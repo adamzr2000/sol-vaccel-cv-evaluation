@@ -1,0 +1,65 @@
+file_name,clip_key,label,label_index,source_shard_url,source_member_path
+x0do8ZL8k9I_000093_000103.mp4,x0do8ZL8k9I_000093_000103.mp4,balloon blowing,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./x0do8ZL8k9I_000093_000103.mp4
+x4Img8HKxJ4_000034_000044.mp4,x4Img8HKxJ4_000034_000044.mp4,sword fighting,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./x4Img8HKxJ4_000034_000044.mp4
+x55Xn93GB7I_000007_000017.mp4,x55Xn93GB7I_000007_000017.mp4,krumping,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./x55Xn93GB7I_000007_000017.mp4
+x6_3yeZd_9k_000004_000014.mp4,x6_3yeZd_9k_000004_000014.mp4,eating doughnuts,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./x6_3yeZd_9k_000004_000014.mp4
+x9hf11_U2NY_000094_000104.mp4,x9hf11_U2NY_000094_000104.mp4,shuffling cards,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./x9hf11_U2NY_000094_000104.mp4
+xAT4H7mP7wU_000703_000713.mp4,xAT4H7mP7wU_000703_000713.mp4,brush painting,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./xAT4H7mP7wU_000703_000713.mp4
+xE5FALBmGuc_000003_000013.mp4,xE5FALBmGuc_000003_000013.mp4,smoking hookah,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./xE5FALBmGuc_000003_000013.mp4
+xL9WhQECIgs_000005_000015.mp4,xL9WhQECIgs_000005_000015.mp4,trimming trees,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./xL9WhQECIgs_000005_000015.mp4
+xQLZf-1ePZw_000029_000039.mp4,xQLZf-1ePZw_000029_000039.mp4,shooting basketball,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./xQLZf-1ePZw_000029_000039.mp4
+xR0b9F1LgW8_000005_000015.mp4,xR0b9F1LgW8_000005_000015.mp4,disc golfing,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./xR0b9F1LgW8_000005_000015.mp4
+xXiaKJAUt10_000003_000013.mp4,xXiaKJAUt10_000003_000013.mp4,trapezing,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./xXiaKJAUt10_000003_000013.mp4
+xZC55adQc8A_000052_000062.mp4,xZC55adQc8A_000052_000062.mp4,strumming guitar,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./xZC55adQc8A_000052_000062.mp4
+xg3LER6hB78_000036_000046.mp4,xg3LER6hB78_000036_000046.mp4,baking cookies,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./xg3LER6hB78_000036_000046.mp4
+xihIy0IQn9I_000079_000089.mp4,xihIy0IQn9I_000079_000089.mp4,tango dancing,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./xihIy0IQn9I_000079_000089.mp4
+xiz-a1dW8mU_000003_000013.mp4,xiz-a1dW8mU_000003_000013.mp4,sticking tongue out,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./xiz-a1dW8mU_000003_000013.mp4
+xkoRNHedKXQ_000415_000425.mp4,xkoRNHedKXQ_000415_000425.mp4,mowing lawn,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./xkoRNHedKXQ_000415_000425.mp4
+xm3vBKtMOtg_000065_000075.mp4,xm3vBKtMOtg_000065_000075.mp4,playing flute,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./xm3vBKtMOtg_000065_000075.mp4
+xo0qjV35hXI_000009_000019.mp4,xo0qjV35hXI_000009_000019.mp4,diving cliff,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./xo0qjV35hXI_000009_000019.mp4
+xpXwB-VsEs4_000317_000327.mp4,xpXwB-VsEs4_000317_000327.mp4,applauding,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./xpXwB-VsEs4_000317_000327.mp4
+xtSBE8LFhXY_000029_000039.mp4,xtSBE8LFhXY_000029_000039.mp4,juggling balls,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./xtSBE8LFhXY_000029_000039.mp4
+xxWhTcGLnNM_000015_000025.mp4,xxWhTcGLnNM_000015_000025.mp4,punching person (boxing),,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./xxWhTcGLnNM_000015_000025.mp4
+y-HkIwa-jWM_000004_000014.mp4,y-HkIwa-jWM_000004_000014.mp4,playing kickball,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./y-HkIwa-jWM_000004_000014.mp4
+y0RAy7VQM6A_000105_000115.mp4,y0RAy7VQM6A_000105_000115.mp4,playing violin,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./y0RAy7VQM6A_000105_000115.mp4
+y1FM_WtlpLA_000092_000102.mp4,y1FM_WtlpLA_000092_000102.mp4,eating burger,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./y1FM_WtlpLA_000092_000102.mp4
+y3-3i88mNPc_000008_000018.mp4,y3-3i88mNPc_000008_000018.mp4,abseiling,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./y3-3i88mNPc_000008_000018.mp4
+y43sVp5GLAM_000004_000014.mp4,y43sVp5GLAM_000004_000014.mp4,dodgeball,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./y43sVp5GLAM_000004_000014.mp4
+y8k3C209zJ4_000010_000020.mp4,y8k3C209zJ4_000010_000020.mp4,blowing leaves,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./y8k3C209zJ4_000010_000020.mp4
+y9kk0ptXevk_000055_000065.mp4,y9kk0ptXevk_000055_000065.mp4,cleaning shoes,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./y9kk0ptXevk_000055_000065.mp4
+yAiqzcM2UCo_000012_000022.mp4,yAiqzcM2UCo_000012_000022.mp4,snorkeling,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./yAiqzcM2UCo_000012_000022.mp4
+yCtkAZUd1_8_000146_000156.mp4,yCtkAZUd1_8_000146_000156.mp4,stretching leg,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./yCtkAZUd1_8_000146_000156.mp4
+yFqb7_Zpwng_000003_000013.mp4,yFqb7_Zpwng_000003_000013.mp4,carrying baby,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./yFqb7_Zpwng_000003_000013.mp4
+yMKMrpwxOA8_000010_000020.mp4,yMKMrpwxOA8_000010_000020.mp4,shredding paper,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./yMKMrpwxOA8_000010_000020.mp4
+yN6394xBHog_000000_000010.mp4,yN6394xBHog_000000_000010.mp4,petting cat,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./yN6394xBHog_000000_000010.mp4
+yYcWd3lcYfM_000003_000013.mp4,yYcWd3lcYfM_000003_000013.mp4,eating cake,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./yYcWd3lcYfM_000003_000013.mp4
+ycfVJyrFgB4_000128_000138.mp4,ycfVJyrFgB4_000128_000138.mp4,drumming fingers,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./ycfVJyrFgB4_000128_000138.mp4
+ygax0_XtJBE_000456_000466.mp4,ygax0_XtJBE_000456_000466.mp4,assembling computer,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./ygax0_XtJBE_000456_000466.mp4
+ypibr1Ju0U4_000562_000572.mp4,ypibr1Ju0U4_000562_000572.mp4,assembling computer,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./ypibr1Ju0U4_000562_000572.mp4
+yviwpE0UBf8_000006_000016.mp4,yviwpE0UBf8_000006_000016.mp4,headbanging,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./yviwpE0UBf8_000006_000016.mp4
+yvzLyK1LYu0_000004_000014.mp4,yvzLyK1LYu0_000004_000014.mp4,drinking shots,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./yvzLyK1LYu0_000004_000014.mp4
+z-6CXisVoHw_000003_000013.mp4,z-6CXisVoHw_000003_000013.mp4,riding elephant,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./z-6CXisVoHw_000003_000013.mp4
+z-6l_dkR3vE_000299_000309.mp4,z-6l_dkR3vE_000299_000309.mp4,massaging person's head,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./z-6l_dkR3vE_000299_000309.mp4
+z-b37Sz_9RE_000000_000010.mp4,z-b37Sz_9RE_000000_000010.mp4,javelin throw,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./z-b37Sz_9RE_000000_000010.mp4
+z3osi5OYCtw_000013_000023.mp4,z3osi5OYCtw_000013_000023.mp4,petting animal (not cat),,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./z3osi5OYCtw_000013_000023.mp4
+z3s4epg5nVs_000002_000012.mp4,z3s4epg5nVs_000002_000012.mp4,exercising with an exercise ball,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./z3s4epg5nVs_000002_000012.mp4
+z69bdG9aYqA_000033_000043.mp4,z69bdG9aYqA_000033_000043.mp4,skateboarding,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./z69bdG9aYqA_000033_000043.mp4
+zAzydi6mtBg_000000_000010.mp4,zAzydi6mtBg_000000_000010.mp4,swinging legs,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./zAzydi6mtBg_000000_000010.mp4
+zGwY0lLRMGE_000260_000270.mp4,zGwY0lLRMGE_000260_000270.mp4,playing controller,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./zGwY0lLRMGE_000260_000270.mp4
+zIJX5KDd4to_000033_000043.mp4,zIJX5KDd4to_000033_000043.mp4,decorating the christmas tree,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./zIJX5KDd4to_000033_000043.mp4
+zIo-Zx2wMA8_000163_000173.mp4,zIo-Zx2wMA8_000163_000173.mp4,massaging feet,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./zIo-Zx2wMA8_000163_000173.mp4
+zIudsNnuaSY_000004_000014.mp4,zIudsNnuaSY_000004_000014.mp4,clean and jerk,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./zIudsNnuaSY_000004_000014.mp4
+zMfe-irysi8_000003_000013.mp4,zMfe-irysi8_000003_000013.mp4,climbing a rope,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./zMfe-irysi8_000003_000013.mp4
+zMi-pwRqk-I_000149_000159.mp4,zMi-pwRqk-I_000149_000159.mp4,roller skating,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./zMi-pwRqk-I_000149_000159.mp4
+zVQbO60nido_000171_000181.mp4,zVQbO60nido_000171_000181.mp4,assembling computer,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./zVQbO60nido_000171_000181.mp4
+zVlHUt0eWbU_000090_000100.mp4,zVlHUt0eWbU_000090_000100.mp4,tying tie,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./zVlHUt0eWbU_000090_000100.mp4
+z_HH52Z38e0_000002_000012.mp4,z_HH52Z38e0_000002_000012.mp4,front raises,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./z_HH52Z38e0_000002_000012.mp4
+z_qQZHOTf68_000298_000308.mp4,z_qQZHOTf68_000298_000308.mp4,digging,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./z_qQZHOTf68_000298_000308.mp4
+zcqHhMI79FY_000395_000405.mp4,zcqHhMI79FY_000395_000405.mp4,unboxing,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./zcqHhMI79FY_000395_000405.mp4
+zgV_kYzVyJY_000003_000013.mp4,zgV_kYzVyJY_000003_000013.mp4,sticking tongue out,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./zgV_kYzVyJY_000003_000013.mp4
+zjjUS6SVjuA_000002_000012.mp4,zjjUS6SVjuA_000002_000012.mp4,water sliding,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./zjjUS6SVjuA_000002_000012.mp4
+zs7h8ZSDejg_000002_000012.mp4,zs7h8ZSDejg_000002_000012.mp4,flipping pancake,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./zs7h8ZSDejg_000002_000012.mp4
+zsG34OIJOtE_000010_000020.mp4,zsG34OIJOtE_000010_000020.mp4,celebrating,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./zsG34OIJOtE_000010_000020.mp4
+zt5P3N4J3Bw_000059_000069.mp4,zt5P3N4J3Bw_000059_000069.mp4,tossing salad,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./zt5P3N4J3Bw_000059_000069.mp4
+ztkghXW1V5w_000003_000013.mp4,ztkghXW1V5w_000003_000013.mp4,rock scissors paper,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./ztkghXW1V5w_000003_000013.mp4
+zx_KUaLVBrE_000037_000047.mp4,zx_KUaLVBrE_000037_000047.mp4,using segway,,https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz,./zx_KUaLVBrE_000037_000047.mp4

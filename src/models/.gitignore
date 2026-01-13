@@ -1,0 +1,23 @@
+# --- Python venv ---
+.venv/
+
+# --- Baseline models: ignore completely ---
+deeplabv3_resnet50/
+fcn_resnet50/
+resnet50/
+mobilenet_v3_large/
+mc3_18/
+r3d_18/
+
+# (Optional but safe) ignore typical downloaded artifacts anywhere in this folder
+*.pt
+**/hub/
+
+# --- SOL models: keep sources but ignore built shared libs ---
+*_sol/**/*.so
+
+# Keep common repo files (explicit allow; optional)
+!.gitignore
+!.gitkeep
+!README*.md
+!download_baseline_model.py

@@ -1,0 +1,15 @@
+root@58575ced7c58:/src-v2/models/sol_deeplabv3_resnet50/lib_gpu# ls
+__pycache__  libsol-dnn-cudnn-deployment-0.8.0rc4-9.1.so  libsol_deeplabv3_resnet50.so  sol_deeplabv3_resnet50.h  sol_deeplabv3_resnet50.py  sol_deeplabv3_resnet50_example.c
+root@58575ced7c58:/src-v2/models/sol_deeplabv3_resnet50/lib_gpu# python3 sol_deeplabv3_resnet50.py
+Segmentation fault (core dumped)
+root@58575ced7c58:/src-v2/models/sol_deeplabv3_resnet50/lib_gpu# python3 -X faulthandler sol_deeplabv3_resnet50.py
+Fatal Python error: Segmentation fault
+
+Current thread 0x0000746deaf53280 (most recent call first):
+  File "/src-v2/models/sol_deeplabv3_resnet50/lib_gpu/sol_deeplabv3_resnet50.py", line 84 in run
+  File "/src-v2/models/sol_deeplabv3_resnet50/lib_gpu/sol_deeplabv3_resnet50.py", line 50 in __call__
+  File "/src-v2/models/sol_deeplabv3_resnet50/lib_gpu/sol_deeplabv3_resnet50.py", line 100 in run_example
+  File "/src-v2/models/sol_deeplabv3_resnet50/lib_gpu/sol_deeplabv3_resnet50.py", line 134 in <module>
+
+Extension modules: numpy._core._multiarray_umath, numpy.linalg._umath_linalg, numpy.random._common, numpy.random.bit_generator, numpy.random._bounded_integers, numpy.random._mt19937, numpy.random.mtrand, numpy.random._philox, numpy.random._pcg64, numpy.random._sfc64, numpy.random._generator (total: 11)
+Segmentation fault (core dumped)

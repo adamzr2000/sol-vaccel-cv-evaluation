@@ -1,0 +1,9 @@
+root@f55f473c4b8a:/src/models/sol_mc3_18/lib_gpu# ls
+libsol-dnn-cublaslt-deployment-0.8.0rc4-12.so  libsol_mc3_18.so  sol_mc3_18.h  sol_mc3_18.py  sol_mc3_18_example.c
+root@f55f473c4b8a:/src/models/sol_mc3_18/lib_gpu# python3 sol_mc3_18.py
+Max_V: [4.978604]
+Max_I: [49]
+Max_V: [5.0152235]
+Max_I: [175]
+Max_V: [5.0152235]
+Max_I: [175]

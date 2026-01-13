@@ -1,0 +1,535 @@
+{
+  "dataset": "Kinetics-400 (CVDF hosted) val sample",
+  "paths_txt_urls_tried": [
+    "https://s3.amazonaws.com/kinetics/400/val/k400_val_path.txt"
+  ],
+  "paths_txt_url_used": "https://s3.amazonaws.com/kinetics/400/val/k400_val_path.txt",
+  "annotations_urls_tried": [
+    "https://s3.amazonaws.com/kinetics/400/annotations/val.csv"
+  ],
+  "annotations_url_used": "https://s3.amazonaws.com/kinetics/400/annotations/val.csv",
+  "num_videos_requested": 64,
+  "num_videos_downloaded": 64,
+  "seed": 1234,
+  "target_dir": "videos",
+  "generated_at_utc": "2026-01-09T17:23:58.649921Z",
+  "download_summary": {
+    "downloaded_shards": 1,
+    "failed_shards": 0,
+    "missing_labels": 0
+  },
+  "videos": [
+    {
+      "file_name": "x0do8ZL8k9I_000093_000103.mp4",
+      "clip_key": "x0do8ZL8k9I_000093_000103.mp4",
+      "label": "balloon blowing",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./x0do8ZL8k9I_000093_000103.mp4"
+    },
+    {
+      "file_name": "x4Img8HKxJ4_000034_000044.mp4",
+      "clip_key": "x4Img8HKxJ4_000034_000044.mp4",
+      "label": "sword fighting",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./x4Img8HKxJ4_000034_000044.mp4"
+    },
+    {
+      "file_name": "x55Xn93GB7I_000007_000017.mp4",
+      "clip_key": "x55Xn93GB7I_000007_000017.mp4",
+      "label": "krumping",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./x55Xn93GB7I_000007_000017.mp4"
+    },
+    {
+      "file_name": "x6_3yeZd_9k_000004_000014.mp4",
+      "clip_key": "x6_3yeZd_9k_000004_000014.mp4",
+      "label": "eating doughnuts",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./x6_3yeZd_9k_000004_000014.mp4"
+    },
+    {
+      "file_name": "x9hf11_U2NY_000094_000104.mp4",
+      "clip_key": "x9hf11_U2NY_000094_000104.mp4",
+      "label": "shuffling cards",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./x9hf11_U2NY_000094_000104.mp4"
+    },
+    {
+      "file_name": "xAT4H7mP7wU_000703_000713.mp4",
+      "clip_key": "xAT4H7mP7wU_000703_000713.mp4",
+      "label": "brush painting",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./xAT4H7mP7wU_000703_000713.mp4"
+    },
+    {
+      "file_name": "xE5FALBmGuc_000003_000013.mp4",
+      "clip_key": "xE5FALBmGuc_000003_000013.mp4",
+      "label": "smoking hookah",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./xE5FALBmGuc_000003_000013.mp4"
+    },
+    {
+      "file_name": "xL9WhQECIgs_000005_000015.mp4",
+      "clip_key": "xL9WhQECIgs_000005_000015.mp4",
+      "label": "trimming trees",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./xL9WhQECIgs_000005_000015.mp4"
+    },
+    {
+      "file_name": "xQLZf-1ePZw_000029_000039.mp4",
+      "clip_key": "xQLZf-1ePZw_000029_000039.mp4",
+      "label": "shooting basketball",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./xQLZf-1ePZw_000029_000039.mp4"
+    },
+    {
+      "file_name": "xR0b9F1LgW8_000005_000015.mp4",
+      "clip_key": "xR0b9F1LgW8_000005_000015.mp4",
+      "label": "disc golfing",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./xR0b9F1LgW8_000005_000015.mp4"
+    },
+    {
+      "file_name": "xXiaKJAUt10_000003_000013.mp4",
+      "clip_key": "xXiaKJAUt10_000003_000013.mp4",
+      "label": "trapezing",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./xXiaKJAUt10_000003_000013.mp4"
+    },
+    {
+      "file_name": "xZC55adQc8A_000052_000062.mp4",
+      "clip_key": "xZC55adQc8A_000052_000062.mp4",
+      "label": "strumming guitar",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./xZC55adQc8A_000052_000062.mp4"
+    },
+    {
+      "file_name": "xg3LER6hB78_000036_000046.mp4",
+      "clip_key": "xg3LER6hB78_000036_000046.mp4",
+      "label": "baking cookies",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./xg3LER6hB78_000036_000046.mp4"
+    },
+    {
+      "file_name": "xihIy0IQn9I_000079_000089.mp4",
+      "clip_key": "xihIy0IQn9I_000079_000089.mp4",
+      "label": "tango dancing",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./xihIy0IQn9I_000079_000089.mp4"
+    },
+    {
+      "file_name": "xiz-a1dW8mU_000003_000013.mp4",
+      "clip_key": "xiz-a1dW8mU_000003_000013.mp4",
+      "label": "sticking tongue out",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./xiz-a1dW8mU_000003_000013.mp4"
+    },
+    {
+      "file_name": "xkoRNHedKXQ_000415_000425.mp4",
+      "clip_key": "xkoRNHedKXQ_000415_000425.mp4",
+      "label": "mowing lawn",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./xkoRNHedKXQ_000415_000425.mp4"
+    },
+    {
+      "file_name": "xm3vBKtMOtg_000065_000075.mp4",
+      "clip_key": "xm3vBKtMOtg_000065_000075.mp4",
+      "label": "playing flute",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./xm3vBKtMOtg_000065_000075.mp4"
+    },
+    {
+      "file_name": "xo0qjV35hXI_000009_000019.mp4",
+      "clip_key": "xo0qjV35hXI_000009_000019.mp4",
+      "label": "diving cliff",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./xo0qjV35hXI_000009_000019.mp4"
+    },
+    {
+      "file_name": "xpXwB-VsEs4_000317_000327.mp4",
+      "clip_key": "xpXwB-VsEs4_000317_000327.mp4",
+      "label": "applauding",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./xpXwB-VsEs4_000317_000327.mp4"
+    },
+    {
+      "file_name": "xtSBE8LFhXY_000029_000039.mp4",
+      "clip_key": "xtSBE8LFhXY_000029_000039.mp4",
+      "label": "juggling balls",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./xtSBE8LFhXY_000029_000039.mp4"
+    },
+    {
+      "file_name": "xxWhTcGLnNM_000015_000025.mp4",
+      "clip_key": "xxWhTcGLnNM_000015_000025.mp4",
+      "label": "punching person (boxing)",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./xxWhTcGLnNM_000015_000025.mp4"
+    },
+    {
+      "file_name": "y-HkIwa-jWM_000004_000014.mp4",
+      "clip_key": "y-HkIwa-jWM_000004_000014.mp4",
+      "label": "playing kickball",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./y-HkIwa-jWM_000004_000014.mp4"
+    },
+    {
+      "file_name": "y0RAy7VQM6A_000105_000115.mp4",
+      "clip_key": "y0RAy7VQM6A_000105_000115.mp4",
+      "label": "playing violin",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./y0RAy7VQM6A_000105_000115.mp4"
+    },
+    {
+      "file_name": "y1FM_WtlpLA_000092_000102.mp4",
+      "clip_key": "y1FM_WtlpLA_000092_000102.mp4",
+      "label": "eating burger",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./y1FM_WtlpLA_000092_000102.mp4"
+    },
+    {
+      "file_name": "y3-3i88mNPc_000008_000018.mp4",
+      "clip_key": "y3-3i88mNPc_000008_000018.mp4",
+      "label": "abseiling",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./y3-3i88mNPc_000008_000018.mp4"
+    },
+    {
+      "file_name": "y43sVp5GLAM_000004_000014.mp4",
+      "clip_key": "y43sVp5GLAM_000004_000014.mp4",
+      "label": "dodgeball",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./y43sVp5GLAM_000004_000014.mp4"
+    },
+    {
+      "file_name": "y8k3C209zJ4_000010_000020.mp4",
+      "clip_key": "y8k3C209zJ4_000010_000020.mp4",
+      "label": "blowing leaves",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./y8k3C209zJ4_000010_000020.mp4"
+    },
+    {
+      "file_name": "y9kk0ptXevk_000055_000065.mp4",
+      "clip_key": "y9kk0ptXevk_000055_000065.mp4",
+      "label": "cleaning shoes",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./y9kk0ptXevk_000055_000065.mp4"
+    },
+    {
+      "file_name": "yAiqzcM2UCo_000012_000022.mp4",
+      "clip_key": "yAiqzcM2UCo_000012_000022.mp4",
+      "label": "snorkeling",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./yAiqzcM2UCo_000012_000022.mp4"
+    },
+    {
+      "file_name": "yCtkAZUd1_8_000146_000156.mp4",
+      "clip_key": "yCtkAZUd1_8_000146_000156.mp4",
+      "label": "stretching leg",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./yCtkAZUd1_8_000146_000156.mp4"
+    },
+    {
+      "file_name": "yFqb7_Zpwng_000003_000013.mp4",
+      "clip_key": "yFqb7_Zpwng_000003_000013.mp4",
+      "label": "carrying baby",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./yFqb7_Zpwng_000003_000013.mp4"
+    },
+    {
+      "file_name": "yMKMrpwxOA8_000010_000020.mp4",
+      "clip_key": "yMKMrpwxOA8_000010_000020.mp4",
+      "label": "shredding paper",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./yMKMrpwxOA8_000010_000020.mp4"
+    },
+    {
+      "file_name": "yN6394xBHog_000000_000010.mp4",
+      "clip_key": "yN6394xBHog_000000_000010.mp4",
+      "label": "petting cat",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./yN6394xBHog_000000_000010.mp4"
+    },
+    {
+      "file_name": "yYcWd3lcYfM_000003_000013.mp4",
+      "clip_key": "yYcWd3lcYfM_000003_000013.mp4",
+      "label": "eating cake",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./yYcWd3lcYfM_000003_000013.mp4"
+    },
+    {
+      "file_name": "ycfVJyrFgB4_000128_000138.mp4",
+      "clip_key": "ycfVJyrFgB4_000128_000138.mp4",
+      "label": "drumming fingers",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./ycfVJyrFgB4_000128_000138.mp4"
+    },
+    {
+      "file_name": "ygax0_XtJBE_000456_000466.mp4",
+      "clip_key": "ygax0_XtJBE_000456_000466.mp4",
+      "label": "assembling computer",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./ygax0_XtJBE_000456_000466.mp4"
+    },
+    {
+      "file_name": "ypibr1Ju0U4_000562_000572.mp4",
+      "clip_key": "ypibr1Ju0U4_000562_000572.mp4",
+      "label": "assembling computer",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./ypibr1Ju0U4_000562_000572.mp4"
+    },
+    {
+      "file_name": "yviwpE0UBf8_000006_000016.mp4",
+      "clip_key": "yviwpE0UBf8_000006_000016.mp4",
+      "label": "headbanging",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./yviwpE0UBf8_000006_000016.mp4"
+    },
+    {
+      "file_name": "yvzLyK1LYu0_000004_000014.mp4",
+      "clip_key": "yvzLyK1LYu0_000004_000014.mp4",
+      "label": "drinking shots",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./yvzLyK1LYu0_000004_000014.mp4"
+    },
+    {
+      "file_name": "z-6CXisVoHw_000003_000013.mp4",
+      "clip_key": "z-6CXisVoHw_000003_000013.mp4",
+      "label": "riding elephant",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./z-6CXisVoHw_000003_000013.mp4"
+    },
+    {
+      "file_name": "z-6l_dkR3vE_000299_000309.mp4",
+      "clip_key": "z-6l_dkR3vE_000299_000309.mp4",
+      "label": "massaging person's head",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./z-6l_dkR3vE_000299_000309.mp4"
+    },
+    {
+      "file_name": "z-b37Sz_9RE_000000_000010.mp4",
+      "clip_key": "z-b37Sz_9RE_000000_000010.mp4",
+      "label": "javelin throw",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./z-b37Sz_9RE_000000_000010.mp4"
+    },
+    {
+      "file_name": "z3osi5OYCtw_000013_000023.mp4",
+      "clip_key": "z3osi5OYCtw_000013_000023.mp4",
+      "label": "petting animal (not cat)",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./z3osi5OYCtw_000013_000023.mp4"
+    },
+    {
+      "file_name": "z3s4epg5nVs_000002_000012.mp4",
+      "clip_key": "z3s4epg5nVs_000002_000012.mp4",
+      "label": "exercising with an exercise ball",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./z3s4epg5nVs_000002_000012.mp4"
+    },
+    {
+      "file_name": "z69bdG9aYqA_000033_000043.mp4",
+      "clip_key": "z69bdG9aYqA_000033_000043.mp4",
+      "label": "skateboarding",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./z69bdG9aYqA_000033_000043.mp4"
+    },
+    {
+      "file_name": "zAzydi6mtBg_000000_000010.mp4",
+      "clip_key": "zAzydi6mtBg_000000_000010.mp4",
+      "label": "swinging legs",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./zAzydi6mtBg_000000_000010.mp4"
+    },
+    {
+      "file_name": "zGwY0lLRMGE_000260_000270.mp4",
+      "clip_key": "zGwY0lLRMGE_000260_000270.mp4",
+      "label": "playing controller",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./zGwY0lLRMGE_000260_000270.mp4"
+    },
+    {
+      "file_name": "zIJX5KDd4to_000033_000043.mp4",
+      "clip_key": "zIJX5KDd4to_000033_000043.mp4",
+      "label": "decorating the christmas tree",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./zIJX5KDd4to_000033_000043.mp4"
+    },
+    {
+      "file_name": "zIo-Zx2wMA8_000163_000173.mp4",
+      "clip_key": "zIo-Zx2wMA8_000163_000173.mp4",
+      "label": "massaging feet",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./zIo-Zx2wMA8_000163_000173.mp4"
+    },
+    {
+      "file_name": "zIudsNnuaSY_000004_000014.mp4",
+      "clip_key": "zIudsNnuaSY_000004_000014.mp4",
+      "label": "clean and jerk",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./zIudsNnuaSY_000004_000014.mp4"
+    },
+    {
+      "file_name": "zMfe-irysi8_000003_000013.mp4",
+      "clip_key": "zMfe-irysi8_000003_000013.mp4",
+      "label": "climbing a rope",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./zMfe-irysi8_000003_000013.mp4"
+    },
+    {
+      "file_name": "zMi-pwRqk-I_000149_000159.mp4",
+      "clip_key": "zMi-pwRqk-I_000149_000159.mp4",
+      "label": "roller skating",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./zMi-pwRqk-I_000149_000159.mp4"
+    },
+    {
+      "file_name": "zVQbO60nido_000171_000181.mp4",
+      "clip_key": "zVQbO60nido_000171_000181.mp4",
+      "label": "assembling computer",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./zVQbO60nido_000171_000181.mp4"
+    },
+    {
+      "file_name": "zVlHUt0eWbU_000090_000100.mp4",
+      "clip_key": "zVlHUt0eWbU_000090_000100.mp4",
+      "label": "tying tie",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./zVlHUt0eWbU_000090_000100.mp4"
+    },
+    {
+      "file_name": "z_HH52Z38e0_000002_000012.mp4",
+      "clip_key": "z_HH52Z38e0_000002_000012.mp4",
+      "label": "front raises",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./z_HH52Z38e0_000002_000012.mp4"
+    },
+    {
+      "file_name": "z_qQZHOTf68_000298_000308.mp4",
+      "clip_key": "z_qQZHOTf68_000298_000308.mp4",
+      "label": "digging",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./z_qQZHOTf68_000298_000308.mp4"
+    },
+    {
+      "file_name": "zcqHhMI79FY_000395_000405.mp4",
+      "clip_key": "zcqHhMI79FY_000395_000405.mp4",
+      "label": "unboxing",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./zcqHhMI79FY_000395_000405.mp4"
+    },
+    {
+      "file_name": "zgV_kYzVyJY_000003_000013.mp4",
+      "clip_key": "zgV_kYzVyJY_000003_000013.mp4",
+      "label": "sticking tongue out",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./zgV_kYzVyJY_000003_000013.mp4"
+    },
+    {
+      "file_name": "zjjUS6SVjuA_000002_000012.mp4",
+      "clip_key": "zjjUS6SVjuA_000002_000012.mp4",
+      "label": "water sliding",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./zjjUS6SVjuA_000002_000012.mp4"
+    },
+    {
+      "file_name": "zs7h8ZSDejg_000002_000012.mp4",
+      "clip_key": "zs7h8ZSDejg_000002_000012.mp4",
+      "label": "flipping pancake",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./zs7h8ZSDejg_000002_000012.mp4"
+    },
+    {
+      "file_name": "zsG34OIJOtE_000010_000020.mp4",
+      "clip_key": "zsG34OIJOtE_000010_000020.mp4",
+      "label": "celebrating",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./zsG34OIJOtE_000010_000020.mp4"
+    },
+    {
+      "file_name": "zt5P3N4J3Bw_000059_000069.mp4",
+      "clip_key": "zt5P3N4J3Bw_000059_000069.mp4",
+      "label": "tossing salad",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./zt5P3N4J3Bw_000059_000069.mp4"
+    },
+    {
+      "file_name": "ztkghXW1V5w_000003_000013.mp4",
+      "clip_key": "ztkghXW1V5w_000003_000013.mp4",
+      "label": "rock scissors paper",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./ztkghXW1V5w_000003_000013.mp4"
+    },
+    {
+      "file_name": "zx_KUaLVBrE_000037_000047.mp4",
+      "clip_key": "zx_KUaLVBrE_000037_000047.mp4",
+      "label": "using segway",
+      "label_index": null,
+      "source_shard_url": "https://s3.amazonaws.com/kinetics/400/val/part_19.tar.gz",
+      "source_member_path": "./zx_KUaLVBrE_000037_000047.mp4"
+    }
+  ]
+}

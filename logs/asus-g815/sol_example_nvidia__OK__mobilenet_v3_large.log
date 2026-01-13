@@ -1,0 +1,9 @@
+root@58575ced7c58:/src/models/sol_mobilenet_v3_large/lib_gpu# ls
+libsol-dnn-cublas-deployment-0.8.0rc4-12.so  libsol-dnn-cublaslt-deployment-0.8.0rc4-12.so  libsol_mobilenet_v3_large.so  sol_mobilenet_v3_large.h  sol_mobilenet_v3_large.py  sol_mobilenet_v3_large_example.c
+root@58575ced7c58:/src/models/sol_mobilenet_v3_large/lib_gpu# python3 sol_mobilenet_v3_large.py
+Max_V: [4.795808]
+Max_I: [844]
+Max_V: [5.0134993]
+Max_I: [844]
+Max_V: [5.0134993]
+Max_I: [844]

@@ -1,0 +1,9 @@
+root@58575ced7c58:/src/models/sol_resnet50/lib_gpu# ls
+__pycache__  libsol-dnn-cublaslt-deployment-0.8.0rc4-12.so  libsol_resnet50.so  sol_resnet50.h  sol_resnet50.py  sol_resnet50_example.c
+root@58575ced7c58:/src/models/sol_resnet50/lib_gpu# python3 sol_resnet50.py
+Max_V: [5.59059]
+Max_I: [610]
+Max_V: [5.5117936]
+Max_I: [549]
+Max_V: [5.5117936]
+Max_I: [549]

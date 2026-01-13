@@ -1,0 +1,11 @@
+# ignore everything under app/models
+app/models/**/*
+# keep readmes and per-folder .gitignore files
+!app/models/**/README.md
+!app/models/**/.gitignore
+
+sol-installers/
+
+__pycache__
+.env
+app/static/videos/uploads/

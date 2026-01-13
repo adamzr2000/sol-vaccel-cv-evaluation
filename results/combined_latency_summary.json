@@ -1,0 +1,152 @@
+[
+    {
+        "run_id": "12-01-2026_19-14-18_deeplabv3_resnet50_stock_gpu",
+        "backend": "stock",
+        "model": "deeplabv3_resnet50",
+        "model_type": "semantic_segmentation",
+        "device": "gpu",
+        "num_samples": 512,
+        "latency_ms": {
+            "mean": 5.160663742572069,
+            "min": 4.390716552734375,
+            "max": 9.885787963867188,
+            "std": 0.8550321616403409
+        },
+        "fps": 193.77352408192382
+    },
+    {
+        "run_id": "12-01-2026_19-15-17_fcn_resnet50_stock_gpu",
+        "backend": "stock",
+        "model": "fcn_resnet50",
+        "model_type": "semantic_segmentation",
+        "device": "gpu",
+        "num_samples": 512,
+        "latency_ms": {
+            "mean": 4.2990040965378284,
+            "min": 3.62396240234375,
+            "max": 8.944511413574219,
+            "std": 0.8430496606723694
+        },
+        "fps": 232.61201374647274
+    },
+    {
+        "run_id": "12-01-2026_19-20-44_mc3_18_stock_gpu",
+        "backend": "stock",
+        "model": "mc3_18",
+        "model_type": "video_classification",
+        "device": "gpu",
+        "num_samples": 20,
+        "latency_ms": {
+            "mean": 5.168259143829346,
+            "min": 4.272937774658203,
+            "max": 8.353948593139648,
+            "std": 1.168979908534487
+        },
+        "fps": 193.48874972609534
+    },
+    {
+        "run_id": "12-01-2026_19-21-31_mc3_18_sol_stock_gpu",
+        "backend": "stock",
+        "model": "mc3_18_sol",
+        "model_type": "video_classification",
+        "device": "gpu",
+        "num_samples": 20,
+        "latency_ms": {
+            "mean": 11.578810214996338,
+            "min": 10.196208953857422,
+            "max": 14.799118041992188,
+            "std": 1.2609188677752035
+        },
+        "fps": 86.36465935894229
+    },
+    {
+        "run_id": "12-01-2026_19-17-06_mobilenet_v3_large_stock_gpu",
+        "backend": "stock",
+        "model": "mobilenet_v3_large",
+        "model_type": "image_classification",
+        "device": "gpu",
+        "num_samples": 512,
+        "latency_ms": {
+            "mean": 2.3861387744545937,
+            "min": 1.703023910522461,
+            "max": 5.551815032958984,
+            "std": 0.8600846542401485
+        },
+        "fps": 419.0871087238305
+    },
+    {
+        "run_id": "12-01-2026_19-25-30_mobilenet_v3_large_sol_stock_gpu",
+        "backend": "stock",
+        "model": "mobilenet_v3_large_sol",
+        "model_type": "image_classification",
+        "device": "gpu",
+        "num_samples": 512,
+        "latency_ms": {
+            "mean": 1.3282080180943012,
+            "min": 0.7197856903076172,
+            "max": 5.730628967285156,
+            "std": 1.0075941499056111
+        },
+        "fps": 752.8941147598171
+    },
+    {
+        "run_id": "12-01-2026_19-23-20_r3d_18_stock_gpu",
+        "backend": "stock",
+        "model": "r3d_18",
+        "model_type": "video_classification",
+        "device": "gpu",
+        "num_samples": 20,
+        "latency_ms": {
+            "mean": 5.664944648742676,
+            "min": 4.824399948120117,
+            "max": 8.524656295776367,
+            "std": 1.2717992023165532
+        },
+        "fps": 176.52423139243703
+    },
+    {
+        "run_id": "12-01-2026_19-22-31_r3d_18_sol_stock_gpu",
+        "backend": "stock",
+        "model": "r3d_18_sol",
+        "model_type": "video_classification",
+        "device": "gpu",
+        "num_samples": 20,
+        "latency_ms": {
+            "mean": 16.813719272613525,
+            "min": 14.57977294921875,
+            "max": 19.066572189331055,
+            "std": 1.4400093109574144
+        },
+        "fps": 59.47524065236519
+    },
+    {
+        "run_id": "12-01-2026_19-16-05_resnet50_stock_gpu",
+        "backend": "stock",
+        "model": "resnet50",
+        "model_type": "image_classification",
+        "device": "gpu",
+        "num_samples": 512,
+        "latency_ms": {
+            "mean": 2.5854255072772503,
+            "min": 1.8672943115234375,
+            "max": 6.51097297668457,
+            "std": 1.0191928126676295
+        },
+        "fps": 386.7835283535648
+    },
+    {
+        "run_id": "12-01-2026_19-16-35_resnet50_sol_stock_gpu",
+        "backend": "stock",
+        "model": "resnet50_sol",
+        "model_type": "image_classification",
+        "device": "gpu",
+        "num_samples": 512,
+        "latency_ms": {
+            "mean": 3.83326830342412,
+            "min": 2.9976367950439453,
+            "max": 8.294820785522461,
+            "std": 0.9897249953079995
+        },
+        "fps": 260.87399076833105
+    }
+]

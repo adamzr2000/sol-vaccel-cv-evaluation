@@ -1,5 +1,10 @@
 # ignore everything in this folder
 *
+# keep
+!*.json
+!*.csv
+!*.py
+!*.sh
 
 # but keep this .gitignore and the placeholder file
 !.gitignore

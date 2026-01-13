@@ -129,6 +129,7 @@ This causes `sol_mobilenet_v3_large.py` to fail at runtime with:
 To run `sol_mobilenet_v3_large` correctly, **cuDNN must be downgraded to 9.1.1.17**:
 
 ```shell
+# On torchvision-app:gpu container
 python3 -m pip install --no-cache-dir --force-reinstall \
   "nvidia-cudnn-cu12==9.1.1.17" --no-deps
 ```

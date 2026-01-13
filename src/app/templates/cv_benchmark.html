@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <script src="/static/js/inference-video-handlers.js?v=0.0.2" defer></script>
+{% endblock %}
+
+{% block content %}
+    <form class="row pb-4 g-3 align-items-end" enctype="multipart/form-data" method="post" id="upload-video-form">
+        <div class="input-group input-group-sm">
+            <input class="form-control form-control-sm" name="upload-video-file" id="upload-video-file" type="file" accept="video/*">
+            <button class="btn btn-outline-primary btn-sm" id="upload-video-button" type="submit">Upload Video</button>
+            <button class="btn btn-outline-primary btn-sm d-none" id="upload-video-progress" type="submit" disabled>
+                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                <span role="status">Uploading...</span>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" type="button" id="reset-video">Reset</button>
+        </div>
+    </form>
+
+    <div class="p-4 border rounded-2 shadow-sm">
+        <form class="row pb-4 g-3 flex-md-nowrap align-items-end" id="detect-video-form">
+            
+            <div class="col-md-3">
+                <label class="form-label small fw-bold" for="model">Model</label>
+                <select class="form-select form-select-sm" id="model" name="model">
+                    {% for model in models %}
+                        <option value="{{ model.name }}">{{ model.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small fw-bold" for="backend">Backend</label>
+                <select class="form-select form-select-sm" id="backend" name="backend">
+                    <option value="stock" selected>stock (pytorch)</option>
+                    <option value="vaccel">vaccel (rpc)</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small fw-bold" for="device">Device</label>
+                <select class="form-select form-select-sm" id="device" name="device">
+                    <option value="cpu" selected>cpu</option>
+                    <option value="gpu">gpu</option>
+                </select>
+            </div>
+
+            <div class="col-auto border-start ps-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="use-webcam" name="use-webcam">
+                    <label class="form-check-label small" for="use-webcam">Webcam</label>
+                </div>
+                <div class="input-group input-group-sm mt-1" style="width: 100px;">
+                    <span class="input-group-text">ID</span>
+                    <input class="form-control" type="number" id="camera-id" name="camera-id" min="0" value="0">
+                </div>
+            </div>
+
+            <div class="col-auto ms-auto">
+                <button class="btn btn-success btn-sm px-4" type="button" id="start-stream">
+                    <i class="bi bi-play-fill"></i> Start
+                </button>
+                <button class="btn btn-danger btn-sm px-4 d-none" type="button" id="stop-stream">
+                    <i class="bi bi-stop-fill"></i> Stop
+                </button>
+            </div>
+        </form>
+
+        <div class="row mb-2 align-items-center">
+            <div class="col-auto">
+                <button class="btn btn-outline-secondary btn-sm" type="button" id="reset-chart">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset Chart
+                </button>
+            </div>
+            <div class="col-auto ms-auto">
+                <div class="btn-group" role="group">
+                    <button class="btn btn-light btn-sm border" type="button" id="download-png" disabled>
+                        <i class="bi bi-image"></i> PNG
+                    </button>
+                    <button class="btn btn-light btn-sm border" type="button" id="download-csv" disabled>
+                        <i class="bi bi-filetype-csv"></i> CSV Data
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <div style="position: relative; height: 180px; width: 100%; margin: auto;">
+                    <canvas id="fpsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col text-center bg-black rounded p-1" style="min-height: 480px; display: flex; align-items: center; justify-content: center;">
+                <span class="text-white-50 small" id="stream-placeholder">Video stream inactive</span>
+                <img class="img-fluid d-none" id="video-stream" alt="Video stream" style="max-height: 600px;">
+            </div>
+        </div>
+        
+    </div>
+{% endblock %}

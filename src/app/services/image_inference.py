@@ -61,10 +61,8 @@ def get_session_video(app: FastAPI, session: dict) -> Path:
         file_name = uploaded_video[next(iter(uploaded_video))]
         return upload_dir / file_name
     
-    # Fallback to test video if exists, else return default name
-    default = videos_dir / "traffic_video.mp4"
-    if default.exists(): return default
-    return videos_dir / "test_video.mp4" # Alternate default
+    # Fallback
+    return videos_dir / "test_video.mp4"
 
 def set_session_video(session: dict, video_name: str, file_path: str):
     session["uploaded_video"] = {video_name: Path(file_path).name}
@@ -137,12 +135,24 @@ async def wait_for_metrics_ready(websocket: WebSocket, session_id: str):
 async def send_metrics(websocket: WebSocket):
     await websocket.accept()
 
-    # Best-effort session id (falls back to first known session)
-    session_id = websocket.cookies.get("session") or "anonymous"
-    if session_id == "anonymous" and websocket.app.state.inference_sessions:
-        session_id = next(iter(websocket.app.state.inference_sessions.keys()))
+    # 1. DEBUG: Print available sessions
+    all_sessions = list(websocket.app.state.inference_sessions.keys())
+    print(f"DEBUG: WS connected. Available sessions: {all_sessions}")
+
+    # 2. Try to find the active session
+    # Priority: Cookie -> First active session -> "anonymous"
+    session_id = websocket.cookies.get("session_id")
+    
+    if not session_id or session_id not in websocket.app.state.inference_sessions:
+        if all_sessions:
+            session_id = all_sessions[0] # Pick the first available one
+            print(f"DEBUG: WS using fallback session: {session_id}")
+        else:
+            session_id = "anonymous"
+            print("DEBUG: WS using anonymous (New Session)")
 
     if not await wait_for_metrics_ready(websocket, session_id):
+        print(f"DEBUG: Metrics timeout for {session_id}")
         return
 
     conns = get_session_websockets(websocket.app, session_id)
@@ -150,6 +160,9 @@ async def send_metrics(websocket: WebSocket):
     try:
         while True:
             m = get_metrics(websocket.app, session_id)
+            # DEBUG: Uncomment if you suspect data is zero
+            # print(f"DEBUG: Sending metrics for {session_id}: {m.get('fps', 0)}")
+            
             await websocket.send_json({
                 "status": "success",
                 "message": "",
@@ -161,6 +174,6 @@ async def send_metrics(websocket: WebSocket):
             })
             await asyncio.sleep(0.1)
     except WebSocketDisconnect:
-        pass
+        print("DEBUG: WS Disconnect")
     finally:
         conns.discard(websocket)

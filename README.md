@@ -133,3 +133,19 @@ To run `sol_mobilenet_v3_large` correctly, **cuDNN must be downgraded to 9.1.1.1
 python3 -m pip install --no-cache-dir --force-reinstall \
   "nvidia-cudnn-cu12==9.1.1.17" --no-deps
 ```
+
+---
+
+## Run the web application
+
+Start the server by running:
+
+```shell
+python3 serve.py
+```
+
+Once the server is running, open your browser and navigate to:
+
+[http://10.5.1.20:8000](http://10.5.1.20:8000)
+
+![web-interface](./web-interface.png)

@@ -1,0 +1,32 @@
+FROM ubuntu:24.04
+
+SHELL ["/bin/bash", "-c"]
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    VENV_PATH=/opt/venv
+
+# System deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-venv python3-pip \
+    libstdc++6 libgomp1 libsleef3 \
+    libtbb12 \
+    ca-certificates binutils \
+ && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+# Python deps (in venv)
+RUN python3 -m venv $VENV_PATH \
+ && $VENV_PATH/bin/pip install --upgrade pip \
+ && $VENV_PATH/bin/pip install \
+      numpy psutil opencv-python-headless fastapi uvicorn
+
+# PyTorch (in venv)
+RUN $VENV_PATH/bin/pip install \
+      torch==2.9.1+cpu \
+      torchvision==0.24.1+cpu \
+      torchaudio==2.9.1+cpu \
+      --index-url https://download.pytorch.org/whl/cpu
+
+ENV PATH="$VENV_PATH/bin:$PATH"
+WORKDIR /src

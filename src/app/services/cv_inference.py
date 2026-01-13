@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import time
+import traceback
 from pathlib import Path
 from collections import deque
 
@@ -31,25 +32,26 @@ from app.services.image_inference import (
 logger = logging.getLogger("uvicorn.error")
 
 # =========================================================
-# 1. MODEL REGISTRY (Flatted Structure)
+# 1. MODEL REGISTRY
 # =========================================================
 SUPPORTED_MODELS = [
     # --- Classification ---
-    {"name": "resnet50",             "label": "ResNet50 (Baseline)"},
-    {"name": "resnet50_sol",         "label": "ResNet50 (SOL)"},
-    {"name": "mobilenet_v3_large",   "label": "MobileNetV3 (Baseline)"},
-    {"name": "mobilenet_v3_large_sol","label": "MobileNetV3 (SOL)"},
+    {"name": "resnet50",             "label": "resnet50"},
+    {"name": "resnet50_sol",         "label": "resnet50_sol"},
+    {"name": "mobilenet_v3_large",   "label": "mobilenet_v3_large"},
+    {"name": "mobilenet_v3_large_sol","label": "mobilenet_v3_large_sol"},
     
     # --- Segmentation ---
-    {"name": "deeplabv3_resnet50",   "label": "DeepLabV3 (Baseline)"},
-    {"name": "deeplabv3_resnet50_sol","label": "DeepLabV3 (SOL)"},
-    {"name": "fcn_resnet50",         "label": "FCN ResNet50 (Baseline)"},
+    {"name": "deeplabv3_resnet50",   "label": "deeplabv3_resnet50"},
+    {"name": "deeplabv3_resnet50_sol","label": "deeplabv3_resnet50_sol"},
+    {"name": "fcn_resnet50",         "label": "fcn_resnet50"},
+    {"name": "fcn_resnet50_sol",     "label": "fcn_resnet50_sol"},
     
     # --- Video Action ---
-    {"name": "mc3_18",               "label": "MC3_18 (Baseline)"},
-    {"name": "mc3_18_sol",           "label": "MC3_18 (SOL)"},
-    {"name": "r3d_18",               "label": "R3D_18 (Baseline)"},
-    {"name": "r3d_18_sol",           "label": "R3D_18 (SOL)"},
+    {"name": "mc3_18",               "label": "mc3_18"},
+    {"name": "mc3_18_sol",           "label": "mc3_18_sol"},
+    {"name": "r3d_18",               "label": "r3d_18"},
+    {"name": "r3d_18_sol",           "label": "r3d_18_sol"},
 ]
 
 ALLOWED_MODEL_NAMES = {m["name"] for m in SUPPORTED_MODELS}
@@ -80,8 +82,8 @@ def set_model_choice(app: FastAPI, session_id: str, name: str):
     if name not in ALLOWED_MODEL_NAMES:
         name = "resnet50"
     
-    # Invalidate if changed
     if s.get("model_name") != name:
+        logger.info(f"🔄 [Session {session_id[:8]}] Switching Model: {s.get('model_name')} -> {name}")
         s["model_name"] = name
         s["adapter"] = None 
         s["frame_buffer"].clear()
@@ -89,31 +91,19 @@ def set_model_choice(app: FastAPI, session_id: str, name: str):
 def set_inference_params(app: FastAPI, session_id: str, backend: str, device: str):
     s = get_session_data(app, session_id)
     
-    # Validations
     if backend not in ["stock", "vaccel"]: backend = "stock"
     if device not in ["cpu", "gpu"]: device = "cpu"
     
-    # Invalidate if changed
     if s.get("backend") != backend or s.get("device") != device:
+        logger.info(f"⚙️ [Session {session_id[:8]}] Updating Params: {s.get('backend')}/{s.get('device')} -> {backend}/{device}")
         s["backend"] = backend
         s["device"] = device
         s["adapter"] = None 
-        # Note: We don't necessarily need to clear frame buffer on device change, 
-        # but it's safer to avoid tensor device mismatches.
         s["frame_buffer"].clear()
 
 # =========================================================
 # 3. MODEL LOADING LOGIC
 # =========================================================
-def _parse_model_config(model_choice: str):
-    """
-    Splits 'resnet50_sol' -> ('resnet50', 'sol')
-    Splits 'resnet50'     -> ('resnet50', 'baseline')
-    """
-    if model_choice.endswith("_sol"):
-        return model_choice.replace("_sol", ""), "sol"
-    return model_choice, "baseline"
-
 def _ensure_model_loaded(app: FastAPI, session_id: str):
     s = get_session_data(app, session_id)
     
@@ -121,10 +111,9 @@ def _ensure_model_loaded(app: FastAPI, session_id: str):
         return
 
     model_choice = s.get("model_name", "resnet50")
-    exec_backend = s.get("backend", "stock") # stock vs vaccel
+    exec_backend = s.get("backend", "stock") 
     device_str = s.get("device", "cpu")
     
-    # Map UI device to PyTorch device
     if device_str == "gpu" and torch.cuda.is_available():
         torch_device = torch.device("cuda")
     else:
@@ -135,30 +124,19 @@ def _ensure_model_loaded(app: FastAPI, session_id: str):
     logger.info(f"Loading: {model_choice} | Exec: {exec_backend} | Device: {torch_device}")
 
     try:
-        # --- PATH A: STOCK (Local Adapter) ---
         if exec_backend == "stock":
-            # 1. Parse architecture and flavor from name
-            arch_name, flavor = _parse_model_config(model_choice)
-            
-            # 2. Instantiate Adapter
-            adapter = get_model_adapter(arch_name, flavor, torch_device)
-            
-            # 3. Load Weights
-            # Directory convention: {arch}_{flavor} (e.g. resnet50_sol)
-            model_dir = app.state.models_dir / f"{arch_name}_{flavor}"
+            adapter = get_model_adapter(model_choice, exec_backend, torch_device)
+            model_dir = app.state.models_dir / model_choice
             adapter.load_model(str(model_dir))
-            
             s["adapter"] = adapter
 
-        # --- PATH B: VACCEL (Future Integration) ---
         elif exec_backend == "vaccel":
-            # Future: Initialize vAccel resource here
-            # s["vaccel_sess"] = ...
             logger.info("vAccel backend selected (Placeholder)")
             pass
 
     except Exception as e:
         logger.error(f"Model Load Failed: {e}")
+        traceback.print_exc()
         s["adapter"] = None
 
 # =========================================================
@@ -167,7 +145,6 @@ def _ensure_model_loaded(app: FastAPI, session_id: str):
 def _draw_result(img, result, model_type, adapter):
     # 1. Segmentation
     if model_type == "segmentation":
-        # result is tensor/numpy mask
         if isinstance(result, torch.Tensor):
             mask_idx = result.cpu().numpy()
         else:
@@ -181,16 +158,15 @@ def _draw_result(img, result, model_type, adapter):
 
     # 2. Classification / Video
     elif model_type in ["classification", "video_classification"]:
-        # result is (class_idx, prob)
         class_idx, prob = result
         if hasattr(adapter, "categories") and adapter.categories:
             label = adapter.categories[int(class_idx)]
         else:
             label = f"Class {int(class_idx)}"
             
-        text = f"{label}: {float(prob)*100:.1f}%"
+        # .item() automatically detaches and converts to float (fixes warning)
+        text = f"{label}: {prob.item()*100:.1f}%"
         
-        # Draw Bottom Bar
         h, w = img.shape[:2]
         cv2.rectangle(img, (0, h-40), (w, h), (0,0,0), -1)
         cv2.putText(img, text, (20, h-12), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
@@ -210,74 +186,80 @@ async def generate_frame(app: FastAPI, session_id: str, file_path: Path):
     
     try:
         while not s["stop_stream"]:
-            # 1. Management
             _ensure_model_loaded(app, session_id)
             adapter = s.get("adapter")
             
-            # 2. Capture
             ret, frame = cap.read()
             if not ret:
-                if not isinstance(file_path, int): # Loop file
+                if not isinstance(file_path, int):
                     cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                     continue
                 break
 
             process_start = time.time()
 
-            # 3. Inference Block
             if adapter:
                 try:
                     img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                     model_type = getattr(adapter, "model_type", "classification")
                     
-                    # --- PREPROCESS ---
                     input_tensor = None
                     
                     if model_type == "video_classification":
-                        # Rolling Buffer Logic
-                        frame_tensor = torch.from_numpy(img_rgb).permute(2, 0, 1)
-                        if adapter.transform: frame_tensor = adapter.transform(frame_tensor)
+                        # --- VIDEO LOGIC ---
+                        t = torch.from_numpy(img_rgb).permute(2, 0, 1) # (C, H, W)
+                        if adapter.transform: 
+                            t = adapter.transform(t)
                         
-                        s["frame_buffer"].append(frame_tensor)
+                        s["frame_buffer"].append(t)
                         
                         if len(s["frame_buffer"]) == 16:
-                            # Stack buffer -> (1, C, 16, H, W)
                             input_tensor = torch.stack(list(s["frame_buffer"]), dim=1).unsqueeze(0)
                             if s["device"] == "gpu" and hasattr(input_tensor, "to"):
                                 input_tensor = input_tensor.to(adapter.device)
                     else:
-                        # Single Image Logic
+                        # --- IMAGE LOGIC ---
                         if adapter.transform:
-                            t = torch.from_numpy(img_rgb).permute(2, 0, 1)
-                            input_tensor = adapter.transform(t).unsqueeze(0)
+                            # Pass HWC numpy array directly (PyTorch/SOL transforms expect this)
+                            input_tensor = adapter.transform(img_rgb).unsqueeze(0)
                         else:
+                            # Fallback manual conversion
                             input_tensor = torch.from_numpy(img_rgb).permute(2, 0, 1).unsqueeze(0).float() / 255.0
                         
                         if hasattr(input_tensor, "to"):
                             input_tensor = input_tensor.to(adapter.device)
 
-                    # --- INFER ---
+                    # --- INFER (Optimized Metrics) ---
                     if input_tensor is not None:
+                        # 1. Sync before starting timer (ensure previous GPU work doesn't pollute)
+                        if s["device"] == "gpu" and torch.cuda.is_available():
+                            torch.cuda.synchronize()
+                            
                         t0 = time.time()
                         
-                        # Handle SOL (numpy) vs Baseline (Torch) inputs
+                        # 2. Run Inference
                         if hasattr(adapter, "model_name") and "sol" in s.get("model_name", ""): 
                             raw_out = adapter.infer(input_tensor.cpu().numpy())
                         else:
                             raw_out = adapter.infer(input_tensor)
+                        
+                        # 3. Sync after inference (ensure we capture full GPU execution)
+                        if s["device"] == "gpu" and torch.cuda.is_available():
+                            torch.cuda.synchronize()
                             
-                        result = adapter.postprocess(raw_out)
+                        # 4. Stop Timer (Pure Inference Time)
                         inf_ms = (time.time() - t0) * 1000.0
                         add_metric(app, session_id, "inference_time", inf_ms)
                         
-                        # --- VISUALIZE ---
+                        # 5. Post-process & Visualize (Outside inference timer)
+                        result = adapter.postprocess(raw_out)
                         frame = _draw_result(frame, result, model_type, adapter)
 
                 except Exception as e:
-                    # logger.error(f"Inference Error: {e}") # Reduce log spam
+                    traceback.print_exc() 
+                    logger.error(f"Inference Error: {e}")
                     cv2.putText(frame, "Infer Error", (10, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
 
-            # 4. Metrics & Stream
             now = time.time()
             m = get_metrics(app, session_id)
             if m["last_frame_time"]:

@@ -100,7 +100,17 @@ DEVICE=cpu MODEL=resnet50 NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 benchmark_tes
 
 ## Run the web application
 
-Start the server by running:
+### 1. Start the container
+
+Start the container in CPU or GPU mode:
+
+```bash
+./run.sh cpu
+# or
+./run.sh gpu
+```
+
+### 2. Run web server
 
 ```shell
 python3 serve.py

@@ -1,11 +1,9 @@
-# ignore everything in this folder
-*
-# keep
-!*.json
-!*.csv
-!*.py
-!*.sh
+# Ignore images anywhere under this folder
+**/*.png
+**/*.jpg
+**/*.jpeg
 
-# but keep this .gitignore and the placeholder file
-!.gitignore
-!.gitkeep
+**/*.PNG
+**/*.JPG
+**/*.JPEG
+

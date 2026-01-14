@@ -1,0 +1,26 @@
+root@a78d00c3ac02:/src/models/deeplabv3_resnet50_sol/lib_cpu# python3 -X faulthandler sol_deeplabv3_resnet50.py
+Traceback (most recent call last):
+  File "/src/models/deeplabv3_resnet50_sol/lib_cpu/sol_deeplabv3_resnet50.py", line 134, in <module>
+    run_example()
+  File "/src/models/deeplabv3_resnet50_sol/lib_cpu/sol_deeplabv3_resnet50.py", line 99, in run_example
+    lib = sol_deeplabv3_resnet50()
+  File "/src/models/deeplabv3_resnet50_sol/lib_cpu/sol_deeplabv3_resnet50.py", line 46, in __init__
+    self.open()
+  File "/src/models/deeplabv3_resnet50_sol/lib_cpu/sol_deeplabv3_resnet50.py", line 8, in open
+    self.lib = ctypes.CDLL(self.path + "/" + "libsol_deeplabv3_resnet50.so")
+  File "/usr/lib/python3.10/ctypes/__init__.py", line 374, in __init__
+    self._handle = _dlopen(self._name, mode)
+OSError: ./libsol_deeplabv3_resnet50.so: undefined symbol: Sleef_sqrtf1_u35
+root@a78d00c3ac02:/src/models/deeplabv3_resnet50_sol/lib_cpu# ls
+libsol-dnn-dnnl-deployment-0.8.0rc4-3.7.1.so  libsol_deeplabv3_resnet50.so  sol_deeplabv3_resnet50.h  sol_deeplabv3_resnet50.py  sol_deeplabv3_resnet50_example.c  test.py
+root@a78d00c3ac02:/src/models/deeplabv3_resnet50_sol/lib_cpu# ldd libsol_deeplabv3_resnet50.so
+        linux-vdso.so.1 (0x000071f8bb835000)
+        libsleef.so.3 => /lib/x86_64-linux-gnu/libsleef.so.3 (0x000071f8b13e2000)
+        libsleefgnuabi.so.3 => /lib/x86_64-linux-gnu/libsleefgnuabi.so.3 (0x000071f8bb78e000)
+        libsol-dnn-dnnl-deployment-0.8.0rc4-3.7.1.so => /src/models/deeplabv3_resnet50_sol/lib_cpu/libsol-dnn-dnnl-deployment-0.8.0rc4-3.7.1.so (0x000071f8af200000)
+        libstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x000071f8aefd4000)
+        libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x000071f8b12fb000)
+        libgomp.so.1 => /lib/x86_64-linux-gnu/libgomp.so.1 (0x000071f8bb742000)
+        libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x000071f8bb722000)
+        libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x000071f8aedab000)
+        /lib64/ld-linux-x86-64.so.2 (0x000071f8bb837000)

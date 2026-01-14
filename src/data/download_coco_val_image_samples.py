@@ -15,7 +15,7 @@ ANNOTATIONS_URLS = [
 ANNOTATIONS_PATH_IN_ZIP = "annotations/instances_val2017.json"
 
 TARGET_DIR = Path("images")
-NUM_IMAGES = 512
+NUM_IMAGES = 1024
 SEED = 1234
 
 MANIFEST_JSON = Path("images_manifest.json")

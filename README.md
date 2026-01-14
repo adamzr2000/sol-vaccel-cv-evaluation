@@ -23,7 +23,7 @@ Models are provided as `models.tar.gz`, which extracts into a `models/` director
    
 - [Download link](https://drive.google.com/file/d/1z1Av5hBn2I1S4mdNuMO88p3VpbLRTtrR/view?usp=sharing)
 
-## Run benchmark test
+## Run model benchmark
 
 ### 1. Start the container
 
@@ -35,9 +35,9 @@ Start the container in CPU or GPU mode:
 ./run.sh gpu
 ```
 
-### 2. Run benchmark script
+### 2. Run model benchmark script
 
-Execute `benchmark_test.py` with the following environment variables.
+Execute `model_benchmark.py` with the following environment variables.
 
 - **DEVICE**: execution device  
   - `cpu` or `gpu`
@@ -66,8 +66,15 @@ Execute `benchmark_test.py` with the following environment variables.
   - Default: `10`
 
 - **EXPORT_RESULTS**: save benchmark results  
-  - Outputs `latency_results.csv` and `latency_results_summary.json`  
+  - Outputs `benchmark_data.csv` and `benchmark_summary.json`  
   - `true` or `false` (default: `false`)
+
+- **RUN_TAG**: Experiment run prefix identifier *(optional)*  
+  - Used to tag the output directory under  
+    `/results/experiments/model-stats/`  
+  - The final directory name is always auto-generated as:  
+    `<RUN_TAG>_<model>_<backend>_<device
+  - If not set, the current `<timestamp>` is used as the prefix.
 
 - **EXPORT_OUTPUT_IMAGES**: save output images  
   - Requires `EXPORT_RESULTS=true`  
@@ -77,24 +84,66 @@ Examples:
 
 ```shell
 # Semantic segmentation (GPU)
-DEVICE=gpu MODEL=deeplabv3_resnet50 NUM_IMAGES=64 python3 benchmark_test.py
-DEVICE=gpu MODEL=fcn_resnet50 NUM_IMAGES=64 python3 benchmark_test.py
+DEVICE=gpu MODEL=deeplabv3_resnet50 NUM_IMAGES=64 python3 model_benchmark.py
+DEVICE=gpu MODEL=fcn_resnet50 NUM_IMAGES=64 python3 model_benchmark.py
 
 # Image classification (GPU)
-DEVICE=gpu MODEL=resnet50 NUM_IMAGES=64 python3 benchmark_test.py
-DEVICE=gpu MODEL=resnet50_sol NUM_IMAGES=64 python3 benchmark_test.py
-DEVICE=gpu MODEL=mobilenet_v3_large NUM_IMAGES=64 python3 benchmark_test.py
-DEVICE=gpu MODEL=mobilenet_v3_large_sol NUM_IMAGES=64 python3 benchmark_test.py
+DEVICE=gpu MODEL=resnet50 NUM_IMAGES=64 python3 model_benchmark.py
+DEVICE=gpu MODEL=resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
+DEVICE=gpu MODEL=mobilenet_v3_large NUM_IMAGES=64 python3 model_benchmark.py
+DEVICE=gpu MODEL=mobilenet_v3_large_sol NUM_IMAGES=64 python3 model_benchmark.py
 
 # Video classification (GPU)
-DEVICE=gpu MODEL=mc3_18 NUM_VIDEOS=10 python3 benchmark_test.py
-DEVICE=gpu MODEL=r3d_18 NUM_VIDEOS=10 python3 benchmark_test.py
+DEVICE=gpu MODEL=mc3_18 NUM_VIDEOS=10 python3 model_benchmark.py
+DEVICE=gpu MODEL=r3d_18 NUM_VIDEOS=10 python3 model_benchmark.py
 
 # Image classification (CPU)
-DEVICE=cpu MODEL=resnet50 NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 benchmark_test.py
+DEVICE=cpu MODEL=resnet50 NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
 ```
 
-> Note: Results and images are not saved by default to avoid unnecessary disk usage. Set `EXPORT_RESULTS=true` to save benchmark metrics, and also set `EXPORT_OUTPUT_IMAGES=true` to store output images in the [results](./results) directory.
+> Note: Results and images are not saved by default to avoid unnecessary disk usage. Set `EXPORT_RESULTS=true` to save benchmark metrics, and also set `EXPORT_OUTPUT_IMAGES=true` to store output images in the [results/experiments/model-stats](./results/experiments/model-stats/) directory.
+
+---
+
+## Run model benchmark with resource consumption
+
+### 1. Start the monitoring service
+
+Start the `docker-stats-collector` and `system-stats-collector` containers:
+
+```bash
+./run_monitoring.sh
+```
+
+### 2. Start the container
+
+Start the container in CPU or GPU mode:
+
+```bash
+./run.sh cpu
+# or
+./run.sh gpu
+```
+
+### 2. Run benchmark script
+
+Execute `model_benchmark.py` with the following environment variables.
+
+Examples:
+
+```shell
+# Semantic segmentation
+DEVICE=gpu MODEL=deeplabv3_resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
+DEVICE=gpu MODEL=fcn_resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
+
+# Image classification
+DEVICE=gpu MODEL=resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
+DEVICE=gpu MODEL=mobilenet_v3_large RUN_TAG=run1 python3 model_benchmark_resources.py
+
+# Video classification
+DEVICE=gpu MODEL=mc3_18 RUN_TAG=run1 python3 model_benchmark_resources.py
+DEVICE=gpu MODEL=r3d_18 RUN_TAG=run1 python3 model_benchmark_resources.py
+```
 
 ---
 

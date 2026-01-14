@@ -51,7 +51,7 @@ docker run -it --rm \
   --privileged \
   -p 8000:8000 \
   -v "$(pwd)"/src:/src \
-  -v "$(pwd)"/results:/results \
+  -v "$(pwd)"/results/experiments:/results/experiments \
   -e LD_LIBRARY_PATH="$LD_LIBRARY_PATH" \
   "${GPU_ARGS[@]}" \
   --entrypoint /bin/bash \

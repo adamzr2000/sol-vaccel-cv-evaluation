@@ -15,9 +15,10 @@ from model_adapter import get_model_adapter
 
 # Import visualization helpers
 try:
-    from segmentation_utils import COLORS
+    from segmentation_utils import COLORS, VOC_CLASSES
 except ImportError:
     COLORS = np.random.randint(0, 255, (256, 3), dtype=np.uint8)
+    VOC_CLASSES = []
 
 # Import shared plumbing
 from app.services.image_inference import (
@@ -143,20 +144,58 @@ def _ensure_model_loaded(app: FastAPI, session_id: str):
 # 4. VISUALIZATION HELPERS
 # =========================================================
 def _draw_result(img, result, model_type, adapter):
-    # 1. Segmentation
+    # 1. Segmentation with Legend (Top-Right)
     if model_type == "segmentation":
         if isinstance(result, torch.Tensor):
             mask_idx = result.cpu().numpy()
         else:
             mask_idx = result
-            
+        
+        # --- Draw the Overlay ---
         mask_colored = COLORS[mask_idx]
         mask_bgr = cv2.cvtColor(mask_colored, cv2.COLOR_RGB2BGR)
+        
         if mask_bgr.shape[:2] != img.shape[:2]:
              mask_bgr = cv2.resize(mask_bgr, (img.shape[1], img.shape[0]), interpolation=cv2.INTER_NEAREST)
-        return cv2.addWeighted(img, 0.6, mask_bgr, 0.4, 0)
+        
+        blended = cv2.addWeighted(img, 0.6, mask_bgr, 0.4, 0)
 
-    # 2. Classification / Video
+        # --- Draw the Legend ---
+        unique_classes = np.unique(mask_idx)
+        h, w = blended.shape[:2]
+        
+        # START POSITION: Top-Right (170px from right edge)
+        x_base = w - 170  
+        y_offset = 30
+        
+        for cls_id in unique_classes:
+            if cls_id == 0: continue # Skip background
+
+            # Get Color
+            color_rgb = COLORS[cls_id]
+            color_bgr = (int(color_rgb[2]), int(color_rgb[1]), int(color_rgb[0]))
+            
+            label = f"Class {cls_id}" # Default fallback
+            if cls_id < len(VOC_CLASSES):
+                label = VOC_CLASSES[cls_id].capitalize()
+            elif hasattr(adapter, "categories") and adapter.categories and cls_id < len(adapter.categories):
+                label = adapter.categories[cls_id]
+            
+            if len(label) > 12: label = label[:10] + ".."
+
+            # Draw Color Swatch
+            cv2.rectangle(blended, (x_base, y_offset - 15), (x_base + 20, y_offset + 5), color_bgr, -1)
+            cv2.rectangle(blended, (x_base, y_offset - 15), (x_base + 20, y_offset + 5), (255, 255, 255), 1)
+            
+            # Draw Text
+            cv2.putText(blended, label, (x_base + 25, y_offset + 1), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
+            cv2.putText(blended, label, (x_base + 25, y_offset), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+            
+            y_offset += 30
+
+        return blended
+
+    # 2. Classification / Video (Unchanged)
     elif model_type in ["classification", "video_classification"]:
         class_idx, prob = result
         if hasattr(adapter, "categories") and adapter.categories:
@@ -164,9 +203,7 @@ def _draw_result(img, result, model_type, adapter):
         else:
             label = f"Class {int(class_idx)}"
             
-        # .item() automatically detaches and converts to float (fixes warning)
         text = f"{label}: {prob.item()*100:.1f}%"
-        
         h, w = img.shape[:2]
         cv2.rectangle(img, (0, h-40), (w, h), (0,0,0), -1)
         cv2.putText(img, text, (20, h-12), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
@@ -196,7 +233,13 @@ async def generate_frame(app: FastAPI, session_id: str, file_path: Path):
                     continue
                 break
 
-            process_start = time.time()
+            # --- Force Resolution Cap (Max 640x480) ---
+            h, w = frame.shape[:2]
+            if w > 640 or h > 480:
+                frame = cv2.resize(frame, (640, 480))
+            # ------------------------------------------
+
+            process_start = time.perf_counter()
 
             if adapter:
                 try:
@@ -207,7 +250,7 @@ async def generate_frame(app: FastAPI, session_id: str, file_path: Path):
                     
                     if model_type == "video_classification":
                         # --- VIDEO LOGIC ---
-                        t = torch.from_numpy(img_rgb).permute(2, 0, 1) # (C, H, W)
+                        t = torch.from_numpy(img_rgb).permute(2, 0, 1) 
                         if adapter.transform: 
                             t = adapter.transform(t)
                         
@@ -220,38 +263,32 @@ async def generate_frame(app: FastAPI, session_id: str, file_path: Path):
                     else:
                         # --- IMAGE LOGIC ---
                         if adapter.transform:
-                            # Pass HWC numpy array directly (PyTorch/SOL transforms expect this)
                             input_tensor = adapter.transform(img_rgb).unsqueeze(0)
                         else:
-                            # Fallback manual conversion
                             input_tensor = torch.from_numpy(img_rgb).permute(2, 0, 1).unsqueeze(0).float() / 255.0
                         
                         if hasattr(input_tensor, "to"):
                             input_tensor = input_tensor.to(adapter.device)
 
-                    # --- INFER (Optimized Metrics) ---
                     if input_tensor is not None:
-                        # 1. Sync before starting timer (ensure previous GPU work doesn't pollute)
                         if s["device"] == "gpu" and torch.cuda.is_available():
                             torch.cuda.synchronize()
                             
-                        t0 = time.time()
+                        # --- Inference Start ---
+                        t0 = time.perf_counter()
                         
-                        # 2. Run Inference
                         if hasattr(adapter, "model_name") and "sol" in s.get("model_name", ""): 
                             raw_out = adapter.infer(input_tensor.cpu().numpy())
                         else:
                             raw_out = adapter.infer(input_tensor)
                         
-                        # 3. Sync after inference (ensure we capture full GPU execution)
                         if s["device"] == "gpu" and torch.cuda.is_available():
                             torch.cuda.synchronize()
                             
-                        # 4. Stop Timer (Pure Inference Time)
-                        inf_ms = (time.time() - t0) * 1000.0
+                        # --- Inference End ---
+                        inf_ms = (time.perf_counter() - t0) * 1000.0
                         add_metric(app, session_id, "inference_time", inf_ms)
                         
-                        # 5. Post-process & Visualize (Outside inference timer)
                         result = adapter.postprocess(raw_out)
                         frame = _draw_result(frame, result, model_type, adapter)
 
@@ -260,7 +297,8 @@ async def generate_frame(app: FastAPI, session_id: str, file_path: Path):
                     logger.error(f"Inference Error: {e}")
                     cv2.putText(frame, "Infer Error", (10, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
 
-            now = time.time()
+            # --- FPS Calculation ---
+            now = time.perf_counter()
             m = get_metrics(app, session_id)
             if m["last_frame_time"]:
                 current_fps = 1.0 / max(now - m["last_frame_time"], 1e-6)

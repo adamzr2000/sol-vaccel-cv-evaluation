@@ -21,9 +21,9 @@ Models are provided as `models.tar.gz`, which extracts into a `models/` director
    tar -xzf models.tar.gz
    ```
    
-- [Download link](https://drive.google.com/file/d/1vkFB9UHdBzxgLpYwXYk1p9kPPZqzrLdr/view?usp=sharing)
+- [Download link](https://drive.google.com/file/d/1z1Av5hBn2I1S4mdNuMO88p3VpbLRTtrR/view?usp=sharing)
 
-## Run benchmarks
+## Run benchmark test
 
 ### 1. Start the container
 
@@ -98,6 +98,22 @@ DEVICE=cpu MODEL=resnet50 NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 benchmark_tes
 
 ---
 
+## Run the web application
+
+Start the server by running:
+
+```shell
+python3 serve.py
+```
+
+Once the server is running, open your browser and navigate to:
+
+[http://10.5.1.20:8000](http://10.5.1.20:8000)
+
+![web-interface](./web-interface.png)
+
+---
+
 ### Model I/O quick reference
 
 Use this as a reminder of what each `MODEL` expects as input and what it produces:
@@ -133,19 +149,3 @@ To run `sol_mobilenet_v3_large` correctly, **cuDNN must be downgraded to 9.1.1.1
 python3 -m pip install --no-cache-dir --force-reinstall \
   "nvidia-cudnn-cu12==9.1.1.17" --no-deps
 ```
-
----
-
-## Run the web application
-
-Start the server by running:
-
-```shell
-python3 serve.py
-```
-
-Once the server is running, open your browser and navigate to:
-
-[http://10.5.1.20:8000](http://10.5.1.20:8000)
-
-![web-interface](./web-interface.png)

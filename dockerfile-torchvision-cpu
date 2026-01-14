@@ -31,7 +31,7 @@ RUN set -eux; \
 # Python deps
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install \
-      numpy psutil opencv-python-headless fastapi uvicorn
+      numpy psutil opencv-python-headless fastapi uvicorn requests
 
 # PyTorch
 RUN python3 -m pip install \

@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install \
       numpy psutil opencv-python-headless \
-      fastapi uvicorn itsdangerous python-dotenv websockets && \
+      fastapi uvicorn itsdangerous python-dotenv websockets requests && \
     python3 -m pip install --pre \
       torch torchvision torchaudio \
       --index-url https://download.pytorch.org/whl/nightly/cu128

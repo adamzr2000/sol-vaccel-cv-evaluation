@@ -1,4 +1,4 @@
-// Generated with SOL v0.8.0rc4
+// Generated with SOL v0.8.0rc5
 #include "sol_deeplabv3_resnet50.h"
 #include <stdlib.h>
 #ifdef __cplusplus

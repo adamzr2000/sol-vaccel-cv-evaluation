@@ -1,7 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "[monitoring] starting (docker compose up -d)..."
-docker compose -f docker-compose-monitoring.yml up -d
+TARGET="${1:-edge}"   # default to edge
+
+case "$TARGET" in
+  edge|robot) ;;
+  *)
+    echo "Usage: $0 [edge|robot]" >&2
+    exit 2
+    ;;
+esac
+
+COMPOSE_FILE="docker-compose-monitoring-${TARGET}.yml"
+
+echo "[monitoring] starting ($TARGET) (docker compose up -d)..."
+docker compose -f "$COMPOSE_FILE" up -d
 echo "[monitoring] started. current status:"
-docker compose -f docker-compose-monitoring.yml ps
+docker compose -f "$COMPOSE_FILE" ps

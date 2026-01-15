@@ -7,7 +7,7 @@ import os
 import glob
 import re
 from datetime import datetime, timezone
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Dict
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
@@ -24,7 +24,8 @@ class StartRequest(BaseModel):
     interval: float = 1.0
     csv_dir: Optional[str] = None
     tag: Optional[str] = "system-stats"
-    mode: Literal["cpu", "gpu", "both"] = "both"  # <--- Select what to monitor
+    mode: Literal["cpu", "gpu", "both"] = "both"
+    csv_names: Optional[Dict[str, str]] = None  # NEW: keys: "cpu", "gpu"
     stdout: bool = False
 
 class StatusResponse(BaseModel):
@@ -69,6 +70,24 @@ def get_next_run_index(csv_dir: str, tag: str) -> int:
             except ValueError: pass
     return max_idx + 1
 
+def _sanitize_tag(tag: str) -> str:
+    return "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in tag)
+
+def _resolve_csv_path(csv_dir: str, name: str) -> str:
+    """
+    If name is absolute -> use as-is.
+    Else -> treat as filename under csv_dir.
+    Ensures .csv suffix.
+    """
+    name = name.strip()
+    if os.path.isabs(name):
+        path = name
+    else:
+        if not name.lower().endswith(".csv"):
+            name += ".csv"
+        path = os.path.join(csv_dir.rstrip("/"), name)
+    return path
+
 def read_cpu_energy_uj() -> Optional[int]:
     """Reads the raw CPU energy counter in microjoules."""
     path = "/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj"
@@ -81,24 +100,42 @@ def read_cpu_energy_uj() -> Optional[int]:
     return None
 
 # ---------- Monitoring Thread ----------
-def monitor_loop(interval: float, csv_dir: Optional[str], tag: str, run_idx: int, mode: str, stdout: bool):
-    
+def monitor_loop(
+    interval: float,
+    csv_dir: Optional[str],
+    tag: str,
+    run_idx: int,
+    mode: str,
+    stdout: bool,
+    csv_names: Optional[Dict[str, str]] = None
+):
     # --- 1. setup CSV writers based on mode ---
     f_cpu = None
     w_cpu = None
     f_gpu = None
     w_gpu = None
-    
+
     if csv_dir:
-        safe_tag = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in tag)
+        safe_tag = _sanitize_tag(tag)
         base_path = os.path.join(csv_dir.rstrip("/"), f"{safe_tag}-run{run_idx}")
+
+        # default paths
+        cpu_path = f"{base_path}_cpu.csv"
+        gpu_path = f"{base_path}_gpu.csv"
+
+        # overrides (optional)
+        if csv_names:
+            if csv_names.get("cpu"):
+                cpu_path = _resolve_csv_path(csv_dir, csv_names["cpu"])
+            if csv_names.get("gpu"):
+                gpu_path = _resolve_csv_path(csv_dir, csv_names["gpu"])
 
         try:
             # CPU Writer
             if mode in ("cpu", "both"):
-                f_cpu = open(f"{base_path}_cpu.csv", "a", newline="")
+                f_cpu = open(cpu_path, "a", newline="")
                 w_cpu = csv.DictWriter(f_cpu, fieldnames=[
-                    "timestamp", "timestamp_iso", 
+                    "timestamp", "timestamp_iso",
                     "cpu_watts", "cpu_util_percent", "cpu_temp_c"
                 ])
                 w_cpu.writeheader()
@@ -106,22 +143,25 @@ def monitor_loop(interval: float, csv_dir: Optional[str], tag: str, run_idx: int
 
             # GPU Writer
             if mode in ("gpu", "both"):
-                f_gpu = open(f"{base_path}_gpu.csv", "a", newline="")
+                f_gpu = open(gpu_path, "a", newline="")
                 w_gpu = csv.DictWriter(f_gpu, fieldnames=[
-                    "timestamp", "timestamp_iso", "gpu_index", "gpu_name", 
-                    "power_draw_w", "power_limit_w", "util_gpu_percent", 
+                    "timestamp", "timestamp_iso", "gpu_index", "gpu_name",
+                    "power_draw_w", "power_limit_w", "util_gpu_percent",
                     "util_mem_percent", "mem_used_mb", "temp_c"
                 ])
                 w_gpu.writeheader()
                 f_gpu.flush()
-                
+
             logger.info(f"Logging started. Mode: {mode}. Run Index: {run_idx}")
-            
+
         except Exception as e:
             logger.error(f"Failed to open CSV files: {e}")
-            if f_cpu: f_cpu.close()
-            if f_gpu: f_gpu.close()
+            if f_cpu:
+                f_cpu.close()
+            if f_gpu:
+                f_gpu.close()
             return
+
 
     # --- 2. Init Hardware ---
     gpu_handles = []
@@ -277,7 +317,7 @@ def start(req: StartRequest):
     state.current_mode = req.mode
     state.thread = threading.Thread(
         target=monitor_loop,
-        args=(req.interval, req.csv_dir, req.tag, run_idx, req.mode, req.stdout),
+        args=(req.interval, req.csv_dir, req.tag, run_idx, req.mode, req.stdout, req.csv_names),
         daemon=True
     )
     state.thread.start()
@@ -285,9 +325,21 @@ def start(req: StartRequest):
     
     files_created = []
     if req.csv_dir:
-        base = f"{req.tag}-run{run_idx}"
-        if req.mode in ("cpu", "both"): files_created.append(f"{base}_cpu.csv")
-        if req.mode in ("gpu", "both"): files_created.append(f"{base}_gpu.csv")
+        safe_tag = _sanitize_tag(req.tag)
+        base_path = os.path.join(req.csv_dir.rstrip("/"), f"{safe_tag}-run{run_idx}")
+
+        cpu_name = f"{safe_tag}-run{run_idx}_cpu.csv"
+        gpu_name = f"{safe_tag}-run{run_idx}_gpu.csv"
+
+        # apply overrides (report names, not full paths)
+        if req.csv_names:
+            if req.mode in ("cpu", "both") and req.csv_names.get("cpu"):
+                cpu_name = req.csv_names["cpu"] if req.csv_names["cpu"].lower().endswith(".csv") else req.csv_names["cpu"] + ".csv"
+            if req.mode in ("gpu", "both") and req.csv_names.get("gpu"):
+                gpu_name = req.csv_names["gpu"] if req.csv_names["gpu"].lower().endswith(".csv") else req.csv_names["gpu"] + ".csv"
+
+        if req.mode in ("cpu", "both"): files_created.append(cpu_name)
+        if req.mode in ("gpu", "both"): files_created.append(gpu_name)
 
     return {
         "success": True, 

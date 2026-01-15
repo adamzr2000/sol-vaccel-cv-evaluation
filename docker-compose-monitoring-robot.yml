@@ -1,0 +1,31 @@
+services:
+  docker-stats-collector:
+    container_name: docker-stats-collector
+    image: docker-stats-collector:latest
+    build:
+      context: ./docker-stats-collector
+      dockerfile: Dockerfile
+    ports:
+      - "6000:6000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - ./docker-stats-collector/app:/app
+      - ./results/experiments:/results/experiments
+    restart: unless-stopped
+
+  system-stats-collector:
+    container_name: system-stats-collector
+    image: system-stats-collector:latest
+    build:
+      context: ./system-stats-collector
+      dockerfile: Dockerfile
+    privileged: true
+    ports:
+      - "6001:6000"  # Different port than docker monitor
+    volumes:
+      - ./system-stats-collector/app:/app
+      - /sys/class/powercap:/sys/class/powercap:ro
+      - /sys/class/thermal:/sys/class/thermal:ro
+      - ./results/experiments:/results/experiments
+    restart: unless-stopped

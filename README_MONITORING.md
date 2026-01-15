@@ -79,6 +79,21 @@ curl -X POST localhost:6001/monitor/start \
   }' | jq
 ```
 
+```shell
+curl -X POST localhost:6001/monitor/start \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "interval": 1.0,
+    "csv_dir": "/results/experiments/system-stats",
+    "mode": "both",
+    "csv_names": {
+      "cpu": "test_cpu.csv",
+      "gpu": "test_gpu.csv"
+    },
+    "stdout": false
+  }' | jq
+```
+
 ## Stop monitoring
 ```shell
 curl -X POST "http://localhost:6001/monitor/stop"

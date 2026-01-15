@@ -30,6 +30,12 @@ else:
 # Backend: 'stock' (default) or 'vaccel'
 BACKEND = os.environ.get("BACKEND", "stock")
 
+# Host: 'edge' (default) or 'robot'
+HOST = os.environ.get("HOST", "edge").lower()
+if HOST not in ["robot", "edge"]:
+    print(f"⚠️  Unknown HOST '{HOST}', defaulting to 'edge'")
+    HOST = "edge"
+
 # Model: Full folder name
 MODEL_ARCH = os.environ.get("MODEL", "deeplabv3_resnet50")
 
@@ -60,13 +66,16 @@ elif CORE_MODEL_NAME in ["resnet50", "mobilenet_v3_large"]:
 else:
     MODEL_TYPE = "semantic_segmentation"
 
-# --- DOCKER MONITOR CONFIG ---
+# --- MONITOR CONFIG ---
 DOCKER_STATS_ENDPOINT = os.environ.get("DOCKER_STATS_ENDPOINT", "http://10.5.1.20:6000")
 DOCKER_STATS_CSV_DIR = "/results/experiments/docker-stats"
 
+SYSTEM_STATS_ENDPOINT = os.environ.get("SYSTEM_STATS_ENDPOINT", "http://10.5.1.20:6001")
+SYSTEM_STATS_CSV_DIR = "/results/experiments/system-stats"
+
 
 # ==========================================
-# HELPER FUNCTIONS FOR DOCKER STATS
+# HELPER FUNCTIONS FOR MONITORS
 # ==========================================
 def start_docker_monitor(run_id):
     url = f"{DOCKER_STATS_ENDPOINT}/monitor/start"
@@ -101,10 +110,49 @@ def stop_docker_monitor():
     except Exception as e:
         print(f"   ⚠️ Could not stop Docker Monitor: {e}")
 
+def start_system_monitor(run_id):
+    url = f"{SYSTEM_STATS_ENDPOINT}/monitor/start"
+    
+    is_gpu = (DEVICE.type == 'cuda')
+    mode = "gpu" if is_gpu else "cpu"
+
+    payload = {
+        "interval": 1.0,
+        "csv_dir": SYSTEM_STATS_CSV_DIR,
+        "mode": mode,
+        "stdout": False,
+        "csv_names": {
+            f"{mode}": f"{run_id}",
+        }
+    }
+
+    try:
+        print(f"   📡 Starting System Monitor: {url} (Mode: {mode})")
+        resp = requests.post(url, json=payload, timeout=5)
+        if resp.status_code == 200:
+            print("   ✅ System Monitor Started.")
+        else:
+            print(f"   ⚠️ System Monitor Start Failed: {resp.text}")
+    except Exception as e:
+        print(f"   ⚠️ Could not contact System Monitor: {e}")
+
+def stop_system_monitor():
+    url = f"{SYSTEM_STATS_ENDPOINT}/monitor/stop"
+    try:
+        print(f"   📡 Stopping System Monitor...")
+        resp = requests.post(url, timeout=5)
+        if resp.status_code == 200:
+            print("   ✅ System Monitor Stopped.")
+        else:
+            print(f"   ⚠️ System Monitor Stop Failed: {resp.text}")
+    except Exception as e:
+        print(f"   ⚠️ Could not stop System Monitor: {e}")
+
 
 def main():
     print(f"\n🚀 STARTING MODEL BENCHMARK (RESOURCES)")
     print(f"   Backend: {BACKEND}")
+    print(f"   Host:    {HOST}")
     print(f"   Model:   {MODEL_ARCH}")
     print(f"   Type:    {MODEL_TYPE}")
     print(f"   Device:  {DEVICE}")
@@ -140,6 +188,7 @@ def main():
             print(f"   ⚠️  No .mp4 videos found, but found {len(image_files)} images.")
             print(f"      Video models need temporal data. Simulating with static image stacking.")
             try:
+                # Default to 'y' for automated batch runs if interactive input fails
                 choice = input(f"      Do you want to use {BENCH_NUM_IMAGES} images as fake static videos? [y/N]: ").strip().lower()
             except EOFError:
                 choice = 'y'
@@ -161,14 +210,18 @@ def main():
         print(f"   📸 Using {len(files_to_process)} images.")
 
 
-    # 3. OUTPUT ID
+    # 3. OUTPUT ID (Run Tag Logic)
+    # -------------------------------------------------------------------------
     run_tag = os.environ.get("RUN_TAG")
     if run_tag:
         prefix = run_tag
     else:
         prefix = time.strftime("%d-%m-%Y_%H-%M-%S")
         
-    run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{INPUT_DEVICE}"
+    # Updated naming convention including HOST
+    run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{HOST}_{INPUT_DEVICE}"
+    # -------------------------------------------------------------------------
+
     run_dir = RESULTS_DIR / run_id
     img_out_dir = run_dir / "output_images"
 
@@ -188,10 +241,11 @@ def main():
         except Exception as e:
             print(f"      Warmup failed on {os.path.basename(files_to_process[i])}: {e}")
             
-    # --- START DOCKER MONITORING ---
+    # --- START MONITORING (DOCKER + SYSTEM) ---
     start_docker_monitor(run_id)
+    start_system_monitor(run_id)
     
-    # Capture Start Time (ISO format for alignment with Docker Stats)
+    # Capture Start Time (ISO format for alignment with Stats)
     t_start_dt = datetime.now(timezone.utc)
     t_start_iso = t_start_dt.isoformat()
     t_stop_iso = None
@@ -298,8 +352,9 @@ def main():
         t_stop_dt = datetime.now(timezone.utc)
         t_stop_iso = t_stop_dt.isoformat()
         
-        # STOP DOCKER MONITORING
+        # STOP MONITORING (DOCKER + SYSTEM)
         stop_docker_monitor()
+        stop_system_monitor()
 
     # 6. SUMMARY & SAVE
     if latencies:
@@ -339,12 +394,13 @@ def main():
                 json.dump({
                     "run_id": run_id,
                     "backend": BACKEND,
+                    "host": HOST,
                     "model": MODEL_ARCH,
                     "model_type": MODEL_TYPE,
                     "device": INPUT_DEVICE,
                     "num_samples": len(latencies),
                     
-                    # --- NEW: Time Alignment ---
+                    # --- Time Alignment ---
                     "time_window": {
                         "start": t_start_iso,
                         "stop": t_stop_iso,

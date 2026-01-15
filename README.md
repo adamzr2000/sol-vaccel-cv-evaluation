@@ -43,6 +43,10 @@ Execute `model_benchmark.py` with the following environment variables.
   - `cpu` or `gpu`
   - If using `cpu` on ASUS G815 laptop, set `OMP_NUM_THREADS=10`
 
+- **DEVICE**: execution host identifier  
+  - `edge` or `robot`
+  - Default: `edge`
+
 - **MODEL**: neural network model to benchmark  
   - **Segmentation**:  
     `deeplabv3_resnet50`, `deeplabv3_resnet50_sol`,  
@@ -73,7 +77,7 @@ Execute `model_benchmark.py` with the following environment variables.
   - Used to tag the output directory under  
     `/results/experiments/model-stats/`  
   - The final directory name is always auto-generated as:  
-    `<RUN_TAG>_<model>_<backend>_<device
+    `<RUN_TAG>_<model>_<backend>_<host>_<device>
   - If not set, the current `<timestamp>` is used as the prefix.
 
 - **EXPORT_OUTPUT_IMAGES**: save output images  
@@ -112,7 +116,9 @@ DEVICE=cpu MODEL=resnet50 NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchma
 Start the `docker-stats-collector` and `system-stats-collector` containers:
 
 ```bash
-./run_monitoring.sh
+./run_monitoring.sh edge
+# or
+./run_monitoring.sh robot
 ```
 
 ### 2. Start the container
@@ -127,7 +133,7 @@ Start the container in CPU or GPU mode:
 
 ### 2. Run benchmark script
 
-Execute `model_benchmark.py` with the following environment variables.
+Execute `model_benchmark_resources.py` with the following environment variables.
 
 Examples:
 
@@ -143,6 +149,9 @@ DEVICE=gpu MODEL=mobilenet_v3_large RUN_TAG=run1 python3 model_benchmark_resourc
 # Video classification
 DEVICE=gpu MODEL=mc3_18 RUN_TAG=run1 python3 model_benchmark_resources.py
 DEVICE=gpu MODEL=r3d_18 RUN_TAG=run1 python3 model_benchmark_resources.py
+
+
+HOST=robot DOCKER_STATS_ENDPOINT=http://10.5.1.19:6000 SYSTEM_STATS_ENDPOINT=http://10.5.1.19:6001 DEVICE=cpu MODEL=resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
 ```
 
 ---

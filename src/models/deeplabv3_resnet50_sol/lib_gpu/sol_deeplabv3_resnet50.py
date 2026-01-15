@@ -1,4 +1,4 @@
-# Generated with SOL v0.8.0rc4
+# Generated with SOL v0.8.0rc5
 import numpy as np
 import ctypes
 from numpy.ctypeslib import ndpointer, as_ctypes_type

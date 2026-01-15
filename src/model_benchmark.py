@@ -28,14 +28,19 @@ else:
 # Backend: 'stock' (default) or 'vaccel'
 BACKEND = os.environ.get("BACKEND", "stock")
 
+# Host: 'edge' (default) or 'robot'
+HOST = os.environ.get("HOST", "edge").lower()
+if HOST not in ["robot", "edge"]:
+    print(f"⚠️  Unknown HOST '{HOST}', defaulting to 'edge'")
+    HOST = "edge"
+
 # Model: Full folder name
 MODEL_ARCH = os.environ.get("MODEL", "deeplabv3_resnet50")
 
-# --- UPDATED DEFAULTS ---
+# Separate limits for Images and Videos
 BENCH_NUM_IMAGES = int(os.environ.get("NUM_IMAGES", "64"))
 BENCH_NUM_VIDEOS = int(os.environ.get("NUM_VIDEOS", "10"))
 
-# Default EXPORT_RESULTS to True
 EXPORT_RESULTS = os.environ.get("EXPORT_RESULTS", "false").strip().lower() in ("1", "true", "yes", "y", "on")
 EXPORT_OUTPUT_IMAGES = os.environ.get("EXPORT_OUTPUT_IMAGES", "false").strip().lower() in ("1", "true", "yes", "y", "on")
 
@@ -65,6 +70,7 @@ else:
 def main():
     print(f"\n🚀 STARTING MODEL BENCHMARK")
     print(f"   Backend: {BACKEND}")
+    print(f"   Host:    {HOST}")
     print(f"   Model:   {MODEL_ARCH}")
     print(f"   Type:    {MODEL_TYPE}")
     print(f"   Device:  {DEVICE}")
@@ -100,10 +106,9 @@ def main():
             print(f"   ⚠️  No .mp4 videos found, but found {len(image_files)} images.")
             print(f"      Video models need temporal data. Simulating with static image stacking.")
             try:
-                # Default to 'y' for automated batch runs if interactive input fails
                 choice = input(f"      Do you want to use {BENCH_NUM_IMAGES} images as fake static videos? [y/N]: ").strip().lower()
             except EOFError:
-                choice = 'y'
+                choice = 'n'
 
             if choice == 'y':
                 files_to_process = image_files[:BENCH_NUM_IMAGES]
@@ -123,6 +128,7 @@ def main():
 
 
     # 3. PREPARE OUTPUT ID (Run Tag Logic)
+    # -------------------------------------------------------------------------
     run_tag = os.environ.get("RUN_TAG")
     
     if run_tag:
@@ -130,7 +136,8 @@ def main():
     else:
         prefix = time.strftime("%d-%m-%Y_%H-%M-%S")
         
-    run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{INPUT_DEVICE}"
+    run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{HOST}_{INPUT_DEVICE}"
+    # -------------------------------------------------------------------------
 
     run_dir = RESULTS_DIR / run_id
     img_out_dir = run_dir / "output_images"
@@ -280,12 +287,8 @@ def main():
         stats_conf = get_stats(conf_values) if conf_values else get_stats([0.0])
 
         # --- FPS Calculations ---
-        # 1. Determine Sample Multiplier
-        #    Image/Seg: 1 inference = 1 frame
-        #    Video:     1 inference = 16 frames
         frames_per_sample = 16 if IS_VIDEO_MODEL else 1
 
-        # 2. Calculate FPS (Frames Per Second)
         inference_fps = (1000.0 / stats_inf["mean"]) * frames_per_sample
         system_fps    = (1000.0 / stats_proc["mean"]) * frames_per_sample
 
@@ -299,12 +302,12 @@ def main():
                 json.dump({
                     "run_id": run_id,
                     "backend": BACKEND,
+                    "host": HOST,
                     "model": MODEL_ARCH,
                     "model_type": MODEL_TYPE,
                     "device": INPUT_DEVICE,
                     "num_samples": len(latencies),
                     
-                    # Store multiplier for clarity
                     "frames_per_sample": frames_per_sample,
 
                     "fps": {

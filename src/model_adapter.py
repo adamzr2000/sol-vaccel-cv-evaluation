@@ -277,15 +277,15 @@ class SolAdapter(BaseModelAdapter):
             tensor = self.transform(img)
             return tensor.unsqueeze(0).numpy()
 
-    def infer_v2(self, input_numpy):
+    def infer(self, input_numpy):
         np.copyto(self.execution_args[0], input_numpy)
         self.model.run(*self.execution_args)
         return self.output_buffer
     
-    def infer(self, input_numpy):
-        args = [input_numpy] + self.execution_args[1:]
-        self.model.run(*args)
-        return self.output_buffer
+    # def infer(self, input_numpy):
+    #     args = [input_numpy] + self.execution_args[1:]
+    #     self.model.run(*args)
+    #     return self.output_buffer
 
     def postprocess(self, output_numpy):
         output_tensor = torch.from_numpy(output_numpy)

@@ -1,4 +1,4 @@
-# Generated with SOL v0.8.0rc4
+# Generated with SOL v0.8.0rc5
 import numpy as np
 import ctypes
 from numpy.ctypeslib import ndpointer, as_ctypes_type
@@ -94,7 +94,7 @@ def run_example():
 	vdims_0 = 1
 	in__input_0 = np.random.rand(vdims_0, 3, 16, 112, 112).astype(np.float32)
 	lib = sol_mc3_18()
-	out__0 = lib(in__input_0)
+	out__0 = lib(in__input_0, )
 	print(f"Max_V: {np.max(out__0, axis=1)}\nMax_I: {np.argmax(out__0, axis=1)}")
 
 	vdims = np.array([vdims_0, ], dtype=np.int64)

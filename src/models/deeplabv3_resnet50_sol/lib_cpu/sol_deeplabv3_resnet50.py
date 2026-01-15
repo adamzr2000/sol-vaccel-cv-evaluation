@@ -1,4 +1,4 @@
-# Generated with SOL v0.8.0rc4
+# Generated with SOL v0.8.0rc5
 import numpy as np
 import ctypes
 from numpy.ctypeslib import ndpointer, as_ctypes_type
@@ -97,7 +97,7 @@ def run_example():
 	vdims_0 = 1
 	in__x = np.random.rand(vdims_0, 3, 224, 224).astype(np.float32)
 	lib = sol_deeplabv3_resnet50()
-	out__0_out, out__0_aux,  = lib(in__x)
+	out__0_out, out__0_aux = lib(in__x, )
 	print(f"Max_V: {np.max(out__0_out, axis=1)}\nMax_I: {np.argmax(out__0_out, axis=1)}")
 	print(f"Max_V: {np.max(out__0_aux, axis=1)}\nMax_I: {np.argmax(out__0_aux, axis=1)}")
 

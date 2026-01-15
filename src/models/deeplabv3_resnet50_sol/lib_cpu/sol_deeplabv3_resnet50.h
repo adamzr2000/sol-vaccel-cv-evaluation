@@ -5,7 +5,7 @@
 	#include<inttypes.h>
 #endif
 
-// Generated with SOL v0.8.0rc4
+// Generated with SOL v0.8.0rc5
 typedef int8_t sol_s8;
 typedef int16_t sol_s16;
 typedef int32_t sol_s32;

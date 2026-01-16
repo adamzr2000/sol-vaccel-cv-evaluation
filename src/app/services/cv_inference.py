@@ -92,7 +92,7 @@ def set_model_choice(app: FastAPI, session_id: str, name: str):
 def set_inference_params(app: FastAPI, session_id: str, backend: str, device: str):
     s = get_session_data(app, session_id)
     
-    if backend not in ["stock", "vaccel"]: backend = "stock"
+    if backend not in ["stock", "vaccel-local", "vaccel-rpc"]: backend = "stock"
     if device not in ["cpu", "gpu"]: device = "cpu"
     
     if s.get("backend") != backend or s.get("device") != device:
@@ -115,25 +115,21 @@ def _ensure_model_loaded(app: FastAPI, session_id: str):
     exec_backend = s.get("backend", "stock") 
     device_str = s.get("device", "cpu")
     
-    if device_str == "gpu" and torch.cuda.is_available():
-        torch_device = torch.device("cuda")
-    else:
-        torch_device = torch.device("cpu")
-        if device_str == "gpu":
-            logger.warning("GPU requested but CUDA not available. Fallback to CPU.")
+    if device_str == "gpu":
+        if not "remote" in exec_backend and not torch.cuda.is_available():
+            raise RuntimeError("GPU was selected but no GPU is available")
 
-    logger.info(f"Loading: {model_choice} | Exec: {exec_backend} | Device: {torch_device}")
+        adapter_device = "cuda"
+    else:
+        adapter_device = "cpu"
+
+    logger.info(f"Loading: {model_choice} | Exec: {exec_backend} | Device: {adapter_device}")
 
     try:
-        if exec_backend == "stock":
-            adapter = get_model_adapter(model_choice, exec_backend, torch_device)
-            model_dir = app.state.models_dir / model_choice
-            adapter.load_model(str(model_dir))
-            s["adapter"] = adapter
-
-        elif exec_backend == "vaccel":
-            logger.info("vAccel backend selected (Placeholder)")
-            pass
+        adapter = get_model_adapter(model_choice, exec_backend, adapter_device)
+        model_dir = app.state.models_dir / model_choice
+        adapter.load_model(str(model_dir))
+        s["adapter"] = adapter
 
     except Exception as e:
         logger.error(f"Model Load Failed: {e}")

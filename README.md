@@ -6,6 +6,9 @@ Build the container image according to the target device:
 ```bash
 sudo docker build -f dockerfile-torchvision-cpu . -t torchvision-app:cpu
 sudo docker build -f dockerfile-torchvision-gpu . -t torchvision-app:gpu
+
+# vAccel agent on the GPU host
+sudo docker build -f dockerfile-torchvision-gpu-agent . -t torchvision-app:agent
 ```
 
 ## Download models
@@ -24,6 +27,21 @@ Models are provided as `models.tar.gz`, which extracts into a `models/` director
 - [Download link](https://drive.google.com/file/d/1pte0m_6HKMS40C-olHXxqNc0_EAQssZU/view?usp=sharing)
 - [Download link (rc4)](https://drive.google.com/file/d/1z1Av5hBn2I1S4mdNuMO88p3VpbLRTtrR/view?usp=sharing)
 
+### Generate vAccel wrappers
+
+To generate vAccel wrappers for the supported models from a directory of stock
+SOL models, launch the gpu container:
+
+```bash
+./run.sh gpu
+```
+
+and run the provided script:
+
+```bash
+python3 /scripts/sol_vaccel_wrappers/gen_sol_vaccel_wrappers.py models
+```
+
 ## Run model benchmark
 
 ### 1. Start the container
@@ -34,6 +52,27 @@ Start the container in CPU or GPU mode:
 ./run.sh cpu
 # or
 ./run.sh gpu
+```
+
+#### vAccel remote setup
+
+To use the vAccel remote backend, first start the agent container on the remote
+GPU host:
+
+```bash
+./run_agent.sh 9125
+```
+
+where `9125` is the port to use. If the port is omitted, `9125` will be used by
+default.
+
+Consequently, specify the remote agent's address on the (local) host when
+starting the main container:
+
+```bash
+./run.sh cpu 10.5.1.20:9125
+# or
+./run.sh gpu 10.5.1.20:9125
 ```
 
 ### 2. Run model benchmark script
@@ -60,7 +99,7 @@ Execute `model_benchmark.py` with the following environment variables.
     `r3d_18`, `r3d_18_sol` 
 
 - **BACKEND**: inference backend  
-  - `stock` or `vaccel` (not implemented)
+  - `stock` (default), `vaccel-local` (or `vaccel`) or `vaccel-remote`
 
 - **SOL_RUN_MODE**: SOL execution mode *(SOL models only)*  
   - `2` → **Option 2 (default)**: explicit buffers per call  
@@ -116,6 +155,20 @@ DEVICE=gpu MODEL=r3d_18 NUM_VIDEOS=10 python3 model_benchmark.py
 
 # Image classification (CPU)
 DEVICE=cpu MODEL=resnet50 NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
+
+# vAccel local image classification (CPU)
+DEVICE=cpu BACKEND=vaccel MODEL=resnet50_sol NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
+DEVICE=cpu BACKEND=vaccel-local MODEL=resnet50_sol NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
+
+# vAccel local image classification (GPU)
+DEVICE=gpu BACKEND=vaccel MODEL=resnet50_sol NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
+DEVICE=gpu BACKEND=vaccel-local MODEL=resnet50_sol NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
+
+# vAccel remote image classification (CPU)
+DEVICE=cpu BACKEND=vaccel-remote MODEL=resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
+
+# vAccel remote image classification (GPU)
+DEVICE=gpu BACKEND=vaccel-remote MODEL=resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
 ```
 
 > Note: Results and images are not saved by default to avoid unnecessary disk usage. Set `EXPORT_RESULTS=true` to save benchmark metrics, and also set `EXPORT_OUTPUT_IMAGES=true` to store output images in the [results/experiments/model-stats](./results/experiments/model-stats/) directory.

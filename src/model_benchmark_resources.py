@@ -21,14 +21,22 @@ except ImportError:
 # ==========================================
 # CONFIGURATION
 # ==========================================
+# Backend: 'stock' (default), 'vaccel-local' (or 'vaccel') or 'vaccel-remote'
+BACKEND = os.environ.get("BACKEND", "stock")
+if BACKEND not in ["stock", "vaccel", "vaccel-local", "vaccel-remote"]:
+    print(f"⚠️  Unknown BACKEND '{BACKEND}', defaulting to 'stock'")
+    BACKEND = "stock"
+
 INPUT_DEVICE = os.environ.get("DEVICE", "cpu").lower()
 if INPUT_DEVICE == "gpu":
-    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    DEVICE = "cuda"
+    if "remote" in BACKEND:
+        TORCH_DEVICE = torch.device("cpu")
+    else:
+        TORCH_DEVICE = torch.device("cuda")
 else:
-    DEVICE = torch.device("cpu")
-
-# Backend: 'stock' (default) or 'vaccel'
-BACKEND = os.environ.get("BACKEND", "stock")
+    DEVICE = "cpu"
+    TORCH_DEVICE = torch.device("cpu")
 
 # Host: 'edge' (default) or 'robot'
 HOST = os.environ.get("HOST", "edge").lower()
@@ -113,7 +121,7 @@ def stop_docker_monitor():
 def start_system_monitor(run_id):
     url = f"{SYSTEM_STATS_ENDPOINT}/monitor/start"
     
-    is_gpu = (DEVICE.type == 'cuda')
+    is_gpu = (TORCH_DEVICE.type == 'cuda')
     mode = "gpu" if is_gpu else "cpu"
 
     payload = {
@@ -155,8 +163,12 @@ def main():
     print(f"   Host:    {HOST}")
     print(f"   Model:   {MODEL_ARCH}")
     print(f"   Type:    {MODEL_TYPE}")
-    print(f"   Device:  {DEVICE}")
+    print(f"   Device:  {INPUT_DEVICE}")
     print(f"   Loading: {CURRENT_MODEL_DIR}")
+
+    if TORCH_DEVICE.type == "cuda" and not torch.cuda.is_available():
+        print("   ❌ GPU was selected but no GPU is available.")
+        return
 
     try:
         adapter = get_model_adapter(MODEL_ARCH, BACKEND, DEVICE)
@@ -237,7 +249,7 @@ def main():
             dummy_tensor = adapter.preprocess(files_to_process[i])
             with torch.no_grad():
                 _ = adapter.infer(dummy_tensor)
-                if DEVICE.type == 'cuda': torch.cuda.synchronize()
+                if TORCH_DEVICE.type == 'cuda': torch.cuda.synchronize()
         except Exception as e:
             print(f"      Warmup failed on {os.path.basename(files_to_process[i])}: {e}")
             
@@ -262,7 +274,7 @@ def main():
             file_name = os.path.basename(f_path)
             stem_name = os.path.splitext(file_name)[0]
 
-            if DEVICE.type == 'cuda': torch.cuda.synchronize()
+            if TORCH_DEVICE.type == 'cuda': torch.cuda.synchronize()
             proc_start = time.perf_counter()
 
             # A. Preprocessing
@@ -273,13 +285,13 @@ def main():
                 continue
 
             # B. Inference
-            if DEVICE.type == 'cuda': torch.cuda.synchronize()
+            if TORCH_DEVICE.type == 'cuda': torch.cuda.synchronize()
             inf_start = time.perf_counter()
 
             with torch.no_grad():
                 raw_output = adapter.infer(input_tensor)
 
-            if DEVICE.type == 'cuda': torch.cuda.synchronize()
+            if TORCH_DEVICE.type == 'cuda': torch.cuda.synchronize()
             inf_end = time.perf_counter()
 
             # C. Postprocessing
@@ -330,7 +342,7 @@ def main():
             except Exception as e:
                 print(f"Error post-processing {file_name}: {e}")
 
-            if DEVICE.type == 'cuda': torch.cuda.synchronize()
+            if TORCH_DEVICE.type == 'cuda': torch.cuda.synchronize()
             proc_end = time.perf_counter()
 
             latency_ms = (inf_end - inf_start) * 1000
@@ -354,7 +366,7 @@ def main():
         t_stop_iso = t_stop_dt.isoformat()
         
         # STOP MONITORING (DOCKER + SYSTEM)
-        if DEVICE.type == "cuda":
+        if TORCH_DEVICE.type == "cuda":
             torch.cuda.synchronize()
         time.sleep(0.2)  # small buffer to avoid stopping exactly on a sampling boundary; captures last tail activity without adding a full extra interval
         stop_docker_monitor()

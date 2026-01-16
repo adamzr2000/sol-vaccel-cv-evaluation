@@ -1,0 +1,12 @@
+.PHONY: all
+all: libsol_@@model@@_wrapper.so
+
+libsol_@@model@@_wrapper.so: sol_@@model@@_wrapper.c
+	LD_RUN_PATH=@@common_lib_dirs@@:"${LD_RUN_PATH}" \
+		$(CXX) -std=c++2b -o $@ $< -fPIC -shared -Wl,--as-needed \
+			$(shell pkg-config --cflags --libs vaccel) \
+			-L.. -I.. -lsol_@@model@@
+
+.PHONY: clean
+clean:
+	rm -f libsol_@@model@@_wrapper.so

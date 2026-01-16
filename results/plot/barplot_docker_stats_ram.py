@@ -7,7 +7,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 INPUT_FILE = "../experiments/docker-stats/_summary/run1_overall_resource_usage_per_container.csv"
-OUTPUT_FILE = "./docker_stats_ram.pdf"
+
+# Output control
+PLOT_MODE = "combined"  # "combined" or "separate"
+OUTPUT_BASENAME = "./docker_stats_ram"  # combined -> <basename>.pdf, separate -> <basename>_<host>.pdf
 
 FONT_SCALE = 1.5
 SPINES_WIDTH = 1.5
@@ -65,6 +68,76 @@ def add_value_labels(ax, xs, ys, yerrs, y_top, show_errors: bool):
         )
 
 
+def style_axes(ax):
+    ax.set_axisbelow(True)
+    ax.grid(axis="y", linestyle="--", linewidth=1.0, alpha=0.8)
+    for side in ("top", "right", "bottom", "left"):
+        ax.spines[side].set_color("black")
+        ax.spines[side].set_linewidth(SPINES_WIDTH)
+
+
+def plot_host(ax, sub, host, base_models, color_map, y_lim_top):
+    x = np.arange(len(base_models))
+    width = 0.34
+
+    means_pt, std_pt, means_sol, std_sol = [], [], [], []
+    for m in base_models:
+        r_pt = sub[(sub["base_model"] == m) & (sub["variant"] == "PyTorch")]
+        r_sol = sub[(sub["base_model"] == m) & (sub["variant"] == "SOL")]
+
+        means_pt.append(float(r_pt.iloc[0]["mem_mb_mean"]) if not r_pt.empty else np.nan)
+        std_pt.append(float(r_pt.iloc[0]["mem_mb_std"]) if not r_pt.empty else np.nan)
+
+        means_sol.append(float(r_sol.iloc[0]["mem_mb_mean"]) if not r_sol.empty else np.nan)
+        std_sol.append(float(r_sol.iloc[0]["mem_mb_std"]) if not r_sol.empty else np.nan)
+
+    xs_pt = x - width / 2
+    xs_sol = x + width / 2
+
+    edgecolor = "black" if SHOW_ERROR_BARS else "none"
+    linewidth = 1.0 if SHOW_ERROR_BARS else 0.0
+
+    ax.bar(
+        xs_pt, means_pt, width=width,
+        color=color_map["PyTorch"],
+        edgecolor=edgecolor, linewidth=linewidth,
+        label="PyTorch", zorder=3,
+    )
+    ax.bar(
+        xs_sol, means_sol, width=width,
+        color=color_map["SOL"],
+        edgecolor=edgecolor, linewidth=linewidth,
+        label="SOL", zorder=3,
+    )
+
+    if SHOW_ERROR_BARS:
+        ax.errorbar(xs_pt, means_pt, yerr=std_pt, fmt="none", ecolor="black",
+                    elinewidth=1.5, capsize=4, capthick=1.5, zorder=10)
+        ax.errorbar(xs_sol, means_sol, yerr=std_sol, fmt="none", ecolor="black",
+                    elinewidth=1.5, capsize=4, capthick=1.5, zorder=10)
+
+    if SHOW_VALUE_LABELS:
+        add_value_labels(ax, xs_pt, means_pt, std_pt, y_lim_top, SHOW_ERROR_BARS)
+        add_value_labels(ax, xs_sol, means_sol, std_sol, y_lim_top, SHOW_ERROR_BARS)
+
+    host_title = host.capitalize()
+    ax.set_title(f"{host_title} RAM utilization")
+    ax.set_xlabel("ML Model")
+    ax.set_xticks(x)
+    ax.set_xticklabels(base_models, rotation=20, ha="right")
+    ax.set_ylim(0, y_lim_top)
+
+    style_axes(ax)
+
+    ax.legend(
+        loc=LEGEND_LOC.get(host, "upper right"),
+        frameon=True,
+        framealpha=0.9,
+        borderpad=0.4,
+        handlelength=1.4,
+    )
+
+
 def main():
     csv_path = Path(INPUT_FILE).resolve()
     if not csv_path.exists():
@@ -116,86 +189,51 @@ def main():
     y_max = (df["mem_mb_mean"].astype(float) + df["mem_mb_std"].fillna(0).astype(float)).max()
     y_lim_top = (y_max * 1.25) if (not pd.isna(y_max) and y_max > 0) else 1.0
 
-    n = len(present_hosts)
-    fig, axes = plt.subplots(1, n, figsize=(FIG_SIZE[0] * n, FIG_SIZE[1]), sharey=True)
-    if n == 1:
-        axes = [axes]
+    if PLOT_MODE not in {"combined", "separate"}:
+        raise SystemExit("PLOT_MODE must be 'combined' or 'separate'.")
 
-    edgecolor = "black" if SHOW_ERROR_BARS else "none"
-    linewidth = 1.0 if SHOW_ERROR_BARS else 0.0
+    if PLOT_MODE == "combined":
+        n = len(present_hosts)
+        fig, axes = plt.subplots(1, n, figsize=(FIG_SIZE[0] * n, FIG_SIZE[1]), sharey=True)
+        if n == 1:
+            axes = [axes]
 
-    for ax, host in zip(axes, present_hosts):
-        sub = df[df["host"] == host].copy()
-        if sub.empty:
-            ax.axis("off")
-            continue
+        for i, (ax, host) in enumerate(zip(axes, present_hosts)):
+            sub = df[df["host"] == host].copy()
+            if sub.empty:
+                ax.axis("off")
+                continue
 
-        x = np.arange(len(base_models))
-        width = 0.34
+            plot_host(ax, sub, host, base_models, color_map, y_lim_top)
 
-        means_pt, std_pt, means_sol, std_sol = [], [], [], []
-        for m in base_models:
-            r_pt = sub[(sub["base_model"] == m) & (sub["variant"] == "PyTorch")]
-            r_sol = sub[(sub["base_model"] == m) & (sub["variant"] == "SOL")]
+            # Only show y-axis label (and y tick labels) on the left-most subplot
+            if i == 0:
+                ax.set_ylabel("RAM (MB)")
+            else:
+                ax.set_ylabel("")
+                ax.tick_params(axis="y", labelleft=False)
 
-            means_pt.append(float(r_pt.iloc[0]["mem_mb_mean"]) if not r_pt.empty else np.nan)
-            std_pt.append(float(r_pt.iloc[0]["mem_mb_std"]) if not r_pt.empty else np.nan)
-            means_sol.append(float(r_sol.iloc[0]["mem_mb_mean"]) if not r_sol.empty else np.nan)
-            std_sol.append(float(r_sol.iloc[0]["mem_mb_std"]) if not r_sol.empty else np.nan)
+        plt.tight_layout()
+        out = f"{OUTPUT_BASENAME}.pdf"
+        fig.savefig(out, dpi=300, bbox_inches="tight")
+        print(f"[OK] Saved combined plot to: {out}")
+        plt.close(fig)
 
-        xs_pt = x - width / 2
-        xs_sol = x + width / 2
+    else:  # separate
+        for host in present_hosts:
+            sub = df[df["host"] == host].copy()
+            if sub.empty:
+                continue
 
-        ax.bar(
-            xs_pt, means_pt, width=width,
-            color=color_map["PyTorch"],
-            edgecolor=edgecolor, linewidth=linewidth,
-            label="PyTorch", zorder=3,
-        )
-        ax.bar(
-            xs_sol, means_sol, width=width,
-            color=color_map["SOL"],
-            edgecolor=edgecolor, linewidth=linewidth,
-            label="SOL", zorder=3,
-        )
+            fig, ax = plt.subplots(1, 1, figsize=FIG_SIZE)
+            plot_host(ax, sub, host, base_models, color_map, y_lim_top)
+            ax.set_ylabel("RAM (MB)")
 
-        if SHOW_ERROR_BARS:
-            ax.errorbar(xs_pt, means_pt, yerr=std_pt, fmt="none", ecolor="black", elinewidth=1.5, capsize=4, capthick=1.5, zorder=10)
-            ax.errorbar(xs_sol, means_sol, yerr=std_sol, fmt="none", ecolor="black", elinewidth=1.5, capsize=4, capthick=1.5, zorder=10)
-
-        if SHOW_VALUE_LABELS:
-            add_value_labels(ax, xs_pt, means_pt, std_pt, y_lim_top, SHOW_ERROR_BARS)
-            add_value_labels(ax, xs_sol, means_sol, std_sol, y_lim_top, SHOW_ERROR_BARS)
-
-        host_title = host.capitalize()
-
-        ax.set_title(f"{host_title} RAM utilization")
-        ax.set_xlabel("ML Model")
-        ax.set_xticks(x)
-        ax.set_xticklabels(base_models, rotation=20, ha="right")
-        ax.set_ylim(0, y_lim_top)
-
-        ax.set_axisbelow(True)
-        ax.grid(axis="y", linestyle="--", linewidth=1.0, alpha=0.8)
-
-        for side in ("top", "right", "bottom", "left"):
-            ax.spines[side].set_color("black")
-            ax.spines[side].set_linewidth(SPINES_WIDTH)
-
-        ax.set_ylabel(f"RAM (MB)")
-
-        ax.legend(
-            loc=LEGEND_LOC.get(host, "upper right"),
-            frameon=True,
-            framealpha=0.9,
-            borderpad=0.4,
-            handlelength=1.4,
-        )
-
-    plt.tight_layout()
-    fig.savefig(OUTPUT_FILE, dpi=300, bbox_inches="tight")
-    print(f"[OK] Saved plot to: {OUTPUT_FILE}")
-    plt.close(fig)
+            plt.tight_layout()
+            out = f"{OUTPUT_BASENAME}_{host}.pdf"
+            fig.savefig(out, dpi=300, bbox_inches="tight")
+            print(f"[OK] Saved {host} plot to: {out}")
+            plt.close(fig)
 
 
 if __name__ == "__main__":

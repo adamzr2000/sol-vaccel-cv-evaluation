@@ -21,7 +21,8 @@ Models are provided as `models.tar.gz`, which extracts into a `models/` director
    tar -xzf models.tar.gz
    ```
    
-- [Download link](https://drive.google.com/file/d/1z1Av5hBn2I1S4mdNuMO88p3VpbLRTtrR/view?usp=sharing)
+- [Download link](https://drive.google.com/file/d/1pte0m_6HKMS40C-olHXxqNc0_EAQssZU/view?usp=sharing)
+- [Download link (rc4)](https://drive.google.com/file/d/1z1Av5hBn2I1S4mdNuMO88p3VpbLRTtrR/view?usp=sharing)
 
 ## Run model benchmark
 

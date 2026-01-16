@@ -8,12 +8,17 @@ import seaborn as sns
 
 INPUT_FILE = "../experiments/system-stats/_summary/run1_overall_gpu_stats.csv"
 
+# Output control
+PLOT_MODE = "combined"  # "combined" or "separate"
+OUTPUT_COMBINED = "system_stats_gpu.pdf"  # used when PLOT_MODE == "combined"
+FIG_SIZE_COMBINED = (10.5, 11.5)  # 3 stacked panels
+
 SHOW_VALUE_LABELS = False
 SHOW_ERROR_BARS = True
 
 FONT_SCALE = 1.5
 SPINES_WIDTH = 1.5
-FIG_SIZE = (9.0, 5.4)
+FIG_SIZE_SINGLE = (9.0, 5.4)
 
 VARIANT_ORDER = ["PyTorch", "SOL"]
 LEGEND_LOC = "upper right"
@@ -78,10 +83,23 @@ def add_value_labels(ax, xs, ys, yerrs, y_top, show_errors: bool):
         )
 
 
-def plot_metric(df, y_col, yerr_col, ylabel, title, out_file):
+def style_axes(ax):
+    ax.set_axisbelow(True)
+    ax.grid(axis="y", linestyle="--", linewidth=1.0, alpha=0.8)
+    for side in ("top", "right", "bottom", "left"):
+        ax.spines[side].set_color("black")
+        ax.spines[side].set_linewidth(SPINES_WIDTH)
+
+
+def plot_metric(df, y_col, yerr_col, ylabel, title, ax=None, out_file=None):
+    """
+    If ax is provided -> draw into it (no saving).
+    If ax is None -> create a figure, draw, and save to out_file.
+    """
     base_models = ordered_models(sorted(df["base_model"].unique().tolist()))
-    df["base_model"] = pd.Categorical(df["base_model"], categories=base_models, ordered=True)
-    df["variant"] = pd.Categorical(df["variant"], categories=VARIANT_ORDER, ordered=True)
+    d = df.copy()
+    d["base_model"] = pd.Categorical(d["base_model"], categories=base_models, ordered=True)
+    d["variant"] = pd.Categorical(d["variant"], categories=VARIANT_ORDER, ordered=True)
 
     sns.set_theme(context="paper", style="ticks", font_scale=FONT_SCALE)
     pal = sns.color_palette("colorblind", n_colors=2)
@@ -90,7 +108,7 @@ def plot_metric(df, y_col, yerr_col, ylabel, title, out_file):
     mean_map = {(m, v): np.nan for m in base_models for v in VARIANT_ORDER}
     std_map = {(m, v): np.nan for m in base_models for v in VARIANT_ORDER}
 
-    for _, r in df.iterrows():
+    for _, r in d.iterrows():
         m = r["base_model"]
         v = r["variant"]
         mean_map[(m, v)] = float(r[y_col]) if pd.notna(r[y_col]) else np.nan
@@ -101,7 +119,10 @@ def plot_metric(df, y_col, yerr_col, ylabel, title, out_file):
     y_max = np.nanmax(all_means + np.nan_to_num(all_stds, nan=0.0))
     y_lim_top = (y_max * 1.25) if np.isfinite(y_max) and y_max > 0 else 1.0
 
-    fig, ax = plt.subplots(figsize=FIG_SIZE)
+    created_fig = False
+    if ax is None:
+        fig, ax = plt.subplots(figsize=FIG_SIZE_SINGLE)
+        created_fig = True
 
     x = np.arange(len(base_models))
     width = 0.34
@@ -138,19 +159,16 @@ def plot_metric(df, y_col, yerr_col, ylabel, title, out_file):
     ax.set_xticklabels(base_models, rotation=20, ha="right")
     ax.set_ylim(0, y_lim_top)
 
-    ax.set_axisbelow(True)
-    ax.grid(axis="y", linestyle="--", linewidth=1.0, alpha=0.8)
-
-    for side in ("top", "right", "bottom", "left"):
-        ax.spines[side].set_color("black")
-        ax.spines[side].set_linewidth(SPINES_WIDTH)
-
+    style_axes(ax)
     ax.legend(loc=LEGEND_LOC, frameon=True, framealpha=0.9, borderpad=0.4, handlelength=1.4)
 
-    plt.tight_layout()
-    fig.savefig(out_file, dpi=300, bbox_inches="tight")
-    plt.close(fig)
-    print(f"[OK] Saved plot to: {out_file}")
+    if created_fig:
+        if not out_file:
+            raise ValueError("out_file must be provided when ax is None (separate plot mode).")
+        plt.tight_layout()
+        fig.savefig(out_file, dpi=300, bbox_inches="tight")
+        plt.close(fig)
+        print(f"[OK] Saved plot to: {out_file}")
 
 
 def main():
@@ -186,8 +204,26 @@ def main():
     if df.empty:
         raise SystemExit("No rows after parsing variants (PyTorch/SOL).")
 
-    for cfg in PLOTS:
-        plot_metric(df, cfg["y"], cfg["yerr"], cfg["ylabel"], cfg["title"], cfg["out"])
+    if PLOT_MODE not in {"combined", "separate"}:
+        raise SystemExit("PLOT_MODE must be 'combined' or 'separate'.")
+
+    if PLOT_MODE == "separate":
+        for cfg in PLOTS:
+            plot_metric(df, cfg["y"], cfg["yerr"], cfg["ylabel"], cfg["title"], ax=None, out_file=cfg["out"])
+        return
+
+    # combined: 3 panels stacked vertically, independent y-scales
+    fig, axes = plt.subplots(len(PLOTS), 1, figsize=FIG_SIZE_COMBINED)
+    if not isinstance(axes, (list, np.ndarray)):
+        axes = [axes]
+
+    for ax, cfg in zip(axes, PLOTS):
+        plot_metric(df, cfg["y"], cfg["yerr"], cfg["ylabel"], cfg["title"], ax=ax, out_file=None)
+
+    plt.tight_layout()
+    fig.savefig(OUTPUT_COMBINED, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    print(f"[OK] Saved combined plot to: {OUTPUT_COMBINED}")
 
 
 if __name__ == "__main__":

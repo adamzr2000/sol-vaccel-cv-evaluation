@@ -44,7 +44,7 @@ Execute `model_benchmark.py` with the following environment variables.
   - `cpu` or `gpu`
   - If using `cpu` on ASUS G815 laptop, set `OMP_NUM_THREADS=10`
 
-- **DEVICE**: execution host identifier  
+- **HOST**: execution host identifier  
   - `edge` or `robot`
   - Default: `edge`
 
@@ -61,6 +61,18 @@ Execute `model_benchmark.py` with the following environment variables.
 
 - **BACKEND**: inference backend  
   - `stock` or `vaccel` (not implemented)
+
+- **SOL_RUN_MODE**: SOL execution mode *(SOL models only)*  
+  - `2` → **Option 2 (default)**: explicit buffers per call  
+    - Uses `run(*args)` (explicit input/output buffers each iteration)  
+    - By default, no `set_IO` is required  
+    - *(GPU only)* may still apply `set_IO(...)` + `optimize(2)` for supported models to improve performance  
+  - `3` → **Option 3**: bound buffers + optimized run  
+    - Calls `set_IO(...)` once  
+    - Uses `run()` (no args) + `get_output()` / `sync()`  
+    - Enables GPU optimizations (`optimize(2)` on GPU)  
+  - Default: `2`
+
 
 - **NUM_IMAGES**: number of images to benchmark  
   - Uses the first *N* images (sorted) from `data/images`  
@@ -114,6 +126,8 @@ DEVICE=cpu MODEL=resnet50 NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchma
 
 ### 1. Start the monitoring service
 
+See [README_MONITORING.md](./README_MONITORING.md)
+
 Start the `docker-stats-collector` and `system-stats-collector` containers:
 
 ```bash
@@ -140,12 +154,12 @@ Examples:
 
 ```shell
 # Semantic segmentation
-DEVICE=gpu MODEL=deeplabv3_resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
-DEVICE=gpu MODEL=fcn_resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
+SOL_RUN_MODE=2 DEVICE=gpu MODEL=deeplabv3_resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
+SOL_RUN_MODE=2 DEVICE=gpu MODEL=fcn_resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
 
 # Image classification
 DEVICE=gpu MODEL=resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
-DEVICE=gpu MODEL=mobilenet_v3_large RUN_TAG=run1 python3 model_benchmark_resources.py
+SOL_RUN_MODE=2 DEVICE=gpu MODEL=mobilenet_v3_large RUN_TAG=run1 python3 model_benchmark_resources.py
 
 # Video classification
 DEVICE=gpu MODEL=mc3_18 RUN_TAG=run1 python3 model_benchmark_resources.py

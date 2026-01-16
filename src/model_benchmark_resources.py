@@ -244,6 +244,7 @@ def main():
     # --- START MONITORING (DOCKER + SYSTEM) ---
     start_docker_monitor(run_id)
     start_system_monitor(run_id)
+    time.sleep(1.2)  # ~1 interval: lets monitors emit a first stable sample (Docker precpu primed, psutil/NVML warmed)
     
     # Capture Start Time (ISO format for alignment with Stats)
     t_start_dt = datetime.now(timezone.utc)
@@ -353,6 +354,9 @@ def main():
         t_stop_iso = t_stop_dt.isoformat()
         
         # STOP MONITORING (DOCKER + SYSTEM)
+        if DEVICE.type == "cuda":
+            torch.cuda.synchronize()
+        time.sleep(0.2)  # small buffer to avoid stopping exactly on a sampling boundary; captures last tail activity without adding a full extra interval
         stop_docker_monitor()
         stop_system_monitor()
 

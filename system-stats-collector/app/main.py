@@ -7,13 +7,15 @@ import os
 import glob
 import re
 from datetime import datetime, timezone
-from typing import List, Optional, Literal, Dict
+from typing import Optional, Literal, Dict
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import pynvml
 import psutil
+
+from rapl import discover_rapl_packages, read_energy_uj, compute_watts
 
 # ---------- Logging ----------
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -25,7 +27,7 @@ class StartRequest(BaseModel):
     csv_dir: Optional[str] = None
     tag: Optional[str] = "system-stats"
     mode: Literal["cpu", "gpu", "both"] = "both"
-    csv_names: Optional[Dict[str, str]] = None  # NEW: keys: "cpu", "gpu"
+    csv_names: Optional[Dict[str, str]] = None  # keys: "cpu", "gpu"
     stdout: bool = False
 
 class StatusResponse(BaseModel):
@@ -47,31 +49,32 @@ class SystemMonitorState:
 state = SystemMonitorState()
 
 # ---------- Helper Functions ----------
+def _sanitize_tag(tag: str) -> str:
+    return "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in tag)
+
 def get_next_run_index(csv_dir: str, tag: str) -> int:
-    """Finds the next run index (e.g., 1, 2, 3) for the given tag."""
+    """Find the next run index (e.g., 1, 2, 3) for the given tag."""
     base = csv_dir.rstrip("/")
-    safe_tag = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in tag)
-    
-    # We look for any file starting with tag-run
+    safe_tag = _sanitize_tag(tag)
+
     pattern = os.path.join(base, f"{safe_tag}-run*")
     existing = glob.glob(pattern)
     max_idx = 0
-    
+
     # Matches both ...-run1_cpu.csv and ...-run1.csv
     rx = re.compile(rf"{re.escape(safe_tag)}-run(\d+)(_.*)?\.csv$")
-    
+
     for path in existing:
         fname = os.path.basename(path)
         m = rx.search(fname)
         if m:
             try:
                 idx = int(m.group(1))
-                if idx > max_idx: max_idx = idx
-            except ValueError: pass
+                if idx > max_idx:
+                    max_idx = idx
+            except ValueError:
+                pass
     return max_idx + 1
-
-def _sanitize_tag(tag: str) -> str:
-    return "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in tag)
 
 def _resolve_csv_path(csv_dir: str, name: str) -> str:
     """
@@ -88,16 +91,62 @@ def _resolve_csv_path(csv_dir: str, name: str) -> str:
         path = os.path.join(csv_dir.rstrip("/"), name)
     return path
 
-def read_cpu_energy_uj() -> Optional[int]:
-    """Reads the raw CPU energy counter in microjoules."""
-    path = "/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj"
+def _open_csv_writer(path: str, fieldnames: list[str]):
+    """
+    Open CSV in append mode; write header only if file is new/empty.
+    """
+    # Ensure parent dir exists (safe even if already exists)
+    parent = os.path.dirname(path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+
+    f = open(path, "a", newline="")
+    w = csv.DictWriter(f, fieldnames=fieldnames)
+
     try:
-        if os.path.exists(path):
-            with open(path, "r") as f:
-                return int(f.read().strip())
+        # If file is empty, write header
+        if f.tell() == 0:
+            w.writeheader()
+            f.flush()
+    except Exception:
+        # If tell() fails for any reason, do not break monitoring
+        pass
+
+    return f, w
+
+def _get_cpu_temp_c() -> float:
+    """
+    Prefer package temperature if available; otherwise average cores; fallback to first sensor.
+    """
+    try:
+        temps = psutil.sensors_temperatures() or {}
+
+        # Common Intel / AMD keys
+        preferred_keys = ["coretemp", "k10temp"]
+        for key in preferred_keys:
+            if key in temps and temps[key]:
+                entries = temps[key]
+
+                # Try to find a package sensor first
+                package = [e.current for e in entries if e.label and "package" in e.label.lower() and e.current is not None]
+                if package:
+                    return float(package[0])
+
+                # Else average all valid entries
+                vals = [e.current for e in entries if e.current is not None]
+                if vals:
+                    return float(sum(vals) / len(vals))
+
+        # Fallback: first available sensor entry
+        for _, entries in temps.items():
+            if entries:
+                for e in entries:
+                    if e.current is not None:
+                        return float(e.current)
     except Exception:
         pass
-    return None
+
+    return 0.0
 
 # ---------- Monitoring Thread ----------
 def monitor_loop(
@@ -109,7 +158,7 @@ def monitor_loop(
     stdout: bool,
     csv_names: Optional[Dict[str, str]] = None
 ):
-    # --- 1. setup CSV writers based on mode ---
+    # --- 1) Setup CSV writers based on mode ---
     f_cpu = None
     w_cpu = None
     f_gpu = None
@@ -131,26 +180,18 @@ def monitor_loop(
                 gpu_path = _resolve_csv_path(csv_dir, csv_names["gpu"])
 
         try:
-            # CPU Writer
             if mode in ("cpu", "both"):
-                f_cpu = open(cpu_path, "a", newline="")
-                w_cpu = csv.DictWriter(f_cpu, fieldnames=[
+                f_cpu, w_cpu = _open_csv_writer(cpu_path, fieldnames=[
                     "timestamp", "timestamp_iso",
                     "cpu_watts", "cpu_util_percent", "cpu_temp_c"
                 ])
-                w_cpu.writeheader()
-                f_cpu.flush()
 
-            # GPU Writer
             if mode in ("gpu", "both"):
-                f_gpu = open(gpu_path, "a", newline="")
-                w_gpu = csv.DictWriter(f_gpu, fieldnames=[
+                f_gpu, w_gpu = _open_csv_writer(gpu_path, fieldnames=[
                     "timestamp", "timestamp_iso", "gpu_index", "gpu_name",
                     "power_draw_w", "power_limit_w", "util_gpu_percent",
                     "util_mem_percent", "mem_used_mb", "temp_c"
                 ])
-                w_gpu.writeheader()
-                f_gpu.flush()
 
             logger.info(f"Logging started. Mode: {mode}. Run Index: {run_idx}")
 
@@ -162,8 +203,20 @@ def monitor_loop(
                 f_gpu.close()
             return
 
+    # --- 2) Init Hardware ---
+    # CPU: RAPL packages discovery (works even if none found)
+    rapl_packages = discover_rapl_packages()
+    last_cpu_energy = read_energy_uj(rapl_packages)
 
-    # --- 2. Init Hardware ---
+    # Prime cpu_percent to avoid first-sample junk
+    if mode in ("cpu", "both"):
+        try:
+            psutil.cpu_percent(interval=None)
+        except Exception:
+            pass
+
+    # GPU: NVML init (track success)
+    gpu_ok = False
     gpu_handles = []
     gpu_names = []
     if mode in ("gpu", "both"):
@@ -172,21 +225,25 @@ def monitor_loop(
             count = pynvml.nvmlDeviceGetCount()
             gpu_handles = [pynvml.nvmlDeviceGetHandleByIndex(i) for i in range(count)]
             gpu_names = [pynvml.nvmlDeviceGetName(h) for h in gpu_handles]
+            gpu_ok = True
         except Exception as e:
             logger.error(f"NVML Init failed: {e}")
+            gpu_ok = False
 
     last_time = time.monotonic()
-    last_cpu_energy = read_cpu_energy_uj()
 
-    # --- 3. Main Loop ---
+    # --- 3) Main Loop ---
     while not state.stop_event.is_set():
         now_mono = time.monotonic()
-        if now_mono - last_time < interval:
-            time.sleep(0.05)
+        elapsed = now_mono - last_time
+
+        if elapsed < interval:
+            # Sleep smarter: wake up less often but remain responsive to stop_event
+            remaining = interval - elapsed
+            time.sleep(min(remaining, 0.2))
             continue
-        
-        # Calculate precise delta for power math
-        time_delta = now_mono - last_time
+
+        time_delta = elapsed
         last_time = now_mono
 
         now_dt = datetime.now(timezone.utc)
@@ -195,55 +252,34 @@ def monitor_loop(
 
         # === CPU BLOCK ===
         if mode in ("cpu", "both"):
-            # 1. Power
-            cpu_watts = 0.0
-            curr_energy = read_cpu_energy_uj()
-            if last_cpu_energy is not None and curr_energy is not None:
-                diff = curr_energy - last_cpu_energy
-                if diff < 0: diff = 0 
-                if time_delta > 0:
-                    cpu_watts = (diff / 1_000_000.0) / time_delta
+            # Power (W) via RAPL (supports multi-package + wrap if max_energy_range_uj available)
+            curr_energy = read_energy_uj(rapl_packages)
+            cpu_watts = compute_watts(last_cpu_energy, curr_energy, time_delta, rapl_packages)
             last_cpu_energy = curr_energy
 
-            # 2. Utilization
-            # interval=None is crucial so it doesn't block!
-            cpu_util = psutil.cpu_percent(interval=None) 
-            
-            # 3. Temperature
-            cpu_temp = 0.0
+            # Utilization (%)
             try:
-                # 'coretemp' is common for Intel, 'k10temp' for AMD
-                # psutil returns a dictionary of sensors. We take the first valid one.
-                temps = psutil.sensors_temperatures()
-                if "coretemp" in temps:
-                    cpu_temp = temps["coretemp"][0].current
-                elif "k10temp" in temps:
-                    cpu_temp = temps["k10temp"][0].current
-                else:
-                    # Fallback: grab the first available sensor if specific ones aren't found
-                    for name, entries in temps.items():
-                        if entries:
-                            cpu_temp = entries[0].current
-                            break
+                cpu_util = psutil.cpu_percent(interval=None)
             except Exception:
-                pass
+                cpu_util = 0.0
 
-            # Write to CSV
+            # Temperature (C)
+            cpu_temp = _get_cpu_temp_c()
+
             if w_cpu:
                 w_cpu.writerow({
-                    "timestamp": ts, 
-                    "timestamp_iso": ts_iso, 
+                    "timestamp": ts,
+                    "timestamp_iso": ts_iso,
                     "cpu_watts": round(cpu_watts, 2),
                     "cpu_util_percent": cpu_util,
                     "cpu_temp_c": cpu_temp
                 })
-            
-            # Log to Stdout
+
             if stdout:
-                logger.info(f"[CPU] {cpu_watts:.2f} W | Util {cpu_util}% | Temp {cpu_temp}C")
+                logger.info(f"[CPU] {cpu_watts:.2f} W | Util {cpu_util}% | Temp {cpu_temp:.1f}C")
 
         # === GPU BLOCK ===
-        if mode in ("gpu", "both"):
+        if mode in ("gpu", "both") and gpu_ok:
             for i, h in enumerate(gpu_handles):
                 try:
                     pwr = pynvml.nvmlDeviceGetPowerUsage(h) / 1000.0
@@ -251,7 +287,7 @@ def monitor_loop(
                     util = pynvml.nvmlDeviceGetUtilizationRates(h)
                     mem = pynvml.nvmlDeviceGetMemoryInfo(h)
                     temp = pynvml.nvmlDeviceGetTemperature(h, pynvml.NVML_TEMPERATURE_GPU)
-                    
+
                     row = {
                         "timestamp": ts, "timestamp_iso": ts_iso,
                         "gpu_index": i, "gpu_name": gpu_names[i],
@@ -260,22 +296,32 @@ def monitor_loop(
                         "mem_used_mb": round(mem.used / 1024**2, 2),
                         "temp_c": temp
                     }
-                    if w_gpu: w_gpu.writerow(row)
+                    if w_gpu:
+                        w_gpu.writerow(row)
+
                     if stdout:
                         logger.info(f"[GPU {i}] {pwr:.2f} W | Util {util.gpu}% | Temp {temp}C")
+
                 except Exception:
+                    # Keep collector resilient (same as your original intent)
                     pass
 
         # Flush buffers
-        if f_cpu: f_cpu.flush()
-        if f_gpu: f_gpu.flush()
+        if f_cpu:
+            f_cpu.flush()
+        if f_gpu:
+            f_gpu.flush()
 
     # --- Cleanup ---
-    if f_cpu: f_cpu.close()
-    if f_gpu: f_gpu.close()
-    if mode in ("gpu", "both"):
-        try: pynvml.nvmlShutdown()
-        except: pass
+    if f_cpu:
+        f_cpu.close()
+    if f_gpu:
+        f_gpu.close()
+    if mode in ("gpu", "both") and gpu_ok:
+        try:
+            pynvml.nvmlShutdown()
+        except Exception:
+            pass
     logger.info("Monitor thread stopped.")
 
 # ---------- API Lifecycle ----------
@@ -284,7 +330,8 @@ async def lifespan(app: FastAPI):
     yield
     if state.running:
         state.stop_event.set()
-        if state.thread: state.thread.join()
+        if state.thread:
+            state.thread.join()
 
 app = FastAPI(title="System Stats Collector", lifespan=lifespan)
 
@@ -296,17 +343,22 @@ def health_check():
         pynvml.nvmlInit()
         gpu_c = pynvml.nvmlDeviceGetCount()
         pynvml.nvmlShutdown()
-    except: pass
-    
-    rapl_ok = os.path.exists("/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj")
-    
+    except Exception:
+        pass
+
+    # More robust: if any package exists, say True
+    rapl_ok = bool(discover_rapl_packages())
+
     return HealthResponse(status="ok", gpu_count=gpu_c, cpu_rapl_available=rapl_ok)
 
 @app.post("/monitor/start")
 def start(req: StartRequest):
     if state.running:
         raise HTTPException(status_code=409, detail=f"Running in mode: {state.current_mode}")
-    
+
+    if req.interval <= 0:
+        raise HTTPException(status_code=400, detail="interval must be > 0")
+
     run_idx = 1
     if req.csv_dir:
         if not os.path.exists(req.csv_dir):
@@ -322,28 +374,28 @@ def start(req: StartRequest):
     )
     state.thread.start()
     state.running = True
-    
+
     files_created = []
     if req.csv_dir:
         safe_tag = _sanitize_tag(req.tag)
-        base_path = os.path.join(req.csv_dir.rstrip("/"), f"{safe_tag}-run{run_idx}")
-
         cpu_name = f"{safe_tag}-run{run_idx}_cpu.csv"
         gpu_name = f"{safe_tag}-run{run_idx}_gpu.csv"
 
-        # apply overrides (report names, not full paths)
+        # apply overrides (report names, not full paths) — keep your existing behavior
         if req.csv_names:
             if req.mode in ("cpu", "both") and req.csv_names.get("cpu"):
                 cpu_name = req.csv_names["cpu"] if req.csv_names["cpu"].lower().endswith(".csv") else req.csv_names["cpu"] + ".csv"
             if req.mode in ("gpu", "both") and req.csv_names.get("gpu"):
                 gpu_name = req.csv_names["gpu"] if req.csv_names["gpu"].lower().endswith(".csv") else req.csv_names["gpu"] + ".csv"
 
-        if req.mode in ("cpu", "both"): files_created.append(cpu_name)
-        if req.mode in ("gpu", "both"): files_created.append(gpu_name)
+        if req.mode in ("cpu", "both"):
+            files_created.append(cpu_name)
+        if req.mode in ("gpu", "both"):
+            files_created.append(gpu_name)
 
     return {
-        "success": True, 
-        "mode": req.mode, 
+        "success": True,
+        "mode": req.mode,
         "files": files_created if req.csv_dir else "None (No Directory)"
     }
 
@@ -352,7 +404,8 @@ def stop():
     if not state.running:
         return {"success": False, "message": "Not running"}
     state.stop_event.set()
-    if state.thread: state.thread.join(timeout=5.0)
+    if state.thread:
+        state.thread.join(timeout=5.0)
     state.running = False
     state.current_mode = None
     return {"success": True}

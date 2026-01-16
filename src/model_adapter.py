@@ -12,10 +12,10 @@ import numpy as np
 #   SOL_RUN_MODE=2 -> Pure Option 2 (call sol_predict via run(*args); no set_IO/optimize)
 #   SOL_RUN_MODE=3 -> Pure Option 3 (set_IO + optimize; run() + get_output)
 # =========================================================
-SOL_RUN_MODE = os.environ.get("SOL_RUN_MODE", "3").strip()
+SOL_RUN_MODE = os.environ.get("SOL_RUN_MODE", "2").strip()
 if SOL_RUN_MODE not in ("2", "3"):
-    print(f"⚠️  Unknown SOL_RUN_MODE='{SOL_RUN_MODE}', defaulting to 3")
-    SOL_RUN_MODE = "3"
+    print(f"⚠️  Unknown SOL_RUN_MODE='{SOL_RUN_MODE}', defaulting to 2")
+    SOL_RUN_MODE = "2"
 
 
 class BaseModelAdapter:
@@ -274,23 +274,49 @@ class SolAdapter(BaseModelAdapter):
             self.execution_args = [self.input_buffer, self.output_buffer, self.aux_buffer, self.vdims]
 
         # --- 3. PURE SOL MODE SELECTION ---
-        if self.device.type == "cuda":
-            print(f"   [SOL] GPU mode | SOL_RUN_MODE={SOL_RUN_MODE}")
+        print(f"   [SOL] {'GPU' if self.device.type == 'cuda' else 'CPU'} mode | SOL_RUN_MODE={SOL_RUN_MODE}")
+
+        # Models where we DO NOT want to run GPU set_IO/optimize in mode 2
+        _norm_name = self.model_name.replace("_", "").lower()
+        _skip_mode2_gpu_opt = {
+            "deeplabv3resnet50",
+            "fcnresnet50",
+        }
+
+        can_gpu_optimize = (self.device.type == "cuda") and (_norm_name not in _skip_mode2_gpu_opt)
+
+        if SOL_RUN_MODE == "3":
+            # Option 3: bind buffers once; optimize only on GPU
             try:
-                if SOL_RUN_MODE == "3":
-                    # Pure Option 3: bind buffers once, optimize, then run() with no args + sync
+                if hasattr(self.model, "set_IO"):
+                    self.model.set_IO(self.execution_args)
+
+                if self.device.type == "cuda" and hasattr(self.model, "optimize"):
+                    print("   [SOL] Running GPU Optimization (Level 2)...")
+                    self.model.optimize(2)
+
+            except Exception as e:
+                print(f"   ⚠️ SOL set_IO/optimize warning: {e}")
+
+        else:
+            # Option 2: explicit buffers each call
+            print("   [SOL] Option 2 selected: using run(*args) each call")
+
+            # BUT: you want to still do set_IO/optimize for GPU for most models
+            if can_gpu_optimize:
+                try:
                     if hasattr(self.model, "set_IO"):
                         self.model.set_IO(self.execution_args)
                     if hasattr(self.model, "optimize"):
-                        print("   [SOL] Running GPU Optimization (Level 2)...")
+                        print("   [SOL] (Mode 2) Running GPU Optimization (Level 2)...")
                         self.model.optimize(2)
-                else:
-                    # Pure Option 2: call sol_predict each time via run(*args); no binding/optimize
-                    print("   [SOL] Option 2 selected: skipping set_IO/optimize")
-            except Exception as e:
-                print(f"   ⚠️ SOL GPU setup warning: {e}")
-        else:
-            print("   [SOL] Running CPU Mode")
+                except Exception as e:
+                    print(f"   ⚠️ SOL (Mode 2) Optimization warning: {e}")
+            else:
+                if self.device.type == "cuda":
+                    print("   [SOL] (Mode 2) Skipping GPU optimize for this model (deeplabv3/fcn)")
+
+
 
     def preprocess(self, input_path):
         if self.model_type == "video_classification":

@@ -28,11 +28,7 @@ services:
       - /sys/class/powercap:/sys/class/powercap:ro
       - /sys/class/thermal:/sys/class/thermal:ro
       - ./results/experiments:/results/experiments
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu, utility]
+    gpus: all
+    environment:
+      - NVIDIA_DRIVER_CAPABILITIES=utility,compute
     restart: unless-stopped

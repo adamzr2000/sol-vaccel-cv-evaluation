@@ -25,6 +25,7 @@ SOL_LIBS="/src/models/deeplabv3_resnet50_sol/${LIB_TYPE}:\
 /src/models/mc3_18_sol/${LIB_TYPE}:\
 /src/models/r3d_18_sol/${LIB_TYPE}:\
 /src/models/resnet50_sol/${LIB_TYPE}:\
+/src/models/swin_t_sol/${LIB_TYPE}:\
 /src/models/mobilenet_v3_large_sol/${LIB_TYPE}"
 
 # Add cuDNN wheel libs only for GPU runs
@@ -48,8 +49,8 @@ LD_LIBRARY_PATH="$(IFS=:; echo "${LD_PARTS[*]}")"
 
 docker run -it --rm \
   --name torchvision-app \
-  --privileged \
   -p 8000:8000 \
+  --privileged \
   -v "$(pwd)"/src:/src \
   -v "$(pwd)"/results/experiments:/results/experiments \
   -e LD_LIBRARY_PATH="$LD_LIBRARY_PATH" \

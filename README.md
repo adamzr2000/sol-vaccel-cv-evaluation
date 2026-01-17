@@ -151,22 +151,23 @@ Start the container in CPU or GPU mode:
 Execute `model_benchmark_resources.py` with the following environment variables.
 
 Examples:
-
 ```shell
 # Semantic segmentation
-SOL_RUN_MODE=2 DEVICE=gpu MODEL=deeplabv3_resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
-SOL_RUN_MODE=2 DEVICE=gpu MODEL=fcn_resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
+HOST=edge DEVICE=gpu DOCKER_STATS_ENDPOINT=http://10.5.1.20:6000 SYSTEM_STATS_ENDPOINT=http://10.5.1.20:6001 MODEL=deeplabv3_resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
+HOST=edge DEVICE=gpu MODEL=fcn_resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
 
 # Image classification
-DEVICE=gpu MODEL=resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
-SOL_RUN_MODE=2 DEVICE=gpu MODEL=mobilenet_v3_large RUN_TAG=run1 python3 model_benchmark_resources.py
+HOST=edge DEVICE=gpu MODEL=resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
+HOST=edge DEVICE=gpu MODEL=mobilenet_v3_large RUN_TAG=run1 python3 model_benchmark_resources.py
 
 # Video classification
-DEVICE=gpu MODEL=mc3_18 RUN_TAG=run1 python3 model_benchmark_resources.py
-DEVICE=gpu MODEL=r3d_18 RUN_TAG=run1 python3 model_benchmark_resources.py
+HOST=edge MODEL=mc3_18 RUN_TAG=run1 python3 model_benchmark_resources.py
+HOST=edge MODEL=r3d_18 RUN_TAG=run1 python3 model_benchmark_resources.py
+```
 
-
-HOST=robot DOCKER_STATS_ENDPOINT=http://10.5.1.19:6000 SYSTEM_STATS_ENDPOINT=http://10.5.1.19:6001 DEVICE=cpu MODEL=resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
+Auto:
+```shell
+./evaluate_models.sh --host edge --device gpu --run-tag run1 --sleep 10
 ```
 
 ---

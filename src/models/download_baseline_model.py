@@ -29,6 +29,10 @@ MODEL_REGISTRY = {
         "builder": models.mobilenet_v3_large,
         "weights": models.MobileNet_V3_Large_Weights.DEFAULT
     },
+    "swin_t": {
+        "builder": models.swin_t,
+        "weights": models.Swin_T_Weights.DEFAULT
+    },
 
     # 3. Video Models
     "mc3_18": {

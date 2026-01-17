@@ -208,6 +208,8 @@ class SolAdapter(BaseModelAdapter):
                 self.categories = models.ResNet50_Weights.DEFAULT.meta["categories"]
             elif "mobilenet" in model_name:
                 self.categories = models.MobileNet_V3_Large_Weights.DEFAULT.meta["categories"]
+            elif "swin_t" in model_name:
+                self.categories = models.Swin_T_Weights.DEFAULT.meta["categories"]
 
             # SOL Image Classification: 224x224
             self.transform = transforms.Compose([
@@ -388,7 +390,7 @@ def get_model_adapter(model_name, backend, device):
 
         if core_name in ["mc3_18", "r3d_18"]:
             m_type = "video_classification"
-        elif core_name in ["resnet50", "mobilenet_v3_large"]:
+        elif core_name in ["resnet50", "mobilenet_v3_large", "swin_t"]:
             m_type = "classification"
         else:
             m_type = "segmentation"
@@ -402,6 +404,7 @@ def get_model_adapter(model_name, backend, device):
             "fcn_resnet50": (models.segmentation.fcn_resnet50, "segmentation", None),
             "resnet50": (models.resnet50, "classification", models.ResNet50_Weights.DEFAULT),
             "mobilenet_v3_large": (models.mobilenet_v3_large, "classification", models.MobileNet_V3_Large_Weights.DEFAULT),
+            "swin_t": (models.swin_t, "classification", models.Swin_T_Weights.DEFAULT),
             "mc3_18": (models.video.mc3_18, "video_classification", models.video.MC3_18_Weights.DEFAULT),
             "r3d_18": (models.video.r3d_18, "video_classification", models.video.R3D_18_Weights.DEFAULT),
         }

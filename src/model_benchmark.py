@@ -35,7 +35,7 @@ if HOST not in ["robot", "edge"]:
     HOST = "edge"
 
 # Model: Full folder name
-MODEL_ARCH = os.environ.get("MODEL", "deeplabv3_resnet50")
+MODEL_ARCH = os.environ.get("MODEL", "resnet50")
 
 # Separate limits for Images and Videos
 BENCH_NUM_IMAGES = int(os.environ.get("NUM_IMAGES", "64"))
@@ -61,7 +61,7 @@ IS_VIDEO_MODEL = CORE_MODEL_NAME in VIDEO_MODELS
 # Determine Model Type String
 if IS_VIDEO_MODEL:
     MODEL_TYPE = "video_classification"
-elif CORE_MODEL_NAME in ["resnet50", "mobilenet_v3_large"]:
+elif CORE_MODEL_NAME in ["resnet50", "mobilenet_v3_large", "swin_t"]:
     MODEL_TYPE = "image_classification"
 else:
     MODEL_TYPE = "semantic_segmentation"

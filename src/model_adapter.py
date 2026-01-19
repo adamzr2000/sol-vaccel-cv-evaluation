@@ -86,6 +86,7 @@ def load_video_with_cv2(video_path, num_frames=16, transform=None):
 class PyTorchBaselineAdapter(BaseModelAdapter):
     def __init__(self, device, builder_func, weights_filename, model_type, weights_enum=None):
         super().__init__(device)
+        self.torch_device = torch.device(device)
         self.builder_func = builder_func
         self.weights_filename = weights_filename
         self.model_type = model_type
@@ -131,9 +132,9 @@ class PyTorchBaselineAdapter(BaseModelAdapter):
         if not os.path.exists(weights_path):
             raise FileNotFoundError(f"Weights not found at {weights_path}")
 
-        state_dict = torch.load(weights_path, map_location=self.device)
+        state_dict = torch.load(weights_path, map_location=self.torch_device)
         self.model.load_state_dict(state_dict)
-        self.model.to(self.device)
+        self.model.to(self.torch_device)
         self.model.eval()
 
     def preprocess(self, input_path):
@@ -160,7 +161,7 @@ class PyTorchBaselineAdapter(BaseModelAdapter):
         # Fair timing vs SOL: SOL takes CPU (NumPy) buffers and returns CPU buffers,
         # so its "inference time" includes CPU↔GPU transfers. We do the same here by
         # moving input to GPU and bringing output back to CPU inside this function.
-        input_tensor = input_tensor.to(self.device)
+        input_tensor = input_tensor.to(self.torch_device)
 
         output = self.model(input_tensor)
         if self.model_type == "segmentation":
@@ -234,26 +235,39 @@ class SolAdapter(BaseModelAdapter):
         self.vdims = None
 
     def load_model(self, model_dir):
+        lib_path = self._get_model_lib_path(model_dir)
+        self._load_model_from_path(lib_path)
+
+    def _get_model_lib_path(self, model_dir):
         # Determine library path based on device
-        target_lib = "lib_gpu" if self.device.type == "cuda" else "lib_cpu"
+        target_lib = "lib_gpu" if self.device == "cuda" else "lib_cpu"
         lib_path = os.path.join(model_dir, target_lib)
 
         if not os.path.exists(lib_path):
             raise FileNotFoundError(f"SOL library path not found: {lib_path}")
 
+        return lib_path
+
+    def _load_model_from_path(self, lib_path, use_remote=False):
         print(f"   [Adapter] Loading SOL model from {lib_path}...")
 
         module_name = f"sol_{self.model_name}"
-        sys.path.insert(0, lib_path)
-
+        module_path = os.path.join(lib_path, f"{module_name}.py")
         try:
-            sol_module = importlib.import_module(module_name)
-            importlib.reload(sol_module)
+            spec = importlib.util.spec_from_file_location(lib_path, module_path)
+            sol_module = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = sol_module
+            spec.loader.exec_module(sol_module)
         except ImportError as e:
-            raise ImportError(f"Could not import SOL wrapper '{module_name}'. Error: {e}")
+            raise ImportError(f"Could not import SOL wrapper for '{module_name}'. Error: {e}")
 
         model_class = getattr(sol_module, module_name)
-        self.model = model_class(path=lib_path)
+
+        kwargs = {}
+        if hasattr(model_class, "use_remote"):
+            kwargs["use_remote"] = use_remote
+
+        self.model = model_class(path=lib_path, **kwargs)
         self.model.init()
 
         # --- 2. BUFFER INITIALIZATION ---
@@ -276,7 +290,7 @@ class SolAdapter(BaseModelAdapter):
             self.execution_args = [self.input_buffer, self.output_buffer, self.aux_buffer, self.vdims]
 
         # --- 3. PURE SOL MODE SELECTION ---
-        print(f"   [SOL] {'GPU' if self.device.type == 'cuda' else 'CPU'} mode | SOL_RUN_MODE={SOL_RUN_MODE}")
+        print(f"   [SOL] {'GPU' if self.device == 'cuda' else 'CPU'} mode | SOL_RUN_MODE={SOL_RUN_MODE}")
 
         # Models where we DO NOT want to run GPU set_IO/optimize in mode 2
         _norm_name = self.model_name.replace("_", "").lower()
@@ -285,7 +299,7 @@ class SolAdapter(BaseModelAdapter):
             "fcnresnet50",
         }
 
-        can_gpu_optimize = (self.device.type == "cuda") and (_norm_name not in _skip_mode2_gpu_opt)
+        can_gpu_optimize = (self.device == "cuda") and (_norm_name not in _skip_mode2_gpu_opt)
 
         if SOL_RUN_MODE == "3":
             # Option 3: bind buffers once; optimize only on GPU
@@ -293,7 +307,7 @@ class SolAdapter(BaseModelAdapter):
                 if hasattr(self.model, "set_IO"):
                     self.model.set_IO(self.execution_args)
 
-                if self.device.type == "cuda" and hasattr(self.model, "optimize"):
+                if self.device == "cuda" and hasattr(self.model, "optimize"):
                     print("   [SOL] Running GPU Optimization (Level 2)...")
                     self.model.optimize(2)
 
@@ -315,7 +329,7 @@ class SolAdapter(BaseModelAdapter):
                 except Exception as e:
                     print(f"   ⚠️ SOL (Mode 2) Optimization warning: {e}")
             else:
-                if self.device.type == "cuda":
+                if self.device == "cuda":
                     print("   [SOL] (Mode 2) Skipping GPU optimize for this model (deeplabv3/fcn)")
 
 
@@ -372,6 +386,14 @@ class SolAdapter(BaseModelAdapter):
             return torch.argmax(output_tensor.squeeze(0), dim=0).byte().cpu()
         return output_tensor
 
+class VaccelSolAdapter(SolAdapter):
+    def __init__(self, device, model_name, model_type="classification", use_remote=False):
+        self.use_remote = use_remote
+        super().__init__(device, model_name, model_type)
+
+    def load_model(self, model_dir):
+        lib_path = self._get_model_lib_path(model_dir)
+        self._load_model_from_path(os.path.join(lib_path, "vaccel"), self.use_remote)
 
 # =========================================================
 # 3. ADAPTER FACTORY
@@ -395,10 +417,18 @@ def get_model_adapter(model_name, backend, device):
         else:
             m_type = "segmentation"
 
-        return SolAdapter(device, core_name, model_type=m_type)
+        if "vaccel" in backend:
+            return VaccelSolAdapter(
+                device, core_name, model_type=m_type, use_remote="remote" in backend
+            )
+        else:
+            return SolAdapter(device, core_name, model_type=m_type)
 
     # 2. Else: PyTorch Baseline
     else:
+        if "vaccel" in backend:
+            raise ValueError("vAccel backends are not supported for Torch models")
+
         BASELINE_REGISTRY = {
             "deeplabv3_resnet50": (models.segmentation.deeplabv3_resnet50, "segmentation", None),
             "fcn_resnet50": (models.segmentation.fcn_resnet50, "segmentation", None),

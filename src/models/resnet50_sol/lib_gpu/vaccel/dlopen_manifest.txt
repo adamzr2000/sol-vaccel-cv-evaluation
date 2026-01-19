@@ -1,0 +1,4 @@
+../libsol-dnn-cudnn-deployment-0.8.0rc5-9.1.so
+../libsol-dnn-cublaslt-deployment-0.8.0rc5-12.so
+../libsol_resnet50.so
+libsol_resnet50_wrapper.so

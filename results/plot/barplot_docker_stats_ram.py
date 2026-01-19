@@ -186,32 +186,35 @@ def main():
     pal = sns.color_palette("colorblind", n_colors=2)
     color_map = {"PyTorch": pal[0], "SOL": pal[1]}
 
-    y_max = (df["mem_mb_mean"].astype(float) + df["mem_mb_std"].fillna(0).astype(float)).max()
-    y_lim_top = (y_max * 1.25) if (not pd.isna(y_max) and y_max > 0) else 1.0
-
     if PLOT_MODE not in {"combined", "separate"}:
         raise SystemExit("PLOT_MODE must be 'combined' or 'separate'.")
 
     if PLOT_MODE == "combined":
+        # Per-host y-scale
+        y_lim_top_by_host = {}
+        for host in present_hosts:
+            subh = df[df["host"] == host].copy()
+            y_max = (subh["mem_mb_mean"].astype(float) + subh["mem_mb_std"].fillna(0).astype(float)).max()
+            y_lim_top_by_host[host] = (y_max * 1.25) if (not pd.isna(y_max) and y_max > 0) else 1.0
+
         n = len(present_hosts)
-        fig, axes = plt.subplots(1, n, figsize=(FIG_SIZE[0] * n, FIG_SIZE[1]), sharey=True)
+        fig, axes = plt.subplots(
+            nrows=n, ncols=1,
+            figsize=(FIG_SIZE[0], FIG_SIZE[1] * n),
+            sharex=False,
+            sharey=False,
+        )
         if n == 1:
             axes = [axes]
 
-        for i, (ax, host) in enumerate(zip(axes, present_hosts)):
+        for ax, host in zip(axes, present_hosts):
             sub = df[df["host"] == host].copy()
             if sub.empty:
                 ax.axis("off")
                 continue
 
-            plot_host(ax, sub, host, base_models, color_map, y_lim_top)
-
-            # Only show y-axis label (and y tick labels) on the left-most subplot
-            if i == 0:
-                ax.set_ylabel("RAM (MB)")
-            else:
-                ax.set_ylabel("")
-                ax.tick_params(axis="y", labelleft=False)
+            plot_host(ax, sub, host, base_models, color_map, y_lim_top_by_host[host])
+            ax.set_ylabel("RAM (MB)")
 
         plt.tight_layout()
         out = f"{OUTPUT_BASENAME}.pdf"
@@ -224,6 +227,9 @@ def main():
             sub = df[df["host"] == host].copy()
             if sub.empty:
                 continue
+
+            y_max = (sub["mem_mb_mean"].astype(float) + sub["mem_mb_std"].fillna(0).astype(float)).max()
+            y_lim_top = (y_max * 1.25) if (not pd.isna(y_max) and y_max > 0) else 1.0
 
             fig, ax = plt.subplots(1, 1, figsize=FIG_SIZE)
             plot_host(ax, sub, host, base_models, color_map, y_lim_top)

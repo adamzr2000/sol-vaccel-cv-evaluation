@@ -357,23 +357,26 @@ class SolAdapter(BaseModelAdapter):
             return tensor.unsqueeze(0).numpy()
 
     def infer(self, input_numpy):
-        # Ensure correct dtype/contiguity (SOL wrapper requires C-contiguous arrays)
+        # 1. Prepare Input
         input_numpy = np.ascontiguousarray(input_numpy, dtype=np.float32)
-
-        # Copy into the preallocated input buffer
         np.copyto(self.input_buffer, input_numpy)
 
+        # 2. Execute
         if SOL_RUN_MODE == "3":
-            # Pure Option 3: run with bound IO (no args) + sync outputs
-            self.model.run()  # calls sol_*_run()
+            # Mode 3: run() is async, get_output() syncs and copies data
+            self.model.run()
             if hasattr(self.model, "get_output"):
                 self.model.get_output()  # sync (per generated wrapper comment)
             elif hasattr(self.model, "sync"):
                 self.model.sync()
         else:
-            # Pure Option 2: run with explicit buffers (calls sol_predict)
+            # Mode 2: Standard execution
             self.model.run(*self.execution_args)
 
+            # Force synchronization for vAccel remote timing results
+            if hasattr(self.model, "sync"):
+                self.model.sync()
+                
         return self.output_buffer
 
     def postprocess(self, output_numpy):

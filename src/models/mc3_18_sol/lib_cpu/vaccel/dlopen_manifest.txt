@@ -1,0 +1,4 @@
+../libsol-dnn-mkl-deployment-0.8.0rc4-2025.3.0.so
+../../../fcn_resnet50_sol/lib_cpu/libsol-dnn-dnnl-deployment-0.8.0rc4-3.7.1.so
+../libsol_mc3_18.so
+libsol_mc3_18_wrapper.so

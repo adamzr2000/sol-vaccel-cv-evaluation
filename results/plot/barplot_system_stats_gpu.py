@@ -14,7 +14,7 @@ OUTPUT_COMBINED = "system_stats_gpu.pdf"  # used when PLOT_MODE == "combined"
 FIG_SIZE_COMBINED = (10.5, 11.5)  # 3 stacked panels
 
 SHOW_VALUE_LABELS = False
-SHOW_ERROR_BARS = True
+SHOW_ERROR_BARS = False
 
 FONT_SCALE = 1.5
 SPINES_WIDTH = 1.5

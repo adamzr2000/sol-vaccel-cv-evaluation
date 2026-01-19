@@ -132,7 +132,7 @@ def plot_target(sub: pd.DataFrame, host: str, device: str, ax=None, out_file: st
         ax=ax,
     )
 
-    ax.set_title(f"Inference latency - stock @ {host}-{device}")
+    ax.set_title(f"Inference latency @ {host}-{device}")
     ax.set_xlabel("ML Model")
     ax.set_ylabel("Time (ms)")
     ax.tick_params(axis="x", labelrotation=20)

@@ -112,7 +112,6 @@ Execute `model_benchmark.py` with the following environment variables.
     - Enables GPU optimizations (`optimize(2)` on GPU)  
   - Default: `2`
 
-
 - **NUM_IMAGES**: number of images to benchmark  
   - Uses the first *N* images (sorted) from `data/images`  
   - Default: `64`
@@ -139,36 +138,32 @@ Execute `model_benchmark.py` with the following environment variables.
 Examples:
 
 ```shell
-# Semantic segmentation (GPU)
-DEVICE=gpu MODEL=deeplabv3_resnet50 NUM_IMAGES=64 python3 model_benchmark.py
-DEVICE=gpu MODEL=fcn_resnet50 NUM_IMAGES=64 python3 model_benchmark.py
-
-# Image classification (GPU)
+# Stock image classification (GPU)
 DEVICE=gpu MODEL=resnet50 NUM_IMAGES=64 python3 model_benchmark.py
 DEVICE=gpu MODEL=resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
 DEVICE=gpu MODEL=mobilenet_v3_large NUM_IMAGES=64 python3 model_benchmark.py
 DEVICE=gpu MODEL=mobilenet_v3_large_sol NUM_IMAGES=64 python3 model_benchmark.py
+# vAccel local image classification (CPU)
+DEVICE=cpu BACKEND=vaccel-local MODEL=resnet50_sol NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
+# vAccel local image classification (GPU)
+DEVICE=gpu BACKEND=vaccel-local MODEL=resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
+# vAccel remote image classification (CPU)
+DEVICE=cpu BACKEND=vaccel-remote MODEL=resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
+# vAccel remote image classification (GPU)
+DEVICE=gpu BACKEND=vaccel-remote MODEL=resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
 
-# Video classification (GPU)
+# Stock semantic segmentation
+DEVICE=gpu BACKEND=stock MODEL=deeplabv3_resnet50 NUM_IMAGES=64 python3 model_benchmark.py
+DEVICE=gpu BACKEND=stock MODEL=deeplabv3_resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
+DEVICE=gpu BACKEND=stock MODEL=fcn_resnet50 NUM_IMAGES=64 python3 model_benchmark.py
+DEVICE=gpu BACKEND=stock MODEL=fcn_resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
+
+# Stock video classification
 DEVICE=gpu MODEL=mc3_18 NUM_VIDEOS=10 python3 model_benchmark.py
 DEVICE=gpu MODEL=r3d_18 NUM_VIDEOS=10 python3 model_benchmark.py
 
-# Image classification (CPU)
+# Stock image classification
 DEVICE=cpu MODEL=resnet50 NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
-
-# vAccel local image classification (CPU)
-DEVICE=cpu BACKEND=vaccel MODEL=resnet50_sol NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
-DEVICE=cpu BACKEND=vaccel-local MODEL=resnet50_sol NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
-
-# vAccel local image classification (GPU)
-DEVICE=gpu BACKEND=vaccel MODEL=resnet50_sol NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
-DEVICE=gpu BACKEND=vaccel-local MODEL=resnet50_sol NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
-
-# vAccel remote image classification (CPU)
-DEVICE=cpu BACKEND=vaccel-remote MODEL=resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
-
-# vAccel remote image classification (GPU)
-DEVICE=gpu BACKEND=vaccel-remote MODEL=resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
 ```
 
 > Note: Results and images are not saved by default to avoid unnecessary disk usage. Set `EXPORT_RESULTS=true` to save benchmark metrics, and also set `EXPORT_OUTPUT_IMAGES=true` to store output images in the [results/experiments/model-stats](./results/experiments/model-stats/) directory.
@@ -206,21 +201,16 @@ Execute `model_benchmark_resources.py` with the following environment variables.
 Examples:
 ```shell
 # Semantic segmentation
-HOST=edge DEVICE=gpu DOCKER_STATS_ENDPOINT=http://10.5.1.20:6000 SYSTEM_STATS_ENDPOINT=http://10.5.1.20:6001 MODEL=deeplabv3_resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
-HOST=edge DEVICE=gpu MODEL=fcn_resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
-
-# Image classification
-HOST=edge DEVICE=gpu MODEL=resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
-HOST=edge DEVICE=gpu MODEL=mobilenet_v3_large RUN_TAG=run1 python3 model_benchmark_resources.py
-
-# Video classification
-HOST=edge MODEL=mc3_18 RUN_TAG=run1 python3 model_benchmark_resources.py
-HOST=edge MODEL=r3d_18 RUN_TAG=run1 python3 model_benchmark_resources.py
+BACKEND=stock HOST=edge DEVICE=gpu DOCKER_STATS_ENDPOINT=http://10.5.1.20:6000 SYSTEM_STATS_ENDPOINT=http://10.5.1.20:6001 MODEL=deeplabv3_resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
 ```
 
 Auto:
 ```shell
-./evaluate_models.sh --host edge --device gpu --run-tag run1 --sleep 10
+./evaluate_models.sh --backend stock --host robot --device cpu --run-tag run1 --sleep 10
+./evaluate_models.sh --backend vaccel-local --host robot --device cpu --run-tag run1 --sleep 10
+
+./evaluate_models.sh --backend stock --host edge --device gpu --run-tag run1 --sleep 10
+./evaluate_models.sh --backend vaccel-local --host edge --device gpu --run-tag run1 --sleep 10
 ```
 
 ---

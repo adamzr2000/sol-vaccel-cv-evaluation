@@ -25,6 +25,9 @@ if BACKEND not in ["stock", "vaccel", "vaccel-local", "vaccel-remote"]:
     print(f"⚠️  Unknown BACKEND '{BACKEND}', defaulting to 'stock'")
     BACKEND = "stock"
 
+if "remote" in BACKEND:
+    print(f"   🔎 VACCEL_RPC_ADDRESS={os.environ.get('VACCEL_RPC_ADDRESS')}")
+    
 INPUT_DEVICE = os.environ.get("DEVICE", "cpu").lower()
 if INPUT_DEVICE == "gpu":
     DEVICE = "cuda"

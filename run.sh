@@ -2,7 +2,7 @@
 set -euo pipefail
 
 MODE="${1:-cpu}"   # usage: ./run.sh [cpu|gpu] [remote_address]
-REMOTE_ADDRESS="${2:-127.0.0.1:9125}"
+REMOTE_ADDRESS="${2:-10.5.1.20:9125}"
 
 case "$MODE" in
   cpu)

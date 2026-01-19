@@ -155,7 +155,7 @@ def plot_latency(ax, rows, host, device, color_map):
         add_value_labels(ax, xs_pt, means_pt, std_pt, y_lim_top, SHOW_ERROR_BARS)
         add_value_labels(ax, xs_sol, means_sol, std_sol, y_lim_top, SHOW_ERROR_BARS)
 
-    ax.set_title(f"Inference latency - stock @ {host}-{device}")
+    ax.set_title(f"Inference latency @ {host}-{device}")
     ax.set_xlabel("ML Model")
     ax.set_ylabel("Time (ms)")
     ax.set_xticks(x)

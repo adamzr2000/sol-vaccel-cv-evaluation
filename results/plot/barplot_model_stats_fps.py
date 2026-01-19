@@ -89,7 +89,7 @@ def plot_target(sub: pd.DataFrame, host: str, device: str, leg_loc: str, color_m
         ax=ax,
     )
 
-    ax.set_title(f"Inference FPS - {BACKEND_FILTER} @ {host}-{device}")
+    ax.set_title(f"Inference FPS @ {host}-{device}")
     ax.set_xlabel("ML Model")
     ax.set_ylabel("FPS (inference)")
     plt.setp(ax.get_xticklabels(), rotation=20, ha="right")

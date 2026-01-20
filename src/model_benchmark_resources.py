@@ -235,7 +235,13 @@ def main():
 
 
     local_mode = "gpu" if (TORCH_DEVICE.type == "cuda") else "cpu"
-    run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{HOST}_{local_mode}"
+
+    is_vaccel_remote_run = (HOST == "robot" and BACKEND == "vaccel-remote")
+    if is_vaccel_remote_run:
+        # local_mode may always be "cpu" here; add target device to avoid collisions
+        run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{HOST}_{local_mode}_target-{TARGET_DEVICE}"
+    else:
+        run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{HOST}_{local_mode}"
 
     # -------------------------------------------------------------------------
 
@@ -259,8 +265,6 @@ def main():
             print(f"      Warmup failed on {os.path.basename(files_to_process[i])}: {e}")
             
     # --- START MONITORING (DOCKER + SYSTEM) ---
-    is_vaccel_remote_run = (HOST == "robot" and BACKEND == "vaccel-remote")
-
     start_docker_monitor(
         run_id=run_id,
         endpoint=DOCKER_STATS_ENDPOINT,
@@ -277,8 +281,7 @@ def main():
 
     # Remote vAccel agent
     if is_vaccel_remote_run:
-        remote_mode = TARGET_DEVICE  # target execution device
-        vaccel_remote_run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_edge_{remote_mode}"
+        vaccel_remote_run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_edge_{TARGET_DEVICE}"
 
         start_docker_monitor(
             run_id=vaccel_remote_run_id,
@@ -291,7 +294,7 @@ def main():
             run_id=vaccel_remote_run_id,
             endpoint=SYSTEM_STATS_REMOTE_ENDPOINT,
             csv_dir=SYSTEM_STATS_REMOTE_CSV_DIR,
-            mode=remote_mode
+            mode=TARGET_DEVICE
         )
     time.sleep(1.2)  # ~1 interval: lets monitors emit a first stable sample (Docker precpu primed, psutil/NVML warmed)
     

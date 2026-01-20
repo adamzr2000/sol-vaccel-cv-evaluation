@@ -4,14 +4,6 @@ summarize_docker_stats.py
 
 Summarize docker-stats-collector CSVs for a given RUN_TAG.
 
-Expected filename pattern (NO .csv):
-  {container}_{RUN_TAG}_{MODEL}_{BACKEND}_{HOST}_{DEVICE}
-
-Notes:
-- container may contain underscores/dashes
-- model may contain underscores and *_sol
-- backend, host, device are assumed to be the last 3 tokens
-
 Output:
   ./_summary/{run_tag}_overall_resource_usage_per_container.csv
 """
@@ -30,8 +22,6 @@ METRIC_COLS = [
     "mem_mb",
     "blk_read_mb",
     "blk_write_mb",
-    "net_rx_mb",
-    "net_tx_mb",
 ]
 
 OUT_FIELDS = [
@@ -48,10 +38,8 @@ OUT_FIELDS = [
     "blk_read_mb_std",
     "blk_write_mb_mean",
     "blk_write_mb_std",
-    "net_rx_mb_mean",
-    "net_rx_mb_std",
-    "net_tx_mb_mean",
-    "net_tx_mb_std",
+    "net_rx_mbps",
+    "net_tx_mbps",
     "duration_sec",
 ]
 
@@ -72,6 +60,9 @@ def parse_stem(stem: str, run_tag: str) -> Optional[Tuple[str, str, str, str, st
     Parse:
       stem = "{container}_{RUN_TAG}_{MODEL}_{BACKEND}_{HOST}_{DEVICE}"
 
+    Extended (vaccel-remote robot-side disambiguation):
+      stem = "{container}_{RUN_TAG}_{MODEL}_{BACKEND}_{HOST}_{LOCAL_MODE}_target-{TARGET_DEVICE}"
+
     Return:
       (container, model, backend, host, device)
     """
@@ -81,19 +72,27 @@ def parse_stem(stem: str, run_tag: str) -> Optional[Tuple[str, str, str, str, st
         return None
 
     container = stem[:idx]
-    remainder = stem[idx + len(needle):]  # "{MODEL}_{BACKEND}_{HOST}_{DEVICE}"
-
+    remainder = stem[idx + len(needle):]
     parts = remainder.split("_")
     if len(parts) < 4:
         return None
 
-    device = parts[-1]
-    host = parts[-2]
-    backend = parts[-3]
-    model = "_".join(parts[:-3])
+    # Extended pattern:
+    # ..._{BACKEND}_{HOST}_{LOCAL_MODE}_target-{TARGET_DEVICE}
+    if len(parts) >= 5 and parts[-1].startswith("target-"):
+        target = parts[-1]          # "target-gpu"
+        local_mode = parts[-2]      # "cpu"
+        host = parts[-3]            # "robot"
+        backend = parts[-4]         # "vaccel-remote"
+        model = "_".join(parts[:-4])
+        device = f"{local_mode}_{target}"  # "cpu_target-gpu"
+    else:
+        device = parts[-1]
+        host = parts[-2]
+        backend = parts[-3]
+        model = "_".join(parts[:-3])
 
     return container, model, backend, host, device
-
 
 def discover_run_tags(csv_files: List[Path]) -> List[str]:
     tags = set()
@@ -104,10 +103,15 @@ def discover_run_tags(csv_files: List[Path]) -> List[str]:
     return sorted(tags)
 
 
-def read_metrics_and_duration(csv_path: Path) -> Tuple[Dict[str, List[float]], Optional[float]]:
+def read_metrics_and_duration(csv_path: Path) -> Tuple[Dict[str, List[float]], Optional[float], Optional[float], Optional[float]]:
     values = {k: [] for k in METRIC_COLS}
     t_min: Optional[int] = None
     t_max: Optional[int] = None
+
+    net_rx_first: Optional[float] = None
+    net_rx_last: Optional[float] = None
+    net_tx_first: Optional[float] = None
+    net_tx_last: Optional[float] = None
 
     with csv_path.open("r", newline="") as f:
         reader = csv.DictReader(f)
@@ -121,6 +125,7 @@ def read_metrics_and_duration(csv_path: Path) -> Tuple[Dict[str, List[float]], O
                 except ValueError:
                     pass
 
+            # collect mean/std metrics
             for k in METRIC_COLS:
                 v = row.get(k)
                 if v:
@@ -129,11 +134,41 @@ def read_metrics_and_duration(csv_path: Path) -> Tuple[Dict[str, List[float]], O
                     except ValueError:
                         pass
 
+            # capture first/last cumulative net values (MB)
+            rx = row.get("net_rx_mb")
+            if rx:
+                try:
+                    rx_f = float(rx)
+                    if net_rx_first is None:
+                        net_rx_first = rx_f
+                    net_rx_last = rx_f
+                except ValueError:
+                    pass
+
+            tx = row.get("net_tx_mb")
+            if tx:
+                try:
+                    tx_f = float(tx)
+                    if net_tx_first is None:
+                        net_tx_first = tx_f
+                    net_tx_last = tx_f
+                except ValueError:
+                    pass
+
     duration_sec = None
     if t_min is not None and t_max is not None and t_max >= t_min:
         duration_sec = (t_max - t_min) / 1000.0
 
-    return values, duration_sec
+    net_rx_delta_mb = None
+    if net_rx_first is not None and net_rx_last is not None:
+        net_rx_delta_mb = max(0.0, net_rx_last - net_rx_first)
+
+    net_tx_delta_mb = None
+    if net_tx_first is not None and net_tx_last is not None:
+        net_tx_delta_mb = max(0.0, net_tx_last - net_tx_first)
+
+    return values, duration_sec, net_rx_delta_mb, net_tx_delta_mb
+
 
 
 def main() -> None:
@@ -177,7 +212,7 @@ def main() -> None:
             continue
 
         container, model, backend, host, device = parsed
-        metrics, duration_sec = read_metrics_and_duration(csv_path)
+        metrics, duration_sec, net_rx_delta_mb, net_tx_delta_mb = read_metrics_and_duration(csv_path)
 
         row: Dict[str, str] = {
             "container": container,
@@ -193,6 +228,17 @@ def main() -> None:
             row[f"{k}_std"] = fmt(sd, 6)
 
         row["duration_sec"] = fmt(duration_sec, 3)
+
+        net_rx_mbps = None
+        net_tx_mbps = None
+        if duration_sec and duration_sec > 0:
+            if net_rx_delta_mb is not None:
+                net_rx_mbps = (net_rx_delta_mb * 8.0) / duration_sec
+            if net_tx_delta_mb is not None:
+                net_tx_mbps = (net_tx_delta_mb * 8.0) / duration_sec
+
+        row["net_rx_mbps"] = fmt(net_rx_mbps, 6)
+        row["net_tx_mbps"] = fmt(net_tx_mbps, 6)
 
         key = (container, host, device, model, backend)
         rows[key] = row

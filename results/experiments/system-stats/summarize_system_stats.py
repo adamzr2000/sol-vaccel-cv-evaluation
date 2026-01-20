@@ -4,13 +4,6 @@ summarize_system_stats.py
 
 Summarize system-stats-collector CSVs for a given RUN_TAG.
 
-Expected filename pattern (NO .csv):
-  {RUN_TAG}_{MODEL}_{BACKEND}_{HOST}_{DEVICE}
-
-Notes:
-- model may contain underscores and *_sol
-- backend/host/device are assumed to be the last 3 tokens
-
 Outputs (written under ./_summary):
   - {run_tag}_overall_cpu_stats.csv
   - {run_tag}_overall_gpu_stats.csv
@@ -85,6 +78,9 @@ def parse_stem(stem: str, run_tag: str) -> Optional[Tuple[str, str, str, str]]:
     Parse:
       stem = "{RUN_TAG}_{MODEL}_{BACKEND}_{HOST}_{DEVICE}"
 
+    Extended (vaccel-remote robot-side disambiguation):
+      stem = "{RUN_TAG}_{MODEL}_{BACKEND}_{HOST}_{LOCAL_MODE}_target-{TARGET_DEVICE}"
+
     Return:
       (model, backend, host, device)
     """
@@ -92,17 +88,26 @@ def parse_stem(stem: str, run_tag: str) -> Optional[Tuple[str, str, str, str]]:
     if not stem.startswith(needle):
         return None
 
-    remainder = stem[len(needle):]  # "{MODEL}_{BACKEND}_{HOST}_{DEVICE}"
+    remainder = stem[len(needle):]
     parts = remainder.split("_")
     if len(parts) < 4:
         return None
 
-    device = parts[-1]
-    host = parts[-2]
-    backend = parts[-3]
-    model = "_".join(parts[:-3])
-    return model, backend, host, device
+    # Extended pattern: ..._{BACKEND}_{HOST}_{LOCAL_MODE}_target-{TARGET_DEVICE}
+    if len(parts) >= 5 and parts[-1].startswith("target-"):
+        target = parts[-1]          # "target-gpu" / "target-cpu"
+        local_mode = parts[-2]      # "cpu"
+        host = parts[-3]            # "robot"
+        backend = parts[-4]         # "vaccel-remote"
+        model = "_".join(parts[:-4])
+        device = f"{local_mode}_{target}"  # "cpu_target-gpu"
+    else:
+        device = parts[-1]
+        host = parts[-2]
+        backend = parts[-3]
+        model = "_".join(parts[:-3])
 
+    return model, backend, host, device
 
 def discover_run_tags(csv_files: List[Path]) -> List[str]:
     tags = set()

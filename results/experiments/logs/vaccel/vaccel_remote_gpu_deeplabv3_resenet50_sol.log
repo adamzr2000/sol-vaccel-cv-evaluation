@@ -1,0 +1,20 @@
+nextnet@asus-g815:~/adam/sol-vaccel-cv-evaluation$ ./run_agent.sh
+2026.01.20-09:04:10.25 - <info> vAccel 0.7.1-70-ec0dc09e
+2026.01.20-09:04:10.25 - <info> Registered plugin exec 0.7.1-70-ec0dc09e
+[2026-01-20T09:04:10Z INFO  ttrpc::sync::server] server listen started
+[2026-01-20T09:04:10Z INFO  ttrpc::sync::server] server started
+[2026-01-20T09:04:10Z INFO  vaccel_rpc_agent] vAccel RPC agent started
+[2026-01-20T09:04:10Z INFO  vaccel_rpc_agent] Listening on 'tcp://0.0.0.0:9125', press Ctrl+C to exit
+[2026-01-20T09:06:01Z INFO  vaccel_rpc_agent::session] Created session 1
+[2026-01-20T09:06:07Z INFO  vaccel_rpc_agent::resource] Creating new resource
+[2026-01-20T09:06:07Z INFO  vaccel_rpc_agent::resource] Registering resource 1 with session 1
+[2026-01-20T09:06:07Z INFO  vaccel_rpc_agent::ops::genop] session:1 Genop
+2026.01.20-09:06:07.75 - <warn> [exec] dlopen with RTLD_NOW failed for /run/user/0/vaccel/7JayaH/resource.1/libsol-dnn-cudnn-deployment-0.8.0rc5-9.1.so: /run/user/0/vaccel/7JayaH/resource.1/libsol-dnn-cudnn-deployment-0.8.0rc5-9.1.so: undefined symbol: sol_exception_throw
+2026.01.20-09:06:07.75 - <warn> [exec] Trying RTLD_LAZY fallback
+[2026-01-20T09:06:08Z INFO  vaccel_rpc_agent::ops::genop] session:1 Genop
+[2026-01-20T09:06:16Z INFO  vaccel_rpc_agent::ops::genop] session:1 Genop
+[2026-01-20T09:06:16Z INFO  vaccel_rpc_agent::ops::genop] session:1 Genop
+[2026-01-20T09:06:17Z INFO  vaccel_rpc_agent::ops::genop] session:1 Genop
+[2026-01-20T09:06:17Z INFO  vaccel_rpc_agent::ops::genop] session:1 Genop
+[2026-01-20T09:06:18Z INFO  vaccel_rpc_agent::ops::genop] session:1 Genop
+[2026-01-20T09:06:18Z INFO  vaccel_rpc_agent::ops::genop] session:1 Genop

@@ -1,0 +1,20 @@
+[2026-01-20T08:45:49Z INFO  vaccel_rpc_agent::session] Created session 3
+[2026-01-20T08:45:50Z INFO  vaccel_rpc_agent::resource] Creating new resource
+[2026-01-20T08:45:50Z INFO  vaccel_rpc_agent::resource] Registering resource 9 with session 3
+[2026-01-20T08:45:50Z INFO  vaccel_rpc_agent::ops::genop] session:3 Genop
+[2026-01-20T08:45:50Z INFO  vaccel_rpc_agent::resource] Creating new resource
+[2026-01-20T08:45:50Z INFO  vaccel_rpc_agent::resource] Registering resource 10 with session 3
+[2026-01-20T08:45:50Z INFO  vaccel_rpc_agent::resource] Creating new resource
+[2026-01-20T08:45:50Z INFO  vaccel_rpc_agent::resource] Registering resource 11 with session 3
+[2026-01-20T08:45:50Z INFO  vaccel_rpc_agent::resource] Creating new resource
+[2026-01-20T08:45:50Z INFO  vaccel_rpc_agent::resource] Registering resource 12 with session 3
+[2026-01-20T08:45:50Z INFO  vaccel_rpc_agent::ops::genop] session:3 Genop
+[2026-01-20T08:45:50Z INFO  vaccel_rpc_agent::ops::genop] session:3 Genop
+[2026-01-20T08:45:50Z INFO  vaccel_rpc_agent::ops::genop] session:3 Genop
+[2026-01-20T08:45:50Z INFO  vaccel_rpc_agent::ops::genop] session:3 Genop
+[2026-01-20T08:45:51Z INFO  vaccel_rpc_agent::ops::genop] session:3 Genop
+[2026-01-20T08:45:51Z INFO  vaccel_rpc_agent::ops::genop] session:3 Genop
+[2026-01-20T08:45:51Z INFO  vaccel_rpc_agent::ops::genop] session:3 Genop
+[2026-01-20T08:45:51Z INFO  vaccel_rpc_agent::ops::genop] session:3 Genop
+[2026-01-20T08:45:51Z INFO  vaccel_rpc_agent::ops::genop] session:3 Genop
+[2026-01-20T08:45:51Z INFO  vaccel_rpc_agent::ops::genop] session:3 Genop

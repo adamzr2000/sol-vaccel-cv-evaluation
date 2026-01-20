@@ -138,11 +138,10 @@ Execute `model_benchmark.py` with the following environment variables.
 Examples:
 
 ```shell
+# Stock image classification (CPU)
+DEVICE=gpu MODEL=resnet50 NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
 # Stock image classification (GPU)
 DEVICE=gpu MODEL=resnet50 NUM_IMAGES=64 python3 model_benchmark.py
-DEVICE=gpu MODEL=resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
-DEVICE=gpu MODEL=mobilenet_v3_large NUM_IMAGES=64 python3 model_benchmark.py
-DEVICE=gpu MODEL=mobilenet_v3_large_sol NUM_IMAGES=64 python3 model_benchmark.py
 # vAccel local image classification (CPU)
 DEVICE=cpu BACKEND=vaccel-local MODEL=resnet50_sol NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
 # vAccel local image classification (GPU)
@@ -151,19 +150,6 @@ DEVICE=gpu BACKEND=vaccel-local MODEL=resnet50_sol NUM_IMAGES=64 python3 model_b
 DEVICE=cpu BACKEND=vaccel-remote MODEL=resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
 # vAccel remote image classification (GPU)
 DEVICE=gpu BACKEND=vaccel-remote MODEL=resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
-
-# Stock semantic segmentation
-DEVICE=gpu BACKEND=stock MODEL=deeplabv3_resnet50 NUM_IMAGES=64 python3 model_benchmark.py
-DEVICE=gpu BACKEND=stock MODEL=deeplabv3_resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
-DEVICE=gpu BACKEND=stock MODEL=fcn_resnet50 NUM_IMAGES=64 python3 model_benchmark.py
-DEVICE=gpu BACKEND=stock MODEL=fcn_resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
-
-# Stock video classification
-DEVICE=gpu MODEL=mc3_18 NUM_VIDEOS=10 python3 model_benchmark.py
-DEVICE=gpu MODEL=r3d_18 NUM_VIDEOS=10 python3 model_benchmark.py
-
-# Stock image classification
-DEVICE=cpu MODEL=resnet50 NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
 ```
 
 > Note: Results and images are not saved by default to avoid unnecessary disk usage. Set `EXPORT_RESULTS=true` to save benchmark metrics, and also set `EXPORT_OUTPUT_IMAGES=true` to store output images in the [results/experiments/model-stats](./results/experiments/model-stats/) directory.
@@ -200,12 +186,9 @@ Execute `model_benchmark_resources.py` with the following environment variables.
 
 Examples:
 ```shell
-# Semantic segmentation
-BACKEND=stock HOST=edge DEVICE=gpu MODEL=deeplabv3_resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
+NUM_IMAGES=32 BACKEND=stock HOST=robot DEVICE=cpu MODEL=resnet50_sol RUN_TAG=run1 DOCKER_STATS_ENDPOINT=http://192.168.2.2:6000 SYSTEM_STATS_ENDPOINT=http://192.168.2.2:6001 python3 model_benchmark_resources.py
 
-BACKEND=stock HOST=robot DEVICE=cpu MODEL=resnet50_sol RUN_TAG=run1 DOCKER_STATS_ENDPOINT=http://192.168.2.2:6000 SYSTEM_STATS_ENDPOINT=http://192.168.2.2:6001 python3 model_benchmark_resources.py
-
-BACKEND=vaccel-remote HOST=robot DEVICE=cpu MODEL=resnet50_sol RUN_TAG=run1 DOCKER_STATS_ENDPOINT=http://192.168.2.2:6000 SYSTEM_STATS_ENDPOINT=http://192.168.2.2:6001 DOCKER_STATS_REMOTE_ENDPOINT=http://10.5.1.20:6000 SYSTEM_STATS_REMOTE_ENDPOINT=http://10.5.1.20:6001 python3 model_benchmark_resources.py
+NUM_IMAGES=32 BACKEND=vaccel-remote HOST=robot DEVICE=gpu MODEL=resnet50_sol RUN_TAG=run1 DOCKER_STATS_ENDPOINT=http://192.168.2.2:6000 SYSTEM_STATS_ENDPOINT=http://192.168.2.2:6001 DOCKER_STATS_REMOTE_ENDPOINT=http://10.5.1.20:6000 SYSTEM_STATS_REMOTE_ENDPOINT=http://10.5.1.20:6001 python3 model_benchmark_resources.py
 ```
 
 Auto:
@@ -247,19 +230,57 @@ Once the server is running, open your browser and navigate to:
 
 ### Model I/O quick reference
 
-Use this as a reminder of what each `MODEL` expects as input and what it produces:
+Quick reminder of **input/output shapes and their sizes** (based on [model_adapter.py](./src/model_adapter.py), assuming **float32 = 4 B**, **uint8 = 1 B**).
 
-- **Segmentation (2D)** — `deeplabv3_resnet50`, `fcn_resnet50`  
-  **Input:** image → `(1, 3, 224, 224)`  
-  **Output:** `(224, 224)` per-pixel class prediction map (one class ID per pixel)
+#### Segmentation (2D) — `deeplabv3_resnet50`, `fcn_resnet50`
 
-- **Image classification** — `resnet50`, `mobilenet_v3_large`  
-  **Input:** image → `(1, 3, 224, 224)`  
-  **Output:** `top_class`, `top_prob` — predicted ImageNet-1k class ID and its confidence score
+* **Input to model**
+  Shape: `(1, 3, 224, 224)` (float32)
+  **Size:** **≈ 588 KiB**
 
-- **Video classification** — `mc3_18`, `r3d_18`  
-  **Input:** video clip (16 frames) → `(1, 3, 16, 112, 112)`  
-  **Output:** `top_class`, `top_prob` — predicted Kinetics-400 action class ID and its confidence score
+* **Raw model output (logits)**
+  Shape: `(1, 21, 224, 224)` (float32)
+  **Size:** **≈ 4.02 MiB**
+
+* **SOL extra buffer (aux output, segmentation only)**
+  Shape: `(1, 21, 224, 224)` (float32)
+  **Size:** **≈ 4.02 MiB**
+
+* **Postprocessed output (returned by app)**
+  Shape: `(224, 224)` class IDs (uint8)
+  **Size:** **≈ 49 KiB**
+
+---
+
+#### Image classification — `resnet50`, `mobilenet_v3_large`, `swin_t`
+
+* **Input to model**
+  Shape: `(1, 3, 224, 224)` (float32)
+  **Size:** **≈ 588 KiB**
+
+* **Raw model output (logits)**
+  Shape: `(1, 1000)` (float32)
+  **Size:** **≈ 3.9 KiB**
+
+* **Postprocessed output (returned by app)**
+  `top_class` (int64) + `top_prob` (float32)
+  **Size:** **≈ 12 B (negligible)**
+
+---
+
+#### Video classification — `mc3_18`, `r3d_18`
+
+* **Input to model**
+  Shape: `(1, 3, 16, 112, 112)` (float32)
+  **Size:** **≈ 2.30 MiB**
+
+* **Raw model output (logits)**
+  Shape: `(1, 400)` (float32)
+  **Size:** **≈ 1.6 KiB**
+
+* **Postprocessed output (returned by app)**
+  `top_class` (int64) + `top_prob` (float32)
+  **Size:** **≈ 12 B (negligible)**
 
 ---
 

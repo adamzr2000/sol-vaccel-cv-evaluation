@@ -9,5 +9,6 @@ CONT_PORT=9125
 docker run -it --rm \
   --name torchvision-app-agent \
   --gpus all \
+  -e OMP_NUM_THREADS=10 \
   -p ${PORT}:${CONT_PORT} \
   "$IMAGE"

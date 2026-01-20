@@ -8,19 +8,17 @@ import seaborn as sns
 
 INPUT_FILE = "../experiments/docker-stats/_summary/run1_overall_resource_usage_per_container.csv"
 
-# Output control
 PLOT_MODE = "combined"  # "combined" or "separate"
-OUTPUT_BASENAME = "./docker_stats_cpu"  # combined -> <basename>.pdf, separate -> <basename>_<host>.pdf
+OUTPUT_BASENAME = "./docker_stats_cpu"
 
 FONT_SCALE = 1.5
 SPINES_WIDTH = 1.5
-FIG_SIZE = (8, 5)
+FIG_SIZE = (10.2, 5.4)
 
 SHOW_VALUE_LABELS = False
-SHOW_ERROR_BARS = False
+SHOW_ERROR_BARS = True
 
 HOST_ORDER = ["robot", "edge"]
-VARIANT_ORDER = ["PyTorch", "SOL"]
 
 LEGEND_LOC = {
     "robot": "upper right",
@@ -31,41 +29,31 @@ MODEL_TYPE_ORDER = [
     "mc3_18", "r3d_18",
     "deeplabv3_resnet50", "fcn_resnet50",
     "resnet50", "mobilenet_v3_large",
+    "swin_t",
+]
+
+VARIANTS_ALL = [
+    "Local · PyTorch @ Robot CPU",
+    "Local · SOL @ Robot CPU",
+    "Remote · SOL + vAccel @ Edge CPU",
+    "Remote · SOL + vAccel @ Edge GPU",
 ]
 
 
-def split_model_variant(model: str):
-    if isinstance(model, str) and model.endswith("_sol"):
-        return model[:-4], "SOL"
-    return model, "PyTorch"
+def variants_for_host(host: str):
+    host = str(host).lower().strip()
+    if host == "robot":
+        return VARIANTS_ALL
+    return [
+        "Remote · SOL + vAccel @ Edge CPU",
+        "Remote · SOL + vAccel @ Edge GPU",
+    ]
 
 
 def ordered_models(models):
     models = list(dict.fromkeys(models))
     rank = {m: i for i, m in enumerate(MODEL_TYPE_ORDER)}
     return sorted(models, key=lambda m: (rank.get(m, 10_000), m))
-
-
-def add_value_labels(ax, xs, ys, yerrs, y_top, show_errors: bool):
-    fs = max(8, int(plt.rcParams["font.size"] * 0.8))
-    for x, y, e in zip(xs, ys, yerrs):
-        if y is None or (isinstance(y, float) and np.isnan(y)):
-            continue
-        err = 0.0
-        if show_errors and e is not None and not (isinstance(e, float) and np.isnan(e)):
-            err = float(e)
-        y_text = y + err + 0.02 * y_top
-        ax.text(
-            x,
-            y_text,
-            f"{y:.0f}",
-            ha="center",
-            va="bottom",
-            color="black",
-            fontsize=fs,
-            clip_on=False,
-            zorder=20,
-        )
 
 
 def style_axes(ax):
@@ -76,65 +64,115 @@ def style_axes(ax):
         ax.spines[side].set_linewidth(SPINES_WIDTH)
 
 
-def plot_host(ax, sub, host, base_models, color_map, y_lim_top):
+def split_model_base(model: str):
+    m = str(model).strip()
+    is_sol = m.endswith("_sol")
+    base = m[:-4] if is_sol else m
+    return base, is_sol
+
+
+def classify_variant(row: dict):
+    container = str(row.get("container", "")).lower().strip()
+    host = str(row.get("host", "")).lower().strip()
+    backend = str(row.get("backend", "")).lower().strip()
+    device = str(row.get("device", "")).lower().strip()
+    model = str(row.get("model", "")).strip()
+
+    base, is_sol = split_model_base(model)
+
+    # ROBOT (torchvision-app): local + remote
+    if host == "robot":
+        if container == "torchvision-app" and backend == "stock" and device == "cpu":
+            return base, (VARIANTS_ALL[0] if not is_sol else VARIANTS_ALL[1])
+
+        if container == "torchvision-app" and backend == "vaccel-remote" and is_sol:
+            if "cpu_target-cpu" in device:
+                return base, VARIANTS_ALL[2]
+            if "cpu_target-gpu" in device:
+                return base, VARIANTS_ALL[3]
+
+        return None, None
+
+    # EDGE (torchvision-app-agent): ONLY remote
+    if host == "edge":
+        if container == "torchvision-app-agent" and backend == "vaccel-remote" and is_sol:
+            if device == "cpu":
+                return base, VARIANTS_ALL[2]
+            if device == "gpu":
+                return base, VARIANTS_ALL[3]
+        return None, None
+
+    return None, None
+
+
+def plot_host(ax, dfh: pd.DataFrame, host: str, base_models, color_map, y_lim_top):
+    variants = variants_for_host(host)
     x = np.arange(len(base_models))
-    width = 0.34
 
-    means_pt, std_pt, means_sol, std_sol = [], [], [], []
-    for m in base_models:
-        r_pt = sub[(sub["base_model"] == m) & (sub["variant"] == "PyTorch")]
-        r_sol = sub[(sub["base_model"] == m) & (sub["variant"] == "SOL")]
+    n = len(variants)
+    width = 0.24 if n == 2 else 0.18
+    if n == 2:
+        offsets = {variants[0]: -width / 2, variants[1]: +width / 2}
+    else:
+        offsets = {
+            variants[0]: -1.5 * width,
+            variants[1]: -0.5 * width,
+            variants[2]: +0.5 * width,
+            variants[3]: +1.5 * width,
+        }
 
-        means_pt.append(float(r_pt.iloc[0]["cpu_percent_mean"]) if not r_pt.empty else np.nan)
-        std_pt.append(float(r_pt.iloc[0]["cpu_percent_std"]) if not r_pt.empty else np.nan)
+    mean_map = {(m, vv): np.nan for m in base_models for vv in variants}
+    std_map = {(m, vv): np.nan for m in base_models for vv in variants}
 
-        means_sol.append(float(r_sol.iloc[0]["cpu_percent_mean"]) if not r_sol.empty else np.nan)
-        std_sol.append(float(r_sol.iloc[0]["cpu_percent_std"]) if not r_sol.empty else np.nan)
-
-    xs_pt = x - width / 2
-    xs_sol = x + width / 2
+    for _, r in dfh.iterrows():
+        m = r["base_model"]
+        vv = r["variant"]
+        if (m in base_models) and (vv in variants):
+            mean_map[(m, vv)] = float(r["cpu_percent_mean"])
+            std_map[(m, vv)] = float(r["cpu_percent_std"]) if pd.notna(r["cpu_percent_std"]) else np.nan
 
     edgecolor = "black" if SHOW_ERROR_BARS else "none"
     linewidth = 1.0 if SHOW_ERROR_BARS else 0.0
 
-    ax.bar(
-        xs_pt, means_pt, width=width,
-        color=color_map["PyTorch"],
-        edgecolor=edgecolor, linewidth=linewidth,
-        label="PyTorch", zorder=3,
-    )
-    ax.bar(
-        xs_sol, means_sol, width=width,
-        color=color_map["SOL"],
-        edgecolor=edgecolor, linewidth=linewidth,
-        label="SOL", zorder=3,
-    )
+    for vv in variants:
+        xs = x + offsets[vv]
+        means = np.asarray([mean_map[(m, vv)] for m in base_models], dtype=float)
+        stds = np.asarray([std_map[(m, vv)] for m in base_models], dtype=float)
 
-    if SHOW_ERROR_BARS:
-        ax.errorbar(xs_pt, means_pt, yerr=std_pt, fmt="none", ecolor="black",
-                    elinewidth=1.5, capsize=4, capthick=1.5, zorder=10)
-        ax.errorbar(xs_sol, means_sol, yerr=std_sol, fmt="none", ecolor="black",
-                    elinewidth=1.5, capsize=4, capthick=1.5, zorder=10)
+        ax.bar(
+            xs, means, width=width,
+            color=color_map[vv],
+            edgecolor=edgecolor, linewidth=linewidth,
+            label=vv, zorder=3,
+        )
 
-    if SHOW_VALUE_LABELS:
-        add_value_labels(ax, xs_pt, means_pt, std_pt, y_lim_top, SHOW_ERROR_BARS)
-        add_value_labels(ax, xs_sol, means_sol, std_sol, y_lim_top, SHOW_ERROR_BARS)
+        if SHOW_ERROR_BARS:
+            yerr = np.where(np.isfinite(stds), stds, 0.0)
+            if np.any(yerr > 0):
+                ax.errorbar(
+                    xs, means, yerr=yerr,
+                    fmt="none", ecolor="black",
+                    elinewidth=1.5, capsize=4, capthick=1.5, zorder=10
+                )
 
-    host_title = host.capitalize()
-    ax.set_title(f"{host_title} CPU utilization")
+    if host == "robot":
+        ax.set_title("Robot CPU utilization (torchvision-app container)")
+    else:
+        ax.set_title("Edge CPU utilization (vaccel-agent container)")
+
     ax.set_xlabel("ML Model")
     ax.set_xticks(x)
     ax.set_xticklabels(base_models, rotation=20, ha="right")
     ax.set_ylim(0, y_lim_top)
 
     style_axes(ax)
-
     ax.legend(
+        title="Execution stack @ execution hardware",
         loc=LEGEND_LOC.get(host, "upper right"),
-        frameon=True,
-        framealpha=0.9,
-        borderpad=0.4,
-        handlelength=1.4,
+        frameon=True, framealpha=0.9,
+        borderpad=0.4, handlelength=1.4,
+        fontsize="small",
+        title_fontsize="small",
     )
 
 
@@ -153,66 +191,61 @@ def main():
     if missing:
         raise SystemExit(f"CSV missing required columns: {missing}")
 
-    df["host"] = df["host"].astype(str).str.lower().str.strip()
-    df["device"] = df["device"].astype(str).str.lower().str.strip()
-    df["backend"] = df["backend"].astype(str).str.lower().str.strip()
+    for c in ["container", "host", "device", "backend"]:
+        df[c] = df[c].astype(str).str.lower().str.strip()
+    df["model"] = df["model"].astype(str).str.strip()
 
-    df = df[
-        (df["container"] == "torchvision-app")
-        & (df["backend"] == "stock")
-        & (df["device"] == "cpu")
-    ].copy()
-    if df.empty:
-        raise SystemExit("No rows after filtering container='torchvision-app', backend='stock', device='cpu'.")
+    rows = []
+    for _, r in df.iterrows():
+        base, variant = classify_variant(r.to_dict())
+        if variant is None:
+            continue
+        rows.append({
+            "host": r["host"],
+            "base_model": base,
+            "variant": variant,
+            "cpu_percent_mean": float(r["cpu_percent_mean"]),
+            "cpu_percent_std": float(r["cpu_percent_std"]) if pd.notna(r["cpu_percent_std"]) else np.nan,
+        })
 
-    base_variant = df["model"].apply(split_model_variant)
-    df["base_model"] = base_variant.apply(lambda t: t[0])
-    df["variant"] = base_variant.apply(lambda t: t[1])
+    if not rows:
+        raise SystemExit("No rows matched. Check container/backend/device patterns in the docker-stats summary CSV.")
 
-    df = df[df["variant"].isin(VARIANT_ORDER)].copy()
-    if df.empty:
-        raise SystemExit("No rows after parsing variants (PyTorch/SOL).")
+    df2 = pd.DataFrame(rows)
 
-    present_hosts = [h for h in HOST_ORDER if h in set(df["host"])]
+    present_hosts = [h for h in HOST_ORDER if h in set(df2["host"])]
     if not present_hosts:
-        present_hosts = sorted(df["host"].unique().tolist())
+        present_hosts = sorted(df2["host"].unique().tolist())
 
-    base_models = ordered_models(sorted(df["base_model"].unique().tolist()))
-    df["host"] = pd.Categorical(df["host"], categories=present_hosts, ordered=True)
-    df["variant"] = pd.Categorical(df["variant"], categories=VARIANT_ORDER, ordered=True)
-    df["base_model"] = pd.Categorical(df["base_model"], categories=base_models, ordered=True)
+    base_models = ordered_models(sorted(df2["base_model"].unique().tolist()))
 
     sns.set_theme(context="paper", style="ticks", font_scale=FONT_SCALE)
-    pal = sns.color_palette("colorblind", n_colors=2)
-    color_map = {"PyTorch": pal[0], "SOL": pal[1]}
+
+    # One global palette for ALL variants -> consistent colors everywhere
+    pal = sns.color_palette("colorblind", n_colors=len(VARIANTS_ALL))
+    color_map = {v: pal[i] for i, v in enumerate(VARIANTS_ALL)}
 
     if PLOT_MODE not in {"combined", "separate"}:
         raise SystemExit("PLOT_MODE must be 'combined' or 'separate'.")
 
     if PLOT_MODE == "combined":
-        # Per-host y-scale: compute y_lim_top per host
         y_lim_top_by_host = {}
         for host in present_hosts:
-            subh = df[df["host"] == host].copy()
-            y_max = (subh["cpu_percent_mean"].astype(float) + subh["cpu_percent_std"].fillna(0).astype(float)).max()
-            y_lim_top_by_host[host] = (y_max * 1.25) if (not pd.isna(y_max) and y_max > 0) else 1.0
+            subh = df2[df2["host"] == host].copy()
+            y_max = (subh["cpu_percent_mean"] + subh["cpu_percent_std"].fillna(0)).max()
+            y_lim_top_by_host[host] = (y_max * 1.55) if (pd.notna(y_max) and y_max > 0) else 1.0
 
         n = len(present_hosts)
         fig, axes = plt.subplots(
             nrows=n, ncols=1,
             figsize=(FIG_SIZE[0], FIG_SIZE[1] * n),
-            sharex=False,
-            sharey=False,
+            sharex=False, sharey=False,
         )
         if n == 1:
             axes = [axes]
 
         for ax, host in zip(axes, present_hosts):
-            sub = df[df["host"] == host].copy()
-            if sub.empty:
-                ax.axis("off")
-                continue
-
+            sub = df2[df2["host"] == host].copy()
             plot_host(ax, sub, host, base_models, color_map, y_lim_top_by_host[host])
             ax.set_ylabel("CPU (%)\n(100% ≈ one logical core)")
 
@@ -222,15 +255,14 @@ def main():
         print(f"[OK] Saved combined plot to: {out}")
         plt.close(fig)
 
-    else:  # separate
-        # keep global y-limit per plot (per host) as well
+    else:
         for host in present_hosts:
-            sub = df[df["host"] == host].copy()
+            sub = df2[df2["host"] == host].copy()
             if sub.empty:
                 continue
 
-            y_max = (sub["cpu_percent_mean"].astype(float) + sub["cpu_percent_std"].fillna(0).astype(float)).max()
-            y_lim_top = (y_max * 1.25) if (not pd.isna(y_max) and y_max > 0) else 1.0
+            y_max = (sub["cpu_percent_mean"] + sub["cpu_percent_std"].fillna(0)).max()
+            y_lim_top = (y_max * 1.25) if (pd.notna(y_max) and y_max > 0) else 1.0
 
             fig, ax = plt.subplots(1, 1, figsize=FIG_SIZE)
             plot_host(ax, sub, host, base_models, color_map, y_lim_top)

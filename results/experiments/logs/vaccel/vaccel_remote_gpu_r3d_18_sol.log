@@ -1,0 +1,28 @@
+nextnet@asus-g815:~/adam/sol-vaccel-cv-evaluation$ ./run_agent.sh
+2026.01.20-09:25:33.65 - <info> vAccel 0.7.1-70-ec0dc09e
+2026.01.20-09:25:33.65 - <info> Registered plugin exec 0.7.1-70-ec0dc09e
+[2026-01-20T09:25:33Z INFO  ttrpc::sync::server] server listen started
+[2026-01-20T09:25:33Z INFO  ttrpc::sync::server] server started
+[2026-01-20T09:25:33Z INFO  vaccel_rpc_agent] vAccel RPC agent started
+[2026-01-20T09:25:33Z INFO  vaccel_rpc_agent] Listening on 'tcp://0.0.0.0:9125', press Ctrl+C to exit
+[2026-01-20T09:26:04Z INFO  vaccel_rpc_agent::session] Created session 1
+[2026-01-20T09:26:14Z INFO  vaccel_rpc_agent::resource] Creating new resource
+[2026-01-20T09:26:14Z INFO  vaccel_rpc_agent::resource] Registering resource 1 with session 1
+[2026-01-20T09:26:14Z INFO  vaccel_rpc_agent::ops::genop] session:1 Genop
+2026.01.20-09:26:14.24 - <warn> [exec] dlopen with RTLD_NOW failed for /run/user/0/vaccel/3uGepN/resource.1/libsol-dnn-cudnn-deployment-0.8.0rc5-9.1.so: /run/user/0/vaccel/3uGepN/resource.1/libsol-dnn-cudnn-deployment-0.8.0rc5-9.1.so: undefined symbol: sol_exception_throw
+2026.01.20-09:26:14.24 - <warn> [exec] Trying RTLD_LAZY fallback
+2026.01.20-09:26:14.24 - <warn> [exec] dlopen with RTLD_NOW failed for /run/user/0/vaccel/3uGepN/resource.1/libsol-dnn-cublaslt-deployment-0.8.0rc5-12.so: /run/user/0/vaccel/3uGepN/resource.1/libsol-dnn-cublaslt-deployment-0.8.0rc5-12.so: undefined symbol: sol_exception_throw
+2026.01.20-09:26:14.24 - <warn> [exec] Trying RTLD_LAZY fallback
+[2026-01-20T09:26:14Z INFO  vaccel_rpc_agent::resource] Creating new resource
+[2026-01-20T09:26:14Z INFO  vaccel_rpc_agent::resource] Registering resource 2 with session 1
+[2026-01-20T09:26:14Z INFO  vaccel_rpc_agent::resource] Creating new resource
+[2026-01-20T09:26:14Z INFO  vaccel_rpc_agent::resource] Registering resource 3 with session 1
+[2026-01-20T09:26:14Z INFO  vaccel_rpc_agent::resource] Creating new resource
+[2026-01-20T09:26:14Z INFO  vaccel_rpc_agent::resource] Registering resource 4 with session 1
+[2026-01-20T09:26:14Z INFO  vaccel_rpc_agent::ops::genop] session:1 Genop
+[2026-01-20T09:26:14Z INFO  vaccel_rpc_agent::ops::genop] session:1 Genop
+[2026-01-20T09:26:18Z INFO  vaccel_rpc_agent::ops::genop] session:1 Genop
+[2026-01-20T09:26:18Z INFO  vaccel_rpc_agent::ops::genop] session:1 Genop
+[2026-01-20T09:26:18Z INFO  vaccel_rpc_agent::ops::genop] session:1 Genop
+[2026-01-20T09:26:19Z INFO  vaccel_rpc_agent::ops::genop] session:1 Genop
+[2026-01-20T09:26:20Z INFO  vaccel_rpc_agent::ops::genop] session:1 Genop

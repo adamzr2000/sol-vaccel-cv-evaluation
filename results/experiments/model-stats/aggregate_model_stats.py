@@ -5,16 +5,18 @@ aggregate_model_stats.py
 Aggregate model-stats benchmark_summary.json files for a given RUN_TAG.
 
 Expected directory naming:
-  {RUN_TAG}_{MODEL}_{BACKEND}_{HOST}_{DEVICE}/benchmark_summary.json
 
-Behavior:
-- Works on CURRENT DIRECTORY only
-- If --run-tag is missing: list available run tags and exit
-- Aggregates all matching benchmark_summary.json into:
-    ./_summary/{run_tag}_benchmark_summary.json
+  Default (most backends):
+    {RUN_TAG}_{MODEL}_{BACKEND}_{HOST}_{LOCAL_MODE}/benchmark_summary.json
 
-Important:
-- Does NOT modify each summary's structure (stored as-is).
+  vAccel remote (robot -> edge) disambiguation:
+    {RUN_TAG}_{MODEL}_{BACKEND}_{HOST}_{LOCAL_MODE}_target-{TARGET_DEVICE}/benchmark_summary.json
+
+Notes:
+- LOCAL_MODE reflects the local execution mode on the machine running the benchmark script
+  (e.g., gpu vs cpu). For vaccel-remote on the robot, LOCAL_MODE is always "cpu".
+- TARGET_DEVICE reflects the intended remote execution target for vaccel-remote sessions
+  (e.g., target-cpu vs target-gpu). This suffix is used to prevent run directory collisions.
 """
 
 from __future__ import annotations
@@ -30,7 +32,7 @@ def discover_run_tags(run_dirs: List[Path]) -> List[str]:
     for d in run_dirs:
         if not d.is_dir():
             continue
-        # Directory format: RUN_TAG_MODEL_BACKEND_HOST_DEVICE
+        # Directory format (minimum): RUN_TAG_MODEL_BACKEND_HOST_LOCAL_MODE[...]
         parts = d.name.split("_")
         if len(parts) >= 5:
             tags.add(parts[0])

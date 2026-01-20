@@ -201,7 +201,11 @@ Execute `model_benchmark_resources.py` with the following environment variables.
 Examples:
 ```shell
 # Semantic segmentation
-BACKEND=stock HOST=edge DEVICE=gpu DOCKER_STATS_ENDPOINT=http://10.5.1.20:6000 SYSTEM_STATS_ENDPOINT=http://10.5.1.20:6001 MODEL=deeplabv3_resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
+BACKEND=stock HOST=edge DEVICE=gpu MODEL=deeplabv3_resnet50 RUN_TAG=run1 python3 model_benchmark_resources.py
+
+BACKEND=stock HOST=robot DEVICE=cpu MODEL=resnet50_sol RUN_TAG=run1 DOCKER_STATS_ENDPOINT=http://192.168.2.2:6000 SYSTEM_STATS_ENDPOINT=http://192.168.2.2:6001 python3 model_benchmark_resources.py
+
+BACKEND=vaccel-remote HOST=robot DEVICE=cpu MODEL=resnet50_sol RUN_TAG=run1 DOCKER_STATS_ENDPOINT=http://192.168.2.2:6000 SYSTEM_STATS_ENDPOINT=http://192.168.2.2:6001 DOCKER_STATS_REMOTE_ENDPOINT=http://10.5.1.20:6000 SYSTEM_STATS_REMOTE_ENDPOINT=http://10.5.1.20:6001 python3 model_benchmark_resources.py
 ```
 
 Auto:

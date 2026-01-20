@@ -28,8 +28,8 @@ if BACKEND not in ["stock", "vaccel", "vaccel-local", "vaccel-remote"]:
 if "remote" in BACKEND:
     print(f"   🔎 VACCEL_RPC_ADDRESS={os.environ.get('VACCEL_RPC_ADDRESS')}")
     
-INPUT_DEVICE = os.environ.get("DEVICE", "cpu").lower()
-if INPUT_DEVICE == "gpu":
+TARGET_DEVICE = os.environ.get("DEVICE", "cpu").lower()
+if TARGET_DEVICE == "gpu":
     DEVICE = "cuda"
     if "remote" in BACKEND:
         TORCH_DEVICE = torch.device("cpu")
@@ -84,7 +84,7 @@ def main():
     print(f"   Host:    {HOST}")
     print(f"   Model:   {MODEL_ARCH}")
     print(f"   Type:    {MODEL_TYPE}")
-    print(f"   Device:  {INPUT_DEVICE}")
+    print(f"   Device:  {TARGET_DEVICE}")
     print(f"   Loading: {CURRENT_MODEL_DIR}")
 
     if TORCH_DEVICE.type == "cuda" and not torch.cuda.is_available():
@@ -151,7 +151,7 @@ def main():
     else:
         prefix = time.strftime("%d-%m-%Y_%H-%M-%S")
         
-    run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{HOST}_{INPUT_DEVICE}"
+    run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{HOST}_{TARGET_DEVICE}"
     # -------------------------------------------------------------------------
 
     run_dir = RESULTS_DIR / run_id
@@ -320,7 +320,7 @@ def main():
                     "host": HOST,
                     "model": MODEL_ARCH,
                     "model_type": MODEL_TYPE,
-                    "device": INPUT_DEVICE,
+                    "device": TARGET_DEVICE,
                     "num_samples": len(latencies),
                     
                     "frames_per_sample": frames_per_sample,

@@ -30,8 +30,8 @@ if BACKEND not in ["stock", "vaccel", "vaccel-local", "vaccel-remote"]:
 if "remote" in BACKEND:
     print(f"   🔎 VACCEL_RPC_ADDRESS={os.environ.get('VACCEL_RPC_ADDRESS')}")
     
-INPUT_DEVICE = os.environ.get("DEVICE", "cpu").lower()
-if INPUT_DEVICE == "gpu":
+TARGET_DEVICE = os.environ.get("DEVICE", "cpu").lower()
+if TARGET_DEVICE == "gpu":
     DEVICE = "cuda"
     if "remote" in BACKEND:
         TORCH_DEVICE = torch.device("cpu")
@@ -84,23 +84,30 @@ DOCKER_STATS_CSV_DIR = "/results/experiments/docker-stats"
 SYSTEM_STATS_ENDPOINT = os.environ.get("SYSTEM_STATS_ENDPOINT", "http://10.5.1.20:6001")
 SYSTEM_STATS_CSV_DIR = "/results/experiments/system-stats"
 
+# --- REMOTE (vAccel agent) MONITOR CONFIG ---
+DOCKER_STATS_REMOTE_ENDPOINT = os.environ.get("DOCKER_STATS_REMOTE_ENDPOINT", "http://10.5.1.20:6000")
+DOCKER_STATS_REMOTE_CSV_DIR = DOCKER_STATS_CSV_DIR
+
+SYSTEM_STATS_REMOTE_ENDPOINT = os.environ.get("SYSTEM_STATS_REMOTE_ENDPOINT", "http://10.5.1.20:6001")
+SYSTEM_STATS_REMOTE_CSV_DIR = SYSTEM_STATS_CSV_DIR
+
 
 # ==========================================
 # HELPER FUNCTIONS FOR MONITORS
 # ==========================================
-def start_docker_monitor(run_id):
-    url = f"{DOCKER_STATS_ENDPOINT}/monitor/start"
+def start_docker_monitor(run_id, endpoint, csv_dir, container_ref, csv_prefix):
+    url = f"{endpoint}/monitor/start"
     payload = {
-        "containers": ["torchvision-app"],
+        "containers": [container_ref],
         "interval": 1.0,
-        "csv_dir": DOCKER_STATS_CSV_DIR,
+        "csv_dir": csv_dir,
         "stdout": False,
         "csv_names": {
-            "torchvision-app": f"torchvision-app_{run_id}"
+            container_ref: f"{csv_prefix}{run_id}"
         }
     }
     try:
-        print(f"   📡 Starting Docker Monitor: {url}")
+        print(f"   📡 Starting Docker Monitor: {url} ({container_ref})")
         resp = requests.post(url, json=payload, timeout=5)
         if resp.status_code == 200:
             print("   ✅ Docker Monitor Started.")
@@ -109,10 +116,10 @@ def start_docker_monitor(run_id):
     except Exception as e:
         print(f"   ⚠️ Could not contact Docker Monitor: {e}")
 
-def stop_docker_monitor():
-    url = f"{DOCKER_STATS_ENDPOINT}/monitor/stop"
+def stop_docker_monitor(endpoint):
+    url = f"{endpoint}/monitor/stop"
     try:
-        print(f"   📡 Stopping Docker Monitor...")
+        print(f"   📡 Stopping Docker Monitor: {url}")
         resp = requests.post(url, timeout=5)
         if resp.status_code == 200:
             print("   ✅ Docker Monitor Stopped.")
@@ -121,22 +128,15 @@ def stop_docker_monitor():
     except Exception as e:
         print(f"   ⚠️ Could not stop Docker Monitor: {e}")
 
-def start_system_monitor(run_id):
-    url = f"{SYSTEM_STATS_ENDPOINT}/monitor/start"
-    
-    is_gpu = (TORCH_DEVICE.type == 'cuda')
-    mode = "gpu" if is_gpu else "cpu"
-
+def start_system_monitor(run_id, endpoint, csv_dir, mode):
+    url = f"{endpoint}/monitor/start"
     payload = {
         "interval": 1.0,
-        "csv_dir": SYSTEM_STATS_CSV_DIR,
+        "csv_dir": csv_dir,
         "mode": mode,
         "stdout": False,
-        "csv_names": {
-            f"{mode}": f"{run_id}",
-        }
+        "csv_names": { f"{mode}": f"{run_id}" }
     }
-
     try:
         print(f"   📡 Starting System Monitor: {url} (Mode: {mode})")
         resp = requests.post(url, json=payload, timeout=5)
@@ -147,10 +147,10 @@ def start_system_monitor(run_id):
     except Exception as e:
         print(f"   ⚠️ Could not contact System Monitor: {e}")
 
-def stop_system_monitor():
-    url = f"{SYSTEM_STATS_ENDPOINT}/monitor/stop"
+def stop_system_monitor(endpoint):
+    url = f"{endpoint}/monitor/stop"
     try:
-        print(f"   📡 Stopping System Monitor...")
+        print(f"   📡 Stopping System Monitor: {url}")
         resp = requests.post(url, timeout=5)
         if resp.status_code == 200:
             print("   ✅ System Monitor Stopped.")
@@ -159,14 +159,13 @@ def stop_system_monitor():
     except Exception as e:
         print(f"   ⚠️ Could not stop System Monitor: {e}")
 
-
 def main():
     print(f"\n🚀 STARTING MODEL BENCHMARK (RESOURCES)")
     print(f"   Backend: {BACKEND}")
     print(f"   Host:    {HOST}")
     print(f"   Model:   {MODEL_ARCH}")
     print(f"   Type:    {MODEL_TYPE}")
-    print(f"   Device:  {INPUT_DEVICE}")
+    print(f"   Device:  {TARGET_DEVICE}")
     print(f"   Loading: {CURRENT_MODEL_DIR}")
 
     if TORCH_DEVICE.type == "cuda" and not torch.cuda.is_available():
@@ -233,8 +232,11 @@ def main():
     else:
         prefix = time.strftime("%d-%m-%Y_%H-%M-%S")
         
-    # Updated naming convention including HOST
-    run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{HOST}_{INPUT_DEVICE}"
+
+
+    local_mode = "gpu" if (TORCH_DEVICE.type == "cuda") else "cpu"
+    run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{HOST}_{local_mode}"
+
     # -------------------------------------------------------------------------
 
     run_dir = RESULTS_DIR / run_id
@@ -257,8 +259,40 @@ def main():
             print(f"      Warmup failed on {os.path.basename(files_to_process[i])}: {e}")
             
     # --- START MONITORING (DOCKER + SYSTEM) ---
-    start_docker_monitor(run_id)
-    start_system_monitor(run_id)
+    is_vaccel_remote_run = (HOST == "robot" and BACKEND == "vaccel-remote")
+
+    start_docker_monitor(
+        run_id=run_id,
+        endpoint=DOCKER_STATS_ENDPOINT,
+        csv_dir=DOCKER_STATS_CSV_DIR,
+        container_ref="torchvision-app",
+        csv_prefix="torchvision-app_",
+    )
+    start_system_monitor(
+        run_id=run_id,
+        endpoint=SYSTEM_STATS_ENDPOINT,
+        csv_dir=SYSTEM_STATS_CSV_DIR,
+        mode=local_mode
+    )
+
+    # Remote vAccel agent
+    if is_vaccel_remote_run:
+        remote_mode = TARGET_DEVICE  # target execution device
+        vaccel_remote_run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_edge_{remote_mode}"
+
+        start_docker_monitor(
+            run_id=vaccel_remote_run_id,
+            endpoint=DOCKER_STATS_REMOTE_ENDPOINT,
+            csv_dir=DOCKER_STATS_REMOTE_CSV_DIR,
+            container_ref="torchvision-app-agent",
+            csv_prefix="torchvision-app-agent_",
+        )
+        start_system_monitor(
+            run_id=vaccel_remote_run_id,
+            endpoint=SYSTEM_STATS_REMOTE_ENDPOINT,
+            csv_dir=SYSTEM_STATS_REMOTE_CSV_DIR,
+            mode=remote_mode
+        )
     time.sleep(1.2)  # ~1 interval: lets monitors emit a first stable sample (Docker precpu primed, psutil/NVML warmed)
     
     # Capture Start Time (ISO format for alignment with Stats)
@@ -372,8 +406,13 @@ def main():
         if TORCH_DEVICE.type == "cuda":
             torch.cuda.synchronize()
         time.sleep(0.2)  # small buffer to avoid stopping exactly on a sampling boundary; captures last tail activity without adding a full extra interval
-        stop_docker_monitor()
-        stop_system_monitor()
+
+        stop_docker_monitor(DOCKER_STATS_ENDPOINT)
+        stop_system_monitor(SYSTEM_STATS_ENDPOINT)
+
+        if is_vaccel_remote_run:
+            stop_docker_monitor(DOCKER_STATS_REMOTE_ENDPOINT)
+            stop_system_monitor(SYSTEM_STATS_REMOTE_ENDPOINT)
 
     # 6. SUMMARY & SAVE
     if latencies:
@@ -416,7 +455,7 @@ def main():
                     "host": HOST,
                     "model": MODEL_ARCH,
                     "model_type": MODEL_TYPE,
-                    "device": INPUT_DEVICE,
+                    "device": TARGET_DEVICE,
                     "num_samples": len(latencies),
                     
                     # --- Time Alignment ---

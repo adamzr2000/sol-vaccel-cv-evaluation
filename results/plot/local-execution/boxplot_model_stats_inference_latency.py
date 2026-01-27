@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from __future__ import annotations
+
 from pathlib import Path
 import json
 import numpy as np
@@ -12,30 +14,33 @@ INPUT_FILE = "../../experiments/model-stats/_summary/run1_benchmark_summary.json
 PLOT_MODE = "combined"  # "combined" or "separate"
 OUTPUT_COMBINED = "model_stats_inference_latency_boxplot_local_exec.pdf"
 
-FONT_SCALE = 1.5
+FONT_SCALE = 1.2
 SPINES_WIDTH = 1.5
 FIG_SIZE_SINGLE = (8.5, 5.2)
 FIG_SIZE_COMBINED = (10.5, 11.0)
 
-INCLUDE_VACCEL_LOCAL = True
+INCLUDE_VACCEL_LOCAL = False
 VARIANT_ORDER = ["PyTorch", "SOL", "SOL + vAccel"] if INCLUDE_VACCEL_LOCAL else ["PyTorch", "SOL"]
 
+# Strict filter + order (consistent behavior)
 MODEL_TYPE_ORDER = [
-    "mc3_18", "r3d_18",
-    "deeplabv3_resnet50", "fcn_resnet50",
-    "resnet50", "mobilenet_v3_large",
+    "mobilenet_v3_large","resnet50","swin_t","swin_s", "swin_v2_b",
+    "swin3d_t","swin3d_s","mc3_18", "r3d_18","r2plus1d_18",
+    "deeplabv3_mobilenet_v3_large",
+    "deeplabv3_resnet50","deeplabv3_resnet101",
+    "fcn_resnet50","fcn_resnet101", 
 ]
-
 TARGETS = [
-    ("robot", "cpu", "model_stats_inference_latency_robot_cpu_boxplot_local_exec.pdf"),
-    ("edge", "cpu", "model_stats_inference_latency_edge_cpu_boxplot_local_exec.pdf"),
-    ("edge", "gpu", "model_stats_inference_latency_edge_gpu_boxplot_local_exec.pdf"),
+    ("robot", "cpu", "model_stats_inference_latency_robot_cpu_boxplot_local_exec.pdf", "upper right"),
+    ("edge", "cpu", "model_stats_inference_latency_edge_cpu_boxplot_local_exec.pdf", "upper right"),
+    ("edge", "gpu", "model_stats_inference_latency_edge_gpu_boxplot_local_exec.pdf", "upper right"),
 ]
 
 
 def ordered_models(models):
     models = list(dict.fromkeys(models))
-    rank = {m: i for i, m in enumerate(MODEL_TYPE_ORDER)}
+    clean_order = [m.strip() for m in MODEL_TYPE_ORDER]
+    rank = {m: i for i, m in enumerate(clean_order)}
     return sorted(models, key=lambda m: (rank.get(m, 10_000), m))
 
 
@@ -63,6 +68,11 @@ def collect_latency_samples(run: dict):
 
     base_model, variant = split_variant(run.get("model", ""), backend)
     if variant is None or variant not in VARIANT_ORDER:
+        return None
+
+    # Strict model filter (match your "MODEL_TYPE_ORDER is effective" behavior)
+    allowed_models = [m.strip() for m in MODEL_TYPE_ORDER]
+    if base_model not in allowed_models:
         return None
 
     inf = run.get("inference_latency_ms", {}) or {}
@@ -102,13 +112,14 @@ def collect_latency_samples(run: dict):
 
 def style_axes(ax):
     ax.set_axisbelow(True)
-    ax.grid(axis="y", linestyle="--", linewidth=1.0, alpha=0.8)
+    ax.grid(axis="both", linestyle="-", linewidth=1.0, alpha=0.8)
     for side in ("top", "right", "bottom", "left"):
         ax.spines[side].set_color("black")
         ax.spines[side].set_linewidth(SPINES_WIDTH)
 
 
-def plot_target(sub: pd.DataFrame, host: str, device: str, color_map, ax=None, out_file: str | None = None):
+def plot_target(sub: pd.DataFrame, host: str, device: str, color_map, leg_loc: str,
+                ax=None, out_file: str | None = None):
     if sub.empty:
         if ax is not None:
             ax.axis("off")
@@ -139,23 +150,23 @@ def plot_target(sub: pd.DataFrame, host: str, device: str, color_map, ax=None, o
         ax=ax,
     )
 
-    ax.set_title(f"Inference latency @ {host.capitalize()} {device.upper()}")
+    # remove title; put context on y-axis
     ax.set_xlabel("ML Model")
-    ax.set_ylabel("Time (ms)")
+    ax.set_ylabel(f"{host.capitalize()} {device.upper()} inference latency (ms)")
     ax.tick_params(axis="x", labelrotation=20)
     for lab in ax.get_xticklabels():
         lab.set_ha("right")
 
     style_axes(ax)
     ax.legend(
-        loc="upper right", 
-        frameon=True, 
-        framealpha=0.9, 
-        borderpad=0.4, 
-        handlelength=1.4, 
+        loc=leg_loc,
+        frameon=True,
+        framealpha=0.9,
+        borderpad=0.4,
+        handlelength=1.4,
         fontsize="small",
         title_fontsize="small",
-        title=None
+        title=None,
     )
 
     if created_fig:
@@ -190,7 +201,7 @@ def main():
         rows.append(tmp)
 
     if not rows:
-        raise SystemExit("No latency samples could be constructed from input JSON.")
+        raise SystemExit("No latency samples could be constructed from input JSON (after filters).")
 
     df = pd.concat(rows, ignore_index=True)
 
@@ -201,9 +212,10 @@ def main():
     if PLOT_MODE not in {"combined", "separate"}:
         raise SystemExit("PLOT_MODE must be 'combined' or 'separate'.")
 
+    allowed_backends = ["stock"] + (["vaccel-local"] if INCLUDE_VACCEL_LOCAL else [])
+
     if PLOT_MODE == "separate":
-        for host, device, out_file in TARGETS:
-            allowed_backends = ["stock"] + (["vaccel-local"] if INCLUDE_VACCEL_LOCAL else [])
+        for host, device, out_file, leg_loc in TARGETS:
             sub = df[
                 (df["backend"].isin(allowed_backends))
                 & (df["host"] == host)
@@ -213,22 +225,21 @@ def main():
             if sub.empty:
                 print(f"[SKIP] No runs for host={host}, device={device}")
                 continue
-            plot_target(sub, host, device, color_map, ax=None, out_file=out_file)
+            plot_target(sub, host, device, color_map, leg_loc, ax=None, out_file=out_file)
 
     else:
         fig, axes = plt.subplots(3, 1, figsize=FIG_SIZE_COMBINED)
         if not isinstance(axes, (list, np.ndarray)):
             axes = [axes]
 
-        allowed_backends = ["stock"] + (["vaccel-local"] if INCLUDE_VACCEL_LOCAL else [])
-        for ax, (host, device, _out_file) in zip(axes, TARGETS):
+        for ax, (host, device, _out_file, leg_loc) in zip(axes, TARGETS):
             sub = df[
                 (df["backend"].isin(allowed_backends))
                 & (df["host"] == host)
                 & (df["device"] == device)
                 & (df["variant"].isin(VARIANT_ORDER))
             ].copy()
-            plot_target(sub, host, device, color_map, ax=ax, out_file=None)
+            plot_target(sub, host, device, color_map, leg_loc, ax=ax, out_file=None)
 
         plt.tight_layout()
         fig.savefig(OUTPUT_COMBINED, dpi=300, bbox_inches="tight")

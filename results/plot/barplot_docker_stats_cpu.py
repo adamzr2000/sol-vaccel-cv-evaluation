@@ -25,11 +25,12 @@ LEGEND_LOC = {
     "edge": "upper right",
 }
 
+# --- FILTER CONFIGURATION ---
 MODEL_TYPE_ORDER = [
-    "mc3_18", "r3d_18",
-    "deeplabv3_resnet50", "fcn_resnet50",
-    "resnet50", "mobilenet_v3_large",
     "swin_t",
+    "resnet50",
+    "mc3_18", "r3d_18",
+    "deeplabv3_resnet50", "fcn_resnet50"
 ]
 
 VARIANTS_ALL = [
@@ -52,13 +53,17 @@ def variants_for_host(host: str):
 
 def ordered_models(models):
     models = list(dict.fromkeys(models))
-    rank = {m: i for i, m in enumerate(MODEL_TYPE_ORDER)}
+    # We strip whitespace from the order keys just to be safe
+    clean_order = [m.strip() for m in MODEL_TYPE_ORDER]
+    rank = {m: i for i, m in enumerate(clean_order)}
+    
+    # Sort by rank. If a model somehow isn't in rank (shouldn't happen with filter), push to end.
     return sorted(models, key=lambda m: (rank.get(m, 10_000), m))
 
 
 def style_axes(ax):
     ax.set_axisbelow(True)
-    ax.grid(axis="y", linestyle="--", linewidth=1.0, alpha=0.8)
+    ax.grid(axis="both", linestyle="-", linewidth=1.0, alpha=0.8)
     for side in ("top", "right", "bottom", "left"):
         ax.spines[side].set_color("black")
         ax.spines[side].set_linewidth(SPINES_WIDTH)
@@ -152,13 +157,13 @@ def plot_host(ax, dfh: pd.DataFrame, host: str, base_models, color_map, y_lim_to
                 ax.errorbar(
                     xs, means, yerr=yerr,
                     fmt="none", ecolor="black",
-                    elinewidth=1.5, capsize=4, capthick=1.5, zorder=10
+                    elinewidth=1.0, capsize=4, capthick=1.0, zorder=10
                 )
 
-    if host == "robot":
-        ax.set_title("Robot CPU utilization (torchvision-app container)")
-    else:
-        ax.set_title("Edge CPU utilization (vaccel-agent container)")
+    # if host == "robot":
+    #     ax.set_title("Robot (application container)")
+    # else:
+    #     ax.set_title("Edge (vAccel agent container)")
 
     ax.set_xlabel("ML Model")
     ax.set_xticks(x)
@@ -167,7 +172,7 @@ def plot_host(ax, dfh: pd.DataFrame, host: str, base_models, color_map, y_lim_to
 
     style_axes(ax)
     ax.legend(
-        title="Execution stack @ execution hardware",
+        title="Execution mode · Backend @ Hardware",
         loc=LEGEND_LOC.get(host, "upper right"),
         frameon=True, framealpha=0.9,
         borderpad=0.4, handlelength=1.4,
@@ -181,52 +186,77 @@ def main():
     if not csv_path.exists():
         raise SystemExit(f"CSV not found: {csv_path}")
 
+    print(f"Reading: {csv_path}")
     df = pd.read_csv(csv_path)
 
-    needed = {
-        "container", "host", "device", "model", "backend",
-        "cpu_percent_mean", "cpu_percent_std",
-    }
-    missing = needed - set(df.columns)
-    if missing:
-        raise SystemExit(f"CSV missing required columns: {missing}")
-
+    # Basic cleanup
     for c in ["container", "host", "device", "backend"]:
-        df[c] = df[c].astype(str).str.lower().str.strip()
+        if c in df.columns:
+            df[c] = df[c].astype(str).str.lower().str.strip()
     df["model"] = df["model"].astype(str).str.strip()
 
+    # --- DIAGNOSTICS: Check what is in the CSV ---
+    unique_models_in_csv = sorted(df["model"].unique())
+    unique_bases_in_csv = sorted({split_model_base(m)[0] for m in unique_models_in_csv})
+    print(f"Found {len(unique_models_in_csv)} unique raw models in CSV.")
+    print(f"Found {len(unique_bases_in_csv)} unique BASE models in CSV: {unique_bases_in_csv}")
+    
+    # Clean the User's List
+    allowed_models = [m.strip() for m in MODEL_TYPE_ORDER]
+    print(f"Filtering for only these {len(allowed_models)} models: {allowed_models}")
+
     rows = []
+    dropped_models = set()
+
     for _, r in df.iterrows():
         base, variant = classify_variant(r.to_dict())
+        
+        # 1. Skip if it's not a relevant container/variant
         if variant is None:
             continue
+        
+        # 2. STRICT FILTER CHECK
+        if base not in allowed_models:
+            dropped_models.add(base)
+            continue
+
+        # 3. CONVERT: Divide by 100 to get vCPUs/Cores
+        try:
+            mean_val = float(r["cpu_percent_mean"]) / 100.0
+            std_val = float(r["cpu_percent_std"]) / 100.0 if pd.notna(r["cpu_percent_std"]) else np.nan
+        except (ValueError, TypeError):
+            continue
+
         rows.append({
             "host": r["host"],
             "base_model": base,
             "variant": variant,
-            "cpu_percent_mean": float(r["cpu_percent_mean"]),
-            "cpu_percent_std": float(r["cpu_percent_std"]) if pd.notna(r["cpu_percent_std"]) else np.nan,
+            "cpu_percent_mean": mean_val,
+            "cpu_percent_std": std_val,
         })
 
+    if dropped_models:
+        print(f"\n[WARNING] Dropped the following models because they are not in MODEL_TYPE_ORDER:\n  {sorted(list(dropped_models))}\n")
+
     if not rows:
-        raise SystemExit("No rows matched. Check container/backend/device patterns in the docker-stats summary CSV.")
+        raise SystemExit("ERROR: No rows remained after filtering! Check the [WARNING] above to see what was dropped.")
 
     df2 = pd.DataFrame(rows)
+    print(f"Plotting {len(df2)} data points...")
 
     present_hosts = [h for h in HOST_ORDER if h in set(df2["host"])]
     if not present_hosts:
         present_hosts = sorted(df2["host"].unique().tolist())
 
+    # Ensure we use the exact order from the allowed list
     base_models = ordered_models(sorted(df2["base_model"].unique().tolist()))
 
     sns.set_theme(context="paper", style="ticks", font_scale=FONT_SCALE)
 
-    # One global palette for ALL variants -> consistent colors everywhere
     pal = sns.color_palette("colorblind", n_colors=len(VARIANTS_ALL))
     color_map = {v: pal[i] for i, v in enumerate(VARIANTS_ALL)}
 
-    if PLOT_MODE not in {"combined", "separate"}:
-        raise SystemExit("PLOT_MODE must be 'combined' or 'separate'.")
+    y_label = "CPU utilization (vCPUs)"
 
     if PLOT_MODE == "combined":
         y_lim_top_by_host = {}
@@ -247,7 +277,7 @@ def main():
         for ax, host in zip(axes, present_hosts):
             sub = df2[df2["host"] == host].copy()
             plot_host(ax, sub, host, base_models, color_map, y_lim_top_by_host[host])
-            ax.set_ylabel("CPU (%)\n(100% ≈ one logical core)")
+            ax.set_ylabel(f"{host.capitalize()} CPU utilization (vCPUs)")
 
         plt.tight_layout()
         out = f"{OUTPUT_BASENAME}.pdf"
@@ -260,13 +290,12 @@ def main():
             sub = df2[df2["host"] == host].copy()
             if sub.empty:
                 continue
-
             y_max = (sub["cpu_percent_mean"] + sub["cpu_percent_std"].fillna(0)).max()
             y_lim_top = (y_max * 1.25) if (pd.notna(y_max) and y_max > 0) else 1.0
 
             fig, ax = plt.subplots(1, 1, figsize=FIG_SIZE)
             plot_host(ax, sub, host, base_models, color_map, y_lim_top)
-            ax.set_ylabel("CPU (%)\n(100% ≈ one logical core)")
+            ax.set_ylabel(f"{host.capitalize()} CPU utilization (vCPUs)")
 
             plt.tight_layout()
             out = f"{OUTPUT_BASENAME}_{host}.pdf"

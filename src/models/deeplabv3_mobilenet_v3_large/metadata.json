@@ -1,0 +1,9 @@
+{
+  "model": "deeplabv3_mobilenet_v3_large",
+  "weights_enum": "DeepLabV3_MobileNet_V3_Large_Weights.COCO_WITH_VOC_LABELS_V1",
+  "num_params": 11029328,
+  "files": {
+    "state_dict": "deeplabv3_mobilenet_v3_large_state_dict.pt",
+    "torchscript": "deeplabv3_mobilenet_v3_large.torchscript.pt"
+  }
+}

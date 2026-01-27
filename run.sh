@@ -22,12 +22,22 @@ case "$MODE" in
 esac
 
 SOL_LIBS="/src/models/deeplabv3_resnet50_sol/${LIB_TYPE}:\
+/src/models/deeplabv3_resnet101_sol/${LIB_TYPE}:\
+/src/models/deeplabv3_mobilenet_v3_large_sol/${LIB_TYPE}:\
 /src/models/fcn_resnet50_sol/${LIB_TYPE}:\
+/src/models/fcn_resnet101_sol/${LIB_TYPE}:\
+/src/models/lraspp_mobilenet_v3_large_sol/${LIB_TYPE}:\
+/src/models/resnet50_sol/${LIB_TYPE}:\
+/src/models/mobilenet_v3_large_sol/${LIB_TYPE}:\
+/src/models/swin_t_sol/${LIB_TYPE}:\
+/src/models/swin_s_sol/${LIB_TYPE}:\
+/src/models/swin_v2_b_sol/${LIB_TYPE}:\
 /src/models/mc3_18_sol/${LIB_TYPE}:\
 /src/models/r3d_18_sol/${LIB_TYPE}:\
-/src/models/resnet50_sol/${LIB_TYPE}:\
-/src/models/swin_t_sol/${LIB_TYPE}:\
-/src/models/mobilenet_v3_large_sol/${LIB_TYPE}"
+/src/models/r2plus1d_18_sol/${LIB_TYPE}:\
+/src/models/swin3d_t_sol/${LIB_TYPE}:\
+/src/models/swin3d_s_sol/${LIB_TYPE}:\
+/src/models/swin3d_b_sol/${LIB_TYPE}"
 
 # Add cuDNN wheel libs only for GPU runs
 if [[ "$MODE" == "gpu" ]]; then

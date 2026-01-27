@@ -1,0 +1,9 @@
+{
+  "model": "r2plus1d_18",
+  "weights_enum": "R2Plus1D_18_Weights.KINETICS400_V1",
+  "num_params": 31505325,
+  "files": {
+    "state_dict": "r2plus1d_18_state_dict.pt",
+    "torchscript": "r2plus1d_18.torchscript.pt"
+  }
+}

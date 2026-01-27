@@ -1,30 +1,27 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
+import json
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-CPU_FILE = "../experiments/system-stats/_summary/run1_overall_cpu_stats.csv"
-GPU_FILE = "../experiments/system-stats/_summary/run1_overall_gpu_stats.csv"
-
-PLOT_MODE = "combined"  # "combined" or "separate"
-OUTPUT_BASENAME = "system_stats_power"  # combined -> <basename>.pdf, separate -> <basename>_<panel>.pdf
+INPUT_FILE = "../experiments/model-stats/_summary/run1_benchmark_summary.json"
+OUTPUT_FILE = "model_stats_inference_latency.pdf"
 
 FONT_SCALE = 1.5
 SPINES_WIDTH = 1.5
-FIG_SIZE_SINGLE = (11.2, 5.6)
-FIG_SIZE_COMBINED = (11.2, 13.6)
+FIG_SIZE = (11.2, 5.6)
 
-SHOW_VALUE_LABELS = True
+SHOW_VALUE_LABELS = False
 SHOW_ERROR_BARS = True
 
 MODEL_TYPE_ORDER = [
-    "mc3_18", "r3d_18",
-    "deeplabv3_resnet50", "fcn_resnet50",
-    "resnet50", "mobilenet_v3_large",
-    "swin_t",
+    "swin_t","swin_s", "swin_v2_b",
+    "swin3d_t","swin3d_s","mc3_18", "r3d_18","r2plus1d_18",
+    "deeplabv3_mobilenet_v3_large",
+    "deeplabv3_resnet50","deeplabv3_resnet101",
+    "fcn_resnet50","fcn_resnet101", 
 ]
 
 VARIANTS = [
@@ -43,10 +40,18 @@ def ordered_models(models):
 
 def style_axes(ax):
     ax.set_axisbelow(True)
-    ax.grid(axis="y", linestyle="--", linewidth=1.0, alpha=0.8)
+    ax.grid(axis="both", linestyle="-", linewidth=1.0, alpha=0.8)
     for side in ("top", "right", "bottom", "left"):
         ax.spines[side].set_color("black")
         ax.spines[side].set_linewidth(SPINES_WIDTH)
+
+
+def moving_average(arr, window: int):
+    a = np.asarray(arr, dtype=float)
+    if window <= 1:
+        return a
+    kernel = np.ones(window, dtype=float) / float(window)
+    return np.convolve(a, kernel, mode="same")
 
 
 def base_model_name(model: str) -> str:
@@ -54,175 +59,169 @@ def base_model_name(model: str) -> str:
     return m[:-4] if m.endswith("_sol") else m
 
 
-def add_value_labels(ax, xs, ys, yerrs, y_top):
-    fs = max(6, int(plt.rcParams["font.size"] * 0.45))
-    for x, y, e in zip(xs, ys, yerrs):
-        if not np.isfinite(y):
-            continue
-        err = float(e) if (SHOW_ERROR_BARS and np.isfinite(e)) else 0.0
-        ax.text(
-            x, y + err + 0.02 * y_top, f"{y:.1f}",
-            ha="center", va="bottom",
-            fontsize=fs, color="black",
-            clip_on=False, zorder=20,
-        )
+def classify_variant(run: dict):
+    run_id = str(run.get("run_id", "")).strip()
+    backend = str(run.get("backend", "")).lower().strip()
+    host = str(run.get("host", "")).lower().strip()
+    model = str(run.get("model", "")).strip()
+    device = str(run.get("device", "")).lower().strip()
 
+    # we plot robot-side observations only
+    if host != "robot":
+        return None
 
-def classify_robot_cpu_variant(row) -> str | None:
-    backend = str(row.get("backend", "")).lower().strip()
-    device = str(row.get("device", "")).lower().strip()
-    model = str(row.get("model", "")).strip()
     is_sol = model.endswith("_sol")
 
+    # Local on robot CPU
     if backend == "stock" and device == "cpu":
         return VARIANTS[0] if not is_sol else VARIANTS[1]
 
+    # Remote offloading (robot measures end-to-end)
     if backend == "vaccel-remote" and is_sol:
-        if device == "cpu_target-cpu":
+        if "cpu_target-cpu" in run_id:
             return VARIANTS[2]
-        if device == "cpu_target-gpu":
+        if "cpu_target-gpu" in run_id:
             return VARIANTS[3]
 
     return None
 
 
-def load_robot_cpu_rows(cpu_df: pd.DataFrame):
-    sub = cpu_df[cpu_df["host"] == "robot"].copy()
+def extract_rows(runs):
+    """
+    Returns rows as tuples:
+      (base_model, variant_label, mean_ms, std_ms_or_nan)
+    """
     rows = []
-    for _, r in sub.iterrows():
-        v = classify_robot_cpu_variant(r)
-        if v is None:
+    for r in runs:
+        # 1. Get the cleaned model name first
+        b_model = base_model_name(r.get("model", ""))
+
+        # 2. Check if it is in your approved list. If not, skip it.
+        if b_model not in MODEL_TYPE_ORDER:
             continue
-        rows.append({
-            "base_model": base_model_name(r["model"]),
-            "variant": v,
-            "mean": float(r["cpu_watts_mean"]),
-            "std": float(r["cpu_watts_std"]) if pd.notna(r["cpu_watts_std"]) else np.nan,
-        })
+        variant = classify_variant(r)
+        if variant is None:
+            continue
+
+        inf = r.get("inference_latency_ms", {}) or {}
+        mean = inf.get("mean", None)
+        std = inf.get("std", None)
+
+        if mean is None:
+            continue
+
+        try:
+            mean_f = float(mean)
+        except Exception:
+            continue
+
+        try:
+            std_f = float(std) if std is not None else np.nan
+        except Exception:
+            std_f = np.nan
+
+        rows.append((
+            b_model,
+            variant,
+            mean_f,
+            std_f,
+        ))
     return rows
 
-
-def load_edge_cpu_remote_rows(cpu_df: pd.DataFrame):
-    sub = cpu_df[
-        (cpu_df["host"] == "edge")
-        & (cpu_df["backend"] == "vaccel-remote")
-        & (cpu_df["device"] == "cpu")
-    ].copy()
-
-    rows = []
-    for _, r in sub.iterrows():
-        model = str(r.get("model", "")).strip()
-        if not model.endswith("_sol"):
+def add_value_labels(ax, xs, ys, yerrs, y_top, show_errors: bool):
+    fs = max(6, int(plt.rcParams["font.size"] * 0.45))
+    pad = 0.02 * y_top
+    for x, y, e in zip(xs, ys, yerrs):
+        if not np.isfinite(y):
             continue
-        rows.append({
-            "base_model": base_model_name(model),
-            "variant": VARIANTS[2],
-            "mean": float(r["cpu_watts_mean"]),
-            "std": float(r["cpu_watts_std"]) if pd.notna(r["cpu_watts_std"]) else np.nan,
-        })
-    return rows
+
+        err = 0.0
+        if show_errors and e is not None and np.isfinite(e):
+            err = float(e)
+
+        ax.text(
+            x,
+            y + err + pad,          # <- key fix: mean + std + padding
+            f"{y:.2f}",
+            ha="center",
+            va="bottom",
+            fontsize=fs,
+            color="black",
+            clip_on=False,
+            zorder=20,
+        )
 
 
-def load_edge_gpu_remote_rows(gpu_df: pd.DataFrame):
-    sub = gpu_df[
-        (gpu_df["host"] == "edge")
-        & (gpu_df["backend"] == "vaccel-remote")
-        & (gpu_df["device"] == "gpu")
-    ].copy()
-
-    rows = []
-    for _, r in sub.iterrows():
-        model = str(r.get("model", "")).strip()
-        if not model.endswith("_sol"):
-            continue
-        rows.append({
-            "base_model": base_model_name(model),
-            "variant": VARIANTS[3],
-            "mean": float(r["power_draw_w_mean"]),
-            "std": float(r["power_draw_w_std"]) if pd.notna(r["power_draw_w_std"]) else np.nan,
-        })
-    return rows
-
-
-def compute_offsets(variants_present):
-    n = len(variants_present)
-    if n == 1:
-        width = 0.55
-        offsets = {variants_present[0]: 0.0}
-        return width, offsets
-
-    width = min(0.22, 0.8 / n)
-    if n == 2:
-        offsets = {variants_present[0]: -width / 2, variants_present[1]: +width / 2}
-        return width, offsets
-
-    center = (n - 1) / 2.0
-    offsets = {v: (i - center) * width for i, v in enumerate(variants_present)}
-    return width, offsets
-
-
-def plot_panel(ax, rows, title, variants_present, color_map):
+def plot_latency(rows):
     if not rows:
-        ax.axis("off")
-        ax.text(0.5, 0.5, "No data", ha="center", va="center", transform=ax.transAxes)
-        return
+        raise SystemExit("No matching rows found (robot stock + robot vaccel-remote).")
 
-    base_models = ordered_models(sorted({r["base_model"] for r in rows}))
-    mean_map = {(m, v): np.nan for m in base_models for v in variants_present}
-    std_map = {(m, v): np.nan for m in base_models for v in variants_present}
+    base_models = ordered_models(sorted({m for m, _, _, _ in rows}))
+    variants = VARIANTS
 
-    for r in rows:
-        m, v = r["base_model"], r["variant"]
-        if m in base_models and v in variants_present:
-            mean_map[(m, v)] = r["mean"]
-            std_map[(m, v)] = r["std"]
+    val_map = {(m, v): np.nan for m in base_models for v in variants}
+    std_map = {(m, v): np.nan for m in base_models for v in variants}
 
-    all_means = np.asarray([mean_map[(m, v)] for m in base_models for v in variants_present], dtype=float)
-    all_stds = np.asarray([std_map[(m, v)] for m in base_models for v in variants_present], dtype=float)
-    y_max = np.nanmax(all_means + np.nan_to_num(all_stds, nan=0.0))
+    for m, v, mu, sd in rows:
+        if m in base_models and v in variants:
+            val_map[(m, v)] = float(mu)
+            std_map[(m, v)] = float(sd) if sd is not None else np.nan
+
+    all_vals = np.asarray([val_map[(m, v)] for m in base_models for v in variants], dtype=float)
+    all_std = np.asarray([std_map[(m, v)] for m in base_models for v in variants], dtype=float)
+
+    y_max = np.nanmax(all_vals + (np.nan_to_num(all_std, nan=0.0) if SHOW_ERROR_BARS else 0.0))
     y_lim_top = (y_max * 1.25) if np.isfinite(y_max) and y_max > 0 else 1.0
 
+    sns.set_theme(context="paper", style="ticks", font_scale=FONT_SCALE)
+    pal = sns.color_palette("colorblind", n_colors=len(variants))
+    color_map = {v: pal[i] for i, v in enumerate(variants)}
+
+    fig, ax = plt.subplots(figsize=FIG_SIZE)
+
     x = np.arange(len(base_models))
-    width, offsets = compute_offsets(variants_present)
+    width = 0.18
+    offsets = {
+        variants[0]: -1.5 * width,
+        variants[1]: -0.5 * width,
+        variants[2]: +0.5 * width,
+        variants[3]: +1.5 * width,
+    }
 
-    edgecolor = "black" if SHOW_ERROR_BARS else "none"
-    linewidth = 1.0 if SHOW_ERROR_BARS else 0.0
-
-    for v in variants_present:
+    for v in variants:
         xs = x + offsets[v]
-        means = np.asarray([mean_map[(m, v)] for m in base_models], dtype=float)
-        stds = np.asarray([std_map[(m, v)] for m in base_models], dtype=float)
+        vals = np.asarray([val_map[(m, v)] for m in base_models], dtype=float)
+        yerr = np.asarray([std_map[(m, v)] for m in base_models], dtype=float)
 
         ax.bar(
-            xs, means, width=width,
+            xs, vals, width=width,
             color=color_map[v],
-            edgecolor=edgecolor, linewidth=linewidth,
+            edgecolor=("black" if SHOW_ERROR_BARS else "none"),
+            linewidth=(1.0 if SHOW_ERROR_BARS else 0.0),
             label=v, zorder=3,
         )
 
         if SHOW_ERROR_BARS:
-            yerr = np.where(np.isfinite(stds), stds, 0.0)
-            if np.any(yerr > 0):
-                ax.errorbar(
-                    xs, means, yerr=yerr,
-                    fmt="none", ecolor="black",
-                    elinewidth=1.5, capsize=4, capthick=1.5, zorder=10
-                )
+            ax.errorbar(
+                xs, vals, yerr=yerr, fmt="none",
+                ecolor="black", elinewidth=1.0, capsize=4, capthick=1.0, zorder=10
+            )
 
         if SHOW_VALUE_LABELS:
-            add_value_labels(ax, xs, means, stds, y_lim_top)
+            add_value_labels(ax, xs, vals, yerr, y_lim_top, SHOW_ERROR_BARS)
 
-    ax.set_title(title)
+
+    # ax.set_title("Robot-side inference latency under local execution and edge offloading")
     ax.set_xlabel("ML Model")
-    ax.set_ylabel("Power (W)")
+    ax.set_ylabel("Inference Time (ms)")
     ax.set_xticks(x)
     ax.set_xticklabels(base_models, rotation=20, ha="right")
     ax.set_ylim(0, y_lim_top)
 
     style_axes(ax)
     ax.legend(
-        title="Execution stack @ execution hardware",
-        loc="upper right",
+        title="Execution mode · Backend @ Hardware",
+        loc="upper left",
         frameon=True,
         framealpha=0.9,
         borderpad=0.4,
@@ -231,63 +230,26 @@ def plot_panel(ax, rows, title, variants_present, color_map):
         title_fontsize="small",
     )
 
+    plt.tight_layout()
+    fig.savefig(OUTPUT_FILE, dpi=300, bbox_inches="tight")
+    print(f"[OK] Saved plot to: {OUTPUT_FILE}")
+    plt.close(fig)
+
 
 def main():
-    cpu_path = Path(CPU_FILE).resolve()
-    gpu_path = Path(GPU_FILE).resolve()
-    if not cpu_path.exists():
-        raise SystemExit(f"CPU CSV not found: {cpu_path}")
-    if not gpu_path.exists():
-        raise SystemExit(f"GPU CSV not found: {gpu_path}")
+    path = Path(INPUT_FILE).resolve()
+    if not path.exists():
+        raise SystemExit(f"JSON not found: {path}")
 
-    cpu_df = pd.read_csv(cpu_path)
-    gpu_df = pd.read_csv(gpu_path)
+    with path.open("r") as f:
+        data = json.load(f)
 
-    for c in ("host", "model", "backend", "device"):
-        cpu_df[c] = cpu_df[c].astype(str).str.lower().str.strip()
-        gpu_df[c] = gpu_df[c].astype(str).str.lower().str.strip()
+    runs = data.get("runs", [])
+    if not isinstance(runs, list) or not runs:
+        raise SystemExit("Input JSON does not contain a non-empty 'runs' list.")
 
-    robot_rows = load_robot_cpu_rows(cpu_df)
-    edge_cpu_rows = load_edge_cpu_remote_rows(cpu_df)
-    edge_gpu_rows = load_edge_gpu_remote_rows(gpu_df)
-
-    sns.set_theme(context="paper", style="ticks", font_scale=FONT_SCALE)
-    pal = sns.color_palette("colorblind", n_colors=len(VARIANTS))
-    color_map = {v: pal[i] for i, v in enumerate(VARIANTS)}
-
-    panels = [
-        ("robot_cpu", "Robot CPU power", robot_rows, VARIANTS),
-        ("edge_cpu", "Edge CPU power", edge_cpu_rows, [VARIANTS[2]]),
-        ("edge_gpu", "Edge GPU power", edge_gpu_rows, [VARIANTS[3]]),
-    ]
-
-    if PLOT_MODE not in {"combined", "separate"}:
-        raise SystemExit("PLOT_MODE must be 'combined' or 'separate'.")
-
-    if PLOT_MODE == "combined":
-        fig, axes = plt.subplots(3, 1, figsize=FIG_SIZE_COMBINED)
-        if not isinstance(axes, (list, np.ndarray)):
-            axes = [axes]
-
-        for ax, (_key, title, rows, vars_present) in zip(axes, panels):
-            plot_panel(ax, rows, title, vars_present, color_map)
-
-        plt.tight_layout()
-        out = f"{OUTPUT_BASENAME}.pdf"
-        fig.savefig(out, dpi=300, bbox_inches="tight")
-        print(f"[OK] Saved combined plot to: {out}")
-        plt.close(fig)
-
-    else:
-        for key, title, rows, vars_present in panels:
-            fig, ax = plt.subplots(1, 1, figsize=FIG_SIZE_SINGLE)
-            plot_panel(ax, rows, title, vars_present, color_map)
-
-            plt.tight_layout()
-            out = f"{OUTPUT_BASENAME}_{key}.pdf"
-            fig.savefig(out, dpi=300, bbox_inches="tight")
-            print(f"[OK] Saved plot to: {out}")
-            plt.close(fig)
+    rows = extract_rows(runs)
+    plot_latency(rows)
 
 
 if __name__ == "__main__":

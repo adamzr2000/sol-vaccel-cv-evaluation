@@ -1,0 +1,9 @@
+{
+  "model": "swin3d_t",
+  "weights_enum": "Swin3D_T_Weights.KINETICS400_V1",
+  "num_params": 28158070,
+  "files": {
+    "state_dict": "swin3d_t_state_dict.pt",
+    "torchscript": "swin3d_t.torchscript.pt"
+  }
+}

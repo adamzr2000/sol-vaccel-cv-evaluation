@@ -1,0 +1,9 @@
+{
+  "model": "lraspp_mobilenet_v3_large",
+  "weights_enum": "LRASPP_MobileNet_V3_Large_Weights.COCO_WITH_VOC_LABELS_V1",
+  "num_params": 3221538,
+  "files": {
+    "state_dict": "lraspp_mobilenet_v3_large_state_dict.pt",
+    "torchscript": "lraspp_mobilenet_v3_large.torchscript.pt"
+  }
+}

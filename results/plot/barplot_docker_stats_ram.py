@@ -26,10 +26,10 @@ LEGEND_LOC = {
 }
 
 MODEL_TYPE_ORDER = [
+    "swin_t",
+    "resnet50",
     "mc3_18", "r3d_18",
     "deeplabv3_resnet50", "fcn_resnet50",
-    "resnet50", "mobilenet_v3_large",
-    "swin_t",
 ]
 
 VARIANTS_ALL = [
@@ -58,7 +58,7 @@ def ordered_models(models):
 
 def style_axes(ax):
     ax.set_axisbelow(True)
-    ax.grid(axis="y", linestyle="--", linewidth=1.0, alpha=0.8)
+    ax.grid(axis="both", linestyle="-", linewidth=1.0, alpha=0.8)
     for side in ("top", "right", "bottom", "left"):
         ax.spines[side].set_color("black")
         ax.spines[side].set_linewidth(SPINES_WIDTH)
@@ -152,14 +152,10 @@ def plot_host(ax, dfh: pd.DataFrame, host: str, base_models, color_map, y_lim_to
                 ax.errorbar(
                     xs, means, yerr=yerr,
                     fmt="none", ecolor="black",
-                    elinewidth=1.5, capsize=4, capthick=1.5, zorder=10
+                    elinewidth=1.0, capsize=4, capthick=1.0, zorder=10
                 )
 
-    if host == "robot":
-        ax.set_title("Robot RAM utilization (torchvision-app container)")
-    else:
-        ax.set_title("Edge RAM utilization (vaccel-agent container)")
-
+    # No per-panel titles
     ax.set_xlabel("ML Model")
     ax.set_xticks(x)
     ax.set_xticklabels(base_models, rotation=20, ha="right")
@@ -167,7 +163,7 @@ def plot_host(ax, dfh: pd.DataFrame, host: str, base_models, color_map, y_lim_to
 
     style_axes(ax)
     ax.legend(
-        title="Execution stack @ execution hardware",
+        title="Execution mode · Backend @ Hardware",
         loc=LEGEND_LOC.get(host, "upper right"),
         frameon=True, framealpha=0.9,
         borderpad=0.4, handlelength=1.4,
@@ -195,21 +191,40 @@ def main():
         df[c] = df[c].astype(str).str.lower().str.strip()
     df["model"] = df["model"].astype(str).str.strip()
 
+    allowed_models = [m.strip() for m in MODEL_TYPE_ORDER]
+
     rows = []
+    dropped_models = set()
+
     for _, r in df.iterrows():
         base, variant = classify_variant(r.to_dict())
         if variant is None:
             continue
+
+        # EFFECTIVE filter: keep only base models in MODEL_TYPE_ORDER
+        if base not in allowed_models:
+            dropped_models.add(base)
+            continue
+
+        try:
+            mu = float(r["mem_mb_mean"])
+            sd = float(r["mem_mb_std"]) if pd.notna(r["mem_mb_std"]) else np.nan
+        except Exception:
+            continue
+
         rows.append({
             "host": r["host"],
             "base_model": base,
             "variant": variant,
-            "mem_mb_mean": float(r["mem_mb_mean"]),
-            "mem_mb_std": float(r["mem_mb_std"]) if pd.notna(r["mem_mb_std"]) else np.nan,
+            "mem_mb_mean": mu,
+            "mem_mb_std": sd,
         })
 
+    if dropped_models:
+        print(f"[WARN] Dropped models not in MODEL_TYPE_ORDER: {sorted(dropped_models)}")
+
     if not rows:
-        raise SystemExit("No rows matched. Check container/backend/device patterns in the docker-stats summary CSV.")
+        raise SystemExit("No rows matched after variant parsing + MODEL_TYPE_ORDER filter.")
 
     df2 = pd.DataFrame(rows)
 
@@ -217,10 +232,9 @@ def main():
     if not present_hosts:
         present_hosts = sorted(df2["host"].unique().tolist())
 
-    base_models = ordered_models(sorted(df2["base_model"].unique().tolist()))
+    base_models = [m for m in MODEL_TYPE_ORDER if m in set(df2["base_model"])]
 
     sns.set_theme(context="paper", style="ticks", font_scale=FONT_SCALE)
-
     pal = sns.color_palette("colorblind", n_colors=len(VARIANTS_ALL))
     color_map = {v: pal[i] for i, v in enumerate(VARIANTS_ALL)}
 
@@ -246,7 +260,9 @@ def main():
         for ax, host in zip(axes, present_hosts):
             sub = df2[df2["host"] == host].copy()
             plot_host(ax, sub, host, base_models, color_map, y_lim_top_by_host[host])
-            ax.set_ylabel("RAM (MB)")
+
+            # per-subplot y label (Robot vs Edge)
+            ax.set_ylabel(f"{host.capitalize()} RAM utilization (MB)")
 
         plt.tight_layout()
         out = f"{OUTPUT_BASENAME}.pdf"
@@ -265,7 +281,7 @@ def main():
 
             fig, ax = plt.subplots(1, 1, figsize=FIG_SIZE)
             plot_host(ax, sub, host, base_models, color_map, y_lim_top)
-            ax.set_ylabel("RAM (MB)")
+            ax.set_ylabel(f"{host.capitalize()} RAM utilization (MB)")
 
             plt.tight_layout()
             out = f"{OUTPUT_BASENAME}_{host}.pdf"

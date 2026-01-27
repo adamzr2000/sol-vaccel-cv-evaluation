@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 
+from __future__ import annotations
+
 from pathlib import Path
+import json
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import json
 
 INPUT_FILE = "../../experiments/model-stats/_summary/run1_benchmark_summary.json"
 
 PLOT_MODE = "combined"  # "combined" or "separate"
 OUTPUT_COMBINED = "model_stats_inference_latency_barplot_local_exec.pdf"
 
-FONT_SCALE = 1.5
+FONT_SCALE = 1.2
 SPINES_WIDTH = 1.5
 FIG_SIZE_SINGLE = (8.5, 5.2)
 FIG_SIZE_COMBINED = (10.5, 11.0)
@@ -19,28 +21,32 @@ FIG_SIZE_COMBINED = (10.5, 11.0)
 SHOW_VALUE_LABELS = True
 SHOW_ERROR_BARS = True
 
-INCLUDE_VACCEL_LOCAL = True
+INCLUDE_VACCEL_LOCAL = False
 VARIANT_ORDER = ["PyTorch", "SOL", "SOL + vAccel"] if INCLUDE_VACCEL_LOCAL else ["PyTorch", "SOL"]
 
 SMOOTH = False
 SMOOTH_WINDOW = 3
 
+# Strict filter + order (consistent behavior)
 MODEL_TYPE_ORDER = [
-    "mc3_18", "r3d_18",
-    "deeplabv3_resnet50", "fcn_resnet50",
-    "resnet50", "mobilenet_v3_large",
+    "mobilenet_v3_large","resnet50","swin_t","swin_s", "swin_v2_b",
+    "swin3d_t","swin3d_s","mc3_18", "r3d_18","r2plus1d_18",
+    "deeplabv3_mobilenet_v3_large",
+    "deeplabv3_resnet50","deeplabv3_resnet101",
+    "fcn_resnet50","fcn_resnet101", 
 ]
 
 TARGETS = [
-    ("robot", "cpu", "model_stats_inference_latency_robot_cpu_barplot_local_exec.pdf"),
-    ("edge", "cpu", "model_stats_inference_latency_edge_cpu_barplot_local_exec.pdf"),
-    ("edge", "gpu", "model_stats_inference_latency_edge_gpu_barplot_local_exec.pdf"),
+    ("robot", "cpu", "model_stats_inference_latency_robot_cpu_barplot_local_exec.pdf", "upper left"),
+    ("edge", "cpu", "model_stats_inference_latency_edge_cpu_barplot_local_exec.pdf", "upper left"),
+    ("edge", "gpu", "model_stats_inference_latency_edge_gpu_barplot_local_exec.pdf", "upper left"),
 ]
 
 
 def ordered_models(models):
     models = list(dict.fromkeys(models))
-    rank = {m: i for i, m in enumerate(MODEL_TYPE_ORDER)}
+    clean_order = [m.strip() for m in MODEL_TYPE_ORDER]
+    rank = {m: i for i, m in enumerate(clean_order)}
     return sorted(models, key=lambda m: (rank.get(m, 10_000), m))
 
 
@@ -62,7 +68,6 @@ def split_variant(model: str, backend: str):
 
 
 def add_value_labels(ax, xs, ys, yerrs, y_top, show_errors: bool):
-    # fs = max(8, int(plt.rcParams["font.size"] * 0.6))
     fs = max(6, int(plt.rcParams["font.size"] * 0.45))
     for x, y, e in zip(xs, ys, yerrs):
         if y is None or (isinstance(y, float) and np.isnan(y)):
@@ -81,7 +86,7 @@ def add_value_labels(ax, xs, ys, yerrs, y_top, show_errors: bool):
 
 def style_axes(ax):
     ax.set_axisbelow(True)
-    ax.grid(axis="y", linestyle="--", linewidth=1.0, alpha=0.8)
+    ax.grid(axis="both", linestyle="-", linewidth=1.0, alpha=0.8)
     for side in ("top", "right", "bottom", "left"):
         ax.spines[side].set_color("black")
         ax.spines[side].set_linewidth(SPINES_WIDTH)
@@ -112,6 +117,7 @@ def extract_rows(runs, host, device):
     if not sub:
         return []
 
+    allowed_models = [m.strip() for m in MODEL_TYPE_ORDER]
     rows = []
     for r in sub:
         model = r.get("model", "")
@@ -120,23 +126,37 @@ def extract_rows(runs, host, device):
         if variant is None or variant not in VARIANT_ORDER:
             continue
 
+        # Strict filter: only keep models in MODEL_TYPE_ORDER
+        if base_model not in allowed_models:
+            continue
+
         inf = r.get("inference_latency_ms", {}) or {}
         mean = inf.get("mean", None)
         std = inf.get("std", None)
         if mean is None:
             continue
 
-        mu = float(mean)
-        sd = float(std) if std is not None else np.nan
+        try:
+            mu = float(mean)
+        except Exception:
+            continue
+        try:
+            sd = float(std) if std is not None else np.nan
+        except Exception:
+            sd = np.nan
+
         rows.append((base_model, variant, mu, sd))
 
     return rows
 
 
-def plot_latency(ax, rows, host, device, color_map):
+def plot_latency(ax, rows, host, device, color_map, leg_loc: str):
+    host_u = str(host).lower().strip()
+    device_u = str(device).lower().strip()
+
     if not rows:
         ax.axis("off")
-        ax.text(0.5, 0.5, f"No data for {host}-{device}", ha="center", va="center", transform=ax.transAxes)
+        ax.text(0.5, 0.5, f"No data for {host_u}-{device_u}", ha="center", va="center", transform=ax.transAxes)
         return
 
     base_models = ordered_models(sorted({m for m, _, _, _ in rows}))
@@ -149,9 +169,9 @@ def plot_latency(ax, rows, host, device, color_map):
             mean_map[(m, v)] = mu
             std_map[(m, v)] = sd
 
-    all_means = [mean_map[(m, v)] for m in base_models for v in variants]
-    all_stds = [std_map[(m, v)] for m in base_models for v in variants]
-    y_max = np.nanmax(np.asarray(all_means, dtype=float) + np.nan_to_num(np.asarray(all_stds, dtype=float), nan=0.0))
+    all_means = np.asarray([mean_map[(m, v)] for m in base_models for v in variants], dtype=float)
+    all_stds = np.asarray([std_map[(m, v)] for m in base_models for v in variants], dtype=float)
+    y_max = np.nanmax(all_means + np.nan_to_num(all_stds, nan=0.0))
     y_lim_top = (y_max * 1.25) if np.isfinite(y_max) and y_max > 0 else 1.0
 
     x = np.arange(len(base_models))
@@ -178,13 +198,14 @@ def plot_latency(ax, rows, host, device, color_map):
         )
 
         if SHOW_ERROR_BARS:
-            # matplotlib errorbar fails if yerr has no finite values -> set NaNs to 0
+            # robust: don't pass NaNs to yerr; also mask NaN means
             yerr = np.where(np.isfinite(stds), stds, 0.0)
-            if np.any(yerr > 0):
+            mask = np.isfinite(means)
+            if np.any(mask) and np.any(yerr[mask] > 0):
                 ax.errorbar(
-                    xs, means, yerr=yerr,
+                    xs[mask], means[mask], yerr=yerr[mask],
                     fmt="none", ecolor="black",
-                    elinewidth=1.5, capsize=4, capthick=1.5, zorder=10
+                    elinewidth=1.0, capsize=4, capthick=1.0, zorder=10
                 )
 
         if SHOW_VALUE_LABELS:
@@ -204,22 +225,23 @@ def plot_latency(ax, rows, host, device, color_map):
                     linewidth=1.8, color="black", alpha=0.35, zorder=6
                 )
 
-    ax.set_title(f"Inference latency @ {host.capitalize()} {device.upper()}")
+    # remove title; put context on y-axis
     ax.set_xlabel("ML Model")
-    ax.set_ylabel("Time (ms)")
+    ax.set_ylabel(f"{host_u.capitalize()} {device_u.upper()}\nInference Time (ms)")
     ax.set_xticks(x)
     ax.set_xticklabels(base_models, rotation=20, ha="right")
     ax.set_ylim(0, y_lim_top)
 
     style_axes(ax)
     ax.legend(
-        loc="upper right", 
-        frameon=True, 
-        framealpha=0.9, 
-        borderpad=0.4, 
-        handlelength=1.4, 
+        loc=leg_loc,
+        frameon=True,
+        framealpha=0.9,
+        borderpad=0.4,
+        handlelength=1.4,
         fontsize="small",
-        title_fontsize="small"
+        title_fontsize="small",
+        title=None,
     )
 
 
@@ -228,14 +250,14 @@ def plot_separate(runs):
     pal = sns.color_palette("colorblind", n_colors=len(VARIANT_ORDER))
     color_map = {v: pal[i] for i, v in enumerate(VARIANT_ORDER)}
 
-    for host, device, out_file in TARGETS:
+    for host, device, out_file, leg_loc in TARGETS:
         rows = extract_rows(runs, host, device)
         if not rows:
             print(f"[SKIP] No runs for host={host}, device={device}")
             continue
 
         fig, ax = plt.subplots(figsize=FIG_SIZE_SINGLE)
-        plot_latency(ax, rows, host, device, color_map)
+        plot_latency(ax, rows, host, device, color_map, leg_loc)
 
         plt.tight_layout()
         fig.savefig(out_file, dpi=300, bbox_inches="tight")
@@ -252,9 +274,9 @@ def plot_combined(runs):
     if not isinstance(axes, (list, np.ndarray)):
         axes = [axes]
 
-    for ax, (host, device, _out_file) in zip(axes, TARGETS):
+    for ax, (host, device, _out_file, leg_loc) in zip(axes, TARGETS):
         rows = extract_rows(runs, host, device)
-        plot_latency(ax, rows, host, device, color_map)
+        plot_latency(ax, rows, host, device, color_map, leg_loc)
 
     plt.tight_layout()
     fig.savefig(OUTPUT_COMBINED, dpi=300, bbox_inches="tight")

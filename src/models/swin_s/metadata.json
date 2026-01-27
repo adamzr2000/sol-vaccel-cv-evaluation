@@ -1,0 +1,9 @@
+{
+  "model": "swin_s",
+  "weights_enum": "Swin_S_Weights.IMAGENET1K_V1",
+  "num_params": 49606258,
+  "files": {
+    "state_dict": "swin_s_state_dict.pt",
+    "torchscript": "swin_s.torchscript.pt"
+  }
+}

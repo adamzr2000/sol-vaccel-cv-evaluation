@@ -23,10 +23,10 @@ SMOOTH = False
 SMOOTH_WINDOW = 3
 
 MODEL_TYPE_ORDER = [
-    "mc3_18", "r3d_18",
-    "deeplabv3_resnet50", "fcn_resnet50",
-    "resnet50", "mobilenet_v3_large",
     "swin_t",
+    "resnet50",
+    "mc3_18", "r3d_18",
+    "deeplabv3_resnet50", "fcn_resnet50"
 ]
 
 VARIANTS = [
@@ -39,13 +39,15 @@ VARIANTS = [
 
 def ordered_models(models):
     models = list(dict.fromkeys(models))
-    rank = {m: i for i, m in enumerate(MODEL_TYPE_ORDER)}
+    # strip whitespace in order keys to be safe
+    clean_order = [m.strip() for m in MODEL_TYPE_ORDER]
+    rank = {m: i for i, m in enumerate(clean_order)}
     return sorted(models, key=lambda m: (rank.get(m, 10_000), m))
 
 
 def style_axes(ax):
     ax.set_axisbelow(True)
-    ax.grid(axis="y", linestyle="--", linewidth=1.0, alpha=0.8)
+    ax.grid(axis="both", linestyle="-", linewidth=1.0, alpha=0.8)
     for side in ("top", "right", "bottom", "left"):
         ax.spines[side].set_color("black")
         ax.spines[side].set_linewidth(SPINES_WIDTH)
@@ -131,6 +133,18 @@ def plot_fps(rows):
     if not rows:
         raise SystemExit("No matching rows found (robot local stock + robot vaccel-remote).")
 
+    # --- MODEL_TYPE_ORDER strict filter (same behavior as your other plots) ---
+    allowed_models = [m.strip() for m in MODEL_TYPE_ORDER]
+    present_models = sorted({m for m, _, _ in rows})
+    dropped = sorted([m for m in present_models if m not in allowed_models])
+    if dropped:
+        print(f"\n[WARNING] Dropped the following models because they are not in MODEL_TYPE_ORDER:\n  {dropped}\n")
+
+    rows = [(m, v, fps) for (m, v, fps) in rows if m in allowed_models]
+    if not rows:
+        raise SystemExit("ERROR: No rows remained after filtering! Check the [WARNING] above.")
+    # -----------------------------------------------------------------------
+
     base_models = ordered_models(sorted({m for m, _, _ in rows}))
     variants = VARIANTS
 
@@ -186,7 +200,7 @@ def plot_fps(rows):
                     linewidth=1.8, color="black", alpha=0.35, zorder=6
                 )
 
-    ax.set_title("Robot-side inference FPS under local execution and edge offloading")
+    # ax.set_title("Robot-side inference FPS under local execution and edge offloading")
     ax.set_xlabel("ML Model")
     ax.set_ylabel("FPS (inference)")
     ax.set_xticks(x)
@@ -195,8 +209,8 @@ def plot_fps(rows):
 
     style_axes(ax)
     ax.legend(
-        title="Execution stack @ execution hardware",
-        loc="upper center",
+        title="Execution mode · Backend @ Hardware",
+        loc="upper left",
         frameon=True,
         framealpha=0.9,
         borderpad=0.4,

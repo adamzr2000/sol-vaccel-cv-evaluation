@@ -19,7 +19,22 @@ MODEL_REGISTRY = {
         "builder": models.segmentation.fcn_resnet50,
         "weights": models.segmentation.FCN_ResNet50_Weights.DEFAULT
     },
-
+    "deeplabv3_resnet101": {
+        "builder": models.segmentation.deeplabv3_resnet101,
+        "weights": models.segmentation.DeepLabV3_ResNet101_Weights.DEFAULT
+    },
+    "deeplabv3_mobilenet_v3_large": {
+        "builder": models.segmentation.deeplabv3_mobilenet_v3_large,
+        "weights": models.segmentation.DeepLabV3_MobileNet_V3_Large_Weights.DEFAULT
+    },
+    "fcn_resnet101": {
+        "builder": models.segmentation.fcn_resnet101,
+        "weights": models.segmentation.FCN_ResNet101_Weights.DEFAULT
+    },
+    "lraspp_mobilenet_v3_large": {
+        "builder": models.segmentation.lraspp_mobilenet_v3_large,
+        "weights": models.segmentation.LRASPP_MobileNet_V3_Large_Weights.DEFAULT
+    },
     # 2. Classification Models
     "resnet50": {
         "builder": models.resnet50,
@@ -33,7 +48,14 @@ MODEL_REGISTRY = {
         "builder": models.swin_t,
         "weights": models.Swin_T_Weights.DEFAULT
     },
-
+    "swin_s": {
+        "builder": models.swin_s,
+        "weights": models.Swin_S_Weights.DEFAULT
+    },
+    "swin_v2_b": {
+        "builder": models.swin_v2_b,
+        "weights": models.Swin_V2_B_Weights.DEFAULT
+    },
     # 3. Video Models
     "mc3_18": {
         "builder": models.video.mc3_18,
@@ -42,6 +64,23 @@ MODEL_REGISTRY = {
     "r3d_18": {
         "builder": models.video.r3d_18,
         "weights": models.video.R3D_18_Weights.DEFAULT
+    },
+    "r2plus1d_18": {
+        "builder": models.video.r2plus1d_18,
+        "weights": models.video.R2Plus1D_18_Weights.DEFAULT
+    },
+    # Swin3D (Video Swin Transformer)
+    "swin3d_t": {
+        "builder": models.video.swin3d_t,
+        "weights": models.video.Swin3D_T_Weights.DEFAULT
+    },
+    "swin3d_s": {
+        "builder": models.video.swin3d_s,
+        "weights": models.video.Swin3D_S_Weights.DEFAULT
+    },
+    "swin3d_b": {
+        "builder": models.video.swin3d_b,
+        "weights": models.video.Swin3D_B_Weights.DEFAULT
     }
 }
 def main():

@@ -1,0 +1,9 @@
+{
+  "model": "deeplabv3_resnet101",
+  "weights_enum": "DeepLabV3_ResNet101_Weights.COCO_WITH_VOC_LABELS_V1",
+  "num_params": 60996202,
+  "files": {
+    "state_dict": "deeplabv3_resnet101_state_dict.pt",
+    "torchscript": "deeplabv3_resnet101.torchscript.pt"
+  }
+}

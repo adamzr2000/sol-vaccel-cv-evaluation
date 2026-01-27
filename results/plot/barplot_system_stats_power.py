@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from __future__ import annotations
+
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -20,11 +22,12 @@ FIG_SIZE_COMBINED = (11.2, 13.6)
 SHOW_VALUE_LABELS = False
 SHOW_ERROR_BARS = True
 
+# --- FILTER CONFIGURATION (match your other plots) ---
 MODEL_TYPE_ORDER = [
+    "swin_t",
+    "resnet50",
     "mc3_18", "r3d_18",
     "deeplabv3_resnet50", "fcn_resnet50",
-    "resnet50", "mobilenet_v3_large",
-    "swin_t",
 ]
 
 VARIANTS = [
@@ -37,13 +40,14 @@ VARIANTS = [
 
 def ordered_models(models):
     models = list(dict.fromkeys(models))
-    rank = {m: i for i, m in enumerate(MODEL_TYPE_ORDER)}
+    clean_order = [m.strip() for m in MODEL_TYPE_ORDER]
+    rank = {m: i for i, m in enumerate(clean_order)}
     return sorted(models, key=lambda m: (rank.get(m, 10_000), m))
 
 
 def style_axes(ax):
     ax.set_axisbelow(True)
-    ax.grid(axis="y", linestyle="--", linewidth=1.0, alpha=0.8)
+    ax.grid(axis="both", linestyle="-", linewidth=1.0, alpha=0.8)
     for side in ("top", "right", "bottom", "left"):
         ax.spines[side].set_color("black")
         ax.spines[side].set_linewidth(SPINES_WIDTH)
@@ -78,6 +82,7 @@ def classify_robot_cpu_variant(row) -> str | None:
         return VARIANTS[0] if not is_sol else VARIANTS[1]
 
     if backend == "vaccel-remote" and is_sol:
+        # system-stats uses device field like "cpu_target-cpu" / "cpu_target-gpu"
         if device == "cpu_target-cpu":
             return VARIANTS[2]
         if device == "cpu_target-gpu":
@@ -161,7 +166,14 @@ def compute_offsets(variants_present):
     return width, offsets
 
 
-def plot_panel(ax, rows, title, variants_present, color_map):
+def _apply_model_filter(rows, allowed_models):
+    present = sorted({r["base_model"] for r in rows})
+    dropped = sorted([m for m in present if m not in allowed_models])
+    kept = [r for r in rows if r["base_model"] in allowed_models]
+    return kept, dropped
+
+
+def plot_panel(ax, rows, ylabel, variants_present, color_map):
     if not rows:
         ax.axis("off")
         ax.text(0.5, 0.5, "No data", ha="center", va="center", transform=ax.transAxes)
@@ -206,22 +218,22 @@ def plot_panel(ax, rows, title, variants_present, color_map):
                 ax.errorbar(
                     xs, means, yerr=yerr,
                     fmt="none", ecolor="black",
-                    elinewidth=1.5, capsize=4, capthick=1.5, zorder=10
+                    elinewidth=1.0, capsize=4, capthick=1.0, zorder=10
                 )
 
         if SHOW_VALUE_LABELS:
             add_value_labels(ax, xs, means, stds, y_lim_top)
 
-    ax.set_title(title)
+    # no title (per request)
     ax.set_xlabel("ML Model")
-    ax.set_ylabel("Power (W)")
+    ax.set_ylabel(ylabel)
     ax.set_xticks(x)
     ax.set_xticklabels(base_models, rotation=20, ha="right")
     ax.set_ylim(0, y_lim_top)
 
     style_axes(ax)
     ax.legend(
-        title="Execution stack @ execution hardware",
+        title="Execution mode · Backend @ Hardware",
         loc="upper right",
         frameon=True,
         framealpha=0.9,
@@ -251,14 +263,33 @@ def main():
     edge_cpu_rows = load_edge_cpu_remote_rows(cpu_df)
     edge_gpu_rows = load_edge_gpu_remote_rows(gpu_df)
 
+    # --- MODEL_TYPE_ORDER strict filter (match your other plots) ---
+    allowed_models = [m.strip() for m in MODEL_TYPE_ORDER]
+
+    robot_rows_f, dropped_robot = _apply_model_filter(robot_rows, allowed_models)
+    edge_cpu_rows_f, dropped_edge_cpu = _apply_model_filter(edge_cpu_rows, allowed_models)
+    edge_gpu_rows_f, dropped_edge_gpu = _apply_model_filter(edge_gpu_rows, allowed_models)
+
+    dropped_all = sorted(set(dropped_robot + dropped_edge_cpu + dropped_edge_gpu))
+    if dropped_all:
+        print(f"\n[WARNING] Dropped the following models because they are not in MODEL_TYPE_ORDER:\n  {dropped_all}\n")
+
+    robot_rows = robot_rows_f
+    edge_cpu_rows = edge_cpu_rows_f
+    edge_gpu_rows = edge_gpu_rows_f
+
+    if not robot_rows and not edge_cpu_rows and not edge_gpu_rows:
+        raise SystemExit("ERROR: No rows remained after filtering! Check the [WARNING] above.")
+    # ----------------------------------------------------------------
+
     sns.set_theme(context="paper", style="ticks", font_scale=FONT_SCALE)
     pal = sns.color_palette("colorblind", n_colors=len(VARIANTS))
     color_map = {v: pal[i] for i, v in enumerate(VARIANTS)}
 
     panels = [
-        ("robot_cpu", "Robot CPU power", robot_rows, VARIANTS),
-        ("edge_cpu", "Edge CPU power", edge_cpu_rows, [VARIANTS[2]]),
-        ("edge_gpu", "Edge GPU power", edge_gpu_rows, [VARIANTS[3]]),
+        ("robot_cpu", "Robot CPU power (W)", robot_rows, VARIANTS),
+        ("edge_cpu", "Edge CPU power (W)", edge_cpu_rows, [VARIANTS[2]]),
+        ("edge_gpu", "Edge GPU power (W)", edge_gpu_rows, [VARIANTS[3]]),
     ]
 
     if PLOT_MODE not in {"combined", "separate"}:
@@ -269,8 +300,8 @@ def main():
         if not isinstance(axes, (list, np.ndarray)):
             axes = [axes]
 
-        for ax, (_key, title, rows, vars_present) in zip(axes, panels):
-            plot_panel(ax, rows, title, vars_present, color_map)
+        for ax, (_key, ylabel, rows, vars_present) in zip(axes, panels):
+            plot_panel(ax, rows, ylabel, vars_present, color_map)
 
         plt.tight_layout()
         out = f"{OUTPUT_BASENAME}.pdf"
@@ -279,9 +310,9 @@ def main():
         plt.close(fig)
 
     else:
-        for key, title, rows, vars_present in panels:
+        for key, ylabel, rows, vars_present in panels:
             fig, ax = plt.subplots(1, 1, figsize=FIG_SIZE_SINGLE)
-            plot_panel(ax, rows, title, vars_present, color_map)
+            plot_panel(ax, rows, ylabel, vars_present, color_map)
 
             plt.tight_layout()
             out = f"{OUTPUT_BASENAME}_{key}.pdf"

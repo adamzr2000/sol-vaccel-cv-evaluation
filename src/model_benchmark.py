@@ -66,13 +66,13 @@ CURRENT_MODEL_DIR = MODELS_DIR / MODEL_ARCH
 
 # Helper to check type (strip _sol suffix)
 CORE_MODEL_NAME = MODEL_ARCH.replace("_sol", "")
-VIDEO_MODELS = ["mc3_18", "r3d_18"]
+VIDEO_MODELS = ["mc3_18", "r3d_18", "r2plus1d_18", "swin3d_t", "swin3d_s", "swin3d_b"]
 IS_VIDEO_MODEL = CORE_MODEL_NAME in VIDEO_MODELS
 
 # Determine Model Type String
 if IS_VIDEO_MODEL:
     MODEL_TYPE = "video_classification"
-elif CORE_MODEL_NAME in ["resnet50", "mobilenet_v3_large", "swin_t"]:
+elif CORE_MODEL_NAME in ["resnet50", "mobilenet_v3_large", "swin_t", "swin_s", "swin_v2_b"]:
     MODEL_TYPE = "image_classification"
 else:
     MODEL_TYPE = "semantic_segmentation"

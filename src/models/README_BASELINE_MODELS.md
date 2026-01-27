@@ -21,6 +21,8 @@ python3 download_baseline_model.py --model fcn_resnet50
 python3 download_baseline_model.py --model resnet50
 python3 download_baseline_model.py --model mobilenet_v3_large
 python3 download_baseline_model.py --model swin_t
+python3 download_baseline_model.py --model swin_s
+python3 download_baseline_model.py --model swin_v2_b
 python3 download_baseline_model.py --model mc3_18
 python3 download_baseline_model.py --model r3d_18
 ```

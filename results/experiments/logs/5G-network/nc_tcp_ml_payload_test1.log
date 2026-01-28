@@ -1,0 +1,62 @@
+netcom@robot:~/sol-vaccel-cv-evaluation$ EDGE_IP=10.5.1.20 PORT=5001 ./ml_payload_over_tcp_bw.sh uplink
+=== UPLINK (UE -> EDGE) : image input tensor (1,3,224,224) float32 ===
+Target:  10.5.1.20:5001
+Payload: 602112 bytes   Count: 200
+Listener on receiver:  nc -lk -p 5001 > /dev/null
+
+
+Summary:
+  Total:      114,84 MiB (120422400 bytes)
+  Time:       20,5200 s
+  Throughput: 5,60 MiB/s (46,9 Mbit/s)
+  Avg/payload (602112 bytes): 0,1026 s (102,6 ms)
+
+=== UPLINK (UE -> EDGE) : video input tensor (1,3,16,112,112) float32 ===
+Target:  10.5.1.20:5001
+Payload: 2408448 bytes   Count: 50
+Listener on receiver:  nc -lk -p 5001 > /dev/null
+
+
+Summary:
+  Total:      114,84 MiB (120422400 bytes)
+  Time:       20,3800 s
+  Throughput: 5,64 MiB/s (47,3 Mbit/s)
+  Avg/payload (2408448 bytes): 0,4076 s (407,6 ms)
+
+
+nextnet@asus-g815:~/adam/sol-vaccel-cv-evaluation$ UE_IP=10.3.202.66 PORT=5001 ./ml_payload_over_tcp_bw.sh downlink
+=== DOWNLINK (EDGE -> UE) : classification logits (1,1000) float32 ===
+Target:  10.3.202.66:5001
+Payload: 4000 bytes   Count: 200000
+Listener on receiver:  nc -lk -p 5001 > /dev/null
+
+
+Summary:
+  Total:      762.94 MiB (800000000 bytes)
+  Time:       13.7900 s
+  Throughput: 55.33 MiB/s (464.1 Mbit/s)
+  Avg/payload (4000 bytes): 0.000069 s (0.069 ms)
+
+=== DOWNLINK (EDGE -> UE) : segmentation logits (1,21,224,224) float32 ===
+Target:  10.3.202.66:5001
+Payload: 4214784 bytes   Count: 50
+Listener on receiver:  nc -lk -p 5001 > /dev/null
+
+
+Summary:
+  Total:      200.98 MiB (210739200 bytes)
+  Time:       3.7900 s
+  Throughput: 53.03 MiB/s (444.8 Mbit/s)
+  Avg/payload (4214784 bytes): 0.075800 s (75.800 ms)
+
+=== DOWNLINK (EDGE -> UE) : video classification logits (1,400) float32 ===
+Target:  10.3.202.66:5001
+Payload: 1600 bytes   Count: 500000
+Listener on receiver:  nc -lk -p 5001 > /dev/null
+
+
+Summary:
+  Total:      762.94 MiB (800000000 bytes)
+  Time:       13.8200 s
+  Throughput: 55.21 MiB/s (463.1 Mbit/s)
+  Avg/payload (1600 bytes): 0.000028 s (0.028 ms)

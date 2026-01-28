@@ -194,7 +194,13 @@ def main() -> None:
         return
 
     run_tag = args.run_tag
-    matched = [p for p in csv_files if f"_{run_tag}_" in p.stem]
+    matched = []
+    for p in csv_files:
+        parts = p.stem.split("_")
+        # expected: {container}_{RUN_TAG}_{MODEL}_{BACKEND}_{HOST}_{DEVICE}[...]
+        if len(parts) >= 2 and parts[1] == run_tag:
+            matched.append(p)
+
     if not matched:
         print(f"❌ No CSV files matched RUN_TAG='{run_tag}'")
         return

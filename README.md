@@ -256,11 +256,11 @@ Quick reminder of **input/output shapes and their sizes** (based on [model_adapt
 
 * **Input to model**
   Shape: `(1, 3, 224, 224)` (float32)
-  **Size:** **≈ 588 KiB**
+  **Size:** **≈ 602 KB**
 
 * **Raw model output (logits)**
   Shape: `(1, 1000)` (float32)
-  **Size:** **≈ 3.9 KiB**
+  **Size:** **≈ 4 KB**
 
 * **Postprocessed output (returned by app)**
   `top_class` (int64) + `top_prob` (float32)
@@ -272,15 +272,47 @@ Quick reminder of **input/output shapes and their sizes** (based on [model_adapt
 
 * **Input to model**
   Shape: `(1, 3, 16, 112, 112)` (float32)
-  **Size:** **≈ 2.30 MiB**
+  **Size:** **≈ 2.40 MB**
 
 * **Raw model output (logits)**
   Shape: `(1, 400)` (float32)
-  **Size:** **≈ 1.6 KiB**
+  **Size:** **≈ 1.6 KB**
 
 * **Postprocessed output (returned by app)**
   `top_class` (int64) + `top_prob` (float32)
   **Size:** **≈ 12 B (negligible)**
+
+---
+
+#### ML payload bandwidth over TCP (UE ↔ Edge)
+
+[ml_payload_over_tcp_bw.sh](./ml_payload_over_tcp_bw.sh) measures **TCP throughput** and **average transfer time per ML tensor payload** for the above inputs/outputs
+  
+It prints: total bytes, total time, throughput (MiB/s + Mbit/s), and avg time per payload (ms).
+
+- Uplink (UE → Edge)
+
+On **Edge**:
+```bash
+nc -lk -p 5001 > /dev/null
+```
+
+On **UE**:
+```bash
+EDGE_IP=10.5.1.20 PORT=5001 ./ml_payload_over_tcp_bw.sh uplink
+```
+
+- Downlink (Edge → UE)
+
+On **UE**:
+```bash
+nc -lk -p 5001 > /dev/null
+```
+
+On **Edge**:
+```bash
+UE_IP=10.3.202.66 PORT=5001 ./ml_payload_over_tcp_bw.sh downlink
+```
 
 ---
 

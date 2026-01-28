@@ -62,8 +62,9 @@ def main() -> None:
         return
 
     run_tag = args.run_tag
-    matched_dirs = [d for d in run_dirs if d.name.startswith(f"{run_tag}_")]
-
+    # matched_dirs = [d for d in run_dirs if d.name.startswith(f"{run_tag}_")]
+    matched_dirs = [d for d in run_dirs if d.name.split("_", 1)[0] == run_tag]
+    
     if not matched_dirs:
         print(f"❌ No run directories matched RUN_TAG='{run_tag}'")
         return

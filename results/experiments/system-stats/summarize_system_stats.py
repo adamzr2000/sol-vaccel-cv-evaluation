@@ -259,7 +259,8 @@ def main() -> None:
         return
 
     run_tag = args.run_tag.strip()
-    matched = [p for p in csv_files if p.stem.startswith(f"{run_tag}_")]
+    matched = [p for p in csv_files if p.stem.split("_", 1)[0] == run_tag]
+
     if not matched:
         print(f"❌ No CSV files matched RUN_TAG='{run_tag}'")
         return

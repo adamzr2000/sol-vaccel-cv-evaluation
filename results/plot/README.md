@@ -21,6 +21,9 @@
 
 ## Docker stats – network
 
+- Uplink: ~602 KB per image (all models)
+- Downlink: ~4 KB (image classification) and ~4.21 MB (segmentation)
+
 ### Robot network traffic (TX) — `torchvision-app` container (remote execution)
 
 * **Segmentation models generate the highest robot TX** (e.g., `deeplabv3_resnet50`, `fcn_resnet50`) because remote inference sustains higher request throughput and keeps the uplink continuously busy during offloading (robot repeatedly sends inputs + protocol overhead).

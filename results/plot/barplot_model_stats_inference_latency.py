@@ -13,13 +13,12 @@ FONT_SCALE = 1.5
 SPINES_WIDTH = 1.5
 FIG_SIZE = (11.2, 5.6)
 
-SHOW_VALUE_LABELS = False
+SHOW_VALUE_LABELS = True
 SHOW_ERROR_BARS = True
 
 MODEL_TYPE_ORDER = [
     "swin_t","swin_s", "swin_v2_b",
     "swin3d_t","swin3d_s","mc3_18", "r3d_18","r2plus1d_18",
-    "deeplabv3_mobilenet_v3_large",
     "deeplabv3_resnet50","deeplabv3_resnet101",
     "fcn_resnet50","fcn_resnet101", 
 ]

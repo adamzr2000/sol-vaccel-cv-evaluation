@@ -1,4 +1,4 @@
 ../../../swin_s_sol/lib_gpu/libsol-dnn-cudnn-deployment-0.8.0rc5-9.1.so
 ../../../swin_s_sol/lib_gpu/libsol-dnn-cublaslt-deployment-0.8.0rc5-12.so
-../libsol_swin_t.so
-libsol_swin_t_wrapper.so
+../libsol_r2plus1d_18.so
+libsol_r2plus1d_18_wrapper.so

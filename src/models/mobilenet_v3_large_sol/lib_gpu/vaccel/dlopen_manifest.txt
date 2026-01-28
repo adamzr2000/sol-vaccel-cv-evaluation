@@ -1,4 +1,4 @@
-../../../resnet50_sol/lib_gpu/libsol-dnn-cudnn-deployment-0.8.0rc5-9.1.so
+../../../swin_s_sol/lib_gpu/libsol-dnn-cudnn-deployment-0.8.0rc5-9.1.so
 ../libsol-dnn-cublaslt-deployment-0.8.0rc5-12.so
 ../libsol_mobilenet_v3_large.so
 libsol_mobilenet_v3_large_wrapper.so

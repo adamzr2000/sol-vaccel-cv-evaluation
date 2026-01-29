@@ -239,7 +239,7 @@ def plot_host(
     ax.set_xlabel("ML Model")
     ax.set_ylabel("Robot Traffic (Mbps)" if host == "robot" else "Edge Traffic (Mbps)")
     ax.set_xticks(x)
-    ax.set_xticklabels(base_models, rotation=20, ha="right")
+    ax.set_xticklabels(base_models, rotation=30, ha="right")
     ax.set_ylim(0, y_lim_top)
 
     style_axes(ax)

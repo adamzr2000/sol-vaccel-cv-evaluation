@@ -21,19 +21,20 @@ FIG_SIZE_COMBINED = (10.5, 11.0)
 SHOW_VALUE_LABELS = True
 SHOW_ERROR_BARS = True
 
+HIGHLIGHT_SOL_SLOWER_THAN_PYTORCH = True
+
 INCLUDE_VACCEL_LOCAL = False
 VARIANT_ORDER = ["PyTorch", "SOL", "SOL + vAccel"] if INCLUDE_VACCEL_LOCAL else ["PyTorch", "SOL"]
 
 SMOOTH = False
 SMOOTH_WINDOW = 3
 
-# Strict filter + order (consistent behavior)
 MODEL_TYPE_ORDER = [
-    "mobilenet_v3_large","resnet50","swin_t","swin_s", "swin_v2_b",
-    "swin3d_t","swin3d_s","mc3_18", "r3d_18","r2plus1d_18",
+    "mobilenet_v3_large", "resnet50", "swin_t", "swin_s", "swin_v2_b",
+    "swin3d_t", "swin3d_s", "swin3d_b", "mc3_18", "r3d_18", "r2plus1d_18",
     "deeplabv3_mobilenet_v3_large",
-    "deeplabv3_resnet50","deeplabv3_resnet101",
-    "fcn_resnet50","fcn_resnet101", 
+    "deeplabv3_resnet50", "deeplabv3_resnet101",
+    "fcn_resnet50", "fcn_resnet101",
 ]
 
 TARGETS = [
@@ -77,8 +78,10 @@ def add_value_labels(ax, xs, ys, yerrs, y_top, show_errors: bool):
             err = float(e)
         y_text = y + err + 0.02 * y_top
         ax.text(
-            x, y_text, f"{y:.2f}",
-            ha="center", va="bottom",
+            x, y_text, f"{y:.0f}",
+            ha="left", va="bottom",
+            rotation=30,
+            rotation_mode="anchor",
             color="black", fontsize=fs,
             clip_on=False, zorder=20,
         )
@@ -126,7 +129,6 @@ def extract_rows(runs, host, device):
         if variant is None or variant not in VARIANT_ORDER:
             continue
 
-        # Strict filter: only keep models in MODEL_TYPE_ORDER
         if base_model not in allowed_models:
             continue
 
@@ -198,7 +200,6 @@ def plot_latency(ax, rows, host, device, color_map, leg_loc: str):
         )
 
         if SHOW_ERROR_BARS:
-            # robust: don't pass NaNs to yerr; also mask NaN means
             yerr = np.where(np.isfinite(stds), stds, 0.0)
             mask = np.isfinite(means)
             if np.any(mask) and np.any(yerr[mask] > 0):
@@ -225,12 +226,18 @@ def plot_latency(ax, rows, host, device, color_map, leg_loc: str):
                     linewidth=1.8, color="black", alpha=0.35, zorder=6
                 )
 
-    # remove title; put context on y-axis
     ax.set_xlabel("ML Model")
     ax.set_ylabel(f"{host_u.capitalize()} {device_u.upper()}\nInference Time (ms)")
     ax.set_xticks(x)
-    ax.set_xticklabels(base_models, rotation=20, ha="right")
+    ax.set_xticklabels(base_models, rotation=30, ha="right")
     ax.set_ylim(0, y_lim_top)
+
+    if HIGHLIGHT_SOL_SLOWER_THAN_PYTORCH:
+        for tick, m in zip(ax.get_xticklabels(), base_models):
+            mu_pt = mean_map.get((m, "PyTorch"), np.nan)
+            mu_sol = mean_map.get((m, "SOL"), np.nan)
+            if np.isfinite(mu_pt) and np.isfinite(mu_sol) and (mu_sol > mu_pt):
+                tick.set_color("red")
 
     style_axes(ax)
     ax.legend(

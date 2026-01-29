@@ -1,0 +1,19 @@
+root@7812dc7aaa43:/src/models/lraspp_mobilenet_v3_large_sol/lib_gpu# ldd libsol_lraspp_mobilenet_v3_large.so
+        linux-vdso.so.1 (0x00007ced58d03000)
+        libcudart.so.12 => /usr/local/cuda/targets/x86_64-linux/lib/libcudart.so.12 (0x00007ced57a00000)
+        libcudnn.so.9 => /.venv/lib/python3.10/site-packages/nvidia/cudnn/lib/libcudnn.so.9 (0x00007ced57600000)
+        libcuda.so.1 => /usr/lib/x86_64-linux-gnu/libcuda.so.1 (0x00007ced51800000)
+        libsol-dnn-cudnn-deployment-0.8.0rc5-9.1.so => /src/models/deeplabv3_resnet50_sol/lib_gpu/libsol-dnn-cudnn-deployment-0.8.0rc5-9.1.so (0x00007ced58ce5000)
+        libstdc++.so.6 => /usr/lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007ced515d4000)
+        libm.so.6 => /usr/lib/x86_64-linux-gnu/libm.so.6 (0x00007ced58bfe000)
+        libgcc_s.so.1 => /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007ced58bde000)
+        libc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x00007ced513ab000)
+        /lib64/ld-linux-x86-64.so.2 (0x00007ced58d05000)
+        libdl.so.2 => /usr/lib/x86_64-linux-gnu/libdl.so.2 (0x00007ced57dfb000)
+        libpthread.so.0 => /usr/lib/x86_64-linux-gnu/libpthread.so.0 (0x00007ced57df6000)
+        librt.so.1 => /usr/lib/x86_64-linux-gnu/librt.so.1 (0x00007ced57df1000)
+root@7812dc7aaa43:/src/models/lraspp_mobilenet_v3_large_sol/lib_gpu# python3 sol_lraspp_mobilenet_v3_large.py
+Module: SOL/dnn-cudnn
+File: /usr/local/lib/python3.10/dist-packages/sol/include/sol/dnn/cudnn/api_v9_graph.cpp
+Line: 270
+Message(DP): CUDNN_STATUS_BAD_PARAM: nullptr == ptr

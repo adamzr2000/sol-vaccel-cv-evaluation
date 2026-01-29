@@ -191,27 +191,31 @@ run_one () {
 # run_one "r3d_18"
 # run_one "r3d_18_sol"
 
-###
+# run_one "deeplabv3_resnet101"
+# run_one "deeplabv3_resnet101_sol"
 
-run_one "deeplabv3_resnet101"
-run_one "deeplabv3_resnet101_sol"
+# run_one "fcn_resnet101"
+# run_one "fcn_resnet101_sol"
 
-run_one "fcn_resnet101"
-run_one "fcn_resnet101_sol"
+# run_one "deeplabv3_mobilenet_v3_large"
+# run_one "deeplabv3_mobilenet_v3_large_sol"
 
-run_one "deeplabv3_mobilenet_v3_large"
-run_one "deeplabv3_mobilenet_v3_large_sol"
+# run_one "swin_s"
+# run_one "swin_s_sol"
 
-run_one "swin_s"
-run_one "swin_s_sol"
+# run_one "swin_v2_b"
+# run_one "swin_v2_b_sol"
 
-run_one "swin_v2_b"
-run_one "swin_v2_b_sol"
+# run_one "r2plus1d_18"
+# run_one "r2plus1d_18_sol"
 
-run_one "r2plus1d_18"
-run_one "r2plus1d_18_sol"
+# run_one "swin3d_t"
+# run_one "swin3d_t_sol"
 
-run_one "swin3d_t"
-run_one "swin3d_t_sol"
+run_one "swin3d_s"
+run_one "swin3d_s_sol"
+
+run_one "swin3d_b"
+run_one "swin3d_b_sol"
 
 echo "[bench] all done ✅"

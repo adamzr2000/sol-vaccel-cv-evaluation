@@ -16,11 +16,13 @@ FIG_SIZE = (11.2, 5.6)
 SHOW_VALUE_LABELS = True
 SHOW_ERROR_BARS = True
 
+HIGHLIGHT_SOL_SLOWER_THAN_PYTORCH = True
+
 MODEL_TYPE_ORDER = [
-    "swin_t","swin_s", "swin_v2_b",
-    "swin3d_t","swin3d_s","mc3_18", "r3d_18","r2plus1d_18",
-    "deeplabv3_resnet50","deeplabv3_resnet101",
-    "fcn_resnet50","fcn_resnet101", 
+    "swin_t", "swin_s", "swin_v2_b",
+    "swin3d_t", "swin3d_s", "swin3d_b", "mc3_18", "r3d_18", "r2plus1d_18",
+    "deeplabv3_resnet50", "deeplabv3_resnet101",
+    "fcn_resnet50", "fcn_resnet101",
 ]
 
 VARIANTS = [
@@ -65,17 +67,14 @@ def classify_variant(run: dict):
     model = str(run.get("model", "")).strip()
     device = str(run.get("device", "")).lower().strip()
 
-    # we plot robot-side observations only
     if host != "robot":
         return None
 
     is_sol = model.endswith("_sol")
 
-    # Local on robot CPU
-    if backend == "stock" and device == "cpu":
+    if backend in {"stock", "vaccel-local"} and device == "cpu":
         return VARIANTS[0] if not is_sol else VARIANTS[1]
 
-    # Remote offloading (robot measures end-to-end)
     if backend == "vaccel-remote" and is_sol:
         if "cpu_target-cpu" in run_id:
             return VARIANTS[2]
@@ -86,18 +85,13 @@ def classify_variant(run: dict):
 
 
 def extract_rows(runs):
-    """
-    Returns rows as tuples:
-      (base_model, variant_label, mean_ms, std_ms_or_nan)
-    """
     rows = []
     for r in runs:
-        # 1. Get the cleaned model name first
         b_model = base_model_name(r.get("model", ""))
 
-        # 2. Check if it is in your approved list. If not, skip it.
         if b_model not in MODEL_TYPE_ORDER:
             continue
+
         variant = classify_variant(r)
         if variant is None:
             continue
@@ -119,13 +113,9 @@ def extract_rows(runs):
         except Exception:
             std_f = np.nan
 
-        rows.append((
-            b_model,
-            variant,
-            mean_f,
-            std_f,
-        ))
+        rows.append((b_model, variant, mean_f, std_f))
     return rows
+
 
 def add_value_labels(ax, xs, ys, yerrs, y_top, show_errors: bool):
     fs = max(6, int(plt.rcParams["font.size"] * 0.45))
@@ -140,10 +130,12 @@ def add_value_labels(ax, xs, ys, yerrs, y_top, show_errors: bool):
 
         ax.text(
             x,
-            y + err + pad,          # <- key fix: mean + std + padding
-            f"{y:.2f}",
-            ha="center",
+            y + err + pad,
+            f"{y:.0f}",
+            ha="left",
             va="bottom",
+            rotation=30,
+            rotation_mode="anchor",
             fontsize=fs,
             color="black",
             clip_on=False,
@@ -153,7 +145,7 @@ def add_value_labels(ax, xs, ys, yerrs, y_top, show_errors: bool):
 
 def plot_latency(rows):
     if not rows:
-        raise SystemExit("No matching rows found (robot stock + robot vaccel-remote).")
+        raise SystemExit("No matching rows found (robot local stock/vaccel-local + robot vaccel-remote).")
 
     base_models = ordered_models(sorted({m for m, _, _, _ in rows}))
     variants = VARIANTS
@@ -209,13 +201,18 @@ def plot_latency(rows):
         if SHOW_VALUE_LABELS:
             add_value_labels(ax, xs, vals, yerr, y_lim_top, SHOW_ERROR_BARS)
 
-
-    # ax.set_title("Robot-side inference latency under local execution and edge offloading")
     ax.set_xlabel("ML Model")
     ax.set_ylabel("Inference Time (ms)")
     ax.set_xticks(x)
-    ax.set_xticklabels(base_models, rotation=20, ha="right")
+    ax.set_xticklabels(base_models, rotation=30, ha="right")
     ax.set_ylim(0, y_lim_top)
+
+    if HIGHLIGHT_SOL_SLOWER_THAN_PYTORCH:
+        for tick, m in zip(ax.get_xticklabels(), base_models):
+            mu_pt = val_map.get((m, VARIANTS[0]), np.nan)
+            mu_sol = val_map.get((m, VARIANTS[1]), np.nan)
+            if np.isfinite(mu_pt) and np.isfinite(mu_sol) and (mu_sol > mu_pt):
+                tick.set_color("red")
 
     style_axes(ax)
     ax.legend(

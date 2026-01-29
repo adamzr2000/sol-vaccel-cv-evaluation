@@ -21,11 +21,11 @@ FIG_SIZE_SINGLE = (8.5, 5.2)
 FIG_SIZE_COMBINED = (10.5, 11.0)  # 3 stacked panels
 
 MODEL_TYPE_ORDER = [
-    "mobilenet_v3_large","resnet50","swin_t","swin_s", "swin_v2_b",
-    "swin3d_t","swin3d_s","mc3_18", "r3d_18","r2plus1d_18",
+    "mobilenet_v3_large", "resnet50", "swin_t", "swin_s", "swin_v2_b",
+    "swin3d_t", "swin3d_s", "swin3d_b", "mc3_18", "r3d_18", "r2plus1d_18",
     "deeplabv3_mobilenet_v3_large",
-    "deeplabv3_resnet50","deeplabv3_resnet101",
-    "fcn_resnet50","fcn_resnet101", 
+    "deeplabv3_resnet50", "deeplabv3_resnet101",
+    "fcn_resnet50", "fcn_resnet101",
 ]
 
 VARIANT_ORDER = ["PyTorch", "SOL"]

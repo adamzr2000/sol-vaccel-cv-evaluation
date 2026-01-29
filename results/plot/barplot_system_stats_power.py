@@ -228,7 +228,7 @@ def plot_panel(ax, rows, ylabel, variants_present, color_map):
     ax.set_xlabel("ML Model")
     ax.set_ylabel(ylabel)
     ax.set_xticks(x)
-    ax.set_xticklabels(base_models, rotation=20, ha="right")
+    ax.set_xticklabels(base_models, rotation=30, ha="right")
     ax.set_ylim(0, y_lim_top)
 
     style_axes(ax)

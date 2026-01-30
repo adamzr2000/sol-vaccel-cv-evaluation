@@ -13,7 +13,7 @@ INPUT_FILE = "../experiments/model-stats/_summary/run1_benchmark_summary.json"
 OUTPUT_FILE = "model_stats_inference_fps.pdf"
 
 FONT_SCALE = 1.5
-SPINES_WIDTH = 1.5
+SPINES_WIDTH = 1.0
 FIG_SIZE = (11.2, 5.6)
 
 SHOW_VALUE_LABELS = False
@@ -47,7 +47,7 @@ def ordered_models(models):
 
 def style_axes(ax):
     ax.set_axisbelow(True)
-    ax.grid(axis="both", linestyle="-", linewidth=1.0, alpha=0.8)
+    ax.grid(axis="y", linestyle="-", linewidth=1.0, alpha=0.8)
     for side in ("top", "right", "bottom", "left"):
         ax.spines[side].set_color("black")
         ax.spines[side].set_linewidth(SPINES_WIDTH)
@@ -157,7 +157,7 @@ def plot_fps(rows):
     y_max = np.nanmax(all_vals)
     y_lim_top = (y_max * 1.25) if np.isfinite(y_max) and y_max > 0 else 1.0
 
-    sns.set_theme(context="paper", style="ticks", font_scale=FONT_SCALE)
+    sns.set_theme(context="paper", style="ticks", rc={"xtick.direction": "in", "ytick.direction": "in"}, font_scale=FONT_SCALE)
     pal = sns.color_palette("colorblind", n_colors=len(variants))
     color_map = {v: pal[i] for i, v in enumerate(variants)}
 

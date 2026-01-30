@@ -14,7 +14,7 @@ PLOT_MODE = "combined"  # "combined" or "separate"
 OUTPUT_BASENAME = "./docker_stats_ram"
 
 FONT_SCALE = 1.2
-SPINES_WIDTH = 1.5
+SPINES_WIDTH = 1.0
 FIG_SIZE = (8, 5.2)
 
 SHOW_VALUE_LABELS = False
@@ -90,7 +90,7 @@ def add_value_labels(ax, xs, ys, yerrs, y_top, show_errors: bool):
 
 def style_axes(ax):
     ax.set_axisbelow(True)
-    ax.grid(axis="both", linestyle="-", linewidth=1.0, alpha=0.8)
+    ax.grid(axis="y", linestyle="-", linewidth=1.0, alpha=0.8)
     for side in ("top", "right", "bottom", "left"):
         ax.spines[side].set_color("black")
         ax.spines[side].set_linewidth(SPINES_WIDTH)
@@ -246,7 +246,7 @@ def main():
     df["variant"] = pd.Categorical(df["variant"], categories=VARIANT_ORDER, ordered=True)
     df["base_model"] = pd.Categorical(df["base_model"], categories=base_models, ordered=True)
 
-    sns.set_theme(context="paper", style="ticks", font_scale=FONT_SCALE)
+    sns.set_theme(context="paper", style="ticks", rc={"xtick.direction": "in", "ytick.direction": "in"}, font_scale=FONT_SCALE)
     pal = sns.color_palette("colorblind", n_colors=len(VARIANT_ORDER))
     color_map = {v: pal[i] for i, v in enumerate(VARIANT_ORDER)}
 

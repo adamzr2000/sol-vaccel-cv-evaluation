@@ -24,7 +24,7 @@ PLOT_MODE = "combined"  # "combined" or "separate"
 OUTPUT_BASENAME = "./docker_stats_network"  # combined -> <basename>.pdf, separate -> <basename>_<host>.pdf
 
 FONT_SCALE = 1.5
-SPINES_WIDTH = 1.5
+SPINES_WIDTH = 1.0
 FIG_SIZE = (9.2, 5.2)
 
 SHOW_VALUE_LABELS = True
@@ -68,7 +68,7 @@ def base_model_name(model: str) -> str:
 
 def style_axes(ax):
     ax.set_axisbelow(True)
-    ax.grid(axis="both", linestyle="-", linewidth=1.0, alpha=0.8)
+    ax.grid(axis="y", linestyle="-", linewidth=1.0, alpha=0.8)
     for side in ("top", "right", "bottom", "left"):
         ax.spines[side].set_color("black")
         ax.spines[side].set_linewidth(SPINES_WIDTH)
@@ -335,7 +335,7 @@ def main():
     long_df["series"] = pd.Categorical(long_df["series"], categories=series_list, ordered=True)
     long_df["base_model"] = pd.Categorical(long_df["base_model"], categories=base_models, ordered=True)
 
-    sns.set_theme(context="paper", style="ticks", font_scale=FONT_SCALE)
+    sns.set_theme(context="paper", style="ticks", rc={"xtick.direction": "in", "ytick.direction": "in"}, font_scale=FONT_SCALE)
 
     # Color map is per execution mode (2 colors), direction uses hatches
     pal = sns.color_palette("colorblind", n_colors=len(BASE_SERIES))

@@ -16,7 +16,7 @@ PLOT_MODE = "combined"  # "combined" or "separate"
 OUTPUT_COMBINED = "model_stats_inference_fps_barplot.pdf"  # used when PLOT_MODE == "combined"
 
 FONT_SCALE = 1.2
-SPINES_WIDTH = 1.5
+SPINES_WIDTH = 1.0
 FIG_SIZE_SINGLE = (8.5, 5.2)
 FIG_SIZE_COMBINED = (10.5, 11.0)  # 3 stacked panels
 
@@ -53,7 +53,7 @@ def ordered_models(models):
 
 def style_axes(ax):
     ax.set_axisbelow(True)
-    ax.grid(axis="both", linestyle="-", linewidth=1.0, alpha=0.8)
+    ax.grid(axis="y", linestyle="-", linewidth=1.0, alpha=0.8)
     for side in ("top", "right", "bottom", "left"):
         ax.spines[side].set_color("black")
         ax.spines[side].set_linewidth(SPINES_WIDTH)
@@ -198,7 +198,7 @@ def main():
 
     df = pd.DataFrame(rows)
 
-    sns.set_theme(context="paper", style="ticks", font_scale=FONT_SCALE)
+    sns.set_theme(context="paper", style="ticks", rc={"xtick.direction": "in", "ytick.direction": "in"}, font_scale=FONT_SCALE)
     pal = sns.color_palette("colorblind", n_colors=2)
     color_map = {"PyTorch": pal[0], "SOL": pal[1]}
 

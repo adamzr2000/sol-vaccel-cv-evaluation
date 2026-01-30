@@ -12,7 +12,7 @@ PLOT_MODE = "combined"  # "combined" or "separate"
 OUTPUT_BASENAME = "./docker_stats_cpu"
 
 FONT_SCALE = 1.5
-SPINES_WIDTH = 1.5
+SPINES_WIDTH = 1.0
 FIG_SIZE = (10.2, 5.4)
 
 SHOW_VALUE_LABELS = False
@@ -63,7 +63,7 @@ def ordered_models(models):
 
 def style_axes(ax):
     ax.set_axisbelow(True)
-    ax.grid(axis="both", linestyle="-", linewidth=1.0, alpha=0.8)
+    ax.grid(axis="y", linestyle="-", linewidth=1.0, alpha=0.8)
     for side in ("top", "right", "bottom", "left"):
         ax.spines[side].set_color("black")
         ax.spines[side].set_linewidth(SPINES_WIDTH)
@@ -251,7 +251,7 @@ def main():
     # Ensure we use the exact order from the allowed list
     base_models = ordered_models(sorted(df2["base_model"].unique().tolist()))
 
-    sns.set_theme(context="paper", style="ticks", font_scale=FONT_SCALE)
+    sns.set_theme(context="paper", style="ticks", rc={"xtick.direction": "in", "ytick.direction": "in"}, font_scale=FONT_SCALE)
 
     pal = sns.color_palette("colorblind", n_colors=len(VARIANTS_ALL))
     color_map = {v: pal[i] for i, v in enumerate(VARIANTS_ALL)}

@@ -3,6 +3,8 @@
 summarize_system_stats.py
 
 Summarize system-stats-collector CSVs for a given RUN_TAG.
+Recursively finds CSVs in subfolders (e.g., robot/, edge-asus/).
+Uses the PARENT DIRECTORY NAME as the 'host' identifier.
 
 Outputs (written under ./_summary):
   - {run_tag}_overall_cpu_stats.csv
@@ -23,41 +25,23 @@ import pandas as pd
 CPU_METRICS = ["cpu_watts", "cpu_util_percent", "cpu_temp_c"]
 GPU_METRICS = ["power_draw_w", "util_gpu_percent", "util_mem_percent", "mem_used_mb", "temp_c"]
 
-
 CPU_OUT_FIELDS = [
-    "host",
-    "model",
-    "backend",
-    "device",
-    "cpu_watts_mean",
-    "cpu_watts_std",
-    "cpu_util_percent_mean",
-    "cpu_util_percent_std",
-    "cpu_temp_c_mean",
-    "cpu_temp_c_std",
-    "duration_sec",
-    "num_samples",
+    "host", "model", "backend", "device",
+    "cpu_watts_mean", "cpu_watts_std",
+    "cpu_util_percent_mean", "cpu_util_percent_std",
+    "cpu_temp_c_mean", "cpu_temp_c_std",
+    "duration_sec", "num_samples",
 ]
 
 GPU_OUT_FIELDS = [
-    "host",
-    "model",
-    "backend",
-    "device",
-    "gpu_count",
-    "gpu_names",
-    "power_draw_w_mean",
-    "power_draw_w_std",
-    "util_gpu_percent_mean",
-    "util_gpu_percent_std",
-    "util_mem_percent_mean",
-    "util_mem_percent_std",
-    "mem_used_mb_mean",
-    "mem_used_mb_std",
-    "temp_c_mean",
-    "temp_c_std",
-    "duration_sec",
-    "num_samples",
+    "host", "model", "backend", "device",
+    "gpu_count", "gpu_names",
+    "power_draw_w_mean", "power_draw_w_std",
+    "util_gpu_percent_mean", "util_gpu_percent_std",
+    "util_mem_percent_mean", "util_mem_percent_std",
+    "mem_used_mb_mean", "mem_used_mb_std",
+    "temp_c_mean", "temp_c_std",
+    "duration_sec", "num_samples",
     "gpu_energy_j",
 ]
 
@@ -73,47 +57,52 @@ def mean_std(vals: List[float]) -> Tuple[Optional[float], Optional[float]]:
     return float(np.mean(arr)), float(np.std(arr, ddof=0))
 
 
-def parse_stem(stem: str, run_tag: str) -> Optional[Tuple[str, str, str, str]]:
+def parse_stem_and_folder(path: Path, run_tag: str) -> Optional[Tuple[str, str, str, str]]:
     """
-    Parse:
-      stem = "{RUN_TAG}_{MODEL}_{BACKEND}_{HOST}_{DEVICE}"
-
-    Extended (vaccel-remote robot-side disambiguation):
-      stem = "{RUN_TAG}_{MODEL}_{BACKEND}_{HOST}_{LOCAL_MODE}_target-{TARGET_DEVICE}"
-
-    Return:
-      (model, backend, host, device)
+    Parse metadata from filename, BUT take 'host' from the parent folder name.
     """
+    stem = path.stem
     needle = f"{run_tag}_"
     if not stem.startswith(needle):
         return None
 
+    # ### CHANGED: Use parent folder name as the HOST
+    host = path.parent.name
+    
+    # Parse the rest from filename
     remainder = stem[len(needle):]
     parts = remainder.split("_")
+    
     if len(parts) < 4:
         return None
 
-    # Extended pattern: ..._{BACKEND}_{HOST}_{LOCAL_MODE}_target-{TARGET_DEVICE}
+    # Handle vaccel-remote extended naming
+    # Pattern: ..._{BACKEND}_{OLD_HOST}_{LOCAL_MODE}_target-{TARGET}
     if len(parts) >= 5 and parts[-1].startswith("target-"):
-        target = parts[-1]          # "target-gpu" / "target-cpu"
-        local_mode = parts[-2]      # "cpu"
-        host = parts[-3]            # "robot"
-        backend = parts[-4]         # "vaccel-remote"
+        target = parts[-1]
+        local_mode = parts[-2]
+        # skip parts[-3] (the filename host, e.g. "robot")
+        backend = parts[-4]
         model = "_".join(parts[:-4])
-        device = f"{local_mode}_{target}"  # "cpu_target-gpu"
+        device = f"{local_mode}_{target}"
     else:
+        # Pattern: ..._{BACKEND}_{OLD_HOST}_{DEVICE}
         device = parts[-1]
-        host = parts[-2]
+        # skip parts[-2] (the filename host, e.g. "edge")
         backend = parts[-3]
         model = "_".join(parts[:-3])
 
     return model, backend, host, device
 
-def discover_run_tags(csv_files: List[Path]) -> List[str]:
+
+def discover_run_tags(cwd: Path) -> List[str]:
     tags = set()
-    for p in csv_files:
+    # Recursive search for tags
+    for p in cwd.rglob("*.csv"):
+        if "_summary" in p.parts:
+            continue
         parts = p.stem.split("_")
-        if len(parts) >= 5:
+        if len(parts) >= 2:
             tags.add(parts[0])
     return sorted(tags)
 
@@ -193,47 +182,23 @@ def read_gpu_id_info(csv_path: Path) -> Tuple[int, str]:
     return gpu_count, joined_names
 
 
-def _print_cpu_summary_table(csv_path: Path) -> None:
+def _print_summary_table(csv_path: Path, title: str) -> None:
     try:
         df = pd.read_csv(csv_path)
         cols = [
             "host", "model", "backend", "device",
-            "cpu_watts_mean", "cpu_watts_std",
-            "cpu_util_percent_mean", "cpu_util_percent_std",
-            "cpu_temp_c_mean", "cpu_temp_c_std",
-            "duration_sec", "num_samples",
+            "cpu_watts_mean", "cpu_util_percent_mean",
+            "power_draw_w_mean", "util_gpu_percent_mean", "gpu_energy_j",
+            "duration_sec"
         ]
         cols = [c for c in cols if c in df.columns]
         df = df[cols].sort_values(["host", "device", "model"]).reset_index(drop=True)
 
-        print("\n===== CPU SUMMARY (sanity check) =====")
+        print(f"\n===== {title} (sanity check) =====")
         print(df.to_string(index=False))
         print("=====================================\n")
     except Exception as e:
-        print(f"⚠️  Could not print CPU summary table: {e}")
-
-
-def _print_gpu_summary_table(csv_path: Path) -> None:
-    try:
-        df = pd.read_csv(csv_path)
-        cols = [
-            "host", "model", "backend", "device",
-            "gpu_count", "gpu_names",
-            "power_draw_w_mean", "power_draw_w_std",
-            "util_gpu_percent_mean", "util_gpu_percent_std",
-            "mem_used_mb_mean", "mem_used_mb_std",
-            "temp_c_mean", "temp_c_std",
-            "duration_sec", "num_samples",
-            "gpu_energy_j",
-        ]
-        cols = [c for c in cols if c in df.columns]
-        df = df[cols].sort_values(["host", "device", "model"]).reset_index(drop=True)
-
-        print("\n===== GPU SUMMARY (sanity check) =====")
-        print(df.to_string(index=False))
-        print("=====================================\n")
-    except Exception as e:
-        print(f"⚠️  Could not print GPU summary table: {e}")
+        print(f"⚠️  Could not print summary table: {e}")
 
 
 def main() -> None:
@@ -243,23 +208,28 @@ def main() -> None:
     args = ap.parse_args()
 
     cwd = Path(".").resolve()
-    csv_files = sorted(cwd.glob("*.csv"))
+    
+    # ### CHANGED: Recursive search
+    csv_files = sorted(cwd.rglob("*.csv"))
 
     if not args.run_tag:
         print("❌ Missing required argument: --run-tag\n")
-        print("📂 Available RUN_TAGs in current directory:\n")
-        tags = discover_run_tags(csv_files)
+        print("📂 Available RUN_TAGs (scanned recursively):\n")
+        tags = discover_run_tags(cwd)
         if not tags:
             print("  (none found)")
         else:
             for t in tags:
                 print(f"  - {t}")
-        print("\n👉 Usage:")
-        print("   python3 summarize_system_stats.py --run-tag <RUN_TAG>")
         return
 
     run_tag = args.run_tag.strip()
-    matched = [p for p in csv_files if p.stem.split("_", 1)[0] == run_tag]
+    
+    # Filter by run_tag and exclude output folder
+    matched = [
+        p for p in csv_files 
+        if p.name.startswith(f"{run_tag}_") and "_summary" not in p.parts
+    ]
 
     if not matched:
         print(f"❌ No CSV files matched RUN_TAG='{run_tag}'")
@@ -274,8 +244,11 @@ def main() -> None:
     cpu_rows: Dict[Tuple[str, str, str, str], Dict[str, str]] = {}
     gpu_rows: Dict[Tuple[str, str, str, str], Dict[str, str]] = {}
 
+    print(f"🔍 Found {len(matched)} files. Processing...")
+
     for csv_path in matched:
-        parsed = parse_stem(csv_path.stem, run_tag)
+        # Parse metadata using folder as host
+        parsed = parse_stem_and_folder(csv_path, run_tag)
         if not parsed:
             continue
         model, backend, host, device = parsed
@@ -328,9 +301,10 @@ def main() -> None:
             p_mean = None
             d_sec = duration_sec
             try:
-                p_mean = float(np.mean(np.asarray(metrics["power_draw_w"], dtype=float))) if metrics["power_draw_w"] else None
+                if metrics["power_draw_w"]:
+                    p_mean = float(np.mean(np.asarray(metrics["power_draw_w"], dtype=float)))
             except Exception:
-                p_mean = None
+                pass
 
             gpu_energy_j = None
             if p_mean is not None and d_sec is not None:
@@ -341,25 +315,27 @@ def main() -> None:
             key = (host, model, backend, device)
             gpu_rows[key] = row
 
+    # --- Write CPU ---
     if cpu_rows:
         with cpu_out_path.open("w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=CPU_OUT_FIELDS)
             writer.writeheader()
             writer.writerows(cpu_rows.values())
         print(f"📄 CPU summary written to: {cpu_out_path} (rows={len(cpu_rows)})")
-        _print_cpu_summary_table(cpu_out_path)
+        _print_summary_table(cpu_out_path, "CPU SUMMARY")
     else:
-        print("⚠️  No CPU CSVs found/matched to summarize.")
+        print("⚠️  No CPU CSVs found/matched.")
 
+    # --- Write GPU ---
     if gpu_rows:
         with gpu_out_path.open("w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=GPU_OUT_FIELDS)
             writer.writeheader()
             writer.writerows(gpu_rows.values())
         print(f"📄 GPU summary written to: {gpu_out_path} (rows={len(gpu_rows)})")
-        _print_gpu_summary_table(gpu_out_path)
+        _print_summary_table(gpu_out_path, "GPU SUMMARY")
     else:
-        print("⚠️  No GPU CSVs found/matched to summarize.")
+        print("⚠️  No GPU CSVs found/matched.")
 
     print("✅ Done.")
 

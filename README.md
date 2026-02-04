@@ -84,8 +84,7 @@ Execute `model_benchmark.py` with the following environment variables.
   - If using `cpu` on ASUS G815 laptop, set `OMP_NUM_THREADS=10`
 
 - **HOST**: execution host identifier  
-  - `edge` or `robot`
-  - Default: `edge`
+  - Default: `edge-asus`
 
 - **MODEL**: neural network model to benchmark  
   - **Segmentation**:  
@@ -126,9 +125,9 @@ Execute `model_benchmark.py` with the following environment variables.
 
 - **RUN_TAG**: Experiment run prefix identifier *(optional)*  
   - Used to tag the output directory under  
-    `/results/experiments/model-stats/`  
+    `/results/experiments/model-stats`  
   - The final directory name is always auto-generated as:  
-    `<RUN_TAG>_<model>_<backend>_<host>_<device>
+    `<host>/<RUN_TAG>_<model>_<backend>_<host>_<device>`
   - If not set, the current `<timestamp>` is used as the prefix.
 
 - **EXPORT_OUTPUT_IMAGES**: save output images  
@@ -196,8 +195,8 @@ Auto:
 ./evaluate_models.sh --backend stock --host robot --device cpu --run-tag run1 --sleep 10
 ./evaluate_models.sh --backend vaccel-local --host robot --device cpu --run-tag run1 --sleep 10
 
-./evaluate_models.sh --backend stock --host edge --device gpu --run-tag run1 --sleep 10
-./evaluate_models.sh --backend vaccel-local --host edge --device gpu --run-tag run1 --sleep 10
+./evaluate_models.sh --backend stock --host edge-asus --device gpu --run-tag run1 --sleep 10
+./evaluate_models.sh --backend vaccel-local --host edge-asus --device gpu --run-tag run1 --sleep 10
 ```
 
 ---

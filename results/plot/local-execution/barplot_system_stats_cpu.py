@@ -12,14 +12,14 @@ INPUT_FILE = "../../experiments/system-stats/_summary/run1_overall_cpu_stats.csv
 
 PLOT_MODE = "combined"  # "combined" or "separate"
 OUTPUT_COMBINED = "system_stats_cpu_local_exec.pdf"
-FIG_SIZE_COMBINED = (10.5, 14.5)
-
-SHOW_VALUE_LABELS = False
-SHOW_ERROR_BARS = True
 
 FONT_SCALE = 1.2
 SPINES_WIDTH = 1.0
-FIG_SIZE_SINGLE = (9.0, 5.4)
+FIG_SIZE_WIDTH = 10.5
+FIG_HEIGHT_PER_SUBPLOT = 3.6  # Adjusted for 4-stack
+
+SHOW_VALUE_LABELS = False
+SHOW_ERROR_BARS = True
 
 INCLUDE_VACCEL_LOCAL = False
 VARIANT_ORDER = ["PyTorch", "SOL", "SOL + vAccel"] if INCLUDE_VACCEL_LOCAL else ["PyTorch", "SOL"]
@@ -33,21 +33,23 @@ MODEL_TYPE_ORDER = [
     "fcn_resnet50", "fcn_resnet101",
 ]
 
+# --- HARDCODED PLOT CONFIGURATION ---
+# Update "host" here to match your folder names (e.g. "edge-asus")
 PLOTS = [
     dict(
-        out="system_stats_cpu_edge_utilization_local_exec.pdf",
-        host="edge",
+        out="system_stats_cpu_edge_asus_utilization_local_exec.pdf",
+        host="edge-asus",
         y="cpu_util_percent_mean",
         yerr="cpu_util_percent_std",
-        ylabel="Edge CPU utilization",
+        ylabel=f"edge-asus\nCPU utilization",
         yunit="(%)",
     ),
     dict(
-        out="system_stats_cpu_edge_power_local_exec.pdf",
-        host="edge",
+        out="system_stats_cpu_edge_asus_power_local_exec.pdf",
+        host="edge-asus",
         y="cpu_watts_mean",
         yerr="cpu_watts_std",
-        ylabel="Edge CPU power",
+        ylabel=f"edge-asus\nCPU power",
         yunit="(W)",
     ),
     dict(
@@ -55,7 +57,7 @@ PLOTS = [
         host="robot",
         y="cpu_util_percent_mean",
         yerr="cpu_util_percent_std",
-        ylabel="Robot CPU utilization",
+        ylabel=f"robot\nCPU utilization",
         yunit="(%)",
     ),
     dict(
@@ -63,7 +65,7 @@ PLOTS = [
         host="robot",
         y="cpu_watts_mean",
         yerr="cpu_watts_std",
-        ylabel="Robot CPU power",
+        ylabel=f"robot\nCPU power",
         yunit="(W)",
     ),
 ]
@@ -139,7 +141,7 @@ def plot_metric(df, y_col, yerr_col, ylabel, yunit, color_map, ax=None, out_file
 
     created_fig = False
     if ax is None:
-        fig, ax = plt.subplots(figsize=FIG_SIZE_SINGLE)
+        fig, ax = plt.subplots(figsize=(9.0, 5.4))
         created_fig = True
 
     x = np.arange(len(base_models))
@@ -184,8 +186,8 @@ def plot_metric(df, y_col, yerr_col, ylabel, yunit, color_map, ax=None, out_file
             add_value_labels(ax, xs, means, stds, y_lim_top, SHOW_ERROR_BARS)
 
     # no title (per request)
-    ax.set_xlabel("ML Model")
-    ax.set_ylabel(f"{ylabel}\n{yunit}")
+    #ax.set_xlabel("ML Model")
+    ax.set_ylabel(f"{ylabel} {yunit}")
     ax.set_xticks(x)
     ax.set_xticklabels(base_models, rotation=20, ha="right")
     ax.set_ylim(0, y_lim_top)
@@ -246,7 +248,7 @@ def main():
     if df.empty:
         raise SystemExit("No rows after parsing variants.")
 
-    # --- STRICT MODEL FILTER (match your other plots) ---
+    # --- STRICT MODEL FILTER ---
     allowed_models = [m.strip() for m in MODEL_TYPE_ORDER]
     dropped = sorted({m for m in df["base_model"].unique() if m not in allowed_models})
     if dropped:
@@ -254,7 +256,7 @@ def main():
     df = df[df["base_model"].isin(allowed_models)].copy()
     if df.empty:
         raise SystemExit("ERROR: No rows remained after filtering! Check the [WARNING] above.")
-    # ---------------------------------------------------
+    # ---------------------------
 
     sns.set_theme(context="paper", style="ticks", rc={"xtick.direction": "in", "ytick.direction": "in"}, font_scale=FONT_SCALE)
     pal = sns.color_palette("colorblind", n_colors=len(VARIANT_ORDER))
@@ -276,8 +278,15 @@ def main():
             )
         return
 
-    fig, axes = plt.subplots(len(PLOTS), 1, figsize=FIG_SIZE_COMBINED)
-    if not isinstance(axes, (list, np.ndarray)):
+    # --- COMBINED PLOT ---
+    num_plots = len(PLOTS)
+    if num_plots == 0:
+        return
+
+    # Dynamic Height
+    total_height = num_plots * FIG_HEIGHT_PER_SUBPLOT
+    fig, axes = plt.subplots(num_plots, 1, figsize=(FIG_SIZE_WIDTH, total_height))
+    if num_plots == 1:
         axes = [axes]
 
     for ax, cfg in zip(axes, PLOTS):

@@ -16,8 +16,8 @@ OUTPUT_COMBINED = "model_stats_inference_latency_boxplot_local_exec.pdf"
 
 FONT_SCALE = 1.2
 SPINES_WIDTH = 1.0
-FIG_SIZE_SINGLE = (8.5, 5.2)
-FIG_SIZE_COMBINED = (10.5, 11.0)
+FIG_SIZE_WIDTH = 10.5
+FIG_HEIGHT_PER_SUBPLOT = 4.0  # Height per horizontal panel
 
 INCLUDE_VACCEL_LOCAL = False
 VARIANT_ORDER = ["PyTorch", "SOL", "SOL + vAccel"] if INCLUDE_VACCEL_LOCAL else ["PyTorch", "SOL"]
@@ -31,10 +31,15 @@ MODEL_TYPE_ORDER = [
     "fcn_resnet50", "fcn_resnet101",
 ]
 
+# --- HARDCODED TARGETS (Updated for new folder structure) ---
+# Format: (host, device, output_filename, legend_loc)
 TARGETS = [
     ("robot", "cpu", "model_stats_inference_latency_robot_cpu_boxplot_local_exec.pdf", "upper right"),
-    ("edge", "cpu", "model_stats_inference_latency_edge_cpu_boxplot_local_exec.pdf", "upper right"),
-    ("edge", "gpu", "model_stats_inference_latency_edge_gpu_boxplot_local_exec.pdf", "upper right"),
+    ("edge-asus", "cpu", "model_stats_inference_latency_edge_asus_cpu_boxplot_local_exec.pdf", "upper right"),
+    ("edge-asus", "gpu", "model_stats_inference_latency_edge_asus_gpu_boxplot_local_exec.pdf", "upper right"),
+    
+    # Future placeholder:
+    # ("edge-xtreme", "gpu", "model_stats_inference_latency_edge_xtreme_gpu_boxplot_local_exec.pdf", "upper right"),
 ]
 
 
@@ -136,7 +141,7 @@ def plot_target(sub: pd.DataFrame, host: str, device: str, color_map, leg_loc: s
 
     created_fig = False
     if ax is None:
-        fig, ax = plt.subplots(figsize=FIG_SIZE_SINGLE)
+        fig, ax = plt.subplots(figsize=(8.5, 5.2))
         created_fig = True
 
     sns.boxplot(
@@ -152,8 +157,11 @@ def plot_target(sub: pd.DataFrame, host: str, device: str, color_map, leg_loc: s
     )
 
     # remove title; put context on y-axis
-    ax.set_xlabel("ML Model")
-    ax.set_ylabel(f"{host.capitalize()} {device.upper()} inference latency (ms)")
+    host_u = str(host).strip()
+    device_u = str(device).upper().strip()
+    
+    #ax.set_xlabel("ML Model")
+    ax.set_ylabel(f"{host_u}\n{device_u} inference time (ms)")
     ax.tick_params(axis="x", labelrotation=20)
     for lab in ax.get_xticklabels():
         lab.set_ha("right")
@@ -215,6 +223,7 @@ def main():
 
     allowed_backends = ["stock"] + (["vaccel-local"] if INCLUDE_VACCEL_LOCAL else [])
 
+    # --- SEPARATE ---
     if PLOT_MODE == "separate":
         for host, device, out_file, leg_loc in TARGETS:
             sub = df[
@@ -228,9 +237,18 @@ def main():
                 continue
             plot_target(sub, host, device, color_map, leg_loc, ax=None, out_file=out_file)
 
+    # --- COMBINED ---
     else:
-        fig, axes = plt.subplots(3, 1, figsize=FIG_SIZE_COMBINED)
-        if not isinstance(axes, (list, np.ndarray)):
+        num_plots = len(TARGETS)
+        if num_plots == 0:
+            print("No targets configured.")
+            return
+
+        # Dynamic Height
+        total_height = num_plots * FIG_HEIGHT_PER_SUBPLOT
+        fig, axes = plt.subplots(num_plots, 1, figsize=(FIG_SIZE_WIDTH, total_height))
+        
+        if num_plots == 1:
             axes = [axes]
 
         for ax, (host, device, _out_file, leg_loc) in zip(axes, TARGETS):

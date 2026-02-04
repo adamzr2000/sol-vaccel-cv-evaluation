@@ -12,7 +12,7 @@ CPU_FILE = "../experiments/system-stats/_summary/run1_overall_cpu_stats.csv"
 GPU_FILE = "../experiments/system-stats/_summary/run1_overall_gpu_stats.csv"
 
 PLOT_MODE = "combined"  # "combined" or "separate"
-OUTPUT_BASENAME = "system_stats_power"  # combined -> <basename>.pdf, separate -> <basename>_<panel>.pdf
+OUTPUT_BASENAME = "system_stats_power"  # combined -> <basename>.pdf
 
 FONT_SCALE = 1.5
 SPINES_WIDTH = 1.0
@@ -22,7 +22,9 @@ FIG_SIZE_COMBINED = (11.2, 13.6)
 SHOW_VALUE_LABELS = False
 SHOW_ERROR_BARS = True
 
-# --- FILTER CONFIGURATION (match your other plots) ---
+# --- CONFIGURATION ---
+REMOTE_HOST = "edge-asus"
+
 MODEL_TYPE_ORDER = [
     "swin_t",
     "resnet50",
@@ -30,11 +32,12 @@ MODEL_TYPE_ORDER = [
     "deeplabv3_resnet50", "fcn_resnet50",
 ]
 
+# Define variants dynamically based on configuration
 VARIANTS = [
-    "Local · PyTorch @ Robot CPU",
-    "Local · SOL @ Robot CPU",
-    "Remote · SOL + vAccel @ Edge CPU",
-    "Remote · SOL + vAccel @ Edge GPU",
+    "Local · PyTorch @ robot CPU",              # Index 0
+    "Local · SOL @ robot CPU",                  # Index 1
+    f"Remote · SOL + vAccel @ {REMOTE_HOST} CPU", # Index 2
+    f"Remote · SOL + vAccel @ {REMOTE_HOST} GPU", # Index 3
 ]
 
 
@@ -81,17 +84,13 @@ def classify_robot_cpu_variant(row) -> str | None:
     if backend == "stock" and device == "cpu":
         return VARIANTS[0] if not is_sol else VARIANTS[1]
 
-    if backend == "vaccel-remote" and is_sol:
-        # system-stats uses device field like "cpu_target-cpu" / "cpu_target-gpu"
-        if device == "cpu_target-cpu":
-            return VARIANTS[2]
-        if device == "cpu_target-gpu":
-            return VARIANTS[3]
-
+    # For System Stats, Robot Power is only relevant for Local Execution.
+    # Remote execution power is measured on the Edge device (below).
     return None
 
 
 def load_robot_cpu_rows(cpu_df: pd.DataFrame):
+    # Robot power stats
     sub = cpu_df[cpu_df["host"] == "robot"].copy()
     rows = []
     for _, r in sub.iterrows():
@@ -108,8 +107,9 @@ def load_robot_cpu_rows(cpu_df: pd.DataFrame):
 
 
 def load_edge_cpu_remote_rows(cpu_df: pd.DataFrame):
+    # Identify edge rows by folder name (e.g. 'edge-asus')
     sub = cpu_df[
-        (cpu_df["host"] == "edge")
+        (cpu_df["host"].str.contains("edge")) 
         & (cpu_df["backend"] == "vaccel-remote")
         & (cpu_df["device"] == "cpu")
     ].copy()
@@ -121,7 +121,7 @@ def load_edge_cpu_remote_rows(cpu_df: pd.DataFrame):
             continue
         rows.append({
             "base_model": base_model_name(model),
-            "variant": VARIANTS[2],
+            "variant": VARIANTS[2],  # Remote Edge CPU variant
             "mean": float(r["cpu_watts_mean"]),
             "std": float(r["cpu_watts_std"]) if pd.notna(r["cpu_watts_std"]) else np.nan,
         })
@@ -129,8 +129,9 @@ def load_edge_cpu_remote_rows(cpu_df: pd.DataFrame):
 
 
 def load_edge_gpu_remote_rows(gpu_df: pd.DataFrame):
+    # Identify edge rows by folder name
     sub = gpu_df[
-        (gpu_df["host"] == "edge")
+        (gpu_df["host"].str.contains("edge")) 
         & (gpu_df["backend"] == "vaccel-remote")
         & (gpu_df["device"] == "gpu")
     ].copy()
@@ -142,7 +143,7 @@ def load_edge_gpu_remote_rows(gpu_df: pd.DataFrame):
             continue
         rows.append({
             "base_model": base_model_name(model),
-            "variant": VARIANTS[3],
+            "variant": VARIANTS[3],  # Remote Edge GPU variant
             "mean": float(r["power_draw_w_mean"]),
             "std": float(r["power_draw_w_std"]) if pd.notna(r["power_draw_w_std"]) else np.nan,
         })
@@ -224,8 +225,6 @@ def plot_panel(ax, rows, ylabel, variants_present, color_map):
         if SHOW_VALUE_LABELS:
             add_value_labels(ax, xs, means, stds, y_lim_top)
 
-    # no title (per request)
-    ax.set_xlabel("ML Model")
     ax.set_ylabel(ylabel)
     ax.set_xticks(x)
     ax.set_xticklabels(base_models, rotation=30, ha="right")
@@ -233,7 +232,7 @@ def plot_panel(ax, rows, ylabel, variants_present, color_map):
 
     style_axes(ax)
     ax.legend(
-        title="Execution mode · Backend @ Hardware",
+        title="Execution Mode",
         loc="upper right",
         frameon=True,
         framealpha=0.9,
@@ -263,7 +262,7 @@ def main():
     edge_cpu_rows = load_edge_cpu_remote_rows(cpu_df)
     edge_gpu_rows = load_edge_gpu_remote_rows(gpu_df)
 
-    # --- MODEL_TYPE_ORDER strict filter (match your other plots) ---
+    # --- MODEL_TYPE_ORDER strict filter ---
     allowed_models = [m.strip() for m in MODEL_TYPE_ORDER]
 
     robot_rows_f, dropped_robot = _apply_model_filter(robot_rows, allowed_models)
@@ -280,16 +279,17 @@ def main():
 
     if not robot_rows and not edge_cpu_rows and not edge_gpu_rows:
         raise SystemExit("ERROR: No rows remained after filtering! Check the [WARNING] above.")
-    # ----------------------------------------------------------------
+    # --------------------------------------
 
     sns.set_theme(context="paper", style="ticks", rc={"xtick.direction": "in", "ytick.direction": "in"}, font_scale=FONT_SCALE)
     pal = sns.color_palette("colorblind", n_colors=len(VARIANTS))
     color_map = {v: pal[i] for i, v in enumerate(VARIANTS)}
 
+    # Panels configuration mapping rows to specific variants
     panels = [
-        ("robot_cpu", "Robot CPU power (W)", robot_rows, VARIANTS),
-        ("edge_cpu", "Edge CPU power (W)", edge_cpu_rows, [VARIANTS[2]]),
-        ("edge_gpu", "Edge GPU power (W)", edge_gpu_rows, [VARIANTS[3]]),
+        ("robot_cpu", "Robot CPU power (W)", robot_rows, [VARIANTS[0], VARIANTS[1]]),
+        ("edge_cpu", f"{REMOTE_HOST} CPU power (W)", edge_cpu_rows, [VARIANTS[2]]),
+        ("edge_gpu", f"{REMOTE_HOST} GPU power (W)", edge_gpu_rows, [VARIANTS[3]]),
     ]
 
     if PLOT_MODE not in {"combined", "separate"}:

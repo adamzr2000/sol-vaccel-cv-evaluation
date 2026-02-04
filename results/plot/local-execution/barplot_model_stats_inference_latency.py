@@ -15,8 +15,8 @@ OUTPUT_COMBINED = "model_stats_inference_latency_barplot_local_exec.pdf"
 
 FONT_SCALE = 1.2
 SPINES_WIDTH = 1.0
-FIG_SIZE_SINGLE = (8.5, 5.2)
-FIG_SIZE_COMBINED = (10.5, 11.0)
+FIG_SIZE_WIDTH = 10.5
+FIG_HEIGHT_PER_SUBPLOT = 4.0  # Height allocated for each host/device row
 
 SHOW_VALUE_LABELS = True
 SHOW_ERROR_BARS = True
@@ -37,10 +37,15 @@ MODEL_TYPE_ORDER = [
     "fcn_resnet50", "fcn_resnet101",
 ]
 
+# --- HARDCODED TARGETS (Updated for new folder structure) ---
+# Format: (host, device, output_filename, legend_loc)
 TARGETS = [
-    ("robot", "cpu", "model_stats_inference_latency_robot_cpu_barplot_local_exec.pdf", "upper left"),
-    ("edge", "cpu", "model_stats_inference_latency_edge_cpu_barplot_local_exec.pdf", "upper left"),
-    ("edge", "gpu", "model_stats_inference_latency_edge_gpu_barplot_local_exec.pdf", "upper left"),
+    ("robot", "cpu", "model_stats_inference_latency_robot_cpu_barplot.pdf", "upper left"),
+    ("edge-asus", "cpu", "model_stats_inference_latency_edge_asus_cpu_barplot.pdf", "upper left"),
+    ("edge-asus", "gpu", "model_stats_inference_latency_edge_asus_gpu_barplot.pdf", "upper left"),
+    
+    # Future placeholder (uncomment when you have data):
+    # ("edge-xtreme", "gpu", "model_stats_inference_latency_edge_xtreme_gpu_barplot.pdf", "upper left"),
 ]
 
 
@@ -153,12 +158,12 @@ def extract_rows(runs, host, device):
 
 
 def plot_latency(ax, rows, host, device, color_map, leg_loc: str):
-    host_u = str(host).lower().strip()
-    device_u = str(device).lower().strip()
+    host_u = str(host).strip()
+    device_u = str(device).upper().strip()
 
     if not rows:
         ax.axis("off")
-        ax.text(0.5, 0.5, f"No data for {host_u}-{device_u}", ha="center", va="center", transform=ax.transAxes)
+        ax.text(0.5, 0.5, f"No data for {host_u} ({device_u})", ha="center", va="center", transform=ax.transAxes)
         return
 
     base_models = ordered_models(sorted({m for m, _, _, _ in rows}))
@@ -226,8 +231,8 @@ def plot_latency(ax, rows, host, device, color_map, leg_loc: str):
                     linewidth=1.8, color="black", alpha=0.35, zorder=6
                 )
 
-    ax.set_xlabel("ML Model")
-    ax.set_ylabel(f"{host_u.capitalize()} {device_u.upper()}\nInference Time (ms)")
+    #ax.set_xlabel("ML Model")
+    ax.set_ylabel(f"{host_u}\n{device_u} inference time (ms)")
     ax.set_xticks(x)
     ax.set_xticklabels(base_models, rotation=30, ha="right")
     ax.set_ylim(0, y_lim_top)
@@ -263,7 +268,7 @@ def plot_separate(runs):
             print(f"[SKIP] No runs for host={host}, device={device}")
             continue
 
-        fig, ax = plt.subplots(figsize=FIG_SIZE_SINGLE)
+        fig, ax = plt.subplots(figsize=(8.5, 5.2))
         plot_latency(ax, rows, host, device, color_map, leg_loc)
 
         plt.tight_layout()
@@ -277,8 +282,16 @@ def plot_combined(runs):
     pal = sns.color_palette("colorblind", n_colors=len(VARIANT_ORDER))
     color_map = {v: pal[i] for i, v in enumerate(VARIANT_ORDER)}
 
-    fig, axes = plt.subplots(3, 1, figsize=FIG_SIZE_COMBINED)
-    if not isinstance(axes, (list, np.ndarray)):
+    num_plots = len(TARGETS)
+    if num_plots == 0:
+        print("No targets configured.")
+        return
+
+    # Dynamic Height Calculation
+    total_height = num_plots * FIG_HEIGHT_PER_SUBPLOT
+    fig, axes = plt.subplots(num_plots, 1, figsize=(FIG_SIZE_WIDTH, total_height))
+    
+    if num_plots == 1:
         axes = [axes]
 
     for ax, (host, device, _out_file, leg_loc) in zip(axes, TARGETS):
@@ -302,9 +315,6 @@ def main():
     runs = data.get("runs", [])
     if not isinstance(runs, list) or not runs:
         raise SystemExit("Input JSON does not contain a non-empty 'runs' list.")
-
-    if PLOT_MODE not in {"combined", "separate"}:
-        raise SystemExit("PLOT_MODE must be 'combined' or 'separate'.")
 
     if PLOT_MODE == "combined":
         plot_combined(runs)

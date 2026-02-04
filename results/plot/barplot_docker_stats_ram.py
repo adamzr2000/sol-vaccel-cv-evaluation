@@ -18,41 +18,74 @@ FIG_SIZE = (10.2, 5.7)
 SHOW_VALUE_LABELS = False
 SHOW_ERROR_BARS = True
 
-HOST_ORDER = ["robot", "edge"]
+# --- CONFIGURATION ---
+REMOTE_HOST = "edge-asus"
+
+# Define variants and where they should appear
+VARIANT_DEFINITIONS = [
+    {
+        "id": "local_pytorch_cpu",
+        "label": "Local · PyTorch @ robot CPU",
+        "show_on_robot": True,
+        "show_on_edge": False
+    },
+    {
+        "id": "local_sol_cpu",
+        "label": "Local · SOL @ robot CPU",
+        "show_on_robot": True,
+        "show_on_edge": False
+    },
+    {
+        "id": "remote_sol_edge_cpu",
+        "label": f"Remote · SOL + vAccel @ {REMOTE_HOST} CPU",
+        "show_on_robot": True,
+        "show_on_edge": True
+    },
+    {
+        "id": "remote_sol_edge_gpu",
+        "label": f"Remote · SOL + vAccel @ {REMOTE_HOST} GPU",
+        "show_on_robot": True,
+        "show_on_edge": True
+    },
+]
+
+# Generate simple list for ordering/colors
+VARIANTS_ALL = [v["label"] for v in VARIANT_DEFINITIONS]
+
+MODEL_TYPE_ORDER = [
+    "swin_t",
+    "resnet50",
+    "mc3_18", "r3d_18",
+    "deeplabv3_resnet50", "fcn_resnet50"
+]
 
 LEGEND_LOC = {
     "robot": "upper right",
     "edge": "upper right",
 }
 
-MODEL_TYPE_ORDER = [
-    "swin_t",
-    "resnet50",
-    "mc3_18", "r3d_18",
-    "deeplabv3_resnet50", "fcn_resnet50",
-]
-
-VARIANTS_ALL = [
-    "Local · PyTorch @ Robot CPU",
-    "Local · SOL @ Robot CPU",
-    "Remote · SOL + vAccel @ Edge CPU",
-    "Remote · SOL + vAccel @ Edge GPU",
-]
-
 
 def variants_for_host(host: str):
+    """
+    Returns list of variant labels that should be plotted for the given host.
+    """
     host = str(host).lower().strip()
-    if host == "robot":
-        return VARIANTS_ALL
-    return [
-        "Remote · SOL + vAccel @ Edge CPU",
-        "Remote · SOL + vAccel @ Edge GPU",
-    ]
+    
+    # 1. Robot Host
+    if "robot" in host:
+        return [v["label"] for v in VARIANT_DEFINITIONS if v["show_on_robot"]]
+    
+    # 2. Edge Host (matches "edge", "edge-asus", "edge-xtreme", etc.)
+    if "edge" in host:
+        return [v["label"] for v in VARIANT_DEFINITIONS if v["show_on_edge"]]
+    
+    return []
 
 
 def ordered_models(models):
     models = list(dict.fromkeys(models))
-    rank = {m: i for i, m in enumerate(MODEL_TYPE_ORDER)}
+    clean_order = [m.strip() for m in MODEL_TYPE_ORDER]
+    rank = {m: i for i, m in enumerate(clean_order)}
     return sorted(models, key=lambda m: (rank.get(m, 10_000), m))
 
 
@@ -72,6 +105,9 @@ def split_model_base(model: str):
 
 
 def classify_variant(row: dict):
+    """
+    Maps a CSV row to a Variant Label defined in VARIANT_DEFINITIONS.
+    """
     container = str(row.get("container", "")).lower().strip()
     host = str(row.get("host", "")).lower().strip()
     backend = str(row.get("backend", "")).lower().strip()
@@ -80,46 +116,52 @@ def classify_variant(row: dict):
 
     base, is_sol = split_model_base(model)
 
-    # ROBOT (torchvision-app): local + remote
-    if host == "robot":
-        if container == "torchvision-app" and backend == "stock" and device == "cpu":
-            return base, (VARIANTS_ALL[0] if not is_sol else VARIANTS_ALL[1])
+    # Helper to look up label by ID
+    def get_label(vid):
+        for v in VARIANT_DEFINITIONS:
+            if v["id"] == vid: return v["label"]
+        return None
 
-        if container == "torchvision-app" and backend == "vaccel-remote" and is_sol:
-            if "cpu_target-cpu" in device:
-                return base, VARIANTS_ALL[2]
-            if "cpu_target-gpu" in device:
-                return base, VARIANTS_ALL[3]
+    # --- CASE 1: ROBOT HOST ---
+    if "robot" in host:
+        if container == "torchvision-app":
+            # Local Execution
+            if backend == "stock" and device == "cpu":
+                return base, get_label("local_sol_cpu" if is_sol else "local_pytorch_cpu")
+            
+            # Remote Execution (Robot Perspective)
+            if backend == "vaccel-remote" and is_sol:
+                if "cpu_target-cpu" in device:
+                    return base, get_label("remote_sol_edge_cpu")
+                if "cpu_target-gpu" in device:
+                    return base, get_label("remote_sol_edge_gpu")
 
-        return None, None
-
-    # EDGE (torchvision-app-agent): ONLY remote
-    if host == "edge":
+    # --- CASE 2: EDGE HOST ---
+    if "edge" in host:
         if container == "torchvision-app-agent" and backend == "vaccel-remote" and is_sol:
             if device == "cpu":
-                return base, VARIANTS_ALL[2]
+                return base, get_label("remote_sol_edge_cpu")
             if device == "gpu":
-                return base, VARIANTS_ALL[3]
-        return None, None
+                return base, get_label("remote_sol_edge_gpu")
 
     return None, None
 
 
 def plot_host(ax, dfh: pd.DataFrame, host: str, base_models, color_map, y_lim_top):
     variants = variants_for_host(host)
-    x = np.arange(len(base_models))
+    if not variants:
+        ax.text(0.5, 0.5, f"No configured variants for {host}", ha="center")
+        return
 
+    x = np.arange(len(base_models))
     n = len(variants)
+    
+    # Adjust bar width based on number of bars
     width = 0.24 if n == 2 else 0.18
-    if n == 2:
-        offsets = {variants[0]: -width / 2, variants[1]: +width / 2}
-    else:
-        offsets = {
-            variants[0]: -1.5 * width,
-            variants[1]: -0.5 * width,
-            variants[2]: +0.5 * width,
-            variants[3]: +1.5 * width,
-        }
+    
+    # Dynamic offsets calculation
+    start = -((n - 1) * width) / 2
+    offsets = {v: start + i * width for i, v in enumerate(variants)}
 
     mean_map = {(m, vv): np.nan for m in base_models for vv in variants}
     std_map = {(m, vv): np.nan for m in base_models for vv in variants}
@@ -155,16 +197,20 @@ def plot_host(ax, dfh: pd.DataFrame, host: str, base_models, color_map, y_lim_to
                     elinewidth=1.0, capsize=4, capthick=1.0, zorder=10
                 )
 
-    # No per-panel titles
-    ax.set_xlabel("ML Model")
     ax.set_xticks(x)
     ax.set_xticklabels(base_models, rotation=30, ha="right")
     ax.set_ylim(0, y_lim_top)
 
     style_axes(ax)
+    
+    # Pick legend loc based on host string (default to upper right)
+    loc = "upper right"
+    if "robot" in host.lower(): loc = LEGEND_LOC.get("robot", "upper right")
+    elif "edge" in host.lower(): loc = LEGEND_LOC.get("edge", "upper right")
+
     ax.legend(
-        title="Execution mode · Backend @ Hardware",
-        loc=LEGEND_LOC.get(host, "upper right"),
+        title="Execution Mode",
+        loc=loc,
         frameon=True, framealpha=0.9,
         borderpad=0.4, handlelength=1.4,
         fontsize="small",
@@ -177,75 +223,65 @@ def main():
     if not csv_path.exists():
         raise SystemExit(f"CSV not found: {csv_path}")
 
+    print(f"Reading: {csv_path}")
     df = pd.read_csv(csv_path)
 
-    needed = {
-        "container", "host", "device", "model", "backend",
-        "mem_mb_mean", "mem_mb_std",
-    }
-    missing = needed - set(df.columns)
-    if missing:
-        raise SystemExit(f"CSV missing required columns: {missing}")
-
+    # Cleanup strings
     for c in ["container", "host", "device", "backend"]:
-        df[c] = df[c].astype(str).str.lower().str.strip()
+        if c in df.columns:
+            df[c] = df[c].astype(str).str.lower().str.strip()
     df["model"] = df["model"].astype(str).str.strip()
 
+    # Model Filter
     allowed_models = [m.strip() for m in MODEL_TYPE_ORDER]
-
+    
     rows = []
     dropped_models = set()
 
     for _, r in df.iterrows():
         base, variant = classify_variant(r.to_dict())
+
         if variant is None:
             continue
 
-        # EFFECTIVE filter: keep only base models in MODEL_TYPE_ORDER
         if base not in allowed_models:
             dropped_models.add(base)
-            continue
-
-        try:
-            mu = float(r["mem_mb_mean"])
-            sd = float(r["mem_mb_std"]) if pd.notna(r["mem_mb_std"]) else np.nan
-        except Exception:
             continue
 
         rows.append({
             "host": r["host"],
             "base_model": base,
             "variant": variant,
-            "mem_mb_mean": mu,
-            "mem_mb_std": sd,
+            "mem_mb_mean": r["mem_mb_mean"],
+            "mem_mb_std": r["mem_mb_std"],
         })
 
     if dropped_models:
-        print(f"[WARN] Dropped models not in MODEL_TYPE_ORDER: {sorted(dropped_models)}")
+        print(f"\n[WARNING] Dropped models not in MODEL_TYPE_ORDER:\n  {sorted(list(dropped_models))}\n")
 
     if not rows:
-        raise SystemExit("No rows matched after variant parsing + MODEL_TYPE_ORDER filter.")
+        raise SystemExit("ERROR: No rows remained after filtering.")
 
     df2 = pd.DataFrame(rows)
+    print(f"Plotting {len(df2)} data points...")
 
-    present_hosts = [h for h in HOST_ORDER if h in set(df2["host"])]
-    if not present_hosts:
-        present_hosts = sorted(df2["host"].unique().tolist())
+    # Auto-discover available hosts in the data
+    present_hosts = sorted(df2["host"].unique().tolist())
+    # Sort to put robot first
+    present_hosts.sort(key=lambda h: (0 if "robot" in h else 1, h))
 
-    base_models = [m for m in MODEL_TYPE_ORDER if m in set(df2["base_model"])]
+    base_models = ordered_models(sorted(df2["base_model"].unique().tolist()))
 
     sns.set_theme(context="paper", style="ticks", rc={"xtick.direction": "in", "ytick.direction": "in"}, font_scale=FONT_SCALE)
     pal = sns.color_palette("colorblind", n_colors=len(VARIANTS_ALL))
     color_map = {v: pal[i] for i, v in enumerate(VARIANTS_ALL)}
 
-    if PLOT_MODE not in {"combined", "separate"}:
-        raise SystemExit("PLOT_MODE must be 'combined' or 'separate'.")
-
+    # Plot
     if PLOT_MODE == "combined":
         y_lim_top_by_host = {}
         for host in present_hosts:
             subh = df2[df2["host"] == host].copy()
-            y_max = (subh["mem_mb_mean"] + subh["mem_mb_std"].fillna(0)).max()
+            y_max = (subh["mem_mb_mean"].astype(float) + subh["mem_mb_std"].fillna(0).astype(float)).max()
             y_lim_top_by_host[host] = (y_max * 1.55) if (pd.notna(y_max) and y_max > 0) else 1.0
 
         n = len(present_hosts)
@@ -254,15 +290,12 @@ def main():
             figsize=(FIG_SIZE[0], FIG_SIZE[1] * n),
             sharex=False, sharey=False,
         )
-        if n == 1:
-            axes = [axes]
+        if n == 1: axes = [axes]
 
         for ax, host in zip(axes, present_hosts):
             sub = df2[df2["host"] == host].copy()
             plot_host(ax, sub, host, base_models, color_map, y_lim_top_by_host[host])
-
-            # per-subplot y label (Robot vs Edge)
-            ax.set_ylabel(f"{host.capitalize()} RAM utilization (MB)")
+            ax.set_ylabel(f"{host}\nRAM utilization (MB)")
 
         plt.tight_layout()
         out = f"{OUTPUT_BASENAME}.pdf"
@@ -273,18 +306,17 @@ def main():
     else:
         for host in present_hosts:
             sub = df2[df2["host"] == host].copy()
-            if sub.empty:
-                continue
+            if sub.empty: continue
 
-            y_max = (sub["mem_mb_mean"] + sub["mem_mb_std"].fillna(0)).max()
+            y_max = (sub["mem_mb_mean"].astype(float) + sub["mem_mb_std"].fillna(0).astype(float)).max()
             y_lim_top = (y_max * 1.25) if (pd.notna(y_max) and y_max > 0) else 1.0
 
             fig, ax = plt.subplots(1, 1, figsize=FIG_SIZE)
             plot_host(ax, sub, host, base_models, color_map, y_lim_top)
-            ax.set_ylabel(f"{host.capitalize()} RAM utilization (MB)")
+            ax.set_ylabel(f"{host}\nRAM utilization (MB)")
 
             plt.tight_layout()
-            out = f"{OUTPUT_BASENAME}_{host}.pdf"
+            out = f"{OUTPUT_BASENAME}_{host.replace('-', '_')}.pdf"
             fig.savefig(out, dpi=300, bbox_inches="tight")
             print(f"[OK] Saved {host} plot to: {out}")
             plt.close(fig)

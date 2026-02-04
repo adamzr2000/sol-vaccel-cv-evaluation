@@ -11,29 +11,23 @@ import seaborn as sns
 INPUT_FILE = "../../experiments/docker-stats/_summary/run1_overall_resource_usage_per_container.csv"
 
 PLOT_MODE = "combined"  # "combined" or "separate"
-OUTPUT_BASENAME = "./docker_stats_ram"
+OUTPUT_COMBINED = "docker_stats_ram_local_exec.pdf"
 
 FONT_SCALE = 1.2
 SPINES_WIDTH = 1.0
-FIG_SIZE = (8, 5.2)
+FIG_SIZE_WIDTH = 10.5
+FIG_HEIGHT_PER_SUBPLOT = 4.0
 
 SHOW_VALUE_LABELS = False
 SHOW_ERROR_BARS = True
 
-HOST_ORDER = ["robot", "edge"]
-
+# Toggle: 2 bars (PyTorch, SOL) vs 3 bars (PyTorch, SOL, SOL + vAccel)
 INCLUDE_VACCEL_LOCAL = False
 VARIANT_ORDER = ["PyTorch", "SOL", "SOL + vAccel"] if INCLUDE_VACCEL_LOCAL else ["PyTorch", "SOL"]
 
 SMOOTH = False
 SMOOTH_WINDOW = 3
 
-LEGEND_LOC = {
-    "robot": "upper left",
-    "edge": "upper left",
-}
-
-# --- FILTER CONFIGURATION (match your other plots) ---
 MODEL_TYPE_ORDER = [
     "mobilenet_v3_large", "resnet50", "swin_t", "swin_s", "swin_v2_b",
     "swin3d_t", "swin3d_s", "swin3d_b", "mc3_18", "r3d_18", "r2plus1d_18",
@@ -41,6 +35,14 @@ MODEL_TYPE_ORDER = [
     "deeplabv3_resnet50", "deeplabv3_resnet101",
     "fcn_resnet50", "fcn_resnet101",
 ]
+
+# --- HARDCODED TARGETS ---
+TARGETS = [
+    ("robot", "cpu", "docker_stats_ram_robot_cpu_barplot.pdf", "upper left"),
+    ("edge-asus", "cpu", "docker_stats_ram_edge_asus_cpu_barplot.pdf", "upper left"),
+    ("edge-asus", "gpu", "docker_stats_ram_edge_asus_gpu_barplot.pdf", "upper left"),
+]
+
 
 def split_model_variant(model: str, backend: str):
     backend = str(backend).lower().strip()
@@ -76,15 +78,10 @@ def add_value_labels(ax, xs, ys, yerrs, y_top, show_errors: bool):
             err = float(e)
         y_text = y + err + 0.02 * y_top
         ax.text(
-            x,
-            y_text,
-            f"{y:.0f}",
-            ha="center",
-            va="bottom",
-            color="black",
-            fontsize=fs,
-            clip_on=False,
-            zorder=20,
+            x, y_text, f"{y:.0f}",
+            ha="center", va="bottom",
+            color="black", fontsize=fs,
+            clip_on=False, zorder=20,
         )
 
 
@@ -104,7 +101,16 @@ def moving_average(arr, window: int):
     return np.convolve(a, kernel, mode="same")
 
 
-def plot_host(ax, sub, host, base_models, color_map, y_lim_top):
+def plot_target(ax, sub, host, device, base_models, color_map, leg_loc):
+    if sub.empty:
+        ax.axis("off")
+        ax.text(0.5, 0.5, f"No data for {host}-{device}", ha="center", va="center", transform=ax.transAxes)
+        return
+
+    # Dynamic Y-limit based on max value in this subplot
+    y_max = (sub["mem_mb_mean"].astype(float) + sub["mem_mb_std"].fillna(0).astype(float)).max()
+    y_lim_top = (y_max * 1.25) if (not pd.isna(y_max) and y_max > 0) else 1.0
+
     x = np.arange(len(base_models))
 
     if len(VARIANT_ORDER) == 3:
@@ -130,29 +136,20 @@ def plot_host(ax, sub, host, base_models, color_map, y_lim_top):
         stds = np.asarray(stats[v]["std"], dtype=float)
 
         ax.bar(
-            xs,
-            means,
-            width=width,
+            xs, means, width=width,
             color=color_map[v],
-            edgecolor=edgecolor,
-            linewidth=linewidth,
-            label=v,
-            zorder=3,
+            edgecolor=edgecolor, linewidth=linewidth,
+            label=v, zorder=3,
         )
 
         if SHOW_ERROR_BARS:
             valid_mask = ~np.isnan(means)
-            ax.errorbar(
-                xs[valid_mask],
-                means[valid_mask],
-                yerr=stds[valid_mask],
-                fmt="none",
-                ecolor="black",
-                elinewidth=1.0,
-                capsize=4,
-                capthick=1.0,
-                zorder=10,
-            )
+            if np.any(valid_mask):
+                ax.errorbar(
+                    xs[valid_mask], means[valid_mask], yerr=stds[valid_mask],
+                    fmt="none", ecolor="black", elinewidth=1.0,
+                    capsize=4, capthick=1.0, zorder=10,
+                )
 
         if SHOW_VALUE_LABELS:
             add_value_labels(ax, xs, means, stds, y_lim_top, SHOW_ERROR_BARS)
@@ -170,23 +167,21 @@ def plot_host(ax, sub, host, base_models, color_map, y_lim_top):
             y_s = moving_average(y, SMOOTH_WINDOW)
             ax.plot(x, y_s, linewidth=1.8, color="black", alpha=0.35, zorder=6)
 
-    # no title (per request)
-    ax.set_xlabel("ML Model")
+    # Labeling
+    host_u = str(host).strip()
+    
+    #ax.set_xlabel("ML Model")
     ax.set_xticks(x)
     ax.set_xticklabels(base_models, rotation=20, ha="right")
     ax.set_ylim(0, y_lim_top)
-
-    ax.set_ylabel(f"{host.capitalize()} RAM utilization (MB)")
+    
+    ax.set_ylabel(f"{host_u}\nRAM utilization (MB)")
 
     style_axes(ax)
     ax.legend(
-        loc=LEGEND_LOC.get(host, "upper right"),
-        frameon=True,
-        framealpha=0.9,
-        borderpad=0.4,
-        handlelength=1.4,
-        fontsize="small",
-        title_fontsize="small",
+        loc=leg_loc,
+        frameon=True, framealpha=0.9, borderpad=0.4,
+        handlelength=1.4, fontsize="small", title_fontsize="small",
     )
 
 
@@ -197,14 +192,7 @@ def main():
 
     df = pd.read_csv(csv_path)
 
-    needed = {
-        "container", "host", "device", "model", "backend",
-        "mem_mb_mean", "mem_mb_std",
-    }
-    missing = needed - set(df.columns)
-    if missing:
-        raise SystemExit(f"CSV missing required columns: {missing}")
-
+    # Standardize columns
     df["host"] = df["host"].astype(str).str.lower().str.strip()
     df["device"] = df["device"].astype(str).str.lower().str.strip()
     df["backend"] = df["backend"].astype(str).str.lower().str.strip()
@@ -212,39 +200,32 @@ def main():
     df["container"] = df["container"].astype(str).str.strip()
 
     backends = ["stock"] + (["vaccel-local"] if INCLUDE_VACCEL_LOCAL else [])
+    
+    # Filter for container and backend only (don't filter device yet!)
     df = df[
         (df["container"] == "torchvision-app")
         & (df["backend"].isin(backends))
-        & (df["device"] == "cpu")
     ].copy()
+    
     if df.empty:
-        raise SystemExit("No rows after filtering container='torchvision-app', backends, device='cpu'.")
+        raise SystemExit("No rows matched container='torchvision-app' and backend.")
 
+    # Split variants
     base_variant = df.apply(lambda r: split_model_variant(r["model"], r["backend"]), axis=1)
     df["base_model"] = base_variant.apply(lambda t: t[0])
     df["variant"] = base_variant.apply(lambda t: t[1])
     df = df[df["variant"].notna()].copy()
-    if df.empty:
-        raise SystemExit("No rows after parsing variants (check backends + *_sol availability).")
 
-    # --- STRICT MODEL FILTER (match your other plots) ---
+    # Model Filter
     allowed_models = [m.strip() for m in MODEL_TYPE_ORDER]
-    dropped = sorted({m for m in df["base_model"].unique() if m not in allowed_models})
-    if dropped:
-        print(f"\n[WARNING] Dropped the following models because they are not in MODEL_TYPE_ORDER:\n  {dropped}\n")
     df = df[df["base_model"].isin(allowed_models)].copy()
     if df.empty:
-        raise SystemExit("ERROR: No rows remained after filtering! Check the [WARNING] above.")
-    # ---------------------------------------------------
+        raise SystemExit("No rows remained after filtering models.")
 
-    present_hosts = [h for h in HOST_ORDER if h in set(df["host"])]
-    if not present_hosts:
-        present_hosts = sorted(df["host"].unique().tolist())
-
+    # Setup Ordering
     base_models = ordered_models(sorted(df["base_model"].unique().tolist()))
-    df["host"] = pd.Categorical(df["host"], categories=present_hosts, ordered=True)
-    df["variant"] = pd.Categorical(df["variant"], categories=VARIANT_ORDER, ordered=True)
     df["base_model"] = pd.Categorical(df["base_model"], categories=base_models, ordered=True)
+    df["variant"] = pd.Categorical(df["variant"], categories=VARIANT_ORDER, ordered=True)
 
     sns.set_theme(context="paper", style="ticks", rc={"xtick.direction": "in", "ytick.direction": "in"}, font_scale=FONT_SCALE)
     pal = sns.color_palette("colorblind", n_colors=len(VARIANT_ORDER))
@@ -253,53 +234,40 @@ def main():
     if PLOT_MODE not in {"combined", "separate"}:
         raise SystemExit("PLOT_MODE must be 'combined' or 'separate'.")
 
-    if PLOT_MODE == "combined":
-        y_lim_top_by_host = {}
-        for host in present_hosts:
-            subh = df[df["host"] == host].copy()
-            y_max = (subh["mem_mb_mean"].astype(float) + subh["mem_mb_std"].fillna(0).astype(float)).max()
-            y_lim_top_by_host[host] = (y_max * 1.25) if (not pd.isna(y_max) and y_max > 0) else 1.0
-
-        n = len(present_hosts)
-        fig, axes = plt.subplots(
-            nrows=n, ncols=1,
-            figsize=(FIG_SIZE[0], FIG_SIZE[1] * n),
-            sharex=False,
-            sharey=False,
-        )
-        if n == 1:
-            axes = [axes]
-
-        for ax, host in zip(axes, present_hosts):
-            sub = df[df["host"] == host].copy()
+    # --- SEPARATE ---
+    if PLOT_MODE == "separate":
+        for host, device, out_file, leg_loc in TARGETS:
+            sub = df[(df["host"] == host) & (df["device"] == device)].copy()
             if sub.empty:
-                ax.axis("off")
+                print(f"[SKIP] No data for {host}-{device}")
                 continue
-            plot_host(ax, sub, host, base_models, color_map, y_lim_top_by_host[host])
+            
+            fig, ax = plt.subplots(figsize=(8.5, 5.2))
+            plot_target(ax, sub, host, device, base_models, color_map, leg_loc)
+            plt.tight_layout()
+            fig.savefig(out_file, dpi=300, bbox_inches="tight")
+            print(f"[OK] Saved plot to: {out_file}")
+            plt.close(fig)
+
+    # --- COMBINED ---
+    else:
+        num_plots = len(TARGETS)
+        if num_plots == 0:
+            print("No targets configured.")
+            return
+
+        total_height = num_plots * FIG_HEIGHT_PER_SUBPLOT
+        fig, axes = plt.subplots(num_plots, 1, figsize=(FIG_SIZE_WIDTH, total_height))
+        if num_plots == 1: axes = [axes]
+
+        for ax, (host, device, _, leg_loc) in zip(axes, TARGETS):
+            sub = df[(df["host"] == host) & (df["device"] == device)].copy()
+            plot_target(ax, sub, host, device, base_models, color_map, leg_loc)
 
         plt.tight_layout()
-        out = f"{OUTPUT_BASENAME}_local_exec.pdf"
-        fig.savefig(out, dpi=300, bbox_inches="tight")
-        print(f"[OK] Saved combined plot to: {out}")
+        fig.savefig(OUTPUT_COMBINED, dpi=300, bbox_inches="tight")
+        print(f"[OK] Saved combined plot to: {OUTPUT_COMBINED}")
         plt.close(fig)
-
-    else:
-        for host in present_hosts:
-            sub = df[df["host"] == host].copy()
-            if sub.empty:
-                continue
-
-            y_max = (sub["mem_mb_mean"].astype(float) + sub["mem_mb_std"].fillna(0).astype(float)).max()
-            y_lim_top = (y_max * 1.25) if (not pd.isna(y_max) and y_max > 0) else 1.0
-
-            fig, ax = plt.subplots(1, 1, figsize=FIG_SIZE)
-            plot_host(ax, sub, host, base_models, color_map, y_lim_top)
-
-            plt.tight_layout()
-            out = f"{OUTPUT_BASENAME}_{host}_local_exec.pdf"
-            fig.savefig(out, dpi=300, bbox_inches="tight")
-            print(f"[OK] Saved {host} plot to: {out}")
-            plt.close(fig)
 
 
 if __name__ == "__main__":

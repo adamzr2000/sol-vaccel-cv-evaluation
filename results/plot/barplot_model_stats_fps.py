@@ -6,9 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Figure caption (example)
-# Inference FPS measured at the robot for multiple vision models. Local execution uses PyTorch and SOL-optimized libraries on the robot CPU, while remote execution offloads inference to edge CPU/GPU resources via vAccel.
-
 INPUT_FILE = "../experiments/model-stats/_summary/run1_benchmark_summary.json"
 OUTPUT_FILE = "model_stats_inference_fps.pdf"
 
@@ -29,12 +26,47 @@ MODEL_TYPE_ORDER = [
     "deeplabv3_resnet50", "fcn_resnet50"
 ]
 
-VARIANTS = [
-    "Local · PyTorch @ Robot CPU",
-    "Local · SOL @ Robot CPU",
-    "Remote · SOL + vAccel @ Edge CPU",
-    "Remote · SOL + vAccel @ Edge GPU",
+# --- CONFIGURATION: DEFINE YOUR VARIANTS HERE ---
+# Only modify this list to add/remove/change variants.
+# 'match': exact matches for run fields.
+# 'run_id_contains': optional list of substrings that MUST be in run_id.
+
+REMOTE_HOST = "edge-asus"
+
+VARIANT_DEFINITIONS = [
+    {
+        "label": "Local · PyTorch @ robot CPU",
+        "match": {"host": "robot", "backend": "stock", "device": "cpu"},
+        "is_sol": False
+    },
+    {
+        "label": "Local · SOL @ robot CPU",
+        "match": {"host": "robot", "backend": "stock", "device": "cpu"},
+        "is_sol": True
+    },
+    {
+        "label": f"Remote · SOL + vAccel @ {REMOTE_HOST} CPU",
+        "match": {"host": "robot", "backend": "vaccel-remote"},
+        "run_id_contains": ["cpu_target-cpu"],
+        "is_sol": True
+    },
+    {
+        "label": f"Remote · SOL + vAccel @ {REMOTE_HOST} GPU",
+        "match": {"host": "robot", "backend": "vaccel-remote"},
+        "run_id_contains": ["cpu_target-gpu"],
+        "is_sol": True
+    },
+    # EXAMPLE: Future Edge-Xtreme case
+    # {
+    #     "label": "Remote · SOL + vAccel @ Edge-Xtreme GPU",
+    #     "match": {"host": "robot", "backend": "vaccel-remote"},
+    #     "run_id_contains": ["xtreme", "target-gpu"],
+    #     "is_sol": True
+    # },
 ]
+
+# Extract just the labels for ordering/colors
+VARIANTS = [v["label"] for v in VARIANT_DEFINITIONS]
 
 
 def ordered_models(models):
@@ -67,27 +99,40 @@ def base_model_name(model: str) -> str:
 
 
 def classify_variant(run: dict):
+    """
+    Generic classifier that checks the run against VARIANT_DEFINITIONS.
+    """
     run_id = str(run.get("run_id", "")).strip()
     backend = str(run.get("backend", "")).lower().strip()
     host = str(run.get("host", "")).lower().strip()
     model = str(run.get("model", "")).strip()
     device = str(run.get("device", "")).lower().strip()
+    is_model_sol = model.endswith("_sol")
 
-    if host != "robot":
-        return None
+    for v_def in VARIANT_DEFINITIONS:
+        # 1. Check strict SOL status matching
+        if v_def.get("is_sol") is not None:
+            if v_def["is_sol"] != is_model_sol:
+                continue
 
-    is_sol = model.endswith("_sol")
+        # 2. Check exact matches (host, device, backend)
+        match_criteria = v_def.get("match", {})
+        matches = True
+        for key, val in match_criteria.items():
+            run_val = locals().get(key)
+            if run_val != val:
+                matches = False
+                break
+        if not matches:
+            continue
 
-    # Local on robot CPU
-    if backend == "stock" and device == "cpu":
-        return VARIANTS[0] if not is_sol else VARIANTS[1]
+        # 3. Check Run ID substrings (e.g. "target-gpu")
+        substrings = v_def.get("run_id_contains", [])
+        if substrings:
+            if not all(sub in run_id for sub in substrings):
+                continue
 
-    # Remote offloading (robot measures end-to-end)
-    if backend == "vaccel-remote" and is_sol:
-        if "cpu_target-cpu" in run_id:
-            return VARIANTS[2]
-        if "cpu_target-gpu" in run_id:
-            return VARIANTS[3]
+        return v_def["label"]
 
     return None
 
@@ -131,9 +176,10 @@ def add_value_labels(ax, xs, ys, y_top):
 
 def plot_fps(rows):
     if not rows:
-        raise SystemExit("No matching rows found (robot local stock + robot vaccel-remote).")
+        print("No matching rows found.")
+        return
 
-    # --- MODEL_TYPE_ORDER strict filter (same behavior as your other plots) ---
+    # --- MODEL_TYPE_ORDER strict filter ---
     allowed_models = [m.strip() for m in MODEL_TYPE_ORDER]
     present_models = sorted({m for m, _, _ in rows})
     dropped = sorted([m for m in present_models if m not in allowed_models])
@@ -142,8 +188,9 @@ def plot_fps(rows):
 
     rows = [(m, v, fps) for (m, v, fps) in rows if m in allowed_models]
     if not rows:
-        raise SystemExit("ERROR: No rows remained after filtering! Check the [WARNING] above.")
-    # -----------------------------------------------------------------------
+        print("ERROR: No rows remained after filtering! Check the [WARNING] above.")
+        return
+    # --------------------------------------
 
     base_models = ordered_models(sorted({m for m, _, _ in rows}))
     variants = VARIANTS
@@ -165,12 +212,9 @@ def plot_fps(rows):
 
     x = np.arange(len(base_models))
     width = 0.18
-    offsets = {
-        variants[0]: -1.5 * width,
-        variants[1]: -0.5 * width,
-        variants[2]: +0.5 * width,
-        variants[3]: +1.5 * width,
-    }
+    # Calculate offsets dynamically based on number of variants
+    start = -((len(variants) - 1) * width) / 2
+    offsets = {v: start + i * width for i, v in enumerate(variants)}
 
     for v in variants:
         xs = x + offsets[v]
@@ -200,8 +244,6 @@ def plot_fps(rows):
                     linewidth=1.8, color="black", alpha=0.35, zorder=6
                 )
 
-    # ax.set_title("Robot-side inference FPS under local execution and edge offloading")
-    ax.set_xlabel("ML Model")
     ax.set_ylabel("FPS (inference)")
     ax.set_xticks(x)
     ax.set_xticklabels(base_models, rotation=30, ha="right")
@@ -209,7 +251,7 @@ def plot_fps(rows):
 
     style_axes(ax)
     ax.legend(
-        title="Execution mode · Backend @ Hardware",
+        title="Execution Mode",
         loc="upper left",
         frameon=True,
         framealpha=0.9,

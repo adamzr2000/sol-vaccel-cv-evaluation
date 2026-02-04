@@ -17,8 +17,8 @@ OUTPUT_COMBINED = "model_stats_inference_fps_barplot.pdf"  # used when PLOT_MODE
 
 FONT_SCALE = 1.2
 SPINES_WIDTH = 1.0
-FIG_SIZE_SINGLE = (8.5, 5.2)
-FIG_SIZE_COMBINED = (10.5, 11.0)  # 3 stacked panels
+FIG_SIZE_WIDTH = 10.5
+FIG_HEIGHT_PER_SUBPLOT = 4.0  # Height per horizontal panel
 
 MODEL_TYPE_ORDER = [
     "mobilenet_v3_large", "resnet50", "swin_t", "swin_s", "swin_v2_b",
@@ -31,10 +31,15 @@ MODEL_TYPE_ORDER = [
 VARIANT_ORDER = ["PyTorch", "SOL"]
 BACKEND_FILTER = "stock"
 
+# --- HARDCODED TARGETS (Updated for new folder structure) ---
+# Format: (host, device, output_filename, legend_loc)
 TARGETS = [
     ("robot", "cpu", "model_stats_inference_fps_robot_cpu_barplot.pdf", "upper right"),
-    ("edge", "cpu", "model_stats_inference_fps_edge_cpu_barplot.pdf", "upper right"),
-    ("edge", "gpu", "model_stats_inference_fps_edge_gpu_barplot.pdf", "upper right"),
+    ("edge-asus", "cpu", "model_stats_inference_fps_edge_asus_cpu_barplot.pdf", "upper right"),
+    ("edge-asus", "gpu", "model_stats_inference_fps_edge_asus_gpu_barplot.pdf", "upper right"),
+    
+    # Future placeholder:
+    # ("edge-xtreme", "gpu", "model_stats_inference_fps_edge_xtreme_gpu_barplot.pdf", "upper right"),
 ]
 
 
@@ -84,27 +89,20 @@ def plot_target(
             print(f"[SKIP] No runs for host={host}, device={device}, backend={BACKEND_FILTER}")
         return
 
-    # --- STRICT MODEL FILTER (match your other plots) ---
+    # --- STRICT MODEL FILTER ---
     allowed_models = [m.strip() for m in MODEL_TYPE_ORDER]
-    dropped = sorted({m for m in sub["base_model"].unique() if m not in allowed_models})
-    if dropped:
-        print(
-            f"\n[WARNING] Dropped the following models for {host}-{device} "
-            f"because they are not in MODEL_TYPE_ORDER:\n  {dropped}\n"
-        )
     sub = sub[sub["base_model"].isin(allowed_models)].copy()
+    
     if sub.empty:
         if ax is not None:
             ax.axis("off")
             ax.text(
                 0.5, 0.5,
-                f"All models were filtered out for {host}-{device}",
+                f"All models filtered out for {host}-{device}",
                 ha="center", va="center", transform=ax.transAxes
             )
-        else:
-            print(f"[SKIP] All models filtered out for host={host}, device={device}.")
         return
-    # ---------------------------------------------------
+    # ---------------------------
 
     base_models = ordered_models(sorted(sub["base_model"].unique().tolist()))
     sub["base_model"] = pd.Categorical(sub["base_model"], categories=base_models, ordered=True)
@@ -112,7 +110,7 @@ def plot_target(
 
     created_fig = False
     if ax is None:
-        fig, ax = plt.subplots(figsize=FIG_SIZE_SINGLE)
+        fig, ax = plt.subplots(figsize=(8.5, 5.2))
         created_fig = True
 
     sns.barplot(
@@ -128,9 +126,12 @@ def plot_target(
     )
 
     # remove title; put context in y-axis
-    ax.set_xlabel("ML Model")
-    ax.set_ylabel(f"{host.capitalize()} {device.upper()}\nFPS (inference)")
-    plt.setp(ax.get_xticklabels(), rotation=20, ha="right")
+    host_u = str(host).strip()
+    device_u = str(device).upper().strip()
+    
+    #ax.set_xlabel("ML Model")
+    ax.set_ylabel(f"{host_u}\n{device_u} FPS (inference)")
+    plt.setp(ax.get_xticklabels(), rotation=30, ha="right")
 
     style_axes(ax)
     ax.legend(
@@ -194,7 +195,7 @@ def main():
         })
 
     if not rows:
-        raise SystemExit("No rows matched backend='stock' with fps.inference present.")
+        raise SystemExit(f"No rows matched backend='{BACKEND_FILTER}' with fps.inference present.")
 
     df = pd.DataFrame(rows)
 
@@ -205,15 +206,24 @@ def main():
     if PLOT_MODE not in {"combined", "separate"}:
         raise SystemExit("PLOT_MODE must be 'combined' or 'separate'.")
 
+    # --- SEPARATE PLOTS ---
     if PLOT_MODE == "separate":
         for host, device, out_file, leg_loc in TARGETS:
             sub = df[(df["host"] == host) & (df["device"] == device)].copy()
             plot_target(sub, host, device, leg_loc, color_map, ax=None, out_file=out_file)
         return
 
-    # combined
-    fig, axes = plt.subplots(3, 1, figsize=FIG_SIZE_COMBINED)
-    if not isinstance(axes, (list, np.ndarray)):
+    # --- COMBINED PLOTS ---
+    num_plots = len(TARGETS)
+    if num_plots == 0:
+        print("No targets configured.")
+        return
+
+    # Dynamic Height
+    total_height = num_plots * FIG_HEIGHT_PER_SUBPLOT
+    fig, axes = plt.subplots(num_plots, 1, figsize=(FIG_SIZE_WIDTH, total_height))
+    
+    if num_plots == 1:
         axes = [axes]
 
     for ax, (host, device, _out_file, leg_loc) in zip(axes, TARGETS):

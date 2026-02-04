@@ -5,9 +5,9 @@
 # - Strict model filtering (MODEL_TYPE_ORDER) consistent with your other plots
 # - No titles
 # - Y-axis label: "Robot Traffic (Mbps)" / "Edge Traffic (Mbps)"
-# - When TRAFFIC_MODE="both": color encodes execution mode, hatch encodes TX/RX,
+# - When TRAFFIC_MODE="both": color encodes Execution Mode, hatch encodes TX/RX,
 #   and bars are paired per model: CPU(TX,RX) then GPU(TX,RX)
-# - Two legends: execution mode (color) + traffic direction (hatch)
+# - Two legends: Execution Mode (color) + traffic direction (hatch)
 
 from __future__ import annotations
 
@@ -29,7 +29,9 @@ FIG_SIZE = (9.2, 5.2)
 
 SHOW_VALUE_LABELS = True
 
-# --- FILTER CONFIGURATION (match your other plots) ---
+# --- CONFIGURATION ---
+REMOTE_HOST = "edge-asus"
+
 MODEL_TYPE_ORDER = [
     "swin_t",
     "resnet50",
@@ -37,18 +39,16 @@ MODEL_TYPE_ORDER = [
     "deeplabv3_resnet50", "fcn_resnet50",
 ]
 
-HOSTS = ["robot", "edge"]
-
-# What to plot: "tx", "rx", or "both"
-TRAFFIC_MODE = "both"
-
-# Base series (execution stack + hw) kept stable for color consistency
+# Defines the plot order and labels for the legend
 BASE_SERIES = [
-    "Remote · SOL + vAccel @ Edge CPU",
-    "Remote · SOL + vAccel @ Edge GPU",
+    f"Remote · SOL + vAccel @ {REMOTE_HOST} CPU",
+    f"Remote · SOL + vAccel @ {REMOTE_HOST} GPU",
 ]
 
 LEGEND_LOC = {"robot": "upper left", "edge": "upper left"}
+
+# What to plot: "tx", "rx", or "both"
+TRAFFIC_MODE = "both"
 
 # Hatch encodes traffic direction (used when TRAFFIC_MODE="both")
 HATCH_MAP = {"TX": "/////", "RX": "xx"}
@@ -107,14 +107,16 @@ def classify_base_series(host: str, device: str) -> str | None:
     host = str(host).lower().strip()
     device = str(device).lower().strip()
 
-    if host == "robot":
-        if device == "cpu_target-cpu":
+    # Robot Side (Client)
+    if "robot" in host:
+        if "cpu_target-cpu" in device:
             return BASE_SERIES[0]
-        if device == "cpu_target-gpu":
+        if "cpu_target-gpu" in device:
             return BASE_SERIES[1]
         return None
 
-    if host == "edge":
+    # Edge Side (Server)
+    if "edge" in host:
         if device == "cpu":
             return BASE_SERIES[0]
         if device == "gpu":
@@ -153,11 +155,13 @@ def extract_rows(df: pd.DataFrame, traffic_mode: str) -> pd.DataFrame:
         # Only remote runs for network plots
         if backend != "vaccel-remote":
             continue
-        if host not in {"robot", "edge"}:
+        
+        # Valid hosts are 'robot' or any 'edge...'
+        if not ("robot" in host or "edge" in host):
             continue
 
         # Container identity (robot vs edge agent)
-        if host == "robot":
+        if "robot" in host:
             if container != "torchvision-app":
                 continue
         else:  # edge
@@ -236,15 +240,14 @@ def plot_host(
         if SHOW_VALUE_LABELS:
             add_value_labels(ax, xs, ys, y_lim_top)
 
-    ax.set_xlabel("ML Model")
-    ax.set_ylabel("Robot Traffic (Mbps)" if host == "robot" else "Edge Traffic (Mbps)")
+    ax.set_ylabel(f"{host} traffic (Mbps)")
     ax.set_xticks(x)
     ax.set_xticklabels(base_models, rotation=30, ha="right")
     ax.set_ylim(0, y_lim_top)
 
     style_axes(ax)
 
-    # Legend 1: execution mode (colors)
+    # Legend 1: Execution Mode (colors)
     exec_handles = [
         mpatches.Patch(
             facecolor=color_map_exec[BASE_SERIES[0]],
@@ -257,10 +260,12 @@ def plot_host(
             label=BASE_SERIES[1],
         ),
     ]
+    leg_loc = LEGEND_LOC.get("robot" if "robot" in host else "edge", "upper left")
+    
     leg1 = ax.legend(
         handles=exec_handles,
-        title="Execution mode · Backend @ Hardware",
-        loc=LEGEND_LOC.get(host, "upper left"),
+        title="Execution Mode",
+        loc=leg_loc,
         frameon=True, framealpha=0.9,
         borderpad=0.4, handlelength=1.4,
         fontsize="small", title_fontsize="small",
@@ -307,12 +312,6 @@ def main():
     df["container"] = df["container"].astype(str).str.strip()
     df["model"] = df["model"].astype(str).str.strip()
 
-    # Diagnostics (same spirit as your other plot scripts)
-    unique_models_in_csv = sorted(df["model"].unique())
-    unique_bases_in_csv = sorted({base_model_name(m) for m in unique_models_in_csv})
-    print(f"Found {len(unique_models_in_csv)} unique raw models in CSV.")
-    print(f"Found {len(unique_bases_in_csv)} unique BASE models in CSV: {unique_bases_in_csv}")
-
     allowed_models = [m.strip() for m in MODEL_TYPE_ORDER]
     print(f"Filtering for only these {len(allowed_models)} models: {allowed_models}")
 
@@ -320,7 +319,7 @@ def main():
     if long_df.empty:
         raise SystemExit("No rows matched (vaccel-remote + host/container filters + net_rx/net_tx).")
 
-    # Strict filter (consistent with your CPU plot behavior)
+    # Strict filter
     dropped_models = sorted({m for m in long_df["base_model"].unique() if m not in allowed_models})
     if dropped_models:
         print(f"\n[WARNING] Dropped the following models because they are not in MODEL_TYPE_ORDER:\n  {dropped_models}\n")
@@ -331,13 +330,17 @@ def main():
     base_models = ordered_models(sorted(long_df["base_model"].unique().tolist()))
 
     # Categoricals for stable ordering
-    long_df["host"] = pd.Categorical(long_df["host"], categories=HOSTS, ordered=True)
+    # Dynamically find hosts in data
+    present_hosts = sorted(long_df["host"].unique().tolist())
+    present_hosts.sort(key=lambda h: (0 if "robot" in h else 1, h))
+
+    long_df["host"] = pd.Categorical(long_df["host"], categories=present_hosts, ordered=True)
     long_df["series"] = pd.Categorical(long_df["series"], categories=series_list, ordered=True)
     long_df["base_model"] = pd.Categorical(long_df["base_model"], categories=base_models, ordered=True)
 
     sns.set_theme(context="paper", style="ticks", rc={"xtick.direction": "in", "ytick.direction": "in"}, font_scale=FONT_SCALE)
 
-    # Color map is per execution mode (2 colors), direction uses hatches
+    # Color map is per Execution Mode (2 colors), direction uses hatches
     pal = sns.color_palette("colorblind", n_colors=len(BASE_SERIES))
     color_map_exec = {BASE_SERIES[i]: pal[i] for i in range(len(BASE_SERIES))}
 
@@ -353,18 +356,16 @@ def main():
 
     if PLOT_MODE == "combined":
         fig, axes = plt.subplots(
-            nrows=2, ncols=1,
-            figsize=(FIG_SIZE[0], FIG_SIZE[1] * 2),
+            nrows=len(present_hosts), ncols=1,
+            figsize=(FIG_SIZE[0], FIG_SIZE[1] * len(present_hosts)),
             sharex=False, sharey=False,
         )
-        if not isinstance(axes, (list, np.ndarray)):
-            axes = [axes]
+        if len(present_hosts) == 1: axes = [axes]
 
-        for ax, host in zip(axes, HOSTS):
+        for ax, host in zip(axes, present_hosts):
             sub = long_df[long_df["host"] == host].copy()
             if sub.empty:
                 ax.axis("off")
-                ax.text(0.5, 0.5, f"No data for host={host}", ha="center", va="center", transform=ax.transAxes)
                 continue
             plot_host(ax, sub, host, base_models, series_list, color_map_exec, y_top_for(host))
 
@@ -375,7 +376,7 @@ def main():
         plt.close(fig)
 
     else:
-        for host in HOSTS:
+        for host in present_hosts:
             sub = long_df[long_df["host"] == host].copy()
             if sub.empty:
                 print(f"[SKIP] No data for host={host}")
@@ -385,7 +386,7 @@ def main():
             plot_host(ax, sub, host, base_models, series_list, color_map_exec, y_top_for(host))
 
             plt.tight_layout()
-            out = f"{OUTPUT_BASENAME}_{host}.pdf"
+            out = f"{OUTPUT_BASENAME}_{host.replace('-', '_')}.pdf"
             fig.savefig(out, dpi=300, bbox_inches="tight")
             print(f"[OK] Saved {host} plot to: {out}")
             plt.close(fig)

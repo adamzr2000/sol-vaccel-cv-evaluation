@@ -15,8 +15,8 @@ OUTPUT_COMBINED = "model_stats_confidence_score_barplot_local_exec.pdf"
 
 FONT_SCALE = 1.2
 SPINES_WIDTH = 1.0
-FIG_SIZE_SINGLE = (8.5, 5.2)
-FIG_SIZE_COMBINED = (10.5, 11.0)
+FIG_SIZE_WIDTH = 10.5
+FIG_HEIGHT_PER_SUBPLOT = 4.0  # Height per horizontal panel
 
 SHOW_VALUE_LABELS = False
 SHOW_ERROR_BARS = True
@@ -27,17 +27,18 @@ VARIANT_ORDER = ["PyTorch", "SOL", "SOL + vAccel"] if INCLUDE_VACCEL_LOCAL else 
 SMOOTH = False
 SMOOTH_WINDOW = 3
 
-# Keep the same canonical order list (filter will drop models not listed)
-# NOTE: If segmentation models truly have no confidence_score, they will be naturally skipped.
+# --- MODEL FILTER ---
+# Excluded segmentation models (DeepLabV3, FCN) as they don't produce a single confidence score.
 MODEL_TYPE_ORDER = [
-    "mobilenet_v3_large","resnet50","swin_t","swin_s", "swin_v2_b",
-    "swin3d_t","swin3d_s","mc3_18", "r3d_18","r2plus1d_18",
+    "mobilenet_v3_large", "resnet50", "swin_t", "swin_s", "swin_v2_b",
+    "swin3d_t", "swin3d_s", "swin3d_b", "mc3_18", "r3d_18", "r2plus1d_18",
 ]
 
+# --- HARDCODED TARGETS ---
 TARGETS = [
     ("robot", "cpu", "model_stats_confidence_score_robot_cpu_barplot_local_exec.pdf", "upper left"),
-    ("edge", "cpu", "model_stats_confidence_score_edge_cpu_barplot_local_exec.pdf", "upper left"),
-    ("edge", "gpu", "model_stats_confidence_score_edge_gpu_barplot_local_exec.pdf", "upper left"),
+    ("edge-asus", "cpu", "model_stats_confidence_score_edge_asus_cpu_barplot_local_exec.pdf", "upper left"),
+    ("edge-asus", "gpu", "model_stats_confidence_score_edge_asus_gpu_barplot_local_exec.pdf", "upper left"),
 ]
 
 
@@ -124,7 +125,7 @@ def extract_rows(runs, host, device):
         if variant is None or variant not in VARIANT_ORDER:
             continue
 
-        # Strict filter consistent with other plots
+        # Strict filter to exclude segmentation models
         if base_model not in allowed_models:
             continue
 
@@ -149,8 +150,8 @@ def extract_rows(runs, host, device):
 
 
 def plot_confidence(ax, rows, host, device, color_map):
-    host_u = str(host).lower().strip()
-    device_u = str(device).lower().strip()
+    host_u = str(host).strip()
+    device_u = str(device).upper().strip()
 
     if not rows:
         ax.axis("off")
@@ -171,6 +172,7 @@ def plot_confidence(ax, rows, host, device, color_map):
     all_stds = np.asarray([std_map[(m, v)] for m in base_models for v in variants], dtype=float)
 
     y_max = np.nanmax(all_means + np.nan_to_num(all_stds, nan=0.0))
+    # Cap Y-limit nicely around 100% since confidence is usually 0-100
     y_lim_top = (y_max * 1.15) if np.isfinite(y_max) and y_max > 0 else 100.0
     if y_lim_top > 100.0 and (np.isfinite(y_max) and y_max <= 100.0):
         y_lim_top = 105.0
@@ -225,11 +227,9 @@ def plot_confidence(ax, rows, host, device, color_map):
                     linewidth=1.8, color="black", alpha=0.35, zorder=6
                 )
 
-    # remove title; encode context in y-axis label
-    ax.set_xlabel("ML Model")
-    ax.set_ylabel(f"{host_u.capitalize()} {device_u.upper()}\nconfidence score (%)")
+    ax.set_ylabel(f"{host_u}\n{device_u} confidence score (%)")
     ax.set_xticks(x)
-    ax.set_xticklabels(base_models, rotation=20, ha="right")
+    ax.set_xticklabels(base_models, rotation=30, ha="right")
     ax.set_ylim(0, y_lim_top)
 
     style_axes(ax)
@@ -270,17 +270,16 @@ def plot_combined(runs):
     pal = sns.color_palette("colorblind", n_colors=len(VARIANT_ORDER))
     color_map = {v: pal[i] for i, v in enumerate(VARIANT_ORDER)}
 
-    fig, axes = plt.subplots(3, 1, figsize=FIG_SIZE_COMBINED)
-    if not isinstance(axes, (list, np.ndarray)):
-        axes = [axes]
+    num_plots = len(TARGETS)
+    if num_plots == 0:
+        print("No targets configured.")
+        return
 
-    # diagnostics + strict filter warnings per target
-    allowed = [m.strip() for m in MODEL_TYPE_ORDER]
-    for (host, device, _out_file, _leg_loc) in TARGETS:
-        rows = extract_rows(runs, host, device)
-        present = sorted({m for m, _, _, _ in rows})
-        # rows already filtered; we only warn about "missing" if you want
-        # (kept quiet by default)
+    # Dynamic Height Calculation
+    total_height = num_plots * FIG_HEIGHT_PER_SUBPLOT
+    fig, axes = plt.subplots(num_plots, 1, figsize=(FIG_SIZE_WIDTH, total_height))
+    if num_plots == 1:
+        axes = [axes]
 
     for ax, (host, device, _out_file, _leg_loc) in zip(axes, TARGETS):
         rows = extract_rows(runs, host, device)
@@ -303,16 +302,6 @@ def main():
     runs = data.get("runs", [])
     if not isinstance(runs, list) or not runs:
         raise SystemExit("Input JSON does not contain a non-empty 'runs' list.")
-
-    if PLOT_MODE not in {"combined", "separate"}:
-        raise SystemExit("PLOT_MODE must be 'combined' or 'separate'.")
-
-    # global diagnostics (optional but consistent with your other scripts)
-    allowed_models = [m.strip() for m in MODEL_TYPE_ORDER]
-    all_models = sorted({split_variant(r.get("model", ""), r.get("backend", ""))[0] for r in runs})
-    # Only print if you want it noisy; keeping minimal:
-    # print(f"Allowed models: {allowed_models}")
-    # print(f"Models seen in JSON: {all_models}")
 
     if PLOT_MODE == "combined":
         plot_combined(runs)

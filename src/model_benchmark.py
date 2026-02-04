@@ -7,6 +7,7 @@ import torch
 import numpy as np
 import cv2
 from pathlib import Path
+from datetime import datetime, timezone  # <--- Added for ISO timestamps
 
 from model_adapter import get_model_adapter
 
@@ -27,7 +28,7 @@ if BACKEND not in ["stock", "vaccel", "vaccel-local", "vaccel-remote"]:
 
 if "remote" in BACKEND:
     print(f"   🔎 VACCEL_RPC_ADDRESS={os.environ.get('VACCEL_RPC_ADDRESS')}")
-    
+
 TARGET_DEVICE = os.environ.get("DEVICE", "cpu").lower()
 if TARGET_DEVICE == "gpu":
     DEVICE = "cuda"
@@ -39,11 +40,10 @@ else:
     DEVICE = "cpu"
     TORCH_DEVICE = torch.device("cpu")
 
-# Host: 'edge' (default) or 'robot'
+# ---------------------------------------------------------------------------
+# UPDATED HOST LOGIC: Default to 'edge', allow any string (flexible)
+# ---------------------------------------------------------------------------
 HOST = os.environ.get("HOST", "edge").lower()
-if HOST not in ["robot", "edge"]:
-    print(f"⚠️  Unknown HOST '{HOST}', defaulting to 'edge'")
-    HOST = "edge"
 
 # Model: Full folder name
 MODEL_ARCH = os.environ.get("MODEL", "resnet50")
@@ -58,8 +58,12 @@ EXPORT_OUTPUT_IMAGES = os.environ.get("EXPORT_OUTPUT_IMAGES", "false").strip().l
 DATA_DIRS = [Path("data/images"), Path("data/videos")]
 MODELS_DIR = Path("models")
 
-# Path: Saves to 'model-stats'
-RESULTS_DIR = Path("/results/experiments/model-stats")
+# ---------------------------------------------------------------------------
+# UPDATED RESULTS PATHS: Automatically append /<HOST> to directories
+# ---------------------------------------------------------------------------
+# Path: Saves to 'model-stats/<HOST>' automatically
+_BASE_RESULTS = Path(os.environ.get("RESULTS_DIR", "/results/experiments/model-stats"))
+RESULTS_DIR = _BASE_RESULTS / HOST  # e.g. /results/experiments/model-stats/edge-xtreme/
 
 # Directory is simply the model name
 CURRENT_MODEL_DIR = MODELS_DIR / MODEL_ARCH
@@ -121,9 +125,10 @@ def main():
             print(f"   ⚠️  No .mp4 videos found, but found {len(image_files)} images.")
             print(f"      Video models need temporal data. Simulating with static image stacking.")
             try:
+                # Default to 'y' for automated batch runs if interactive input fails
                 choice = input(f"      Do you want to use {BENCH_NUM_IMAGES} images as fake static videos? [y/N]: ").strip().lower()
             except EOFError:
-                choice = 'n'
+                choice = 'y'
 
             if choice == 'y':
                 files_to_process = image_files[:BENCH_NUM_IMAGES]
@@ -145,13 +150,19 @@ def main():
     # 3. PREPARE OUTPUT ID (Run Tag Logic)
     # -------------------------------------------------------------------------
     run_tag = os.environ.get("RUN_TAG")
-    
     if run_tag:
         prefix = run_tag
     else:
         prefix = time.strftime("%d-%m-%Y_%H-%M-%S")
-        
-    run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{HOST}_{TARGET_DEVICE}"
+
+    local_mode = "gpu" if (TORCH_DEVICE.type == "cuda") else "cpu"
+    
+    is_vaccel_remote_run = (HOST == "robot" and BACKEND == "vaccel-remote")
+    if is_vaccel_remote_run:
+        # local_mode may always be "cpu" here; add target device to avoid collisions
+        run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{HOST}_{local_mode}_target-{TARGET_DEVICE}"
+    else:
+        run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{HOST}_{local_mode}"
     # -------------------------------------------------------------------------
 
     run_dir = RESULTS_DIR / run_id
@@ -172,6 +183,11 @@ def main():
                 if TORCH_DEVICE.type == 'cuda': torch.cuda.synchronize()
         except Exception as e:
             print(f"      Warmup failed on {os.path.basename(files_to_process[i])}: {e}")
+
+    # Capture Start Time (ISO format for alignment with Stats)
+    t_start_dt = datetime.now(timezone.utc)
+    t_start_iso = t_start_dt.isoformat()
+    t_stop_iso = None
 
     # 5. RUN LOOP
     print("   ⏱️  Running Inference...")
@@ -265,16 +281,20 @@ def main():
         processing_ms = (proc_end - proc_start) * 1000
 
         benchmark_records.append({
-            "image": file_name, 
+            "image": file_name,
             "latency_ms": round(latency_ms, 4),
             "processing_ms": round(processing_ms, 4),
             "confidence_score": round(confidence_score, 2)
         })
-        
+
         latencies.append(latency_ms)
         proc_latencies.append(processing_ms)
-        
+
         print(f"      - {file_name}: Inf={latency_ms:.2f}ms | Tot={processing_ms:.2f}ms {detected_info}")
+
+    # Capture Stop Time
+    t_stop_dt = datetime.now(timezone.utc)
+    t_stop_iso = t_stop_dt.isoformat()
 
     # 6. SUMMARY & SAVE
     if latencies:
@@ -323,8 +343,14 @@ def main():
                     "device": TARGET_DEVICE,
                     "num_samples": len(latencies),
                     
+                    # --- Time Alignment ---
+                    "time_window": {
+                        "start": t_start_iso,
+                        "stop": t_stop_iso,
+                        "duration_sec": (t_stop_dt - t_start_dt).total_seconds() if t_stop_iso else 0
+                    },
+                    
                     "frames_per_sample": frames_per_sample,
-
                     "fps": {
                         "inference": inference_fps,
                         "system": system_fps

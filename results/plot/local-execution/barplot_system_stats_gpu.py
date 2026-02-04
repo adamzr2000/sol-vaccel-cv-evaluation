@@ -33,24 +33,29 @@ MODEL_TYPE_ORDER = [
     "fcn_resnet50", "fcn_resnet101",
 ]
 
+# --- CONFIGURATION WITH SPECIFIC HOSTS ---
+# Added 'host' key to filter specific data and updated 'ylabel' to be explicit.
 PLOTS = [
     dict(
-        out="system_stats_gpu_vram_local_exec.pdf",
+        out="system_stats_gpu_edge_asus_vram_local_exec.pdf",
+        host="edge-asus",
         y="mem_used_mb_mean",
         yerr="mem_used_mb_std",
-        ylabel="Edge GPU\nVRAM utilization (MB)",
+        ylabel="edge-asus\nGPU VRAM utilization (MB)",
     ),
     dict(
-        out="system_stats_gpu_utilization_local_exec.pdf",
+        out="system_stats_gpu_edge_asus_utilization_local_exec.pdf",
+        host="edge-asus",
         y="util_gpu_percent_mean",
         yerr="util_gpu_percent_std",
-        ylabel="Edge GPU utilization\n(%)",
+        ylabel="edge-asus\nGPU utilization (%)",
     ),
     dict(
-        out="system_stats_gpu_power_local_exec.pdf",
+        out="system_stats_gpu_edge_asus_power_local_exec.pdf",
+        host="edge-asus",
         y="power_draw_w_mean",
         yerr="power_draw_w_std",
-        ylabel="Edge GPU power\n(W)",
+        ylabel="edge-asus\nGPU power (W)",
     ),
 ]
 
@@ -170,7 +175,7 @@ def plot_metric(df, y_col, yerr_col, ylabel, color_map, ax=None, out_file=None):
             add_value_labels(ax, xs, means, stds, y_lim_top, SHOW_ERROR_BARS)
 
     # no title (per request)
-    ax.set_xlabel("ML Model")
+    # ax.set_xlabel("ML Model")
     ax.set_ylabel(ylabel)
     ax.set_xticks(x)
     ax.set_xticklabels(base_models, rotation=20, ha="right")
@@ -222,13 +227,14 @@ def main():
     if INCLUDE_VACCEL_LOCAL:
         allowed_backends.add("vaccel-local")
 
+    # Initial global filter: keep all GPU rows for allowed backends
     df = df[
-        (df["host"] == "edge")
-        & (df["device"] == "gpu")
+        (df["device"] == "gpu")
         & (df["backend"].isin(allowed_backends))
     ].copy()
+    
     if df.empty:
-        raise SystemExit("No rows after filtering host='edge', device='gpu', backend in {stock,vaccel-local}.")
+        raise SystemExit("No rows after filtering device='gpu', backend in {stock,vaccel-local}.")
 
     base_var = df.apply(lambda r: split_variant(r["model"], r["backend"]), axis=1)
     df["base_model"] = base_var.apply(lambda t: t[0])
@@ -237,7 +243,7 @@ def main():
     if df.empty:
         raise SystemExit("No rows after parsing variants.")
 
-    # --- STRICT MODEL FILTER (match your other plots) ---
+    # --- STRICT MODEL FILTER ---
     allowed_models = [m.strip() for m in MODEL_TYPE_ORDER]
     dropped = sorted({m for m in df["base_model"].unique() if m not in allowed_models})
     if dropped:
@@ -245,7 +251,7 @@ def main():
     df = df[df["base_model"].isin(allowed_models)].copy()
     if df.empty:
         raise SystemExit("ERROR: No rows remained after filtering! Check the [WARNING] above.")
-    # ---------------------------------------------------
+    # ---------------------------
 
     sns.set_theme(context="paper", style="ticks", rc={"xtick.direction": "in", "ytick.direction": "in"}, font_scale=FONT_SCALE)
     pal = sns.color_palette("colorblind", n_colors=len(VARIANT_ORDER))
@@ -254,17 +260,33 @@ def main():
     if PLOT_MODE not in {"combined", "separate"}:
         raise SystemExit("PLOT_MODE must be 'combined' or 'separate'.")
 
+    # --- SEPARATE MODE ---
     if PLOT_MODE == "separate":
         for cfg in PLOTS:
-            plot_metric(df, cfg["y"], cfg["yerr"], cfg["ylabel"], color_map, ax=None, out_file=cfg["out"])
+            # Filter by specific host defined in PLOTS
+            sub = df[df["host"] == cfg["host"]].copy()
+            if sub.empty:
+                print(f"[SKIP] No rows for host='{cfg['host']}'")
+                continue
+            
+            plot_metric(sub, cfg["y"], cfg["yerr"], cfg["ylabel"], color_map, ax=None, out_file=cfg["out"])
         return
 
+    # --- COMBINED MODE ---
     fig, axes = plt.subplots(len(PLOTS), 1, figsize=FIG_SIZE_COMBINED)
     if not isinstance(axes, (list, np.ndarray)):
         axes = [axes]
 
     for ax, cfg in zip(axes, PLOTS):
-        plot_metric(df, cfg["y"], cfg["yerr"], cfg["ylabel"], color_map, ax=ax, out_file=None)
+        # Filter by specific host defined in PLOTS
+        sub = df[df["host"] == cfg["host"]].copy()
+        if sub.empty:
+            ax.axis("off")
+            ax.text(0.5, 0.5, f"No data for host={cfg['host']}", 
+                    ha="center", va="center", transform=ax.transAxes)
+            continue
+            
+        plot_metric(sub, cfg["y"], cfg["yerr"], cfg["ylabel"], color_map, ax=ax, out_file=None)
 
     plt.tight_layout()
     fig.savefig(OUTPUT_COMBINED, dpi=300, bbox_inches="tight")

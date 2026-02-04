@@ -3,6 +3,8 @@
 summarize_docker_stats.py
 
 Summarize docker-stats-collector CSVs for a given RUN_TAG.
+Recursively finds CSVs in subfolders (e.g., robot/, edge-asus/).
+Uses the PARENT DIRECTORY NAME as the 'host' identifier.
 
 Output:
   ./_summary/{run_tag}_overall_resource_usage_per_container.csv
@@ -16,6 +18,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
+import pandas as pd
 
 METRIC_COLS = [
     "cpu_percent",
@@ -52,52 +55,63 @@ def mean_std(vals: List[float]) -> Tuple[Optional[float], Optional[float]]:
     if not vals:
         return None, None
     arr = np.asarray(vals, dtype=float)
-    return float(np.mean(arr)), float(np.std(arr, ddof=0))  # ddof=0 matches numpy default
+    return float(np.mean(arr)), float(np.std(arr, ddof=0))
 
 
-def parse_stem(stem: str, run_tag: str) -> Optional[Tuple[str, str, str, str, str]]:
+def parse_stem_and_folder(path: Path, run_tag: str) -> Optional[Tuple[str, str, str, str, str]]:
     """
-    Parse:
-      stem = "{container}_{RUN_TAG}_{MODEL}_{BACKEND}_{HOST}_{DEVICE}"
-
-    Extended (vaccel-remote robot-side disambiguation):
-      stem = "{container}_{RUN_TAG}_{MODEL}_{BACKEND}_{HOST}_{LOCAL_MODE}_target-{TARGET_DEVICE}"
-
-    Return:
-      (container, model, backend, host, device)
+    Parse metadata from filename, but use PARENT FOLDER for 'host'.
+    
+    Filename structure:
+      {container}_{RUN_TAG}_{MODEL}_{BACKEND}_{OLD_HOST}_{DEVICE}.csv
     """
+    stem = path.stem
     needle = f"_{run_tag}_"
     idx = stem.find(needle)
     if idx < 0:
         return None
 
+    # 1. Extract Container Name
     container = stem[:idx]
+    
+    # 2. Extract Host from Folder Name
+    host = path.parent.name
+
+    # 3. Parse the rest of the filename
+    # Remainder: {MODEL}_{BACKEND}_{OLD_HOST}_{DEVICE}...
     remainder = stem[idx + len(needle):]
     parts = remainder.split("_")
+    
     if len(parts) < 4:
         return None
 
-    # Extended pattern:
-    # ..._{BACKEND}_{HOST}_{LOCAL_MODE}_target-{TARGET_DEVICE}
+    # Handle vaccel-remote extended naming
+    # ..._{BACKEND}_{OLD_HOST}_{LOCAL_MODE}_target-{TARGET_DEVICE}
     if len(parts) >= 5 and parts[-1].startswith("target-"):
         target = parts[-1]          # "target-gpu"
         local_mode = parts[-2]      # "cpu"
-        host = parts[-3]            # "robot"
+        # parts[-3] is the old host filename tag (ignore)
         backend = parts[-4]         # "vaccel-remote"
         model = "_".join(parts[:-4])
-        device = f"{local_mode}_{target}"  # "cpu_target-gpu"
+        device = f"{local_mode}_{target}"
     else:
+        # Standard: ..._{BACKEND}_{OLD_HOST}_{DEVICE}
         device = parts[-1]
-        host = parts[-2]
+        # parts[-2] is the old host filename tag (ignore)
         backend = parts[-3]
         model = "_".join(parts[:-3])
 
     return container, model, backend, host, device
 
-def discover_run_tags(csv_files: List[Path]) -> List[str]:
+
+def discover_run_tags(cwd: Path) -> List[str]:
     tags = set()
-    for p in csv_files:
+    # Recursive search
+    for p in cwd.rglob("*.csv"):
+        if "_summary" in p.parts:
+            continue
         parts = p.stem.split("_")
+        # Heuristic: usually part[1] is run_tag if part[0] is container
         if len(parts) >= 6:
             tags.add(parts[1])
     return sorted(tags)
@@ -170,6 +184,22 @@ def read_metrics_and_duration(csv_path: Path) -> Tuple[Dict[str, List[float]], O
     return values, duration_sec, net_rx_delta_mb, net_tx_delta_mb
 
 
+def _print_docker_summary(csv_path: Path) -> None:
+    try:
+        df = pd.read_csv(csv_path)
+        cols = [
+            "container", "host", "device", "backend",
+            "cpu_percent_mean", "mem_mb_mean", "net_rx_mbps", "net_tx_mbps"
+        ]
+        cols = [c for c in cols if c in df.columns]
+        # Sort for readability
+        df = df[cols].sort_values(["host", "container", "device"]).reset_index(drop=True)
+        print("\n===== DOCKER STATS SUMMARY (sanity check) =====")
+        print(df.to_string(index=False))
+        print("===============================================\n")
+    except Exception as e:
+        print(f"⚠️  Could not print summary table: {e}")
+
 
 def main() -> None:
     ap = argparse.ArgumentParser(add_help=False)
@@ -178,27 +208,30 @@ def main() -> None:
     args = ap.parse_args()
 
     cwd = Path(".").resolve()
-    csv_files = sorted(cwd.glob("*.csv"))
+    
+    # ### CHANGED: Recursive Search
+    csv_files = sorted(cwd.rglob("*.csv"))
 
     if not args.run_tag:
         print("❌ Missing required argument: --run-tag\n")
-        print("📂 Available RUN_TAGs in current directory:\n")
+        print("📂 Available RUN_TAGs (scanned recursively):\n")
         tags = discover_run_tags(csv_files)
         if not tags:
             print("  (none found)")
         else:
             for t in tags:
                 print(f"  - {t}")
-        print("\n👉 Usage:")
-        print("   python3 summarize_docker_stats.py --run-tag <RUN_TAG>")
         return
 
     run_tag = args.run_tag
     matched = []
+    
+    # Filter files that match the run_tag (and aren't in _summary)
     for p in csv_files:
-        parts = p.stem.split("_")
-        # expected: {container}_{RUN_TAG}_{MODEL}_{BACKEND}_{HOST}_{DEVICE}[...]
-        if len(parts) >= 2 and parts[1] == run_tag:
+        if "_summary" in p.parts:
+            continue
+        # Check if run_tag exists in the stem (surrounded by underscores usually)
+        if f"_{run_tag}_" in p.stem:
             matched.append(p)
 
     if not matched:
@@ -209,11 +242,14 @@ def main() -> None:
     out_dir.mkdir(exist_ok=True)
     out_path = out_dir / f"{run_tag}_overall_resource_usage_per_container.csv"
 
-    # include device in key to avoid overwriting cpu vs gpu runs
+    # Key includes host to differentiate edge-asus vs edge-xtreme
     rows: Dict[Tuple[str, str, str, str, str], Dict[str, str]] = {}
 
+    print(f"🔍 Found {len(matched)} files. Processing...")
+
     for csv_path in matched:
-        parsed = parse_stem(csv_path.stem, run_tag)
+        # ### CHANGED: Parse using parent folder as host
+        parsed = parse_stem_and_folder(csv_path, run_tag)
         if not parsed:
             continue
 
@@ -257,6 +293,8 @@ def main() -> None:
     print(f"✅ RUN_TAG '{run_tag}' summarized")
     print(f"📄 Output written to: {out_path}")
     print(f"📊 Containers summarized: {len(rows)}")
+    
+    _print_docker_summary(out_path)
 
 
 if __name__ == "__main__":

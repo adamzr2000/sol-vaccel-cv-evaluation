@@ -8,7 +8,7 @@ import numpy as np
 import cv2
 import requests
 from pathlib import Path
-from datetime import datetime, timezone  # <--- Added for ISO timestamps
+from datetime import datetime, timezone
 
 from model_adapter import get_model_adapter
 
@@ -41,11 +41,10 @@ else:
     DEVICE = "cpu"
     TORCH_DEVICE = torch.device("cpu")
 
-# Host: 'edge' (default) or 'robot'
-HOST = os.environ.get("HOST", "edge").lower()
-if HOST not in ["robot", "edge"]:
-    print(f"⚠️  Unknown HOST '{HOST}', defaulting to 'edge'")
-    HOST = "edge"
+# ---------------------------------------------------------------------------
+# UPDATED HOST LOGIC: Default to 'edge-asus', allow any string (flexible)
+# ---------------------------------------------------------------------------
+HOST = os.environ.get("HOST", "edge-asus").lower()
 
 # Model: Full folder name
 MODEL_ARCH = os.environ.get("MODEL", "resnet50")
@@ -60,8 +59,12 @@ EXPORT_OUTPUT_IMAGES = os.environ.get("EXPORT_OUTPUT_IMAGES", "false").strip().l
 DATA_DIRS = [Path("data/images"), Path("data/videos")]
 MODELS_DIR = Path("models")
 
-# Path: Saves to 'model-stats'
-RESULTS_DIR = Path("/results/experiments/model-stats")
+# ---------------------------------------------------------------------------
+# UPDATED RESULTS PATHS: Automatically append /<HOST> to directories
+# ---------------------------------------------------------------------------
+# 1. Model Stats Output
+_BASE_RESULTS = Path(os.environ.get("RESULTS_DIR", "/results/experiments/model-stats"))
+RESULTS_DIR = _BASE_RESULTS / HOST  # e.g. /results/experiments/model-stats/edge-asus/
 
 # Directory is simply the model name
 CURRENT_MODEL_DIR = MODELS_DIR / MODEL_ARCH
@@ -78,18 +81,21 @@ else:
     MODEL_TYPE = "semantic_segmentation"
 
 # --- MONITOR CONFIG ---
+# 2. Docker & System Stats Output (ensure these are strings for the API)
 DOCKER_STATS_ENDPOINT = os.environ.get("DOCKER_STATS_ENDPOINT", "http://10.5.1.20:6000")
-DOCKER_STATS_CSV_DIR = "/results/experiments/docker-stats"
+_DOCKER_BASE = os.environ.get("DOCKER_STATS_CSV_DIR", "/results/experiments/docker-stats")
+DOCKER_STATS_CSV_DIR = str(Path(_DOCKER_BASE) / HOST)
 
 SYSTEM_STATS_ENDPOINT = os.environ.get("SYSTEM_STATS_ENDPOINT", "http://10.5.1.20:6001")
-SYSTEM_STATS_CSV_DIR = "/results/experiments/system-stats"
+_SYSTEM_BASE = os.environ.get("SYSTEM_STATS_CSV_DIR", "/results/experiments/system-stats")
+SYSTEM_STATS_CSV_DIR = str(Path(_SYSTEM_BASE) / HOST)
 
 # --- REMOTE (vAccel agent) MONITOR CONFIG ---
 DOCKER_STATS_REMOTE_ENDPOINT = os.environ.get("DOCKER_STATS_REMOTE_ENDPOINT", "http://10.5.1.20:6000")
-DOCKER_STATS_REMOTE_CSV_DIR = DOCKER_STATS_CSV_DIR
+DOCKER_STATS_REMOTE_CSV_DIR = os.environ.get("DOCKER_STATS_REMOTE_CSV_DIR", DOCKER_STATS_CSV_DIR)
 
 SYSTEM_STATS_REMOTE_ENDPOINT = os.environ.get("SYSTEM_STATS_REMOTE_ENDPOINT", "http://10.5.1.20:6001")
-SYSTEM_STATS_REMOTE_CSV_DIR = SYSTEM_STATS_CSV_DIR
+SYSTEM_STATS_REMOTE_CSV_DIR = os.environ.get("SYSTEM_STATS_REMOTE_CSV_DIR", SYSTEM_STATS_CSV_DIR)
 
 
 # ==========================================
@@ -232,7 +238,6 @@ def main():
     else:
         prefix = time.strftime("%d-%m-%Y_%H-%M-%S")
         
-
 
     local_mode = "gpu" if (TORCH_DEVICE.type == "cuda") else "cpu"
 

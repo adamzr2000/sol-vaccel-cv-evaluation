@@ -7,10 +7,10 @@ BACKEND="stock"   # NEW default
 
 usage() {
   cat <<EOF
-Usage: $(basename "$0") --host <edge|robot> --device <cpu|gpu> --run-tag <tag> [--backend <stock|vaccel-local|vaccel-remote>] [--sleep <seconds>]
+Usage: $(basename "$0") --host <edge-asus|edge-xtreme|robot> --device <cpu|gpu> --run-tag <tag> [--backend <stock|vaccel-local|vaccel-remote>] [--sleep <seconds>]
 
 Required:
-  --host     edge|robot
+  --host     edge-asus|edge-xtreme|robot
   --device   cpu|gpu
   --run-tag  run identifier (e.g., run1)
 
@@ -19,9 +19,9 @@ Optional:
   --sleep    seconds to wait between runs (default: ${SLEEP_SEC})
 
 Examples:
-  $(basename "$0") --host edge  --device gpu --run-tag run1
-  $(basename "$0") --host edge  --device gpu --run-tag run1 --backend vaccel-local
-  $(basename "$0") --host robot --device cpu --run-tag testA --sleep 2
+  $(basename "$0") --host edge-asus   --device gpu --run-tag run1
+  $(basename "$0") --host edge-xtreme --device gpu --run-tag run1 --backend vaccel-local
+  $(basename "$0") --host robot       --device cpu --run-tag testA --sleep 2
 EOF
 }
 
@@ -47,7 +47,7 @@ while [[ $# -gt 0 ]]; do
       RUN_TAG="$2"
       shift 2
       ;;
-    --backend)   # NEW
+    --backend)
       [[ $# -ge 2 ]] || { echo "[err] --backend requires a value"; usage; exit 2; }
       BACKEND="$2"
       shift 2
@@ -76,8 +76,8 @@ if [[ -z "${HOST}" || -z "${DEVICE}" || -z "${RUN_TAG}" ]]; then
   exit 2
 fi
 
-if [[ "${HOST}" != "edge" && "${HOST}" != "robot" ]]; then
-  echo "[err] --host must be one of: edge, robot (got: ${HOST})"
+if [[ "${HOST}" != "edge-asus" && "${HOST}" != "edge-xtreme" && "${HOST}" != "robot" ]]; then
+  echo "[err] --host must be one of: edge-asus, edge-xtreme, robot (got: ${HOST})"
   usage
   exit 2
 fi
@@ -103,15 +103,19 @@ if [[ "${BACKEND}" == vaccel-* ]]; then
   USE_VACCEL=1
 fi
 
-# ---- Host defaults (mandatory envs derived from --host) ----
+# ---- Host defaults (IP assignment) ----
 case "${HOST}" in
   robot)
     DOCKER_STATS_ENDPOINT="http://192.168.2.2:6000"
     SYSTEM_STATS_ENDPOINT="http://192.168.2.2:6001"
     ;;
-  edge)
+  edge-asus)
     DOCKER_STATS_ENDPOINT="http://10.5.1.20:6000"
     SYSTEM_STATS_ENDPOINT="http://10.5.1.20:6001"
+    ;;
+  edge-xtreme)
+    DOCKER_STATS_ENDPOINT="http://10.5.1.21:6000"
+    SYSTEM_STATS_ENDPOINT="http://10.5.1.21:6001"
     ;;
 esac
 
@@ -133,8 +137,16 @@ run_one () {
 
   echo "[bench] run: ${model}"
 
-  if [[ "${HOST}" == "edge" && "${DEVICE}" == "cpu" && ( "${BACKEND}" == "stock" || "${BACKEND}" == "vaccel-local" ) ]]; then
-    OMP_NUM_THREADS=10 \
+  # MATCH any edge host (asus/xtreme) for the CPU optimization block
+  if [[ "${HOST}" == edge* && "${DEVICE}" == "cpu" && ( "${BACKEND}" == "stock" || "${BACKEND}" == "vaccel-local" ) ]]; then
+
+    # Set thread count based on specific edge host
+    local threads=10
+    if [[ "${HOST}" == "edge-xtreme" ]]; then
+      threads=16
+    fi
+
+    OMP_NUM_THREADS="${threads}" \
     HOST="${HOST}" \
     DOCKER_STATS_ENDPOINT="${DOCKER_STATS_ENDPOINT}" \
     SYSTEM_STATS_ENDPOINT="${SYSTEM_STATS_ENDPOINT}" \
@@ -143,6 +155,7 @@ run_one () {
     MODEL="${model}" \
     RUN_TAG="${RUN_TAG}" \
     python3 "${SCRIPT}"
+    
   elif [[ "${HOST}" == "robot" && "${DEVICE}" == "cpu" && ( "${BACKEND}" == "stock" || "${BACKEND}" == "vaccel-local" ) ]]; then
     NUM_IMAGES=512 \
     NUM_VIDEOS=32 \

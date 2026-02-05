@@ -143,7 +143,7 @@ run_one () {
     # Set thread count based on specific edge host
     local threads=10
     if [[ "${HOST}" == "edge-xtreme" ]]; then
-      threads=16
+      threads=10
     fi
 
     OMP_NUM_THREADS="${threads}" \
@@ -155,7 +155,7 @@ run_one () {
     MODEL="${model}" \
     RUN_TAG="${RUN_TAG}" \
     python3 "${SCRIPT}"
-    
+
   elif [[ "${HOST}" == "robot" && "${DEVICE}" == "cpu" && ( "${BACKEND}" == "stock" || "${BACKEND}" == "vaccel-local" ) ]]; then
     NUM_IMAGES=512 \
     NUM_VIDEOS=32 \

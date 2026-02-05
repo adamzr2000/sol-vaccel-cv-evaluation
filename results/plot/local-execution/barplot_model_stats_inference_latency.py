@@ -44,8 +44,8 @@ TARGETS = [
     ("edge-asus", "cpu", "model_stats_inference_latency_edge_asus_cpu_barplot.pdf", "upper left"),
     ("edge-asus", "gpu", "model_stats_inference_latency_edge_asus_gpu_barplot.pdf", "upper left"),
     
-    # Future placeholder (uncomment when you have data):
-    # ("edge-xtreme", "gpu", "model_stats_inference_latency_edge_xtreme_gpu_barplot.pdf", "upper left"),
+    ("edge-xtreme", "cpu", "model_stats_inference_latency_edge_xtreme_cpu_barplot.pdf", "upper left"),
+    ("edge-xtreme", "gpu", "model_stats_inference_latency_edge_xtreme_gpu_barplot.pdf", "upper left"),
 ]
 
 

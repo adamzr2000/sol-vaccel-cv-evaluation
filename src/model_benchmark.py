@@ -7,7 +7,7 @@ import torch
 import numpy as np
 import cv2
 from pathlib import Path
-from datetime import datetime, timezone  # <--- Added for ISO timestamps
+from datetime import datetime, timezone
 
 from model_adapter import get_model_adapter
 
@@ -16,6 +16,29 @@ try:
 except ImportError:
     COLORS = np.random.randint(0, 255, (256, 3), dtype=np.uint8)
     def analyze_segmentation_mask(mask): return ""
+
+# ==========================================
+# HELPER: STATS CALCULATOR
+# ==========================================
+def calculate_stats(data_list):
+    """Calculates detailed statistics for a list of numbers."""
+    if not data_list:
+        return {k: 0.0 for k in ["mean", "std", "min", "max", "p25", "p50", "p75", "p90", "p95", "p99"]}
+    
+    data = np.array(data_list)
+    return {
+        "mean": round(float(np.mean(data)), 4),
+        "std":  round(float(np.std(data)), 4),
+        "min":  round(float(np.min(data)), 4),
+        "max":  round(float(np.max(data)), 4),
+        "p25":  round(float(np.percentile(data, 25)), 4),
+        "p50":  round(float(np.percentile(data, 50)), 4),
+        "p75":  round(float(np.percentile(data, 75)), 4),
+        "p90":  round(float(np.percentile(data, 90)), 4),
+        "p95":  round(float(np.percentile(data, 95)), 4),
+        "p99":  round(float(np.percentile(data, 99)), 4)
+    }
+
 
 # ==========================================
 # CONFIGURATION
@@ -189,44 +212,66 @@ def main():
     t_start_iso = t_start_dt.isoformat()
     t_stop_iso = None
 
+    # Determine frames per sample for FPS calculation
+    # Video models process a block of 16 frames per inference call
+    frames_per_sample = 16 if IS_VIDEO_MODEL else 1
+
     # 5. RUN LOOP
     print("   ⏱️  Running Inference...")
-    benchmark_records = []
-    latencies = []       # Pure Inference
-    proc_latencies = []  # Total End-to-End
 
-    for f_path in files_to_process:
-        file_name = os.path.basename(f_path)
+    # Lists to store raw duration data (in milliseconds)
+    inference_latencies_ms = []
+    preprocessing_latencies_ms = []
+    postprocessing_latencies_ms = []
+    total_system_latencies_ms = []
+
+    # List to store confidence scores
+    confidence_scores_list = []
+
+    # Detailed Records
+    detailed_sample_records = []
+
+    # Determine frames per sample (16 for Video models, 1 for Image models)
+    frames_per_sample = 16 if IS_VIDEO_MODEL else 1
+
+    for i, file_path in enumerate(files_to_process):
+        file_name = os.path.basename(file_path)
         stem_name = os.path.splitext(file_name)[0]
 
-        # --- TOTAL PROCESSING TIMER START ---
+        # Synchronize GPU before starting the total system timer
         if TORCH_DEVICE.type == 'cuda': torch.cuda.synchronize()
-        proc_start = time.perf_counter()
 
-        # A. Preprocessing
+        # --- A. SYSTEM START ---
+        system_start_time = time.perf_counter()
+
+        # --- B. PREPROCESSING ---
+        preprocessing_start_time = time.perf_counter()
         try:
-            input_tensor = adapter.preprocess(f_path)
+            input_tensor = adapter.preprocess(file_path)
         except Exception as e:
             print(f"      Skipping {file_name}: {e}")
             continue
 
-        # --- INFERENCE TIMER START ---
         if TORCH_DEVICE.type == 'cuda': torch.cuda.synchronize()
-        inf_start = time.perf_counter()
+        preprocessing_end_time = time.perf_counter()
 
+        # --- C. INFERENCE ---
+        inference_start_time = time.perf_counter()
         with torch.no_grad():
             raw_output = adapter.infer(input_tensor)
 
         if TORCH_DEVICE.type == 'cuda': torch.cuda.synchronize()
-        inf_end = time.perf_counter()
-        # --- INFERENCE TIMER END ---
+        inference_end_time = time.perf_counter()
+
+        # --- D. POSTPROCESSING ---
+        postprocessing_start_time = time.perf_counter()
 
         # Initialize defaults
         confidence_score = 0.0
         detected_info = ""
+        class_id = -1
 
         try:
-            # C. Postprocessing
             result = adapter.postprocess(raw_output)
 
             # --- SEGMENTATION ---
@@ -235,7 +280,8 @@ def main():
                 if EXPORT_OUTPUT_IMAGES:
                     mask_colored = COLORS[mask_idx]
                     mask_bgr = cv2.cvtColor(mask_colored, cv2.COLOR_RGB2BGR)
-                    cv2.imwrite(str(img_out_dir / f"pred_{stem_name}.png"), mask_bgr)
+                    cv2.imwrite(str(img_out_dir / f"{i:04d}_pred_{stem_name}.png"), mask_bgr)
+
                 detected_info = analyze_segmentation_mask(mask_idx)
 
             # --- CLASSIFICATION / VIDEO ---
@@ -254,12 +300,12 @@ def main():
                 if EXPORT_OUTPUT_IMAGES:
                     display_img = None
                     if is_processing_video_files:
-                        cap = cv2.VideoCapture(str(f_path))
+                        cap = cv2.VideoCapture(str(file_path))
                         ret, frame = cap.read()
                         cap.release()
                         if ret: display_img = frame
                     else:
-                        display_img = cv2.imread(f_path)
+                        display_img = cv2.imread(file_path)
 
                     if display_img is not None:
                         display_img = cv2.resize(display_img, (224, 224))
@@ -267,117 +313,132 @@ def main():
                         cv2.rectangle(display_img, (5, 5), (250, 25), (0, 0, 0), -1)
                         cv2.putText(display_img, label_text, (10, 20),
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
-                        cv2.imwrite(str(img_out_dir / f"pred_{stem_name}.jpg"), display_img)
+                        cv2.imwrite(str(img_out_dir / f"{i:04d}_pred_{stem_name}.jpg"), display_img)
 
         except Exception as e:
             print(f"Error post-processing {file_name}: {e}")
 
-        # --- TOTAL PROCESSING TIMER END ---
         if TORCH_DEVICE.type == 'cuda': torch.cuda.synchronize()
-        proc_end = time.perf_counter()
+        postprocessing_end_time = time.perf_counter()
 
-        # D. Calculations
-        latency_ms = (inf_end - inf_start) * 1000
-        processing_ms = (proc_end - proc_start) * 1000
+        # --- TOTAL PROCESS END ---
+        system_end_time = time.perf_counter()
 
-        benchmark_records.append({
-            "image": file_name,
-            "latency_ms": round(latency_ms, 4),
-            "processing_ms": round(processing_ms, 4),
-            "confidence_score": round(confidence_score, 2)
+        # --- CALCULATE RAW DURATIONS (Milliseconds) ---
+        current_preprocessing_ms = (preprocessing_end_time - preprocessing_start_time) * 1000.0
+        current_inference_ms = (inference_end_time - inference_start_time) * 1000.0
+        current_postprocessing_ms = (postprocessing_end_time - postprocessing_start_time) * 1000.0
+        current_system_ms = (system_end_time - system_start_time) * 1000.0
+
+        # Store raw data
+        preprocessing_latencies_ms.append(current_preprocessing_ms)
+        inference_latencies_ms.append(current_inference_ms)
+        postprocessing_latencies_ms.append(current_postprocessing_ms)
+        total_system_latencies_ms.append(current_system_ms)
+
+        # Store confidence
+        if confidence_score > 0:
+            confidence_scores_list.append(confidence_score)
+
+        print(f"    [{i+1}/{len(files_to_process)}] {file_name} "
+              f"| Pre: {current_preprocessing_ms:.1f}ms "
+              f"| Inf: {current_inference_ms:.1f}ms "
+              f"| Post: {current_postprocessing_ms:.1f}ms "
+              f"| Total: {current_system_ms:.1f}ms"
+              f" {detected_info}")
+
+        # Store detailed record
+        detailed_sample_records.append({
+            "filename": file_name,
+            "preprocessing_ms": round(current_preprocessing_ms, 4),
+            "inference_ms": round(current_inference_ms, 4),
+            "postprocessing_ms": round(current_postprocessing_ms, 4),
+            "e2e_ms": round(current_system_ms, 4),
+            "class_id": class_id,
+            "confidence": round(confidence_score, 2),
+            "info": str(detected_info)
         })
-
-        latencies.append(latency_ms)
-        proc_latencies.append(processing_ms)
-
-        print(f"      - {file_name}: Inf={latency_ms:.2f}ms | Tot={processing_ms:.2f}ms {detected_info}")
 
     # Capture Stop Time
     t_stop_dt = datetime.now(timezone.utc)
     t_stop_iso = t_stop_dt.isoformat()
 
-    # 6. SUMMARY & SAVE
-    if latencies:
-        # --- Helper for Percentiles ---
-        def get_stats(data):
-            if not data: return {}
-            return {
-                "mean": np.mean(data),
-                "std":  np.std(data),
-                "min":  np.min(data),
-                "max":  np.max(data),
-                "p25":  np.percentile(data, 25),
-                "p50":  np.percentile(data, 50),
-                "p75":  np.percentile(data, 75),
-                "p90":  np.percentile(data, 90),
-                "p95":  np.percentile(data, 95),
-                "p99":  np.percentile(data, 99)
-            }
+    # 6. FINAL CALCULATIONS & EXPORT
+    if not inference_latencies_ms:
+        print("❌ No successful inferences recorded.")
+        return
 
-        # --- Calculate Statistics ---
-        stats_inf  = get_stats(latencies)
-        stats_proc = get_stats(proc_latencies)
+    # --- Metrics Calculations (using Helper) ---
+    stats_preprocessing = calculate_stats(preprocessing_latencies_ms)
+    stats_inference = calculate_stats(inference_latencies_ms)
+    stats_postprocessing = calculate_stats(postprocessing_latencies_ms)
+    stats_system = calculate_stats(total_system_latencies_ms)
+    stats_confidence = calculate_stats(confidence_scores_list)
+
+    # --- FPS Calculations ---
+    # Use mean from stats
+    avg_inf = stats_inference["mean"]
+    avg_sys = stats_system["mean"]
+    inference_fps = (1000.0 / avg_inf) * frames_per_sample if avg_inf > 0 else 0
+    system_fps = (1000.0 / avg_sys) * frames_per_sample if avg_sys > 0 else 0
+
+    # Print Summary to Console
+    print(f"\n📊 BENCHMARK SUMMARY ({MODEL_ARCH})")
+    print(f"   ---------------------------------------------")
+    print(f"   Avg Preprocessing:  {stats_preprocessing['mean']:.2f} ms")
+    print(f"   Avg Inference:      {stats_inference['mean']:.2f} ms (P90: {stats_inference['p90']:.2f})")
+    print(f"   Avg Postprocessing: {stats_postprocessing['mean']:.2f} ms")
+    print(f"   Avg System E2E:     {stats_system['mean']:.2f} ms")
+    print(f"   ---------------------------------------------")
+    print(f"   Inference FPS:      {inference_fps:.2f}")
+    print(f"   System FPS:         {system_fps:.2f}")
+    print(f"   ---------------------------------------------")
+
+    if EXPORT_RESULTS:
+        # 1. Export JSON Summary
+        json_output_path = run_dir / "benchmark_summary.json"
         
-        conf_values = [r['confidence_score'] for r in benchmark_records]
-        stats_conf = get_stats(conf_values) if conf_values else get_stats([0.0])
-
-        # --- FPS Calculations ---
-        frames_per_sample = 16 if IS_VIDEO_MODEL else 1
-
-        inference_fps = (1000.0 / stats_inf["mean"]) * frames_per_sample
-        system_fps    = (1000.0 / stats_proc["mean"]) * frames_per_sample
-
-        if EXPORT_RESULTS:
-            with open(run_dir / "benchmark_data.csv", 'w', newline='') as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=['image', 'latency_ms', 'processing_ms', 'confidence_score'])
-                writer.writeheader()
-                writer.writerows(benchmark_records)
-
-            with open(run_dir / "benchmark_summary.json", "w") as f:
-                json.dump({
-                    "run_id": run_id,
-                    "backend": BACKEND,
-                    "host": HOST,
-                    "model": MODEL_ARCH,
-                    "model_type": MODEL_TYPE,
-                    "device": TARGET_DEVICE,
-                    "num_samples": len(latencies),
-                    
-                    # --- Time Alignment ---
-                    "time_window": {
-                        "start": t_start_iso,
-                        "stop": t_stop_iso,
-                        "duration_sec": (t_stop_dt - t_start_dt).total_seconds() if t_stop_iso else 0
-                    },
-                    
-                    "frames_per_sample": frames_per_sample,
-                    "fps": {
-                        "inference": inference_fps,
-                        "system": system_fps
-                    },
-
-                    "inference_latency_ms": stats_inf,
-                    "processing_latency_ms": stats_proc,
-                    "confidence_score": stats_conf
-
-                }, f, indent=2)
-
-        print(f"\n✅ Benchmark Complete.")
-        print(f"   📂 Results saved to: {run_dir}" if EXPORT_RESULTS else "   📂 Results export disabled.")
-        print(f"   ----------------------------------")
-        print(f"   📊 Summary for {BACKEND} / {MODEL_ARCH}:")
-
-        print(f"      Inference Mean: {stats_inf['mean']:.2f} ms (P99: {stats_inf['p99']:.2f} ms)")
-        print(f"      Inference FPS:  {inference_fps:.2f} (x{frames_per_sample} frames)" if frames_per_sample > 1 else f"      Inference FPS:  {inference_fps:.2f}")
-        print(f"      System Mean:    {stats_proc['mean']:.2f} ms")
-        print(f"      System FPS:     {system_fps:.2f}")
-        
-        if stats_conf['mean'] > 0:
-            print(f"      Avg Conf:       {stats_conf['mean']:.1f}%")
+        final_output_data = {
+            "run_id": run_id,
+            "backend": BACKEND,
+            "host": HOST,
+            "model": MODEL_ARCH,
+            "model_type": MODEL_TYPE,
+            "device": TARGET_DEVICE,
+            "num_samples": len(inference_latencies_ms),
             
-        print(f"   ----------------------------------")
-    else:
-        print("\n❌ No data collected.")
+            "time_window": {
+                "start": t_start_iso,
+                "stop": t_stop_iso,
+                "duration_sec": (t_stop_dt - t_start_dt).total_seconds() if t_stop_iso else 0
+            },
+            
+            "frames_per_sample": frames_per_sample,
+            "fps": {
+                "inference": round(inference_fps, 2),
+                "system": round(system_fps, 2)
+            },
+            "preprocessing_ms": stats_preprocessing,
+            "inference_ms": stats_inference,
+            "postprocessing_ms": stats_postprocessing,
+            "system_ms": stats_system,
+            "confidence_score": stats_confidence
+        }
+
+        with open(json_output_path, 'w') as json_file:
+            json.dump(final_output_data, json_file, indent=4)
+        print(f"   ✅ JSON Summary saved to {json_output_path}")
+
+        # 2. Export CSV Data
+        csv_output_path = run_dir / "benchmark_data.csv"
+        
+        if detailed_sample_records:
+            keys = detailed_sample_records[0].keys()
+            with open(csv_output_path, 'w', newline='') as csv_file:
+                dict_writer = csv.DictWriter(csv_file, fieldnames=keys)
+                dict_writer.writeheader()
+                dict_writer.writerows(detailed_sample_records)
+            print(f"   ✅ CSV Data saved to {csv_output_path}")
 
 if __name__ == "__main__":
     main()

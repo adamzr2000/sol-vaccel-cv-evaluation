@@ -7,8 +7,8 @@ Recursively finds CSVs in subfolders (e.g., robot/, edge-asus/).
 Uses the PARENT DIRECTORY NAME as the 'host' identifier.
 
 Outputs (written under ./_summary):
-  - {run_tag}_overall_cpu_stats.csv
-  - {run_tag}_overall_gpu_stats.csv
+  - {run_tag}_overall_cpu_stats_{link}.csv
+  - {run_tag}_overall_gpu_stats_{link}.csv
 """
 
 from __future__ import annotations
@@ -66,29 +66,24 @@ def parse_stem_and_folder(path: Path, run_tag: str) -> Optional[Tuple[str, str, 
     if not stem.startswith(needle):
         return None
 
-    # ### CHANGED: Use parent folder name as the HOST
     host = path.parent.name
-    
-    # Parse the rest from filename
+
     remainder = stem[len(needle):]
     parts = remainder.split("_")
-    
+
     if len(parts) < 4:
         return None
 
-    # Handle vaccel-remote extended naming
+    # vaccel-remote extended naming
     # Pattern: ..._{BACKEND}_{OLD_HOST}_{LOCAL_MODE}_target-{TARGET}
     if len(parts) >= 5 and parts[-1].startswith("target-"):
         target = parts[-1]
         local_mode = parts[-2]
-        # skip parts[-3] (the filename host, e.g. "robot")
         backend = parts[-4]
         model = "_".join(parts[:-4])
         device = f"{local_mode}_{target}"
     else:
-        # Pattern: ..._{BACKEND}_{OLD_HOST}_{DEVICE}
         device = parts[-1]
-        # skip parts[-2] (the filename host, e.g. "edge")
         backend = parts[-3]
         model = "_".join(parts[:-3])
 
@@ -97,7 +92,6 @@ def parse_stem_and_folder(path: Path, run_tag: str) -> Optional[Tuple[str, str, 
 
 def discover_run_tags(cwd: Path) -> List[str]:
     tags = set()
-    # Recursive search for tags
     for p in cwd.rglob("*.csv"):
         if "_summary" in p.parts:
             continue
@@ -204,13 +198,18 @@ def _print_summary_table(csv_path: Path, title: str) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(add_help=False)
     ap.add_argument("--run-tag")
+    # NEW: which extra vaccel-remote family to include
+    ap.add_argument("--link", choices=["5g", "wifi"], default="5g")
     ap.add_argument("-h", "--help", action="store_true")
     args = ap.parse_args()
 
     cwd = Path(".").resolve()
-    
-    # ### CHANGED: Recursive search
     csv_files = sorted(cwd.rglob("*.csv"))
+
+    if args.help:
+        print("Usage:")
+        print("  ./summarize_system_stats.py --run-tag <tag> [--link 5g|wifi]")
+        return
 
     if not args.run_tag:
         print("❌ Missing required argument: --run-tag\n")
@@ -224,12 +223,29 @@ def main() -> None:
         return
 
     run_tag = args.run_tag.strip()
-    
-    # Filter by run_tag and exclude output folder
-    matched = [
-        p for p in csv_files 
-        if p.name.startswith(f"{run_tag}_") and "_summary" not in p.parts
+    link = args.link.strip()
+
+    # 1) ORIGINAL behavior: include run_tag_*
+    base_matched = [
+        p for p in csv_files
+        if "_summary" not in p.parts and p.name.startswith(f"{run_tag}_")
     ]
+
+    # 2) EXTENSION: include ONLY vaccel-remote in run_tag-{link}_*
+    extra_matched = [
+        p for p in csv_files
+        if "_summary" not in p.parts
+        and p.name.startswith(f"{run_tag}-{link}_")
+        and "vaccel-remote" in p.stem
+    ]
+
+    # Merge + dedup preserving order
+    seen = set()
+    matched = []
+    for p in base_matched + extra_matched:
+        if p not in seen:
+            matched.append(p)
+            seen.add(p)
 
     if not matched:
         print(f"❌ No CSV files matched RUN_TAG='{run_tag}'")
@@ -238,19 +254,28 @@ def main() -> None:
     out_dir = cwd / "_summary"
     out_dir.mkdir(exist_ok=True)
 
-    cpu_out_path = out_dir / f"{run_tag}_overall_cpu_stats.csv"
-    gpu_out_path = out_dir / f"{run_tag}_overall_gpu_stats.csv"
+    # NEW: output naming includes _5g or _wifi
+    cpu_out_path = out_dir / f"{run_tag}_overall_cpu_stats_{link}.csv"
+    gpu_out_path = out_dir / f"{run_tag}_overall_gpu_stats_{link}.csv"
 
     cpu_rows: Dict[Tuple[str, str, str, str], Dict[str, str]] = {}
     gpu_rows: Dict[Tuple[str, str, str, str], Dict[str, str]] = {}
 
-    print(f"🔍 Found {len(matched)} files. Processing...")
+    print(
+        f"🔍 Found {len(matched)} files "
+        f"(base={len(base_matched)}, extra_vaccel_remote_{link}={len(extra_matched)}). Processing..."
+    )
 
     for csv_path in matched:
-        # Parse metadata using folder as host
+        # Parse metadata:
+        # - base files: parse with run_tag
+        # - extra files: parse with run_tag-link (e.g. run1-wifi)
         parsed = parse_stem_and_folder(csv_path, run_tag)
         if not parsed:
-            continue
+            parsed = parse_stem_and_folder(csv_path, f"{run_tag}-{link}")
+            if not parsed:
+                continue
+
         model, backend, host, device = parsed
 
         with csv_path.open("r", newline="") as f:
@@ -282,7 +307,7 @@ def main() -> None:
             metrics, duration_sec, n = read_duration_and_metrics(csv_path, GPU_METRICS)
             gpu_count, gpu_names = read_gpu_id_info(csv_path)
 
-            row: Dict[str, str] = {
+            row = {
                 "host": host,
                 "model": model,
                 "backend": backend,

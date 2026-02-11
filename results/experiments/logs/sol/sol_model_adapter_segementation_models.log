@@ -1,0 +1,143 @@
+root@6c1ff67a90f1:/src# NUM_IMAGES=1024 BACKEND=stock HOST=edge-asus DEVICE=gpu MODEL=deeplabv3_mobilenet_v3_large_sol RUN_TAG=runTEST python3 model_benchmark.py
+🚀 STARTING MODEL BENCHMARK
+   Backend: stock
+   Host:    edge-asus
+   Model:   deeplabv3_mobilenet_v3_large_sol
+   Type:    semantic_segmentation
+   Device:  gpu
+   Loading: models/deeplabv3_mobilenet_v3_large_sol
+   [Adapter] Loading SOL model from models/deeplabv3_mobilenet_v3_large_sol/lib_gpu...
+   [SOL] GPU mode | SOL_RUN_MODE=2
+   [SOL] Option 2 selected: using run(*args) each call
+   [SOL] (Mode 2) Running GPU Optimization (Level 2)...
+   📸 Using 1024 images.
+   🔥 Warming up (30 iterations)...
+   ⏱️  Running Inference..
+      - 000000577735.jpg: Inf=2.96ms | Tot=10.45ms  -> [background only]
+      - 000000577864.jpg: Inf=2.72ms | Tot=9.57ms  -> [background only]
+      - 000000577932.jpg: Inf=2.74ms | Tot=10.60ms  -> [background only]
+      - 000000577976.jpg: Inf=2.71ms | Tot=10.00ms  -> [background only]
+      - 000000578792.jpg: Inf=2.72ms | Tot=9.55ms  -> [background only]
+      - 000000579970.jpg: Inf=2.71ms | Tot=9.17ms  -> [background only]
+      - 000000580294.jpg: Inf=3.05ms | Tot=9.92ms  -> [background only]
+      - 000000580410.jpg: Inf=2.82ms | Tot=9.50ms  -> [background only]
+      - 000000580418.jpg: Inf=2.74ms | Tot=9.60ms  -> [background only]
+      - 000000581357.jpg: Inf=3.01ms | Tot=10.32ms  -> [background only]
+
+✅ Benchmark Complete.
+   📂 Results export disabled.
+   ----------------------------------
+   📊 Summary for stock / deeplabv3_mobilenet_v3_large_sol:
+      Inference Mean: 3.05 ms (P99: 6.41 ms)
+      Inference FPS:  328.29
+      System Mean:    10.23 ms
+      System FPS:     97.78
+   ----------------------------------
+
+root@6c1ff67a90f1:/src# NUM_IMAGES=1024 BACKEND=stock HOST=edge-asus DEVICE=gpu MODEL=deeplabv3_resnet101_sol RUN_TAG=runTEST python3 model_benchmark.py
+
+🚀 STARTING MODEL BENCHMARK
+   Backend: stock
+   Host:    edge-asus
+   Model:   deeplabv3_resnet101_sol
+   Type:    semantic_segmentation
+   Device:  gpu
+   Loading: models/deeplabv3_resnet101_sol
+   [Adapter] Loading SOL model from models/deeplabv3_resnet101_sol/lib_gpu...
+   [SOL] GPU mode | SOL_RUN_MODE=2
+   [SOL] Option 2 selected: using run(*args) each call
+   [SOL] (Mode 2) Running GPU Optimization (Level 2)...
+   📸 Using 1024 images.
+   🔥 Warming up (30 iterations)...
+      - 000000574810.jpg: Inf=16.89ms | Tot=24.47ms  -> [background only]
+      - 000000575081.jpg: Inf=16.77ms | Tot=23.50ms  -> [background only]
+      - 000000577182.jpg: Inf=16.51ms | Tot=25.45ms  -> [background only]
+      - 000000577735.jpg: Inf=17.44ms | Tot=24.59ms  -> [background only]
+      - 000000577864.jpg: Inf=17.15ms | Tot=24.23ms  -> [background only]
+      - 000000577932.jpg: Inf=16.35ms | Tot=25.29ms  -> [background only]
+      - 000000577976.jpg: Inf=15.81ms | Tot=23.67ms  -> [background only]
+      - 000000578792.jpg: Inf=16.85ms | Tot=24.22ms  -> [background only]
+      - 000000579970.jpg: Inf=17.43ms | Tot=24.92ms  -> [background only]
+      - 000000580294.jpg: Inf=16.38ms | Tot=23.96ms  -> [background only]
+      - 000000580410.jpg: Inf=15.87ms | Tot=22.86ms  -> [background only]
+      - 000000580418.jpg: Inf=15.87ms | Tot=23.94ms  -> [background only]
+      - 000000581357.jpg: Inf=16.86ms | Tot=24.06ms  -> [background only]
+
+✅ Benchmark Complete.
+   📂 Results export disabled.
+   ----------------------------------
+   📊 Summary for stock / deeplabv3_resnet101_sol:
+      Inference Mean: 16.11 ms (P99: 17.57 ms)
+      Inference FPS:  62.06
+      System Mean:    25.24 ms
+      System FPS:     39.61
+   ----------------------------------
+
+
+root@6c1ff67a90f1:/src# NUM_IMAGES=512 BACKEND=stock HOST=edge-asus DEVICE=gpu MODEL=deeplabv3_resnet50_sol RUN_TAG=runTEST python3 model_benchmark.py
+
+🚀 STARTING MODEL BENCHMARK
+   Backend: stock
+   Host:    edge-asus
+   Model:   deeplabv3_resnet50_sol
+   Type:    semantic_segmentation
+   Device:  gpu
+   Loading: models/deeplabv3_resnet50_sol
+   [Adapter] Loading SOL model from models/deeplabv3_resnet50_sol/lib_gpu...
+   [SOL] GPU mode | SOL_RUN_MODE=2
+   [SOL] Option 2 selected: using run(*args) each call
+   [SOL] (Mode 2) Running GPU Optimization (Level 2)...
+   📸 Using 512 images.
+   🔥 Warming up (30 iterations)...
+Module: SOL/backend_nvidia
+File: /usr/local/lib/python3.10/dist-packages/sol/include/sol/nvidia/dp_api_offload.h
+Line: 129
+Message(DP): CUDA_ERROR_INVALID_ADDRESS_SPACE: operation not supported on global/shared address space
+
+
+
+root@6c1ff67a90f1:/src# NUM_IMAGES=512 BACKEND=stock HOST=edge-asus DEVICE=gpu MODEL=fcn_resnet50_sol RUN_TAG=runTEST python3 model_benchmark.py
+
+🚀 STARTING MODEL BENCHMARK
+   Backend: stock
+   Host:    edge-asus
+   Model:   fcn_resnet50_sol
+   Type:    semantic_segmentation
+   Device:  gpu
+   Loading: models/fcn_resnet50_sol
+   [Adapter] Loading SOL model from models/fcn_resnet50_sol/lib_gpu...
+   [SOL] GPU mode | SOL_RUN_MODE=2
+   [SOL] Option 2 selected: using run(*args) each call
+   [SOL] (Mode 2) Running GPU Optimization (Level 2)...
+   📸 Using 512 images.
+   🔥 Warming up (30 iterations)...
+Module: SOL/backend_nvidia
+File: /usr/local/lib/python3.10/dist-packages/sol/include/sol/nvidia/dp_api_offload.h
+Line: 129
+Message(DP): CUDA_ERROR_INVALID_ADDRESS_SPACE: operation not supported on global/shared address space
+
+
+
+root@6c1ff67a90f1:/src# NUM_IMAGES=512 BACKEND=stock HOST=edge-asus DEVICE=gpu MODEL=fcn_resnet101_sol RUN_TAG=runTEST python3 model_benchmark.py
+
+🚀 STARTING MODEL BENCHMARK
+   Backend: stock
+   Host:    edge-asus
+   Model:   fcn_resnet101_sol
+   Type:    semantic_segmentation
+   Device:  gpu
+   Loading: models/fcn_resnet101_sol
+   [Adapter] Loading SOL model from models/fcn_resnet101_sol/lib_gpu...
+   [SOL] GPU mode | SOL_RUN_MODE=2
+   [SOL] Option 2 selected: using run(*args) each call
+   [SOL] (Mode 2) Running GPU Optimization (Level 2)...
+   📸 Using 512 images.
+   🔥 Warming up (30 iterations)...
+Module: SOL/backend_nvidia
+File: /usr/local/lib/python3.10/dist-packages/sol/include/sol/nvidia/dp_api_offload.h
+Line: 129
+Message(DP): CUDA_ERROR_ILLEGAL_ADDRESS: an illegal memory access was encountered
+
+
+
+

@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.patches as mpatches
 
-INPUT_FILE = "../experiments/docker-stats/_summary/run1_overall_resource_usage_per_container.csv"
+INPUT_FILE = "../experiments/docker-stats/_summary/run1_overall_resource_usage_per_container_wifi.csv"
 
 PLOT_MODE = "combined"  # "combined" or "separate"
 OUTPUT_BASENAME = "./docker_stats_network"  # combined -> <basename>.pdf, separate -> <basename>_<host>.pdf
@@ -33,10 +33,10 @@ SHOW_VALUE_LABELS = True
 REMOTE_HOST = "edge-asus"
 
 MODEL_TYPE_ORDER = [
-    "swin_t",
-    "resnet50",
-    "mc3_18", "r3d_18",
-    "deeplabv3_resnet50", "fcn_resnet50",
+    "swin_t", "swin_s", "swin_v2_b",
+    "swin3d_t", "swin3d_s", "swin3d_b", "mc3_18", "r3d_18", "r2plus1d_18",
+    "deeplabv3_resnet50", "deeplabv3_resnet101",
+    "fcn_resnet50", "fcn_resnet101",
 ]
 
 # Defines the plot order and labels for the legend

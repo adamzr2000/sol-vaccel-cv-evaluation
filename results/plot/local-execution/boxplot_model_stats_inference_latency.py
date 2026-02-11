@@ -9,7 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-INPUT_FILE = "../../experiments/model-stats/_summary/run1_benchmark_summary.json"
+INPUT_FILE = "../../experiments/model-stats/_summary/run1_benchmark_summary_wifi.json"
 
 PLOT_MODE = "combined"  # "combined" or "separate"
 OUTPUT_COMBINED = "model_stats_inference_latency_boxplot_local_exec.pdf"
@@ -81,7 +81,7 @@ def collect_latency_samples(run: dict):
     if base_model not in allowed_models:
         return None
 
-    inf = run.get("inference_latency_ms", {}) or {}
+    inf = run.get("inference_ms", {}) or {}
     mu = inf.get("mean", None)
     sd = inf.get("std", None)
     n = run.get("num_samples", None)

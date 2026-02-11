@@ -8,8 +8,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-CPU_FILE = "../experiments/system-stats/_summary/run1_overall_cpu_stats.csv"
-GPU_FILE = "../experiments/system-stats/_summary/run1_overall_gpu_stats.csv"
+CPU_FILE = "../experiments/system-stats/_summary/run1_overall_cpu_stats_wifi.csv"
+GPU_FILE = "../experiments/system-stats/_summary/run1_overall_gpu_stats_wifi.csv"
 
 PLOT_MODE = "combined"  # "combined" or "separate"
 OUTPUT_BASENAME = "system_stats_power"  # combined -> <basename>.pdf
@@ -26,10 +26,10 @@ SHOW_ERROR_BARS = True
 REMOTE_HOST = "edge-asus"
 
 MODEL_TYPE_ORDER = [
-    "swin_t",
-    "resnet50",
-    "mc3_18", "r3d_18",
-    "deeplabv3_resnet50", "fcn_resnet50",
+    "swin_t", "swin_s", "swin_v2_b",
+    "swin3d_t", "swin3d_s", "swin3d_b", "mc3_18", "r3d_18", "r2plus1d_18",
+    "deeplabv3_resnet50", "deeplabv3_resnet101",
+    "fcn_resnet50", "fcn_resnet101",
 ]
 
 # Define variants dynamically based on configuration
@@ -75,19 +75,37 @@ def add_value_labels(ax, xs, ys, yerrs, y_top):
         )
 
 
+# def classify_robot_cpu_variant(row) -> str | None:
+#     backend = str(row.get("backend", "")).lower().strip()
+#     device = str(row.get("device", "")).lower().strip()
+#     model = str(row.get("model", "")).strip()
+#     is_sol = model.endswith("_sol")
+
+#     if backend == "stock" and device == "cpu":
+#         return VARIANTS[0] if not is_sol else VARIANTS[1]
+
+#     # For System Stats, Robot Power is only relevant for Local Execution.
+#     # Remote execution power is measured on the Edge device (below).
+#     return None
+
 def classify_robot_cpu_variant(row) -> str | None:
     backend = str(row.get("backend", "")).lower().strip()
     device = str(row.get("device", "")).lower().strip()
     model = str(row.get("model", "")).strip()
     is_sol = model.endswith("_sol")
 
+    # Local robot runs
     if backend == "stock" and device == "cpu":
         return VARIANTS[0] if not is_sol else VARIANTS[1]
 
-    # For System Stats, Robot Power is only relevant for Local Execution.
-    # Remote execution power is measured on the Edge device (below).
-    return None
+    # Remote vAccel runs (robot-side client overhead power)
+    if backend == "vaccel-remote":
+        if device == "cpu_target-cpu":
+            return VARIANTS[2]
+        if device == "cpu_target-gpu":
+            return VARIANTS[3]
 
+    return None
 
 def load_robot_cpu_rows(cpu_df: pd.DataFrame):
     # Robot power stats
@@ -287,7 +305,8 @@ def main():
 
     # Panels configuration mapping rows to specific variants
     panels = [
-        ("robot_cpu", "Robot CPU power (W)", robot_rows, [VARIANTS[0], VARIANTS[1]]),
+        # ("robot_cpu", "Robot CPU power (W)", robot_rows, [VARIANTS[0], VARIANTS[1]]),
+        ("robot_cpu", "Robot CPU power (W)", robot_rows, [VARIANTS[0], VARIANTS[1], VARIANTS[2], VARIANTS[3]]),
         ("edge_cpu", f"{REMOTE_HOST} CPU power (W)", edge_cpu_rows, [VARIANTS[2]]),
         ("edge_gpu", f"{REMOTE_HOST} GPU power (W)", edge_gpu_rows, [VARIANTS[3]]),
     ]

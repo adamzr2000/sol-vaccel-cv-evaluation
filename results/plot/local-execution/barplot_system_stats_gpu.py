@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-INPUT_FILE = "../../experiments/system-stats/_summary/run1_overall_gpu_stats.csv"
+INPUT_FILE = "../../experiments/system-stats/_summary/run1_overall_gpu_stats_wifi.csv"
 
 PLOT_MODE = "combined"  # "combined" or "separate"
 OUTPUT_COMBINED = "system_stats_gpu_local_exec.pdf"

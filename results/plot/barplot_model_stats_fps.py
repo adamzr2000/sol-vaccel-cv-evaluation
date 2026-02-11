@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-INPUT_FILE = "../experiments/model-stats/_summary/run1_benchmark_summary.json"
+INPUT_FILE = "../experiments/model-stats/_summary/run1_benchmark_summary_wifi.json"
 OUTPUT_FILE = "model_stats_inference_fps.pdf"
 
 FONT_SCALE = 1.5

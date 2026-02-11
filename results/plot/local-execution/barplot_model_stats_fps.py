@@ -9,7 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-INPUT_FILE = "../../experiments/model-stats/_summary/run1_benchmark_summary.json"
+INPUT_FILE = "../../experiments/model-stats/_summary/run1_benchmark_summary_wifi.json"
 
 # Output control
 PLOT_MODE = "combined"  # "combined" or "separate"
@@ -130,7 +130,7 @@ def plot_target(
     device_u = str(device).upper().strip()
     
     #ax.set_xlabel("ML Model")
-    ax.set_ylabel(f"{host_u}\n{device_u} FPS (inference)")
+    ax.set_ylabel(f"{host_u} {device_u}\nFPS (inference)")
     plt.setp(ax.get_xticklabels(), rotation=30, ha="right")
 
     style_axes(ax)

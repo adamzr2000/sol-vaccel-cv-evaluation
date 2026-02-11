@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-INPUT_FILE = "../../experiments/docker-stats/_summary/run1_overall_resource_usage_per_container.csv"
+INPUT_FILE = "../../experiments/docker-stats/_summary/run1_overall_resource_usage_per_container_wifi.csv"
 
 PLOT_MODE = "combined"  # "combined" or "separate"
 OUTPUT_COMBINED = "docker_stats_cpu_local_exec.pdf"

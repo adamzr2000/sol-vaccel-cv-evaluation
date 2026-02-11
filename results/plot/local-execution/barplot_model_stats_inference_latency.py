@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-INPUT_FILE = "../../experiments/model-stats/_summary/run1_benchmark_summary.json"
+INPUT_FILE = "../../experiments/model-stats/_summary/run1_benchmark_summary_wifi.json"
 
 PLOT_MODE = "combined"  # "combined" or "separate"
 OUTPUT_COMBINED = "model_stats_inference_latency_barplot_local_exec.pdf"
@@ -137,7 +137,7 @@ def extract_rows(runs, host, device):
         if base_model not in allowed_models:
             continue
 
-        inf = r.get("inference_latency_ms", {}) or {}
+        inf = r.get("inference_ms", {}) or {}
         mean = inf.get("mean", None)
         std = inf.get("std", None)
         if mean is None:
@@ -232,7 +232,7 @@ def plot_latency(ax, rows, host, device, color_map, leg_loc: str):
                 )
 
     #ax.set_xlabel("ML Model")
-    ax.set_ylabel(f"{host_u}\n{device_u} inference time (ms)")
+    ax.set_ylabel(f"{host_u} {device_u}\nInference Time (ms)")
     ax.set_xticks(x)
     ax.set_xticklabels(base_models, rotation=30, ha="right")
     ax.set_ylim(0, y_lim_top)

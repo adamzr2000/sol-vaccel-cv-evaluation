@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-INPUT_FILE = "../../experiments/model-stats/_summary/run1_benchmark_summary.json"
+INPUT_FILE = "../../experiments/model-stats/_summary/run1_benchmark_summary_wifi.json"
 
 PLOT_MODE = "combined"  # "combined" or "separate"
 OUTPUT_COMBINED = "model_stats_confidence_score_barplot_local_exec.pdf"
@@ -227,7 +227,7 @@ def plot_confidence(ax, rows, host, device, color_map):
                     linewidth=1.8, color="black", alpha=0.35, zorder=6
                 )
 
-    ax.set_ylabel(f"{host_u}\n{device_u} confidence score (%)")
+    ax.set_ylabel(f"{host_u} {device_u}\nConfidence Score (%)")
     ax.set_xticks(x)
     ax.set_xticklabels(base_models, rotation=30, ha="right")
     ax.set_ylim(0, y_lim_top)

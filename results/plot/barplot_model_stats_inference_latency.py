@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-INPUT_FILE = "../experiments/model-stats/_summary/run1_benchmark_summary.json"
+INPUT_FILE = "../experiments/model-stats/_summary/run1_benchmark_summary_wifi.json"
 OUTPUT_FILE = "model_stats_inference_latency.pdf"
 
 FONT_SCALE = 1.5
@@ -156,7 +156,7 @@ def extract_rows(runs):
         if variant is None:
             continue
 
-        inf = r.get("inference_latency_ms", {}) or {}
+        inf = r.get("inference_ms", {}) or {}
         mean = inf.get("mean", None)
         std = inf.get("std", None)
 

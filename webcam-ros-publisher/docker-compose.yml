@@ -1,0 +1,30 @@
+services:
+  ros-master:
+    image: ros-master:latest
+    container_name: ros-master
+    environment:
+      ROS_MASTER_URI: "http://10.5.1.20:11311"
+      ROS_IP: "10.5.1.20"
+    network_mode: host
+
+  webcam-ros-publisher:
+    image: webcam-ros-publisher:latest
+    container_name: webcam-ros-publisher
+    network_mode: host
+    privileged: true
+    devices:
+      - "/dev/video0:/dev/video0"
+    environment:
+      ROS_MASTER_URI: "http://10.5.1.20:11311"
+      ROS_IP: "10.5.1.20"
+      CAM_DEVICE: "0"
+      CAM_WIDTH: "640"
+      CAM_HEIGHT: "480"
+      CAM_CAPTURE_FPS: "30"
+      CAM_FPS: "30"
+      ROS_IMAGE_TOPIC: "/camera/image_raw"
+      DEBUG_EVERY_N: "0"
+    volumes:
+      - "./src:/app/src"
+    depends_on:
+      - ros-master

@@ -1,0 +1,25 @@
+services:
+  ros-master:
+    image: ros-master:latest
+    build:
+      context: ./ros-master
+      dockerfile: Dockerfile
+    container_name: ros-master
+    environment:
+      ROS_IP: "${HOST_IP}"
+      ROS_MASTER_URI: "http://${HOST_IP}:11311"
+    network_mode: host
+
+  camera:
+    image: astra-camera:latest 
+    build:
+      context: ./camera-drivers
+      dockerfile: Dockerfile      
+    container_name: camera
+    environment:
+      ROS_IP: "${HOST_IP}"
+      ROS_MASTER_URI: "http://${HOST_IP}:11311"
+    devices:
+      - "/dev/astra:/dev/astra"
+    network_mode: host
+    privileged: true

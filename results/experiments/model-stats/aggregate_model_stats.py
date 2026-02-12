@@ -48,8 +48,11 @@ def main() -> None:
     run_tag = args.run_tag.strip()
     link = args.link.strip()
 
-    all_summaries = sorted(cwd.rglob("benchmark_summary.json"))
-
+    all_summaries = sorted(
+        p for p in cwd.rglob("benchmark_summary.json")
+        if "failed" not in p.parts
+    )
+    
     # 1) ORIGINAL behavior (unchanged):
     #    include anything whose run folder starts with "{run_tag}_"
     base_prefix = f"{run_tag}_"

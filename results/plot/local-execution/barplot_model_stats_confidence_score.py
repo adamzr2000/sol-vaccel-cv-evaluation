@@ -7,8 +7,10 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from plot_config import get_path, load_config, get_model_type_order
 
-INPUT_FILE = "../../experiments/model-stats/_summary/run1_benchmark_summary_wifi.json"
+cfg = load_config()
+INPUT_FILE = str(get_path("model_summary"))
 
 PLOT_MODE = "combined"  # "combined" or "separate"
 OUTPUT_COMBINED = "model_stats_confidence_score_barplot_local_exec.pdf"

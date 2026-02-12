@@ -1,0 +1,79 @@
+{
+    "run_id": "run1-wifi_deeplabv3_mobilenet_v3_large_sol_vaccel-remote_robot_cpu_target-gpu",
+    "backend": "vaccel-remote",
+    "host": "robot",
+    "model": "deeplabv3_mobilenet_v3_large_sol",
+    "model_type": "semantic_segmentation",
+    "device": "gpu",
+    "num_samples": 512,
+    "time_window": {
+        "start": "2026-02-12T13:14:29.169171+00:00",
+        "stop": "2026-02-12T13:17:14.469816+00:00",
+        "duration_sec": 165.300645
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 3.29,
+        "system": 3.1
+    },
+    "preprocessing_ms": {
+        "mean": 8.162,
+        "std": 3.7984,
+        "min": 1.4239,
+        "max": 37.519,
+        "p25": 5.9871,
+        "p50": 6.8979,
+        "p75": 8.8033,
+        "p90": 13.5514,
+        "p95": 15.1281,
+        "p99": 20.941
+    },
+    "inference_ms": {
+        "mean": 303.4907,
+        "std": 7.2301,
+        "min": 286.0663,
+        "max": 336.2692,
+        "p25": 298.8369,
+        "p50": 303.2039,
+        "p75": 307.3966,
+        "p90": 312.201,
+        "p95": 316.236,
+        "p99": 325.0378
+    },
+    "postprocessing_ms": {
+        "mean": 11.0999,
+        "std": 3.1629,
+        "min": 6.2685,
+        "max": 28.8993,
+        "p25": 9.432,
+        "p50": 9.7711,
+        "p75": 10.3946,
+        "p90": 16.1586,
+        "p95": 16.7181,
+        "p99": 23.6783
+    },
+    "system_ms": {
+        "mean": 322.756,
+        "std": 9.8133,
+        "min": 301.9853,
+        "max": 360.7492,
+        "p25": 316.1832,
+        "p50": 321.3931,
+        "p75": 328.106,
+        "p90": 336.0116,
+        "p95": 341.8729,
+        "p99": 351.6201
+    },
+    "confidence_score": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+    }
+}

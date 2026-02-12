@@ -7,8 +7,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from plot_config import get_path, load_config, get_model_type_order
 
-INPUT_FILE = "../../experiments/system-stats/_summary/run1_overall_gpu_stats_wifi.csv"
+cfg = load_config()
+INPUT_FILE = str(get_path("system_gpu_summary"))
 
 PLOT_MODE = "combined"  # "combined" or "separate"
 OUTPUT_COMBINED = "system_stats_gpu_local_exec.pdf"
@@ -25,13 +27,7 @@ INCLUDE_VACCEL_LOCAL = False
 VARIANT_ORDER = ["PyTorch", "SOL", "SOL + vAccel"] if INCLUDE_VACCEL_LOCAL else ["PyTorch", "SOL"]
 LEGEND_LOC = "upper left"
 
-MODEL_TYPE_ORDER = [
-    "mobilenet_v3_large", "resnet50", "swin_t", "swin_s", "swin_v2_b",
-    "swin3d_t", "swin3d_s", "swin3d_b", "mc3_18", "r3d_18", "r2plus1d_18",
-    "deeplabv3_mobilenet_v3_large",
-    "deeplabv3_resnet50", "deeplabv3_resnet101",
-    "fcn_resnet50", "fcn_resnet101",
-]
+MODEL_TYPE_ORDER = get_model_type_order()
 
 # --- CONFIGURATION WITH SPECIFIC HOSTS ---
 # Added 'host' key to filter specific data and updated 'ylabel' to be explicit.

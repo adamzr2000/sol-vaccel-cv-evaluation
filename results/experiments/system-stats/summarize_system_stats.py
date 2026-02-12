@@ -204,7 +204,11 @@ def main() -> None:
     args = ap.parse_args()
 
     cwd = Path(".").resolve()
-    csv_files = sorted(cwd.rglob("*.csv"))
+
+    csv_files = sorted(
+        p for p in cwd.rglob("*.csv")
+        if "failed" not in p.parts and "_summary" not in p.parts
+    )
 
     if args.help:
         print("Usage:")

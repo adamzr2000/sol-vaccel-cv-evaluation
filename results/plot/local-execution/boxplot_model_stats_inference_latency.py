@@ -8,8 +8,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from plot_config import get_path, load_config, get_model_type_order
 
-INPUT_FILE = "../../experiments/model-stats/_summary/run1_benchmark_summary_wifi.json"
+cfg = load_config()
+INPUT_FILE = str(get_path("model_summary"))
 
 PLOT_MODE = "combined"  # "combined" or "separate"
 OUTPUT_COMBINED = "model_stats_inference_latency_boxplot_local_exec.pdf"
@@ -23,13 +25,8 @@ INCLUDE_VACCEL_LOCAL = False
 VARIANT_ORDER = ["PyTorch", "SOL", "SOL + vAccel"] if INCLUDE_VACCEL_LOCAL else ["PyTorch", "SOL"]
 
 # Strict filter + order (consistent behavior)
-MODEL_TYPE_ORDER = [
-    "mobilenet_v3_large", "resnet50", "swin_t", "swin_s", "swin_v2_b",
-    "swin3d_t", "swin3d_s", "swin3d_b", "mc3_18", "r3d_18", "r2plus1d_18",
-    "deeplabv3_mobilenet_v3_large",
-    "deeplabv3_resnet50", "deeplabv3_resnet101",
-    "fcn_resnet50", "fcn_resnet101",
-]
+
+MODEL_TYPE_ORDER = get_model_type_order()
 
 # --- HARDCODED TARGETS (Updated for new folder structure) ---
 # Format: (host, device, output_filename, legend_loc)

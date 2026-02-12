@@ -61,6 +61,8 @@ GPU host:
 
 ```bash
 ./run_agent.sh 9125
+# or
+./run_agent.sh 9125 --debug
 ```
 
 where `9125` is the port to use. If the port is omitted, `9125` will be used by
@@ -100,6 +102,9 @@ Execute `model_benchmark.py` with the following environment variables.
 - **BACKEND**: inference backend  
   - `stock` (default), `vaccel-local` (or `vaccel`) or `vaccel-remote`
 
+- **ENABLE_VACCEL_PROFILER**: enable vAccel execution profiling *(vAccel SOL models only)*  
+  - `true` or `false` (default: `false`)
+
 - **SOL_RUN_MODE**: SOL execution mode *(SOL models only)*  
   - `2` → **Option 2 (default)**: explicit buffers per call  
     - Uses `run(*args)` (explicit input/output buffers each iteration)  
@@ -138,13 +143,9 @@ Examples:
 
 ```shell
 # Stock image classification (CPU)
-DEVICE=gpu MODEL=resnet50 NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
+DEVICE=cpu MODEL=resnet50 NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
 # Stock image classification (GPU)
 DEVICE=gpu MODEL=resnet50 NUM_IMAGES=64 python3 model_benchmark.py
-# vAccel local image classification (CPU)
-DEVICE=cpu BACKEND=vaccel-local MODEL=resnet50_sol NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
-# vAccel local image classification (GPU)
-DEVICE=gpu BACKEND=vaccel-local MODEL=resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
 # vAccel remote image classification (CPU)
 DEVICE=cpu BACKEND=vaccel-remote MODEL=resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
 # vAccel remote image classification (GPU)
@@ -159,7 +160,7 @@ DEVICE=gpu BACKEND=vaccel-remote MODEL=resnet50_sol NUM_IMAGES=64 python3 model_
 
 ### 1. Start the monitoring service
 
-See [README_MONITORING.md](./README_MONITORING.md)
+See [monitoring](./monitoring)
 
 Start the `docker-stats-collector` and `system-stats-collector` containers:
 
@@ -198,34 +199,6 @@ Auto:
 ./evaluate_models.sh --backend stock --host edge-asus --device gpu --run-tag run1 --sleep 10
 ./evaluate_models.sh --backend vaccel-local --host edge-asus --device gpu --run-tag run1 --sleep 10
 ```
-
----
-
-## Run the web application
-
-### 1. Start the container
-
-Start the container in CPU or GPU mode:
-
-```bash
-./run.sh cpu
-# or
-./run.sh gpu
-```
-
-### 2. Run web server
-
-```shell
-python3 serve.py
-```
-
-Once the server is running, open your browser and navigate to:
-
-[http://10.5.1.20:8000](http://10.5.1.20:8000)
-
-![web-interface](./web-interface.png)
-
----
 
 ### Model I/O quick reference
 
@@ -280,38 +253,6 @@ Quick reminder of **input/output shapes and their sizes** (based on [model_adapt
 * **Postprocessed output (returned by app)**
   `top_class` (int64) + `top_prob` (float32)
   **Size:** **≈ 12 B (negligible)**
-
----
-
-#### ML payload bandwidth over TCP (UE ↔ Edge)
-
-[ml_payload_over_tcp_bw.sh](./ml_payload_over_tcp_bw.sh) measures **TCP throughput** and **average transfer time per ML tensor payload** for the above inputs/outputs
-  
-It prints: total bytes, total time, throughput (MiB/s + Mbit/s), and avg time per payload (ms).
-
-- Uplink (UE → Edge)
-
-On **Edge**:
-```bash
-nc -lk -p 5001 > /dev/null
-```
-
-On **UE**:
-```bash
-EDGE_IP=10.5.1.20 PORT=5001 ./ml_payload_over_tcp_bw.sh uplink
-```
-
-- Downlink (Edge → UE)
-
-On **UE**:
-```bash
-nc -lk -p 5001 > /dev/null
-```
-
-On **Edge**:
-```bash
-UE_IP=10.3.202.66 PORT=5001 ./ml_payload_over_tcp_bw.sh downlink
-```
 
 ---
 

@@ -7,9 +7,10 @@ import torch
 import numpy as np
 import cv2
 import requests
+import logging
+
 from pathlib import Path
 from datetime import datetime, timezone
-
 from model_adapter import get_model_adapter
 
 try:
@@ -17,6 +18,8 @@ try:
 except ImportError:
     COLORS = np.random.randint(0, 255, (256, 3), dtype=np.uint8)
     def analyze_segmentation_mask(mask): return ""
+
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 # ==========================================
 # HELPER: STATS CALCULATOR

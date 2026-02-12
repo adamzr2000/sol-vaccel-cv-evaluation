@@ -276,12 +276,39 @@ class SolAdapter(BaseModelAdapter):
 
         model_class = getattr(sol_module, module_name)
 
+        # kwargs = {}
+        # if hasattr(model_class, "use_remote"):
+        #     kwargs["use_remote"] = use_remote
+
+        # self.model = model_class(path=lib_path, **kwargs)
+        # self.model.init()
+
         kwargs = {}
         if hasattr(model_class, "use_remote"):
             kwargs["use_remote"] = use_remote
 
-        self.model = model_class(path=lib_path, **kwargs)
+        # --- NEW: enable vAccel per-method profiling (safe / best-effort) ---
+        enable_prof = os.environ.get("ENABLE_VACCEL_PROFILER", "0").strip().lower() in (
+            "1", "true", "yes", "y", "on"
+        )
+
+        if enable_prof:
+            # Try to pass the kwarg; if wrapper doesn't support it, we'll retry without it
+            kwargs["enable_profiler"] = True
+            print("   [vAccel] enable_profiler=True")
+
+        try:
+            self.model = model_class(path=lib_path, **kwargs)
+        except TypeError:
+            # Wrapper doesn't accept enable_profiler → retry without it
+            if "enable_profiler" in kwargs:
+                kwargs.pop("enable_profiler", None)
+                self.model = model_class(path=lib_path, **kwargs)
+            else:
+                raise
+
         self.model.init()
+
 
         # --- 2. BUFFER INITIALIZATION ---
         self.vdims = np.array([1], dtype=np.int64)

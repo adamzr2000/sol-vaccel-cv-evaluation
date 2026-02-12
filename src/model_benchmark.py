@@ -6,6 +6,8 @@ import json
 import torch
 import numpy as np
 import cv2
+import logging
+
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -16,6 +18,8 @@ try:
 except ImportError:
     COLORS = np.random.randint(0, 255, (256, 3), dtype=np.uint8)
     def analyze_segmentation_mask(mask): return ""
+
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 # ==========================================
 # HELPER: STATS CALCULATOR

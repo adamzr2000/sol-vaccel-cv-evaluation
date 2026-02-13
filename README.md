@@ -273,3 +273,27 @@ To run `sol_mobilenet_v3_large` correctly, **cuDNN must be downgraded to 9.1.1.1
 python3 -m pip install --no-cache-dir --force-reinstall \
   "nvidia-cudnn-cu12==9.1.1.17" --no-deps
 ```
+
+---
+
+## ROS Integration
+
+### Build docker images
+Build the container image according to the target device:
+
+```bash
+sudo docker build -f dockerfile-torchvision-ros-cpu . -t torchvision-ros-app:cpu
+sudo docker build -f dockerfile-torchvision-ros-gpu . -t torchvision-ros-app:gpu
+```
+
+### Start the container in CPU or GPU mode:
+
+```bash
+./run_ros.sh cpu
+# or
+./run_ros.sh gpu
+```
+
+```bash
+EXPERIMENT_DURATION_SEC=30 HOST=edge-asus BACKEND=stock DEVICE=cpu MODEL=resnet50 INPUT_TOPIC=/camera/color/image_raw python3 model_benchmark_ros.py
+```

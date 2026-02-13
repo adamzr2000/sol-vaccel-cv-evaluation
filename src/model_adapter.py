@@ -29,7 +29,20 @@ class BaseModelAdapter:
 
     def preprocess(self, image_path):
         raise NotImplementedError
+    
+    # Optional: in-memory preprocessing for ROS/live pipelines
+    def preprocess_frame(self, frame_rgb: np.ndarray):
+        """
+        frame_rgb: HxWx3 uint8, RGB
+        """
+        raise NotImplementedError
 
+    def preprocess_frames(self, frames_rgb):
+        """
+        frames_rgb: list of HxWx3 uint8 RGB frames (e.g., 16 frames for video models)
+        """
+        raise NotImplementedError
+    
     def infer(self, input_tensor):
         raise NotImplementedError
 
@@ -157,6 +170,56 @@ class PyTorchBaselineAdapter(BaseModelAdapter):
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             return self.transform(img).unsqueeze(0)  # CPU tensor
 
+    def preprocess_frame(self, frame_rgb: np.ndarray):
+        """
+        Preprocess a single RGB frame (HxWx3 uint8) without disk I/O.
+        Returns the same type/shape as preprocess(path).
+        """
+        if frame_rgb is None or frame_rgb.ndim != 3 or frame_rgb.shape[2] != 3:
+            raise ValueError("preprocess_frame expects an RGB HxWx3 frame")
+
+        if self.model_type == "video_classification":
+            # One frame -> transform -> replicate to 16 frames
+            dummy_tensor = torch.from_numpy(frame_rgb).permute(2, 0, 1)
+            frame_tensor = self.transform(dummy_tensor)  # (3,112,112)
+            return torch.stack([frame_tensor] * 16, dim=1).unsqueeze(0)  # (1,3,16,112,112) CPU tensor
+
+        # classification / segmentation
+        # Your transform starts with ToTensor(), so it accepts numpy HxWx3 RGB
+        return self.transform(frame_rgb).unsqueeze(0)  # (1,3,224,224) CPU tensor
+
+    def preprocess_frames(self, frames_rgb):
+        """
+        Preprocess a list of RGB frames for video models.
+        frames_rgb: list length 16 (preferred), each HxWx3 uint8 RGB.
+        Returns (1,3,16,112,112) CPU tensor.
+        """
+        if self.model_type != "video_classification":
+            raise ValueError("preprocess_frames is only valid for video_classification")
+
+        if not frames_rgb:
+            raise ValueError("frames_rgb is empty")
+
+        # If more/less than 16, we will sample or pad to 16
+        num_frames = 16
+        if len(frames_rgb) >= num_frames:
+            idx = np.linspace(0, len(frames_rgb) - 1, num_frames).astype(int)
+            frames_rgb = [frames_rgb[i] for i in idx]
+        else:
+            # pad last frame
+            last = frames_rgb[-1]
+            frames_rgb = frames_rgb + [last] * (num_frames - len(frames_rgb))
+
+        frames_list = []
+        for fr in frames_rgb:
+            if fr is None or fr.ndim != 3 or fr.shape[2] != 3:
+                raise ValueError("Each frame must be RGB HxWx3")
+            ft = torch.from_numpy(fr).permute(2, 0, 1)
+            frames_list.append(self.transform(ft))  # (3,112,112)
+
+        clip = torch.stack(frames_list, dim=1)  # (3,16,112,112)
+        return clip.unsqueeze(0)  # (1,3,16,112,112)
+    
     def infer(self, input_tensor):
         # Fair timing vs SOL: SOL takes CPU (NumPy) buffers and returns CPU buffers,
         # so its "inference time" includes CPU↔GPU transfers. We do the same here by
@@ -375,8 +438,6 @@ class SolAdapter(BaseModelAdapter):
                 if self.device == "cuda":
                     print("   [SOL] (Mode 2) Skipping GPU optimize for this model (deeplabv3/fcn)")
 
-
-
     def preprocess(self, input_path):
         if self.model_type == "video_classification":
             ext = os.path.splitext(input_path)[1].lower()
@@ -399,6 +460,52 @@ class SolAdapter(BaseModelAdapter):
             tensor = self.transform(img)
             return tensor.unsqueeze(0).numpy()
 
+    def preprocess_frame(self, frame_rgb: np.ndarray):
+        """
+        Preprocess a single RGB frame (HxWx3 uint8) into NumPy input for SOL buffers.
+        Returns the same type/shape as preprocess(path).
+        """
+        if frame_rgb is None or frame_rgb.ndim != 3 or frame_rgb.shape[2] != 3:
+            raise ValueError("preprocess_frame expects an RGB HxWx3 frame")
+
+        if self.model_type == "video_classification":
+            dummy_tensor = torch.from_numpy(frame_rgb).permute(2, 0, 1)
+            frame_tensor = self.transform(dummy_tensor)  # (3,112,112) float
+            tensor = torch.stack([frame_tensor] * 16, dim=1)  # (3,16,112,112)
+            return tensor.unsqueeze(0).numpy()  # (1,3,16,112,112)
+
+        tensor = self.transform(frame_rgb)  # (3,224,224)
+        return tensor.unsqueeze(0).numpy()  # (1,3,224,224)
+
+    def preprocess_frames(self, frames_rgb):
+        """
+        Preprocess a list of RGB frames for SOL video models.
+        Returns (1,3,16,112,112) float32 NumPy.
+        """
+        if self.model_type != "video_classification":
+            raise ValueError("preprocess_frames is only valid for video_classification")
+
+        if not frames_rgb:
+            raise ValueError("frames_rgb is empty")
+
+        num_frames = 16
+        if len(frames_rgb) >= num_frames:
+            idx = np.linspace(0, len(frames_rgb) - 1, num_frames).astype(int)
+            frames_rgb = [frames_rgb[i] for i in idx]
+        else:
+            last = frames_rgb[-1]
+            frames_rgb = frames_rgb + [last] * (num_frames - len(frames_rgb))
+
+        frames_list = []
+        for fr in frames_rgb:
+            if fr is None or fr.ndim != 3 or fr.shape[2] != 3:
+                raise ValueError("Each frame must be RGB HxWx3")
+            ft = torch.from_numpy(fr).permute(2, 0, 1)
+            frames_list.append(self.transform(ft))  # (3,112,112)
+
+        clip = torch.stack(frames_list, dim=1)  # (3,16,112,112)
+        return clip.unsqueeze(0).numpy()
+    
     def infer(self, input_numpy):
         # 1. Prepare Input
         input_numpy = np.ascontiguousarray(input_numpy, dtype=np.float32)

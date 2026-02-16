@@ -49,11 +49,12 @@ RUN python3 -m pip install \
 
 # vAccel
 RUN wget https://s3.nbfc.io/nbfc-assets/github/vaccel/rev/main/x86_64/release/vaccel_latest_amd64.deb && \
-    wget https://s3.nbfc.io/nbfc-assets/github/vaccel/plugins/rpc/rev/main/x86_64/release/vaccel-rpc_latest_amd64.deb && \
+    wget https://s3.nbfc.io/nbfc-assets/github/vaccel/plugins/rpc/rev/feat_genop_optional_send_write/x86_64/release/vaccel-rpc_latest_amd64.deb && \
     dpkg -i vaccel_latest_amd64.deb vaccel-rpc_latest_amd64.deb && \
     python3 -m pip install --force-reinstall git+https://github.com/nubificus/vaccel-python
 
 ENV VACCEL_PLUGINS=libvaccel-exec.so:libvaccel-rpc.so
 ENV TTRPC_TCP_NODELAY_ENABLED=1
+ENV VACCEL_RPC_SEND_WRITE_ENABLED=0
 
 WORKDIR /src

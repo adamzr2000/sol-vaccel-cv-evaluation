@@ -98,6 +98,8 @@ Execute `model_benchmark.py` with the following environment variables.
   - **Video classification**:  
     `mc3_18`, `mc3_18_sol`,  
     `r3d_18`, `r3d_18_sol` 
+  - **Object detection**:  
+    `yolov5s`
 
 - **BACKEND**: inference backend  
   - `stock` (default), `vaccel-local` (or `vaccel`) or `vaccel-remote`
@@ -201,7 +203,7 @@ Auto:
 ```
 
 ### GPU laptop specs
-````shell
+```shell
 nextnet@asus-g815:~$ nvidia-smi
 Mon Feb 16 17:48:56 2026
 +-----------------------------------------------------------------------------------------+

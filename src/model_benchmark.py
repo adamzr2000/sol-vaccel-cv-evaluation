@@ -7,7 +7,7 @@ import torch
 import numpy as np
 import cv2
 import logging
-
+import warnings
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -19,8 +19,14 @@ except ImportError:
     COLORS = np.random.randint(0, 255, (256, 3), dtype=np.uint8)
     def analyze_segmentation_mask(mask): return ""
 
+try:
+    from detection_utils import COCO_CLASSES
+except ImportError:
+    # Fallback to string IDs if the file is missing
+    COCO_CLASSES = [str(i) for i in range(80)]
+    
 logging.basicConfig(level=logging.INFO, format="%(message)s")
-
+warnings.filterwarnings("ignore", category=FutureWarning)
 # ==========================================
 # HELPER: STATS CALCULATOR
 # ==========================================
@@ -98,13 +104,16 @@ CURRENT_MODEL_DIR = MODELS_DIR / MODEL_ARCH
 # Helper to check type (strip _sol suffix)
 CORE_MODEL_NAME = MODEL_ARCH.replace("_sol", "")
 VIDEO_MODELS = ["mc3_18", "r3d_18", "r2plus1d_18", "swin3d_t", "swin3d_s", "swin3d_b"]
+DETECTION_MODELS = ["yolov5s"]
+
 IS_VIDEO_MODEL = CORE_MODEL_NAME in VIDEO_MODELS
 
-# Determine Model Type String
 if IS_VIDEO_MODEL:
     MODEL_TYPE = "video_classification"
 elif CORE_MODEL_NAME in ["resnet50", "mobilenet_v3_large", "swin_t", "swin_s", "swin_v2_b"]:
     MODEL_TYPE = "image_classification"
+elif CORE_MODEL_NAME in DETECTION_MODELS:
+    MODEL_TYPE = "object_detection"
 else:
     MODEL_TYPE = "semantic_segmentation"
 
@@ -319,6 +328,46 @@ def main():
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
                         cv2.imwrite(str(img_out_dir / f"{i:04d}_pred_{stem_name}.jpg"), display_img)
 
+            elif isinstance(result, dict) and "boxes" in result:
+                boxes = result["boxes"]
+                scores = result["scores"]
+                classes = result["classes"]
+                
+                num_objects = len(boxes)
+                
+                if num_objects > 0:
+                    # Log the confidence of the most confident object for the CSV stats
+                    max_idx = torch.argmax(scores).item()
+                    confidence_score = float(scores[max_idx].item()) * 100
+                    class_id = int(classes[max_idx].item())
+                    # Convert the ID to a string name
+                    top_class_name = COCO_CLASSES[class_id] if class_id < len(COCO_CLASSES) else str(class_id)
+                    detected_info = f" -> Detected {num_objects} object(s) (Top: {top_class_name} @ {confidence_score:.1f}%)"
+                else:
+                    confidence_score = 0.0
+                    class_id = -1
+                    detected_info = " -> Detected 0 objects"
+                    
+                if EXPORT_OUTPUT_IMAGES:
+                    display_img = cv2.imread(file_path)
+                    if display_img is not None:
+                        # Resize display image to 640x640 because our adapter bounding boxes are mapped to the 640x640 scale
+                        display_img = cv2.resize(display_img, (640, 640))
+                        
+                        # Draw every detected object
+                        for idx in range(num_objects):
+                            x1, y1, x2, y2 = boxes[idx].int().tolist()
+                            conf = float(scores[idx].item()) * 100
+                            cls = int(classes[idx].item())
+                            
+                            # Convert the ID to a string name for the image label
+                            class_name = COCO_CLASSES[cls] if cls < len(COCO_CLASSES) else str(cls)
+                            
+                            cv2.rectangle(display_img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                            cv2.putText(display_img, f"{class_name} {conf:.1f}%", (x1, y1 - 5), 
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
+                            
+                        cv2.imwrite(str(img_out_dir / f"{i:04d}_pred_{stem_name}.jpg"), display_img)
         except Exception as e:
             print(f"Error post-processing {file_name}: {e}")
 

@@ -1,0 +1,10 @@
+{
+  "model": "yolov5s",
+  "source": "torchhub",
+  "weights_enum": null,
+  "num_params": 7225885,
+  "files": {
+    "state_dict": "yolov5s_state_dict.pt",
+    "torchscript": null
+  }
+}

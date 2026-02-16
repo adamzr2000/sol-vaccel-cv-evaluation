@@ -19,6 +19,12 @@ except ImportError:
     COLORS = np.random.randint(0, 255, (256, 3), dtype=np.uint8)
     def analyze_segmentation_mask(mask): return ""
 
+try:
+    from detection_utils import COCO_CLASSES
+except ImportError:
+    # Fallback to string IDs if the file is missing
+    COCO_CLASSES = [str(i) for i in range(80)]
+    
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 # ==========================================

@@ -152,7 +152,7 @@ DEVICE=cpu BACKEND=vaccel-remote MODEL=resnet50_sol NUM_IMAGES=64 python3 model_
 DEVICE=gpu BACKEND=vaccel-remote MODEL=resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
 ```
 
-> Note: Results and images are not saved by default to avoid unnecessary disk usage. Set `EXPORT_RESULTS=true` to save benchmark metrics, and also set `EXPORT_OUTPUT_IMAGES=true` to store output images in the [results/experiments/model-stats](./results/experiments/model-stats/) directory.
+> Note: Results and images are not saved by default to avoid unnecessary disk usage. Set `EXPORT_RESULTS=1` to save benchmark metrics, and also set `EXPORT_OUTPUT_IMAGES=1` to store output images in the [results/experiments/model-stats](./results/experiments/model-stats/) directory.
 
 ---
 
@@ -200,9 +200,53 @@ Auto:
 ./evaluate_models.sh --backend vaccel-local --host edge-asus --device gpu --run-tag run1 --sleep 10
 ```
 
+### GPU laptop specs
+````shell
+nextnet@asus-g815:~$ nvidia-smi
+Mon Feb 16 17:48:56 2026
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.95.05              Driver Version: 580.95.05      CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5080 ...    Off |   00000000:02:00.0 Off |                  N/A |
+| N/A   41C    P8              9W /   80W |     181MiB /  16303MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            2433      G   /usr/lib/xorg/Xorg                      145MiB |
+|    0   N/A  N/A            2765      G   /usr/bin/gnome-shell                     14MiB |
++-----------------------------------------------------------------------------------------+
+nextnet@asus-g815:~$ uname -a
+Linux asus-g815 6.14.0-37-generic #37~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Nov 20 10:25:38 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+```
+
 ### Model I/O quick reference
 
 Quick reminder of **input/output shapes and their sizes** (based on [model_adapter.py](./src/model_adapter.py), assuming **float32 = 4 B**, **uint8 = 1 B**).
+
+#### Object Detection — `yolov5s`
+
+* **Input to model**
+  Shape: `(1, 3, 640, 640)` (float32)
+  **Size:** **≈ 4.69 MiB**
+
+* **Raw model output (predictions)** 
+  Shape: `(1, 25200, 85)` (float32)
+  **Size:** **≈ 8.17 MiB**
+
+* **Postprocessed output (returned by app)**
+  Dictionary containing `N` detected objects: `boxes` (float32), `scores` (float32), and `classes` (int64).
+  **Size:** **≈ 28 B per detected object (negligible)**
+
+---
 
 #### Segmentation (2D) — `deeplabv3_resnet50`, `fcn_resnet50`
 

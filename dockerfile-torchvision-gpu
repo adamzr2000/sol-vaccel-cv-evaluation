@@ -36,10 +36,11 @@ RUN python3 -m venv $VENV
 ENV PATH="$VENV/bin:$PATH"
 
 # Python deps
-RUN python3 -m pip install --upgrade pip && \
+RUN python3 -m pip install --upgrade pip "setuptools>=70.0.0" && \
     python3 -m pip install \
       numpy psutil opencv-python-headless \
-      fastapi uvicorn itsdangerous python-dotenv websockets requests && \
+      ultralytics itsdangerous python-dotenv requests \
+      pandas tqdm seaborn gitpython && \
     python3 -m pip install --pre \
       torch torchvision torchaudio \
       --index-url https://download.pytorch.org/whl/nightly/cu128 && \

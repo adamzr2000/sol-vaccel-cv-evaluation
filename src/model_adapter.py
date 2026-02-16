@@ -1,4 +1,5 @@
 import torch
+import torchvision
 import torchvision.models as models
 import torchvision.transforms as transforms
 import cv2
@@ -132,21 +133,32 @@ class PyTorchBaselineAdapter(BaseModelAdapter):
                 transforms.CenterCrop(224),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ])
+        elif model_type == "object_detection":
+            self.transform = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Resize((640, 640), antialias=True),
+            ])
 
     def load_model(self, model_dir):
         print(f"   [Adapter] Loading PyTorch {self.model_type} model from {model_dir}...")
-
-        if self.model_type == "segmentation":
-            self.model = self.builder_func(weights=None, weights_backbone=None, aux_loss=True)
-        else:
-            self.model = self.builder_func(weights=None)
-
         weights_path = os.path.join(model_dir, self.weights_filename)
+
         if not os.path.exists(weights_path):
             raise FileNotFoundError(f"Weights not found at {weights_path}")
 
-        state_dict = torch.load(weights_path, map_location=self.torch_device)
-        self.model.load_state_dict(state_dict)
+        if self.model_type == "object_detection" and self.builder_func == "torchhub":
+            # Load YOLOv5 via Torch Hub, pointing to the local weights file
+            self.model = torch.hub.load('ultralytics/yolov5', 'custom', path=weights_path, force_reload=False, trust_repo=True)
+        else:
+            # Standard torchvision loading
+            if self.model_type == "segmentation":
+                self.model = self.builder_func(weights=None, weights_backbone=None, aux_loss=True)
+            else:
+                self.model = self.builder_func(weights=None)
+
+            state_dict = torch.load(weights_path, map_location=self.torch_device)
+            self.model.load_state_dict(state_dict)
+
         self.model.to(self.torch_device)
         self.model.eval()
 
@@ -229,6 +241,9 @@ class PyTorchBaselineAdapter(BaseModelAdapter):
         output = self.model(input_tensor)
         if self.model_type == "segmentation":
             output = output["out"]
+        elif self.model_type == "object_detection":
+            # YOLOv5 returns a tuple when given a raw BCHW tensor. Extract the inference output.
+            output = output[0]
 
         # Bring results to CPU inside the timed region (matches SOL output buffers).
         output = output.detach().cpu()
@@ -237,11 +252,51 @@ class PyTorchBaselineAdapter(BaseModelAdapter):
     def postprocess(self, output_tensor):
         if self.model_type == "segmentation":
             return torch.argmax(output_tensor.squeeze(0), dim=0).byte()
-        else:
+        elif self.model_type in ["classification", "video_classification"]:
             probs = torch.nn.functional.softmax(output_tensor, dim=1)
             top_prob, top_class = torch.max(probs, dim=1)
             return top_class, top_prob
-
+        elif self.model_type == "object_detection":
+            # 1. Strip batch dimension -> shape: (25200, 85)
+            preds = output_tensor.squeeze(0) 
+            
+            # 2. Calculate confidence (objectness * max_class_prob)
+            obj_conf = preds[:, 4]
+            class_probs = preds[:, 5:]
+            class_conf, class_idx = torch.max(class_probs, dim=1)
+            
+            conf = obj_conf * class_conf
+            
+            # 3. Filter out weak predictions (Threshold = 0.25)
+            mask = conf > 0.25
+            preds = preds[mask]
+            conf = conf[mask]
+            class_idx = class_idx[mask]
+            
+            if len(preds) == 0:
+                return {
+                    "boxes": torch.empty((0, 4), dtype=torch.float32), 
+                    "scores": torch.empty((0,), dtype=torch.float32), 
+                    "classes": torch.empty((0,), dtype=torch.int64)
+                }
+                
+            # 4. Convert [cx, cy, w, h] to [x1, y1, x2, y2]
+            boxes = preds[:, :4]
+            x1 = boxes[:, 0] - (boxes[:, 2] / 2)
+            y1 = boxes[:, 1] - (boxes[:, 3] / 2)
+            x2 = boxes[:, 0] + (boxes[:, 2] / 2)
+            y2 = boxes[:, 1] + (boxes[:, 3] / 2)
+            boxes_xyxy = torch.stack([x1, y1, x2, y2], dim=1)
+            
+            # 5. Apply Non-Maximum Suppression (IoU Threshold = 0.45)
+            keep_indices = torchvision.ops.nms(boxes_xyxy, conf, iou_threshold=0.45)
+            
+            final_boxes = boxes_xyxy[keep_indices]
+            final_conf = conf[keep_indices]
+            final_classes = class_idx[keep_indices]
+            
+            # Return a list of dictionaries, or a combined tensor, depending on your evaluation script needs.
+            return {"boxes": final_boxes, "scores": final_conf, "classes": final_classes}
 
 # =========================================================
 # 2. ADAPTER FOR SOL COMPILER
@@ -303,6 +358,13 @@ class SolAdapter(BaseModelAdapter):
                 transforms.Resize(256, antialias=True),
                 transforms.CenterCrop(224),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
+
+        elif self.model_type == "object_detection":
+            # SOL Object Detection: 640x640, [0, 1] scaling
+            self.transform = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Resize((640, 640), antialias=True),
             ])
 
         self.execution_args = []
@@ -577,18 +639,21 @@ def get_model_adapter(model_name, backend, device):
             "swin_s",
             "swin_v2_b",
         }
+        DET_CORES = {
+            "yolov5s",
+        }
 
         if core_name in VIDEO_CORES:
             m_type = "video_classification"
         elif core_name in CLS_CORES:
             m_type = "classification"
+        elif core_name in DET_CORES:
+            m_type = "object_detection"
         else:
             m_type = "segmentation"
 
         if "vaccel" in backend:
-            return VaccelSolAdapter(
-                device, core_name, model_type=m_type, use_remote="remote" in backend
-            )
+            return VaccelSolAdapter(device, core_name, model_type=m_type, use_remote="remote" in backend)
         else:
             return SolAdapter(device, core_name, model_type=m_type)
 
@@ -620,16 +685,23 @@ def get_model_adapter(model_name, backend, device):
             "swin3d_t": (models.video.swin3d_t, "video_classification", models.video.Swin3D_T_Weights.DEFAULT),
             "swin3d_s": (models.video.swin3d_s, "video_classification", models.video.Swin3D_S_Weights.DEFAULT),
             "swin3d_b": (models.video.swin3d_b, "video_classification", models.video.Swin3D_B_Weights.DEFAULT),
+
+            # Object Detection
+            "yolov5s": ("torchhub", "object_detection", None),
         }
 
         if model_name not in BASELINE_REGISTRY:
             raise ValueError(f"Model {model_name} not found in Baseline Registry.")
 
         builder, m_type, w_enum = BASELINE_REGISTRY[model_name]
+
+        # Handle specific weight filenames for YOLO
+        w_filename = f"{model_name}.pt" if m_type == "object_detection" else f"{model_name}_state_dict.pt"
+
         return PyTorchBaselineAdapter(
             device,
             builder,
-            f"{model_name}_state_dict.pt",
+            w_filename,
             model_type=m_type,
             weights_enum=w_enum,
         )

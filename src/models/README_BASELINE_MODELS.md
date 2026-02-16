@@ -7,7 +7,7 @@ sudo apt install -y python3-venv
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -U pip
-pip install torch torchvision
+pip install torch torchvision ultralytics
 ```
 
 ## Download baseline models
@@ -25,4 +25,5 @@ python3 download_baseline_model.py --model swin_s
 python3 download_baseline_model.py --model swin_v2_b
 python3 download_baseline_model.py --model mc3_18
 python3 download_baseline_model.py --model r3d_18
+python3 download_baseline_model.py --model yolov5s
 ```

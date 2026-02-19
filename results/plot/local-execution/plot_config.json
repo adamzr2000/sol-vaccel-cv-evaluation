@@ -2,7 +2,6 @@
     "run_tag": "run1",
     "link": "wifi",
     "model_type_order": [
-        "mobilenet_v3_large",
         "resnet50",
         "swin_t",
         "swin_s",
@@ -13,7 +12,6 @@
         "mc3_18",
         "r3d_18",
         "r2plus1d_18",
-        "deeplabv3_mobilenet_v3_large",
         "deeplabv3_resnet50",
         "deeplabv3_resnet101",
         "fcn_resnet50",

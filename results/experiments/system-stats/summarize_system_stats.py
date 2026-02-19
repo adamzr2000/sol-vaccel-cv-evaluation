@@ -235,12 +235,12 @@ def main() -> None:
         if "_summary" not in p.parts and p.name.startswith(f"{run_tag}_")
     ]
 
-    # 2) EXTENSION: include ONLY vaccel-remote in run_tag-{link}_*
+    # 2) EXTENSION: include ONLY remote in run_tag-{link}_*
     extra_matched = [
         p for p in csv_files
         if "_summary" not in p.parts
         and p.name.startswith(f"{run_tag}-{link}_")
-        and "vaccel-remote" in p.stem
+        and "remote" in p.stem
     ]
 
     # Merge + dedup preserving order

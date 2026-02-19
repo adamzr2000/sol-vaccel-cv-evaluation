@@ -43,7 +43,7 @@ ENV LD_LIBRARY_PATH="/.venv/lib/python3.10/site-packages/nvidia/cudnn/lib"
 
 # vAccel
 RUN wget https://s3.nbfc.io/nbfc-assets/github/vaccel/rev/main/x86_64/release/vaccel_latest_amd64.deb && \
-    wget https://s3.nbfc.io/nbfc-assets/github/vaccel/rust/rev/main/x86_64/release/vaccel-rpc-agent_latest_amd64.deb && \
+    wget https://s3.nbfc.io/nbfc-assets/github/vaccel/rust/rev/feat_genop_optional_send_write/x86_64/release/vaccel-rpc-agent_latest_amd64.deb && \
     dpkg -i vaccel_latest_amd64.deb vaccel-rpc-agent_latest_amd64.deb
 
 ENV VACCEL_PLUGINS=libvaccel-exec.so

@@ -58,8 +58,8 @@ def ordered_models(models):
 
 
 def base_model_name(model: str) -> str:
-    m = str(model).strip()
-    return m[:-4] if m.endswith("_sol") else m
+    # Model names are now already clean in the CSV
+    return str(model).strip()
 
 
 def style_axes(ax):
@@ -105,9 +105,9 @@ def classify_base_series(host: str, device: str) -> str | None:
 
     # Robot Side (Client)
     if "robot" in host:
-        if "cpu_target-cpu" in device:
+        if "target-cpu" in device:
             return BASE_SERIES[0]
-        if "cpu_target-gpu" in device:
+        if "target-gpu" in device:
             return BASE_SERIES[1]
         return None
 
@@ -149,9 +149,9 @@ def extract_rows(df: pd.DataFrame, traffic_mode: str) -> pd.DataFrame:
         model = r.get("model", "")
 
         # Only remote runs for network plots
-        if backend != "vaccel-remote":
+        if "remote" not in backend:
             continue
-        
+
         # Valid hosts are 'robot' or any 'edge...'
         if not ("robot" in host or "edge" in host):
             continue
@@ -257,7 +257,7 @@ def plot_host(
         ),
     ]
     leg_loc = LEGEND_LOC.get("robot" if "robot" in host else "edge", "upper left")
-    
+
     leg1 = ax.legend(
         handles=exec_handles,
         title="Execution Mode",
@@ -313,7 +313,7 @@ def main():
 
     long_df = extract_rows(df, traffic_mode)
     if long_df.empty:
-        raise SystemExit("No rows matched (vaccel-remote + host/container filters + net_rx/net_tx).")
+        raise SystemExit("No rows matched (remote + host/container filters + net_rx/net_tx).")
 
     # Strict filter
     dropped_models = sorted({m for m in long_df["base_model"].unique() if m not in allowed_models})

@@ -23,14 +23,18 @@ FONT_SCALE = 1.2
 SPINES_WIDTH = 1.0
 FIG_SIZE_SINGLE = (9.0, 5.4)
 
+# --- VARIANT CONFIGURATION ---
 INCLUDE_VACCEL_LOCAL = False
-VARIANT_ORDER = ["PyTorch", "SOL", "SOL + vAccel"] if INCLUDE_VACCEL_LOCAL else ["PyTorch", "SOL"]
+
+VARIANT_ORDER = ["PyTorch", "Torchcompile", "SOL"]
+if INCLUDE_VACCEL_LOCAL:
+    VARIANT_ORDER.append("SOL + vAccel")
+
 LEGEND_LOC = "upper left"
 
 MODEL_TYPE_ORDER = get_model_type_order()
 
 # --- CONFIGURATION WITH SPECIFIC HOSTS ---
-# Added 'host' key to filter specific data and updated 'ylabel' to be explicit.
 PLOTS = [
     dict(
         out="system_stats_gpu_edge_asus_vram_local_exec.pdf",
@@ -64,17 +68,24 @@ def ordered_models(models):
 
 
 def split_variant(model: str, backend: str):
+    """
+    Decides the legend label (Variant) based on backend.
+    """
     backend = str(backend).lower().strip()
     model = str(model).strip()
 
-    is_sol = model.endswith("_sol")
-    base = model[:-4] if is_sol else model
+    base = model
 
-    if backend == "stock" and not is_sol:
+    if backend == "stock":
         return base, "PyTorch"
-    if backend == "stock" and is_sol:
+    
+    if backend == "ptc":
+        return base, "Torchcompile"
+
+    if backend == "sol":
         return base, "SOL"
-    if INCLUDE_VACCEL_LOCAL and backend == "vaccel-local" and is_sol:
+
+    if INCLUDE_VACCEL_LOCAL and backend == "vaccel-local-sol":
         return base, "SOL + vAccel"
 
     return base, None
@@ -130,12 +141,18 @@ def plot_metric(df, y_col, yerr_col, ylabel, color_map, ax=None, out_file=None):
         created_fig = True
 
     x = np.arange(len(base_models))
-    if len(VARIANT_ORDER) == 3:
-        width = 0.24
-        offsets = {"PyTorch": -width, "SOL": 0.0, "SOL + vAccel": +width}
-    else:
-        width = 0.34
-        offsets = {"PyTorch": -width / 2, "SOL": +width / 2}
+
+    # --- DYNAMIC BAR OFFSET CALCULATION ---
+    n_vars = len(VARIANT_ORDER)
+    group_width = 0.8
+    bar_width = group_width / n_vars
+    
+    offsets_arr = np.linspace(
+        -group_width/2 + bar_width/2, 
+        group_width/2 - bar_width/2, 
+        n_vars
+    )
+    offsets = {v: off for v, off in zip(VARIANT_ORDER, offsets_arr)}
 
     edgecolor = "black" if SHOW_ERROR_BARS else "none"
     linewidth = 1.0 if SHOW_ERROR_BARS else 0.0
@@ -150,7 +167,7 @@ def plot_metric(df, y_col, yerr_col, ylabel, color_map, ax=None, out_file=None):
         stds_np = np.array(stds, dtype=float)
 
         ax.bar(
-            xs, means, width=width,
+            xs, means, width=bar_width,
             color=color_map[v],
             edgecolor=edgecolor, linewidth=linewidth,
             label=v, zorder=3
@@ -170,7 +187,6 @@ def plot_metric(df, y_col, yerr_col, ylabel, color_map, ax=None, out_file=None):
         if SHOW_VALUE_LABELS:
             add_value_labels(ax, xs, means, stds, y_lim_top, SHOW_ERROR_BARS)
 
-    # no title (per request)
     # ax.set_xlabel("ML Model")
     ax.set_ylabel(ylabel)
     ax.set_xticks(x)
@@ -219,18 +235,19 @@ def main():
     df["backend"] = df["backend"].astype(str).str.lower().str.strip()
     df["model"] = df["model"].astype(str).str.strip()
 
-    allowed_backends = {"stock"}
+    # UPDATED: Backends to include
+    allowed_backends = {"stock", "ptc", "sol"}
     if INCLUDE_VACCEL_LOCAL:
-        allowed_backends.add("vaccel-local")
+        allowed_backends.add("vaccel-local-sol")
 
-    # Initial global filter: keep all GPU rows for allowed backends
+    # Filter for GPU device
     df = df[
         (df["device"] == "gpu")
         & (df["backend"].isin(allowed_backends))
     ].copy()
-    
+
     if df.empty:
-        raise SystemExit("No rows after filtering device='gpu', backend in {stock,vaccel-local}.")
+        raise SystemExit(f"No rows after filtering device='gpu', backend in {allowed_backends}.")
 
     base_var = df.apply(lambda r: split_variant(r["model"], r["backend"]), axis=1)
     df["base_model"] = base_var.apply(lambda t: t[0])
@@ -259,12 +276,10 @@ def main():
     # --- SEPARATE MODE ---
     if PLOT_MODE == "separate":
         for cfg in PLOTS:
-            # Filter by specific host defined in PLOTS
             sub = df[df["host"] == cfg["host"]].copy()
             if sub.empty:
                 print(f"[SKIP] No rows for host='{cfg['host']}'")
                 continue
-            
             plot_metric(sub, cfg["y"], cfg["yerr"], cfg["ylabel"], color_map, ax=None, out_file=cfg["out"])
         return
 
@@ -274,14 +289,12 @@ def main():
         axes = [axes]
 
     for ax, cfg in zip(axes, PLOTS):
-        # Filter by specific host defined in PLOTS
         sub = df[df["host"] == cfg["host"]].copy()
         if sub.empty:
             ax.axis("off")
-            ax.text(0.5, 0.5, f"No data for host={cfg['host']}", 
+            ax.text(0.5, 0.5, f"No data for host={cfg['host']}",
                     ha="center", va="center", transform=ax.transAxes)
             continue
-            
         plot_metric(sub, cfg["y"], cfg["yerr"], cfg["ylabel"], color_map, ax=ax, out_file=None)
 
     plt.tight_layout()

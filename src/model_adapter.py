@@ -93,17 +93,37 @@ def load_video_with_cv2(video_path, num_frames=16, transform=None):
     cap.release()
     return torch.stack(frames_list, dim=1)
 
+class _OutOnly(torch.nn.Module):
+    def __init__(self, m: torch.nn.Module, model_type: str):
+        super().__init__()
+        self.m = m
+        self.model_type = model_type
+
+    def forward(self, x):
+        out = self.m(x)
+        # Segmentation models return dict with "out"
+        if self.model_type == "segmentation" and isinstance(out, dict):
+            return out["out"]
+        # Some models might return tuple/list
+        if isinstance(out, (list, tuple)):
+            return out[0]
+        return out
+
+def _infer_aux_loss_from_state_dict(state_dict: dict) -> bool:
+    # DeepLab/FCN aux head present?
+    return any(k.startswith("aux_classifier.") for k in state_dict.keys())
 
 # =========================================================
 # 1. ADAPTER FOR PYTORCH BASELINES
 # =========================================================
 class PyTorchBaselineAdapter(BaseModelAdapter):
-    def __init__(self, device, builder_func, weights_filename, model_type, weights_enum=None):
+    def __init__(self, device, builder_func, weights_filename, model_type, weights_enum=None, use_compile=False):
         super().__init__(device)
         self.torch_device = torch.device(device)
         self.builder_func = builder_func
         self.weights_filename = weights_filename
         self.model_type = model_type
+        self.use_compile = use_compile
 
         if model_type == "video_classification":
             if hasattr(weights_enum, "meta"):
@@ -143,30 +163,86 @@ class PyTorchBaselineAdapter(BaseModelAdapter):
         print(f"   [Adapter] Loading PyTorch {self.model_type} model from {model_dir}...")
         weights_path = os.path.join(model_dir, self.weights_filename)
 
+        # comp_mode = "reduce-overhead" if self.device == "cuda" else "default"
+        comp_mode = "default"
+
         if not os.path.exists(weights_path):
             raise FileNotFoundError(f"Weights not found at {weights_path}")
 
         if self.model_type == "object_detection" and self.builder_func == "torchhub":
-            # Load YOLOv5 via Torch Hub, pointing to the local weights file
-            self.model = torch.hub.load('ultralytics/yolov5', 'custom', path=weights_path, force_reload=False, trust_repo=True)
-        else:
-            # Standard torchvision loading
-            if self.model_type == "segmentation":
-                self.model = self.builder_func(weights=None, weights_backbone=None, aux_loss=True)
+            # YOLOv5 hub (uses local weights file)
+            hub = torch.hub.load(
+                "ultralytics/yolov5",
+                "custom",
+                path=weights_path,
+                force_reload=False,
+                trust_repo=True,
+            )
+            # hub is typically AutoShape. We want to bypass AutoShape for apples-to-apples
+            # (so preprocessing + NMS is done by OUR code, like SOL).
+            dmb = getattr(hub, "model", None)  # DetectMultiBackend
+            if dmb is None:
+                raise RuntimeError("Unexpected YOLOv5 hub object: missing .model")
+
+            raw = getattr(dmb, "model", None)  # underlying torch.nn.Module if present
+            if isinstance(raw, torch.nn.Module):
+                self.model = raw
             else:
-                self.model = self.builder_func(weights=None)
+                # Fallback: still better than AutoShape
+                self.model = dmb
 
-            state_dict = torch.load(weights_path, map_location=self.torch_device)
-            self.model.load_state_dict(state_dict)
+            self.model.to(self.torch_device).eval()
+            wrapped = _OutOnly(self.model, "object_detection")
 
-        self.model.to(self.torch_device)
-        self.model.eval()
+            if self.use_compile:
+                self.model_final = torch.compile(wrapped, backend="inductor", mode=comp_mode, fullgraph=False, dynamic=False)
+            else:
+                self.model_final = wrapped
+            return
+        # ---------------------------
+        # Torchvision baselines path
+        # ---------------------------
+        state_dict = torch.load(weights_path, map_location="cpu")
+
+        # Standard torchvision loading
+        if self.model_type == "segmentation":
+            aux_loss = _infer_aux_loss_from_state_dict(state_dict)
+            self.model = self.builder_func(weights=None, weights_backbone=None, aux_loss=aux_loss)
+        else:
+            self.model = self.builder_func(weights=None)
+
+        # Move + eval
+        self.model.to(self.torch_device).eval()
+
+        # APPLY SAME CUDA SETTINGS FOR BOTH STOCK + PTC
+        if self.torch_device.type == "cuda":
+            torch.backends.cudnn.benchmark = True
+            torch.set_float32_matmul_precision("high")
+
+        # Load weights
+        self.model.load_state_dict(state_dict, strict=True)
+
+        # Wrap to ensure forward returns a Tensor (compile-friendly)
+        wrapped = _OutOnly(self.model, self.model_type)
+
+        if self.use_compile:
+            print(f"   [Adapter] Compiling {self.model_type} with Inductor...")
+
+            self.model_final = torch.compile(
+                wrapped,
+                backend="inductor",
+                mode=comp_mode,
+                fullgraph=False,
+                dynamic=False,
+            )
+        else:
+            self.model_final = wrapped
 
     def preprocess(self, input_path):
         if self.model_type == "video_classification":
             ext = os.path.splitext(input_path)[1].lower()
             if ext in [".mp4", ".avi", ".mov"]:
-                return load_video_with_cv2(input_path, num_frames=16, transform=self.transform).unsqueeze(0)
+                clip = load_video_with_cv2(input_path, num_frames=16, transform=self.transform).unsqueeze(0)
             else:
                 img = cv2.imread(str(input_path))
                 if img is None:
@@ -174,13 +250,16 @@ class PyTorchBaselineAdapter(BaseModelAdapter):
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                 dummy_tensor = torch.from_numpy(img).permute(2, 0, 1)
                 frame_tensor = self.transform(dummy_tensor)
-                return torch.stack([frame_tensor] * 16, dim=1).unsqueeze(0)  # CPU tensor
-        else:
-            img = cv2.imread(str(input_path))
-            if img is None:
-                raise FileNotFoundError(f"Failed: {input_path}")
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            return self.transform(img).unsqueeze(0)  # CPU tensor
+                clip = torch.stack([frame_tensor] * 16, dim=1).unsqueeze(0)
+
+            return clip # CPU tensor
+
+        # image models
+        img = cv2.imread(str(input_path))
+        if img is None:
+            raise FileNotFoundError(f"Failed: {input_path}")
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        return self.transform(img).unsqueeze(0) # CPU tensor
 
     def preprocess_frame(self, frame_rgb: np.ndarray):
         """
@@ -193,12 +272,13 @@ class PyTorchBaselineAdapter(BaseModelAdapter):
         if self.model_type == "video_classification":
             # One frame -> transform -> replicate to 16 frames
             dummy_tensor = torch.from_numpy(frame_rgb).permute(2, 0, 1)
-            frame_tensor = self.transform(dummy_tensor)  # (3,112,112)
-            return torch.stack([frame_tensor] * 16, dim=1).unsqueeze(0)  # (1,3,16,112,112) CPU tensor
+            frame_tensor = self.transform(dummy_tensor)
+            clip = torch.stack([frame_tensor] * 16, dim=1).unsqueeze(0)
+            return clip
 
         # classification / segmentation
-        # Your transform starts with ToTensor(), so it accepts numpy HxWx3 RGB
-        return self.transform(frame_rgb).unsqueeze(0)  # (1,3,224,224) CPU tensor
+        x = self.transform(frame_rgb).unsqueeze(0)
+        return x
 
     def preprocess_frames(self, frames_rgb):
         """
@@ -230,32 +310,62 @@ class PyTorchBaselineAdapter(BaseModelAdapter):
             frames_list.append(self.transform(ft))  # (3,112,112)
 
         clip = torch.stack(frames_list, dim=1)  # (3,16,112,112)
-        return clip.unsqueeze(0)  # (1,3,16,112,112)
+        x = clip.unsqueeze(0)                   # (1,3,16,112,112)
+        return x
     
+    def _maybe_to_device(self, x: torch.Tensor) -> torch.Tensor:
+        # only move for CUDA runs
+        if self.torch_device.type == "cuda":
+            return x.to(self.torch_device, non_blocking=False)
+        return x
+
+    # def infer(self, input_tensor):
+    #     # 1. Host-to-Device Transfer (Using Static Memory Allocation)
+    #     if self.torch_device.type == "cuda":
+    #         # Allocate the static GPU buffer ONCE (Matches SOL's self.input_buffer)
+    #         if getattr(self, "gpu_input_buffer", None) is None or self.gpu_input_buffer.shape != input_tensor.shape:
+    #             self.gpu_input_buffer = torch.empty(input_tensor.shape, dtype=input_tensor.dtype, device=self.torch_device)
+            
+    #         # Re-use the memory block! (Matches SOL's np.copyto)
+    #         self.gpu_input_buffer.copy_(input_tensor, non_blocking=True)
+    #         gpu_tensor = self.gpu_input_buffer
+    #     else:
+    #         gpu_tensor = input_tensor
+        
+    #     # 2. Compute
+    #     with torch.inference_mode():
+    #         output = self.model_final(gpu_tensor)
+            
+    #     if isinstance(output, (tuple, list)):
+    #         output = output[0]
+            
+    #     # 3. Device-to-Host Transfer
+    #     return output.detach().cpu()
+
     def infer(self, input_tensor):
         # Fair timing vs SOL: SOL takes CPU (NumPy) buffers and returns CPU buffers,
         # so its "inference time" includes CPU↔GPU transfers. We do the same here by
         # moving input to GPU and bringing output back to CPU inside this function.
-        input_tensor = input_tensor.to(self.torch_device)
-
-        output = self.model(input_tensor)
-        if self.model_type == "segmentation":
-            output = output["out"]
-        elif self.model_type == "object_detection":
-            # YOLOv5 returns a tuple when given a raw BCHW tensor. Extract the inference output.
+        input_tensor = self._maybe_to_device(input_tensor)
+        
+        # 2. Compute
+        output = self.model_final(input_tensor)
+            
+        if isinstance(output, (tuple, list)):
             output = output[0]
-
+            
         # Bring results to CPU inside the timed region (matches SOL output buffers).
-        output = output.detach().cpu()
-        return output
+        return output.detach().cpu()
 
     def postprocess(self, output_tensor):
         if self.model_type == "segmentation":
             return torch.argmax(output_tensor.squeeze(0), dim=0).byte()
+
         elif self.model_type in ["classification", "video_classification"]:
             probs = torch.nn.functional.softmax(output_tensor, dim=1)
             top_prob, top_class = torch.max(probs, dim=1)
             return top_class, top_prob
+
         elif self.model_type == "object_detection":
             # 1. Strip batch dimension -> shape: (25200, 85)
             preds = output_tensor.squeeze(0) 
@@ -302,27 +412,17 @@ class PyTorchBaselineAdapter(BaseModelAdapter):
 # 2. ADAPTER FOR SOL COMPILER
 # =========================================================
 class SolAdapter(BaseModelAdapter):
-    def __init__(self, device, model_name, model_type="classification"):
+    def __init__(self, device, model_name, model_type="classification", weights_enum=None):
         super().__init__(device)
         self.model_name = model_name
         self.model_type = model_type
 
         # --- 1. CONFIGURATION BASED ON MODEL TYPE ---
-        if self.model_type == "video_classification":
-            # Categories (Kinetics-400) where available
-            if "mc3_18" in model_name:
-                self.categories = models.video.MC3_18_Weights.DEFAULT.meta.get("categories", None)
-            elif "r3d_18" in model_name:
-                self.categories = models.video.R3D_18_Weights.DEFAULT.meta.get("categories", None)
-            elif "r2plus1d_18" in model_name:
-                self.categories = models.video.R2Plus1D_18_Weights.DEFAULT.meta.get("categories", None)
-            elif "swin3d_t" in model_name:
-                self.categories = models.video.Swin3D_T_Weights.DEFAULT.meta.get("categories", None)
-            elif "swin3d_s" in model_name:
-                self.categories = models.video.Swin3D_S_Weights.DEFAULT.meta.get("categories", None)
-            elif "swin3d_b" in model_name:
-                self.categories = models.video.Swin3D_B_Weights.DEFAULT.meta.get("categories", None)
+        # Look up categories cleanly from the passed weights_enum (Removes massive if/elif block)
+        if weights_enum is not None and hasattr(weights_enum, "meta") and "categories" in weights_enum.meta:
+            self.categories = weights_enum.meta["categories"]
 
+        if self.model_type == "video_classification":
             # SOL Video: 112x112
             self.transform = transforms.Compose([
                 transforms.Resize(128, antialias=True),
@@ -330,19 +430,7 @@ class SolAdapter(BaseModelAdapter):
                 transforms.ConvertImageDtype(torch.float),
                 transforms.Normalize(mean=[0.432, 0.394, 0.377], std=[0.228, 0.221, 0.217]),
             ])
-
-        elif self.model_type == "classification":
-            if "resnet50" in model_name:
-                self.categories = models.ResNet50_Weights.DEFAULT.meta.get("categories", None)
-            elif "mobilenet" in model_name:
-                self.categories = models.MobileNet_V3_Large_Weights.DEFAULT.meta.get("categories", None)
-            elif "swin_t" in model_name:
-                self.categories = models.Swin_T_Weights.DEFAULT.meta.get("categories", None)
-            elif "swin_s" in model_name:
-                self.categories = models.Swin_S_Weights.DEFAULT.meta.get("categories", None)
-            elif "swin_v2_b" in model_name:
-                self.categories = models.Swin_V2_B_Weights.DEFAULT.meta.get("categories", None)
-
+        elif self.model_type in ["classification", "segmentation"]:
             # SOL Image Classification: 224x224
             self.transform = transforms.Compose([
                 transforms.ToTensor(),
@@ -350,16 +438,6 @@ class SolAdapter(BaseModelAdapter):
                 transforms.CenterCrop(224),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ])
-
-        elif self.model_type == "segmentation":
-            # SOL Segmentation: 224x224
-            self.transform = transforms.Compose([
-                transforms.ToTensor(),
-                transforms.Resize(256, antialias=True),
-                transforms.CenterCrop(224),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ])
-
         elif self.model_type == "object_detection":
             # SOL Object Detection: 640x640, [0, 1] scaling
             self.transform = transforms.Compose([
@@ -401,18 +479,10 @@ class SolAdapter(BaseModelAdapter):
 
         model_class = getattr(sol_module, module_name)
 
-        # kwargs = {}
-        # if hasattr(model_class, "use_remote"):
-        #     kwargs["use_remote"] = use_remote
-
-        # self.model = model_class(path=lib_path, **kwargs)
-        # self.model.init()
-
         kwargs = {}
         if hasattr(model_class, "use_remote"):
             kwargs["use_remote"] = use_remote
 
-        # --- NEW: enable vAccel per-method profiling (safe / best-effort) ---
         enable_prof = os.environ.get("ENABLE_VACCEL_PROFILER", "0").strip().lower() in (
             "1", "true", "yes", "y", "on"
         )
@@ -602,9 +672,9 @@ class SolAdapter(BaseModelAdapter):
         return output_tensor
 
 class VaccelSolAdapter(SolAdapter):
-    def __init__(self, device, model_name, model_type="classification", use_remote=False):
+    def __init__(self, device, model_name, model_type="classification", weights_enum=None, use_remote=False):
         self.use_remote = use_remote
-        super().__init__(device, model_name, model_type)
+        super().__init__(device, model_name, model_type, weights_enum)
 
     def load_model(self, model_dir):
         lib_path = self._get_model_lib_path(model_dir)
@@ -615,93 +685,62 @@ class VaccelSolAdapter(SolAdapter):
 # =========================================================
 def get_model_adapter(model_name, backend, device):
     """
-    Decides adapter based on model_name string (e.g. ends with '_sol').
-    'backend' argument corresponds to execution environment (stock/vaccel)
+    Decides adapter based purely on the backend string and unified registry.
     """
+    
+    # 1. Strip suffix to get core name (e.g. resnet50_sol -> resnet50)
+    core_name = model_name.replace("_sol", "")
+    
+    # 2. Unified Baseline Registry (Source of Truth)
+    BASELINE_REGISTRY = {
+        # Segmentation
+        "deeplabv3_resnet50": (models.segmentation.deeplabv3_resnet50, "segmentation", None),
+        "deeplabv3_resnet101": (models.segmentation.deeplabv3_resnet101, "segmentation", None),
+        "deeplabv3_mobilenet_v3_large": (models.segmentation.deeplabv3_mobilenet_v3_large, "segmentation", None),
+        "fcn_resnet50": (models.segmentation.fcn_resnet50, "segmentation", None),
+        "fcn_resnet101": (models.segmentation.fcn_resnet101, "segmentation", None),
+        "lraspp_mobilenet_v3_large": (models.segmentation.lraspp_mobilenet_v3_large, "segmentation", None),
 
-    # 1. Check if SOL Model (Based on Naming Convention)
-    if model_name.endswith("_sol"):
-        # Strip suffix to get core name for config (e.g. resnet50_sol -> resnet50)
-        # We pass core_name to SolAdapter so it imports 'sol_resnet50', not 'sol_resnet50_sol'
-        core_name = model_name.replace("_sol", "")
-        VIDEO_CORES = {
-            "mc3_18",
-            "r3d_18",
-            "r2plus1d_18",
-            "swin3d_t",
-            "swin3d_s",
-            "swin3d_b",
-        }
-        CLS_CORES = {
-            "resnet50",
-            "mobilenet_v3_large",
-            "swin_t",
-            "swin_s",
-            "swin_v2_b",
-        }
-        DET_CORES = {
-            "yolov5s",
-        }
+        # Classification
+        "resnet50": (models.resnet50, "classification", models.ResNet50_Weights.DEFAULT),
+        "mobilenet_v3_large": (models.mobilenet_v3_large, "classification", models.MobileNet_V3_Large_Weights.DEFAULT),
+        "swin_t": (models.swin_t, "classification", models.Swin_T_Weights.DEFAULT),
+        "swin_s": (models.swin_s, "classification", models.Swin_S_Weights.DEFAULT),
+        "swin_v2_b": (models.swin_v2_b, "classification", models.Swin_V2_B_Weights.DEFAULT),
 
-        if core_name in VIDEO_CORES:
-            m_type = "video_classification"
-        elif core_name in CLS_CORES:
-            m_type = "classification"
-        elif core_name in DET_CORES:
-            m_type = "object_detection"
-        else:
-            m_type = "segmentation"
+        # Video
+        "mc3_18": (models.video.mc3_18, "video_classification", models.video.MC3_18_Weights.DEFAULT),
+        "r3d_18": (models.video.r3d_18, "video_classification", models.video.R3D_18_Weights.DEFAULT),
+        "r2plus1d_18": (models.video.r2plus1d_18, "video_classification", models.video.R2Plus1D_18_Weights.DEFAULT),
+        "swin3d_t": (models.video.swin3d_t, "video_classification", models.video.Swin3D_T_Weights.DEFAULT),
+        "swin3d_s": (models.video.swin3d_s, "video_classification", models.video.Swin3D_S_Weights.DEFAULT),
+        "swin3d_b": (models.video.swin3d_b, "video_classification", models.video.Swin3D_B_Weights.DEFAULT),
 
+        # Object Detection
+        "yolov5s": ("torchhub", "object_detection", None),
+    }
+
+    if core_name not in BASELINE_REGISTRY:
+        raise ValueError(f"Model {core_name} not found in Baseline Registry.")
+
+    builder, m_type, w_enum = BASELINE_REGISTRY[core_name]
+
+    # 3. Route to the exact Adapter explicitly checking the 'backend'
+    if "sol" in backend:
         if "vaccel" in backend:
-            return VaccelSolAdapter(device, core_name, model_type=m_type, use_remote="remote" in backend)
+            use_remote = ("remote" in backend)
+            return VaccelSolAdapter(device, core_name, model_type=m_type, weights_enum=w_enum, use_remote=use_remote)
         else:
-            return SolAdapter(device, core_name, model_type=m_type)
-
-    # 2. Else: PyTorch Baseline
+            return SolAdapter(device, core_name, model_type=m_type, weights_enum=w_enum)
     else:
-        if "vaccel" in backend:
-            raise ValueError("vAccel backends are not supported for Torch models")
-
-        BASELINE_REGISTRY = {   
-            # Segmentation
-            "deeplabv3_resnet50": (models.segmentation.deeplabv3_resnet50, "segmentation", None),
-            "deeplabv3_resnet101": (models.segmentation.deeplabv3_resnet101, "segmentation", None),
-            "deeplabv3_mobilenet_v3_large": (models.segmentation.deeplabv3_mobilenet_v3_large, "segmentation", None),
-            "fcn_resnet50": (models.segmentation.fcn_resnet50, "segmentation", None),
-            "fcn_resnet101": (models.segmentation.fcn_resnet101, "segmentation", None),
-            "lraspp_mobilenet_v3_large": (models.segmentation.lraspp_mobilenet_v3_large, "segmentation", None),
-
-            # Classification
-            "resnet50": (models.resnet50, "classification", models.ResNet50_Weights.DEFAULT),
-            "mobilenet_v3_large": (models.mobilenet_v3_large, "classification", models.MobileNet_V3_Large_Weights.DEFAULT),
-            "swin_t": (models.swin_t, "classification", models.Swin_T_Weights.DEFAULT),
-            "swin_s": (models.swin_s, "classification", models.Swin_S_Weights.DEFAULT),
-            "swin_v2_b": (models.swin_v2_b, "classification", models.Swin_V2_B_Weights.DEFAULT),
-
-            # Video
-            "mc3_18": (models.video.mc3_18, "video_classification", models.video.MC3_18_Weights.DEFAULT),
-            "r3d_18": (models.video.r3d_18, "video_classification", models.video.R3D_18_Weights.DEFAULT),
-            "r2plus1d_18": (models.video.r2plus1d_18, "video_classification", models.video.R2Plus1D_18_Weights.DEFAULT),
-            "swin3d_t": (models.video.swin3d_t, "video_classification", models.video.Swin3D_T_Weights.DEFAULT),
-            "swin3d_s": (models.video.swin3d_s, "video_classification", models.video.Swin3D_S_Weights.DEFAULT),
-            "swin3d_b": (models.video.swin3d_b, "video_classification", models.video.Swin3D_B_Weights.DEFAULT),
-
-            # Object Detection
-            "yolov5s": ("torchhub", "object_detection", None),
-        }
-
-        if model_name not in BASELINE_REGISTRY:
-            raise ValueError(f"Model {model_name} not found in Baseline Registry.")
-
-        builder, m_type, w_enum = BASELINE_REGISTRY[model_name]
-
-        # Handle specific weight filenames for YOLO
-        w_filename = f"{model_name}.pt" if m_type == "object_detection" else f"{model_name}_state_dict.pt"
-
+        use_compile = (backend == "ptc")
+        w_filename = f"{core_name}.pt" if m_type == "object_detection" else f"{core_name}_state_dict.pt"
+        
         return PyTorchBaselineAdapter(
             device,
             builder,
             w_filename,
             model_type=m_type,
             weights_enum=w_enum,
+            use_compile=use_compile
         )

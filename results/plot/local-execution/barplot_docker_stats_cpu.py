@@ -24,9 +24,15 @@ FIG_HEIGHT_PER_SUBPLOT = 4.0
 SHOW_VALUE_LABELS = False
 SHOW_ERROR_BARS = True
 
-# Toggle: 2 bars (PyTorch, SOL) vs 3 bars (PyTorch, SOL, SOL + vAccel)
+# --- VARIANT CONFIGURATION ---
+# Toggle: Add 'SOL + vAccel' (Local) if needed
 INCLUDE_VACCEL_LOCAL = False
-VARIANT_ORDER = ["PyTorch", "SOL", "SOL + vAccel"] if INCLUDE_VACCEL_LOCAL else ["PyTorch", "SOL"]
+
+# Define the standard order. 
+# We now include "Torchcompile" as a standard comparison.
+VARIANT_ORDER = ["PyTorch", "Torchcompile", "SOL"]
+if INCLUDE_VACCEL_LOCAL:
+    VARIANT_ORDER.append("SOL + vAccel")
 
 SMOOTH = False
 SMOOTH_WINDOW = 3
@@ -41,17 +47,25 @@ TARGETS = [
 
 
 def split_model_variant(model: str, backend: str):
+    """
+    Decides the legend label (Variant) based on backend.
+    """
     backend = str(backend).lower().strip()
     model = str(model).strip()
 
-    is_sol = model.endswith("_sol")
-    base = model[:-4] if is_sol else model
+    # Base model name is just the model (CSV has clean names like "resnet50")
+    base = model 
 
-    if backend == "stock" and not is_sol:
+    if backend == "stock":
         return base, "PyTorch"
-    if backend == "stock" and is_sol:
+    
+    if backend == "ptc":
+        return base, "Torchcompile"
+    
+    if backend == "sol":
         return base, "SOL"
-    if INCLUDE_VACCEL_LOCAL and backend == "vaccel-local" and is_sol:
+    
+    if INCLUDE_VACCEL_LOCAL and backend == "vaccel-local-sol":
         return base, "SOL + vAccel"
 
     return base, None
@@ -110,12 +124,22 @@ def plot_target(ax, sub, host, device, base_models, color_map, leg_loc):
 
     x = np.arange(len(base_models))
 
-    if len(VARIANT_ORDER) == 3:
-        width = 0.24
-        offsets = {"PyTorch": -width, "SOL": 0.0, "SOL + vAccel": +width}
-    else:
-        width = 0.34
-        offsets = {"PyTorch": -width / 2, "SOL": +width / 2}
+    # --- DYNAMIC BAR OFFSET CALCULATION ---
+    # Automatically calculates bar positions and width based on how many variants exist.
+    # Group width covers 0.8 units of the x-axis index.
+    n_vars = len(VARIANT_ORDER)
+    group_width = 0.8
+    bar_width = group_width / n_vars
+    
+    # Generate offsets centered around 0
+    # e.g. for 3 bars: [-width, 0, +width]
+    # e.g. for 2 bars: [-width/2, +width/2]
+    offsets_arr = np.linspace(
+        -group_width/2 + bar_width/2, 
+        group_width/2 - bar_width/2, 
+        n_vars
+    )
+    offsets = {v: off for v, off in zip(VARIANT_ORDER, offsets_arr)}
 
     edgecolor = "black" if SHOW_ERROR_BARS else "none"
     linewidth = 1.0 if SHOW_ERROR_BARS else 0.0
@@ -137,7 +161,7 @@ def plot_target(ax, sub, host, device, base_models, color_map, leg_loc):
         stds = stds_pct / 100.0
 
         ax.bar(
-            xs, means, width=width,
+            xs, means, width=bar_width,
             color=color_map[v],
             edgecolor=edgecolor, linewidth=linewidth,
             label=v, zorder=3,
@@ -169,12 +193,12 @@ def plot_target(ax, sub, host, device, base_models, color_map, leg_loc):
             ax.plot(x, y_s, linewidth=1.8, color="black", alpha=0.35, zorder=6)
 
     host_u = str(host).strip()
-    
+
     # #ax.set_xlabel("ML Model")
     ax.set_xticks(x)
     ax.set_xticklabels(base_models, rotation=20, ha="right")
     ax.set_ylim(0, y_lim_top)
-    
+
     ax.set_ylabel(f"{host_u}\nCPU utilization (vCPUs)")
 
     style_axes(ax)
@@ -199,16 +223,18 @@ def main():
     df["model"] = df["model"].astype(str).str.strip()
     df["container"] = df["container"].astype(str).str.strip()
 
-    backends = ["stock"] + (["vaccel-local"] if INCLUDE_VACCEL_LOCAL else [])
-    
+    # UPDATED: Backends to include in this plot
+    # Now explicitly including 'ptc' for Torchcompile
+    backends = ["stock", "ptc", "sol"] + (["vaccel-local-sol"] if INCLUDE_VACCEL_LOCAL else [])
+
     # Filter for container and backend only (don't filter device yet!)
     df = df[
         (df["container"] == "torchvision-app")
         & (df["backend"].isin(backends))
     ].copy()
-    
+
     if df.empty:
-        raise SystemExit("No rows matched container='torchvision-app' and backend.")
+        raise SystemExit(f"No rows matched container='torchvision-app' and backend in {backends}.")
 
     # Split variants
     base_variant = df.apply(lambda r: split_model_variant(r["model"], r["backend"]), axis=1)
@@ -241,7 +267,7 @@ def main():
             if sub.empty:
                 print(f"[SKIP] No data for {host}-{device}")
                 continue
-            
+
             fig, ax = plt.subplots(figsize=(8.5, 5.2))
             plot_target(ax, sub, host, device, base_models, color_map, leg_loc)
             plt.tight_layout()

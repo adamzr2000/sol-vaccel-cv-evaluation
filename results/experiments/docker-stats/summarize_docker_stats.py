@@ -236,8 +236,8 @@ def main() -> None:
             base_matched.append(p)
             continue
 
-        # 2) EXTENSION: match _{run_tag}-{link}_ BUT ONLY vaccel-remote
-        if extra_needle in p.stem and "vaccel-remote" in p.stem:
+        # 2) EXTENSION: match _{run_tag}-{link}_ BUT ONLY remote runs
+        if extra_needle in p.stem and "remote" in p.stem:
             extra_matched.append(p)
 
     # Merge + dedup preserving order
@@ -262,7 +262,7 @@ def main() -> None:
 
     print(
         f"🔍 Found {len(matched)} files "
-        f"(base={len(base_matched)}, extra_vaccel_remote_{link}={len(extra_matched)}). Processing..."
+        f"(base={len(base_matched)}, extra_remote_{link}={len(extra_matched)}). Processing..."
     )
 
     for csv_path in matched:

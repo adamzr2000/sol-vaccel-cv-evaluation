@@ -10,6 +10,7 @@ import torch
 import numpy as np
 import cv2
 import logging
+import warnings
 
 import rclpy
 from rclpy.qos import qos_profile_sensor_data, QoSProfile
@@ -18,100 +19,52 @@ from sensor_msgs.msg import Image
 from std_msgs.msg import String
 
 from pathlib import Path
-from datetime import datetime, timezone
+
+# --- REUSING LOGIC FROM benchmark_utils ---
+from benchmark_utils import (
+    get_benchmark_config,
+    get_duration_ms,
+    calculate_stats,
+    get_utc_timestamps,
+    start_docker_monitor, stop_docker_monitor,
+    start_system_monitor, stop_system_monitor,
+    COLORS, analyze_segmentation_mask,
+    COCO_CLASSES, stabilize_torch_compile
+)
 
 from model_adapter import get_model_adapter
 
-try:
-    from segmentation_utils import COLORS, analyze_segmentation_mask
-except ImportError:
-    COLORS = np.random.randint(0, 255, (256, 3), dtype=np.uint8)
-
-    def analyze_segmentation_mask(mask):
-        return ""
-
 logging.basicConfig(level=logging.INFO, format="%(message)s")
-
-
-# ==========================================
-# HELPER: STATS CALCULATOR
-# ==========================================
-def calculate_stats(data_list):
-    """Calculates detailed statistics for a list of numbers."""
-    if not data_list:
-        return {k: 0.0 for k in ["mean", "std", "min", "max", "p25", "p50", "p75", "p90", "p95", "p99"]}
-
-    data = np.array(data_list)
-    return {
-        "mean": round(float(np.mean(data)), 4),
-        "std":  round(float(np.std(data)), 4),
-        "min":  round(float(np.min(data)), 4),
-        "max":  round(float(np.max(data)), 4),
-        "p25":  round(float(np.percentile(data, 25)), 4),
-        "p50":  round(float(np.percentile(data, 50)), 4),
-        "p75":  round(float(np.percentile(data, 75)), 4),
-        "p90":  round(float(np.percentile(data, 90)), 4),
-        "p95":  round(float(np.percentile(data, 95)), 4),
-        "p99":  round(float(np.percentile(data, 99)), 4)
-    }
-
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 # ==========================================
-# CONFIGURATION (env-driven like original)
+# CENTRALIZED CONFIGURATION (via utils)
 # ==========================================
-# Backend: 'stock' (default), 'vaccel-local' (or 'vaccel') or 'vaccel-remote'
-BACKEND = os.environ.get("BACKEND", "stock")
-if BACKEND not in ["stock", "vaccel", "vaccel-local", "vaccel-remote"]:
-    print(f"⚠️  Unknown BACKEND '{BACKEND}', defaulting to 'stock'")
-    BACKEND = "stock"
+cfg = get_benchmark_config()
+
+BACKEND = cfg["backend"]
+TARGET_DEVICE = cfg["target_device"]
+DEVICE = cfg["device"]
+TORCH_DEVICE = cfg["torch_device"]
+HOST = cfg["host"]
+MODEL_ARCH = cfg["model_arch"]
+CORE_MODEL_NAME = cfg["core_model_name"]
+MODEL_TYPE = cfg["model_type"]
+IS_VIDEO_MODEL = cfg["is_video_model"]
+EXPORT_RESULTS = cfg["export_results"]
+RESULTS_DIR = cfg["base_results_dir"] / HOST
 
 if "remote" in BACKEND:
     print(f"   🔎 VACCEL_RPC_ADDRESS={os.environ.get('VACCEL_RPC_ADDRESS')}")
 
-TARGET_DEVICE = os.environ.get("DEVICE", "cpu").lower()
-if TARGET_DEVICE == "gpu":
-    DEVICE = "cuda"
-    if "remote" in BACKEND:
-        TORCH_DEVICE = torch.device("cpu")
-    else:
-        TORCH_DEVICE = torch.device("cuda")
-else:
-    DEVICE = "cpu"
-    TORCH_DEVICE = torch.device("cpu")
-
-# ---------------------------------------------------------------------------
-# Host + Model
-# ---------------------------------------------------------------------------
-HOST = os.environ.get("HOST", "edge").lower()
-MODEL_ARCH = os.environ.get("MODEL", "resnet50")
-
-# ---------------------------------------------------------------------------
-# Keep EXPORT_RESULTS flag (default false)
-# ---------------------------------------------------------------------------
-EXPORT_RESULTS = os.environ.get("EXPORT_RESULTS", "false").strip().lower() in ("1", "true", "yes", "y", "on")
-
-# Results dir: same structure as original (model-stats/<HOST>/<run_id>/...)
-_BASE_RESULTS = Path(os.environ.get("RESULTS_DIR", "/results/experiments/model-stats"))
-RESULTS_DIR = _BASE_RESULTS / HOST
-
 MODELS_DIR = Path("models")
 CURRENT_MODEL_DIR = MODELS_DIR / MODEL_ARCH
 
-# Detect model type for behavior + ROS outputs
-CORE_MODEL_NAME = MODEL_ARCH.replace("_sol", "")
-VIDEO_MODELS = ["mc3_18", "r3d_18", "r2plus1d_18", "swin3d_t", "swin3d_s", "swin3d_b"]
-IS_VIDEO_MODEL = CORE_MODEL_NAME in VIDEO_MODELS
-
-if IS_VIDEO_MODEL:
-    MODEL_TYPE = "video_classification"
-elif CORE_MODEL_NAME in ["resnet50", "mobilenet_v3_large", "swin_t", "swin_s", "swin_v2_b"]:
-    MODEL_TYPE = "image_classification"
-else:
-    MODEL_TYPE = "semantic_segmentation"
-
 frames_per_sample = 16 if IS_VIDEO_MODEL else 1
 
-# ROS-specific (env)
+# ==========================================
+# ROS-SPECIFIC CONFIGURATION
+# ==========================================
 INPUT_TOPIC = os.environ.get("INPUT_TOPIC", "/camera/color/image_raw")
 
 # Publish topics (you can disable any by setting it to empty string)
@@ -133,9 +86,7 @@ MAX_FPS = float(os.environ.get("MAX_FPS", "0"))  # 0 = no throttle
 QUEUE_SIZE = int(os.environ.get("QUEUE_SIZE", "1"))  # 1=latest-only
 VIDEO_BUFFER_LEN = int(os.environ.get("VIDEO_BUFFER_LEN", "16"))
 
-# ---------------------------------------------------------------------------
 # Duplicate control (default realistic)
-# ---------------------------------------------------------------------------
 AVOID_DUPLICATES = os.environ.get("AVOID_DUPLICATES", "1").strip().lower() in ("1", "true", "yes", "y", "on")
 
 
@@ -203,17 +154,13 @@ class RosFrameBuffer:
             return self.latest_stamp_ns
 
     def get_observed_hz(self):
-        """
-        Estimate camera publish rate from header stamps.
-        Returns 0.0 if not enough data.
-        """
+        """Estimate camera publish rate from header stamps. Returns 0.0 if not enough data."""
         with self.lock:
             stamps = list(self.stamp_history_ns)
 
         if len(stamps) < 2:
             return 0.0
 
-        # Use last N-1 deltas; filter non-positive deltas (shouldn't happen, but be safe)
         deltas = []
         for i in range(1, len(stamps)):
             d = stamps[i] - stamps[i - 1]
@@ -246,6 +193,7 @@ def main():
     print(f"   Warmup:    {WARMUP_ITERS} iters")
     print(f"   Publish:   class={PUBLISH_CLASS} mask={PUBLISH_MASK} overlay={PUBLISH_OVERLAY}")
     print(f"   Export:    EXPORT_RESULTS={EXPORT_RESULTS}")
+    print(f"   Monitors:  RESOURCE_MONITORING={cfg['monitor_resources']}")
     print(f"   Control:   AVOID_DUPLICATES={AVOID_DUPLICATES} MAX_FPS={MAX_FPS}")
 
     if TORCH_DEVICE.type == "cuda" and not torch.cuda.is_available():
@@ -263,24 +211,22 @@ def main():
         rclpy.shutdown()
         return
 
-    # Output dirs + run_id logic (same as original)
-    run_tag = os.environ.get("RUN_TAG")
-    if run_tag:
-        prefix = run_tag
-    else:
-        prefix = time.strftime("%d-%m-%Y_%H-%M-%S")
+    # --- UPDATED RUN ID LOGIC ---
+    run_tag = cfg["run_tag"]
+    prefix = run_tag if run_tag else time.strftime("%d-%m-%Y_%H-%M-%S")
 
     local_mode = "gpu" if (TORCH_DEVICE.type == "cuda") else "cpu"
-    is_vaccel_remote_run = (HOST == "robot" and BACKEND == "vaccel-remote")
+    is_vaccel_remote_run = (HOST == "robot" and "remote" in BACKEND)
+
     if is_vaccel_remote_run:
-        run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{HOST}_{local_mode}_target-{TARGET_DEVICE}"
+        run_id = f"{prefix}_{CORE_MODEL_NAME}_{BACKEND}_{HOST}_{local_mode}_target-{TARGET_DEVICE}"
     else:
-        run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{HOST}_{local_mode}"
+        run_id = f"{prefix}_{CORE_MODEL_NAME}_{BACKEND}_{HOST}_{local_mode}"
 
     run_dir = RESULTS_DIR / run_id
 
-    # Only create output dir if exporting
-    if EXPORT_RESULTS:
+    # Create output dir if exporting OR monitoring (monitors need a place to drop CSVs if local)
+    if EXPORT_RESULTS or cfg["monitor_resources"]:
         run_dir.mkdir(parents=True, exist_ok=True)
         print(f"   📂 Output Directory: {run_dir}")
     else:
@@ -301,19 +247,14 @@ def main():
     spin_thread.start()
 
     # Publishers are optional; create only if enabled AND topic is not empty
-    pub_class = None
-    pub_mask = None
-    pub_overlay = None
-
+    pub_class = pub_mask = pub_overlay = None
     qos_out_class = QoSProfile(depth=10)
     qos_out_img = QoSProfile(depth=1)
 
     if PUBLISH_CLASS and OUTPUT_CLASS_TOPIC.strip():
         pub_class = node.create_publisher(String, OUTPUT_CLASS_TOPIC, qos_out_class)
-
     if PUBLISH_MASK and OUTPUT_MASK_TOPIC.strip():
         pub_mask = node.create_publisher(Image, OUTPUT_MASK_TOPIC, qos_out_img)
-
     if PUBLISH_OVERLAY and OUTPUT_OVERLAY_TOPIC.strip():
         pub_overlay = node.create_publisher(Image, OUTPUT_OVERLAY_TOPIC, qos_out_img)
 
@@ -351,7 +292,7 @@ def main():
             inp = adapter.preprocess_frame(fr)
 
         try:
-            with torch.no_grad():
+            with torch.inference_mode():
                 _ = adapter.infer(inp)
                 if TORCH_DEVICE.type == "cuda":
                     torch.cuda.synchronize()
@@ -359,16 +300,46 @@ def main():
             print(f"Warmup failed: {e}")
 
         warm_done += 1
-
         if MAX_FPS > 0:
             time.sleep(1.0 / MAX_FPS)
 
-    # Capture Start Time (ISO format)
-    t_start_dt = datetime.now(timezone.utc)
-    t_start_iso = t_start_dt.isoformat()
+    # --- torch.compile stabilization (ptc only) ---
+    if BACKEND == "ptc":
+        print(f"   🔥 Stabilizing PyTorch Compile...")
+        dummy_input = frame_buf.get_clip() if IS_VIDEO_MODEL else frame_buf.get_latest()
+        if dummy_input is not None:
+            stabilize_torch_compile(
+                adapter=adapter,
+                sample_path=dummy_input,  # adapter in utils usually handles paths, but if adapter handles arrays natively for ROS, ensure compat here.
+                torch_device=TORCH_DEVICE,
+                iters=int(os.environ.get("PTC_STABILIZE_ITERS", "10")),
+                do_postprocess=False,
+            )
+
+    # --- START RESOURCE MONITORING ---
+    if cfg["monitor_resources"]:
+        docker_csv_dir = str(Path(cfg['docker_csv_base']) / HOST)
+        system_csv_dir = str(Path(cfg['system_csv_base']) / HOST)
+
+        container_ref = "vaccelrt" if "vaccel" in BACKEND else f"ros_{BACKEND}"
+        start_docker_monitor(run_id, cfg['docker_endpoint'], docker_csv_dir, container_ref, "ros_run_")
+        start_system_monitor(run_id, cfg['system_endpoint'], system_csv_dir, local_mode)
+        
+        if is_vaccel_remote_run:
+            vaccel_remote_run_id = f"{prefix}_{CORE_MODEL_NAME}_{BACKEND}_edge-asus_{TARGET_DEVICE}"
+            rem_docker_csv_dir = str(Path(cfg['docker_csv_base']) / "edge-asus")
+            rem_system_csv_dir = str(Path(cfg['system_csv_base']) / "edge-asus")
+
+            start_docker_monitor(vaccel_remote_run_id, cfg['remote_docker_endpoint'], rem_docker_csv_dir, "torchvision-app-agent", "torchvision-app-agent_")
+            start_system_monitor(vaccel_remote_run_id, cfg['remote_system_endpoint'], rem_system_csv_dir, TARGET_DEVICE)
+            
+        time.sleep(1.2) # Prime monitors
+
+    # Capture Start Time (Using Utils)
+    t_start_dt, t_start_iso = get_utc_timestamps()
 
     # Timing lists
-    transport_latencies_ms = []   # NEW: Track Data Age
+    ros_data_age_latencies_ms = []   # Track Data Age
     preprocessing_latencies_ms = []
     inference_latencies_ms = []
     postprocessing_latencies_ms = []
@@ -379,7 +350,7 @@ def main():
     # Counters/rates (camera hz, processed fps, duplicates)
     processed_samples = 0
     duplicates_skipped = 0
-    camera_hz_samples = []  # snapshot observed Hz over time (optional, cheap)
+    camera_hz_samples = []
 
     print("   ⏱️  Running Inference...")
 
@@ -387,7 +358,7 @@ def main():
     sample_idx = 0
     last_tick = 0.0
 
-    # Gate by ROS header stamp (more correct than received_count if you ever drop/reorder)
+    # Gate by ROS header stamp
     last_seen_stamp_ns = frame_buf.get_latest_stamp_ns()
 
     while rclpy.ok():
@@ -395,14 +366,14 @@ def main():
         if now - start_wall >= EXPERIMENT_DURATION_SEC:
             break
 
-        # Optional throttle (still useful even with AVOID_DUPLICATES)
+        # Optional throttle
         if MAX_FPS > 0:
             dt = now - last_tick
             if dt < (1.0 / MAX_FPS):
                 time.sleep((1.0 / MAX_FPS) - dt)
             last_tick = time.time()
 
-        # If avoiding duplicates, wait until a new ROS message arrives (by stamp)
+        # Avoid duplicates
         if AVOID_DUPLICATES:
             cur_stamp = frame_buf.get_latest_stamp_ns()
             if cur_stamp is None or cur_stamp == last_seen_stamp_ns:
@@ -411,12 +382,12 @@ def main():
                 continue
             last_seen_stamp_ns = cur_stamp
 
-        # Track observed camera Hz (not timed, very cheap)
+        # Track observed camera Hz
         hz = frame_buf.get_observed_hz()
         if hz > 0:
             camera_hz_samples.append(hz)
 
-        # Fetch input (do NOT include ROS waiting time in timings)
+        # Fetch input
         if IS_VIDEO_MODEL:
             clip = frame_buf.get_clip()
             if clip is None:
@@ -434,18 +405,18 @@ def main():
         if TORCH_DEVICE.type == "cuda":
             torch.cuda.synchronize()
 
-        # --- CALCULATE TRANSPORT LATENCY (DATA AGE) ---
+        # --- CALCULATE ROS DATA AGE ---
         frame_stamp_ns = frame_buf.get_latest_stamp_ns()
         current_ros_time_ns = node.get_clock().now().nanoseconds
         if frame_stamp_ns is not None:
-            current_transport_ms = (current_ros_time_ns - frame_stamp_ns) / 1_000_000.0
+            current_ros_data_age_ms = (current_ros_time_ns - frame_stamp_ns) / 1_000_000.0
         else:
-            current_transport_ms = 0.0
+            current_ros_data_age_ms = 0.0
 
-        system_start_time = time.perf_counter()
+        system_start_time_ns = time.perf_counter_ns()
 
         # --- PREPROCESS ---
-        preprocessing_start_time = time.perf_counter()
+        preprocessing_start_time_ns = time.perf_counter_ns()
         try:
             if IS_VIDEO_MODEL:
                 input_tensor = adapter.preprocess_frames(clip)
@@ -457,12 +428,12 @@ def main():
 
         if TORCH_DEVICE.type == "cuda":
             torch.cuda.synchronize()
-        preprocessing_end_time = time.perf_counter()
+        preprocessing_end_time_ns = time.perf_counter_ns()
 
         # --- INFERENCE ---
-        inference_start_time = time.perf_counter()
+        inference_start_time_ns = time.perf_counter_ns()
         try:
-            with torch.no_grad():
+            with torch.inference_mode():
                 raw_output = adapter.infer(input_tensor)
         except Exception as e:
             print(f"Infer failed: {e}")
@@ -470,26 +441,25 @@ def main():
 
         if TORCH_DEVICE.type == "cuda":
             torch.cuda.synchronize()
-        inference_end_time = time.perf_counter()
+        inference_end_time_ns = time.perf_counter_ns()
 
-        # --- POSTPROCESS (ONLY model postprocess is timed) ---
-        postprocessing_start_time = time.perf_counter()
+        # --- POSTPROCESS ---
+        postprocessing_start_time_ns = time.perf_counter_ns()
 
         confidence_score = 0.0
         detected_info = ""
         class_id = -1
 
-        # Prepared for publishing AFTER timing is stopped (not timed)
-        to_publish_mask = None           # np.uint8 mono8 mask
-        to_publish_overlay_bgr = None    # np.uint8 BGR overlay image
-        to_publish_class_str = None      # "class,conf"
+        to_publish_mask = None
+        to_publish_overlay_bgr = None
+        to_publish_class_str = None
 
         try:
             result = adapter.postprocess(raw_output)
 
             # --- SEGMENTATION ---
             if isinstance(result, torch.Tensor) and result.ndim >= 2:
-                mask_idx = result.numpy().astype(np.uint8)  # (H,W)
+                mask_idx = result.numpy().astype(np.uint8)
                 detected_info = analyze_segmentation_mask(mask_idx)
 
                 if PUBLISH_MASK and pub_mask is not None:
@@ -498,7 +468,7 @@ def main():
                 if PUBLISH_OVERLAY and pub_overlay is not None:
                     base = frame_buf.get_latest()
                     if base is not None:
-                        mask_colored = COLORS[mask_idx]  # RGB
+                        mask_colored = COLORS[mask_idx]
                         overlay_rgb = cv2.addWeighted(base, 0.6, mask_colored, 0.4, 0)
                         to_publish_overlay_bgr = cv2.cvtColor(overlay_rgb, cv2.COLOR_RGB2BGR)
 
@@ -518,12 +488,33 @@ def main():
                 if PUBLISH_CLASS and pub_class is not None:
                     to_publish_class_str = f"{class_name},{confidence_score:.2f}"
 
+            # --- OBJECT DETECTION ---
+            elif isinstance(result, dict):
+                boxes = result.get("boxes", [])
+                scores = result.get("scores", [])
+                classes = result.get("classes", [])
+                num_objects = len(boxes)
+
+                if num_objects > 0:
+                    max_idx = torch.argmax(scores).item()
+                    confidence_score = float(scores[max_idx].item()) * 100.0
+                    class_id = int(classes[max_idx].item())
+                    
+                    # Protect against index out of bounds if dict classes don't match COCO
+                    top_class_name = COCO_CLASSES[class_id] if class_id < len(COCO_CLASSES) else f"Obj_{class_id}"
+                    detected_info = f" -> Detected {num_objects} obj (Top: {top_class_name} {confidence_score:.1f}%)"
+                    
+                    if PUBLISH_CLASS and pub_class is not None:
+                        to_publish_class_str = f"{top_class_name},{confidence_score:.2f}"
+                else:
+                    detected_info = " -> Detected 0 objects"
+
         except Exception as e:
             print(f"Postprocess failed: {e}")
 
         if TORCH_DEVICE.type == "cuda":
             torch.cuda.synchronize()
-        postprocessing_end_time = time.perf_counter()
+        postprocessing_end_time_ns = time.perf_counter_ns()
 
         # --- PUBLISH (NOT TIMED) ---
         try:
@@ -541,15 +532,15 @@ def main():
         except Exception as e:
             print(f"Publish failed: {e}")
 
-        system_end_time = time.perf_counter()
+        system_end_time_ns = time.perf_counter_ns()
 
-        # Durations
-        current_pre_ms = (preprocessing_end_time - preprocessing_start_time) * 1000.0
-        current_inf_ms = (inference_end_time - inference_start_time) * 1000.0
-        current_post_ms = (postprocessing_end_time - postprocessing_start_time) * 1000.0
-        current_sys_ms = (system_end_time - system_start_time) * 1000.0
+        # Durations matched exactly to model_benchmark.py
+        current_pre_ms = get_duration_ms(preprocessing_start_time_ns, preprocessing_end_time_ns)
+        current_inf_ms = get_duration_ms(inference_start_time_ns, inference_end_time_ns)
+        current_post_ms = get_duration_ms(postprocessing_start_time_ns, postprocessing_end_time_ns)
+        current_sys_ms = get_duration_ms(system_start_time_ns, system_end_time_ns)
 
-        transport_latencies_ms.append(current_transport_ms)
+        ros_data_age_latencies_ms.append(current_ros_data_age_ms)
         preprocessing_latencies_ms.append(current_pre_ms)
         inference_latencies_ms.append(current_inf_ms)
         postprocessing_latencies_ms.append(current_post_ms)
@@ -561,8 +552,8 @@ def main():
         processed_samples += 1
 
         print(
-            f"    [{sample_idx + 1}] {input_src} "
-            f"| Age: {current_transport_ms:.1f}ms "
+            f"   [{sample_idx + 1}] {input_src} "
+            f"| ROS Age: {current_ros_data_age_ms:.1f}ms "
             f"| Pre: {current_pre_ms:.1f}ms "
             f"| Inf: {current_inf_ms:.1f}ms "
             f"| Post: {current_post_ms:.1f}ms "
@@ -572,7 +563,7 @@ def main():
 
         detailed_sample_records.append({
             "filename": input_src,
-            "transport_ms": round(current_transport_ms, 4),
+            "ros_data_age_ms": round(current_ros_data_age_ms, 4),
             "preprocessing_ms": round(current_pre_ms, 4),
             "inference_ms": round(current_inf_ms, 4),
             "postprocessing_ms": round(current_post_ms, 4),
@@ -584,10 +575,22 @@ def main():
 
         sample_idx += 1
 
-    # Stop time
-    t_stop_dt = datetime.now(timezone.utc)
-    t_stop_iso = t_stop_dt.isoformat()
+    # Capture Stop Time (Using Utils)
+    t_stop_dt, t_stop_iso = get_utc_timestamps()
     wall_duration_sec = max(1e-9, (time.time() - start_wall))
+
+    # --- STOP RESOURCE MONITORING ---
+    if cfg["monitor_resources"]:
+        if TORCH_DEVICE.type == "cuda":
+            torch.cuda.synchronize()
+        time.sleep(0.2)
+        
+        stop_docker_monitor(cfg['docker_endpoint'])
+        stop_system_monitor(cfg['system_endpoint'])
+
+        if is_vaccel_remote_run:
+            stop_docker_monitor(cfg['remote_docker_endpoint'])
+            stop_system_monitor(cfg['remote_system_endpoint'])
 
     if not inference_latencies_ms:
         print("❌ No successful inferences recorded.")
@@ -596,7 +599,7 @@ def main():
         return
 
     # Stats
-    stats_transport = calculate_stats(transport_latencies_ms)
+    stats_ros_data_age = calculate_stats(ros_data_age_latencies_ms)
     stats_pre = calculate_stats(preprocessing_latencies_ms)
     stats_inf = calculate_stats(inference_latencies_ms)
     stats_post = calculate_stats(postprocessing_latencies_ms)
@@ -615,9 +618,9 @@ def main():
     dropped_est = max(0, received_total - processed_samples) if AVOID_DUPLICATES else 0
     drop_ratio = (float(dropped_est) / float(received_total)) if received_total > 0 else 0.0
 
-    print(f"\n📊 BENCHMARK SUMMARY ({MODEL_ARCH})")
+    print(f"\n📊 BENCHMARK SUMMARY ({CORE_MODEL_NAME})")
     print(f"   ---------------------------------------------")
-    print(f"   Avg Data Age (Transport): {stats_transport['mean']:.2f} ms")
+    print(f"   Avg ROS Data Age:   {stats_ros_data_age['mean']:.2f} ms")
     print(f"   Avg Preprocessing:  {stats_pre['mean']:.2f} ms")
     print(f"   Avg Inference:      {stats_inf['mean']:.2f} ms (P90: {stats_inf['p90']:.2f})")
     print(f"   Avg Postprocessing: {stats_post['mean']:.2f} ms")
@@ -645,7 +648,7 @@ def main():
             "run_id": run_id,
             "backend": BACKEND,
             "host": HOST,
-            "model": MODEL_ARCH,
+            "model": CORE_MODEL_NAME,
             "model_type": MODEL_TYPE,
             "device": TARGET_DEVICE,
             "num_samples": len(inference_latencies_ms),
@@ -661,20 +664,22 @@ def main():
                 "processed": round(processed_fps, 2),
                 "camera_observed": round(observed_camera_hz, 2)
             },
-            "stream": { 
+            "stream": {
                 "avoid_duplicates": bool(AVOID_DUPLICATES),
                 "received_frames": int(received_total),
                 "processed_frames": int(processed_samples),
                 "drop_ratio": round(drop_ratio, 6),
                 "duplicates_skipped_loops": int(duplicates_skipped)
             },
-            "transport_ms": stats_transport,
+            "ros_data_age_ms": stats_ros_data_age,
             "preprocessing_ms": stats_pre,
             "inference_ms": stats_inf,
             "postprocessing_ms": stats_post,
             "system_ms": stats_sys,
             "confidence_score": stats_conf
         }
+        if "sol" in BACKEND:
+            final_output_data["sol_run_mode"] = int(os.environ.get("SOL_RUN_MODE", "2").strip())
 
         with open(json_output_path, "w") as f:
             json.dump(final_output_data, f, indent=4)

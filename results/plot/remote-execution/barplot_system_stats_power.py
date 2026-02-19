@@ -30,8 +30,8 @@ MODEL_TYPE_ORDER = get_model_type_order()
 
 # Define variants dynamically based on configuration
 VARIANTS = [
-    "Local · PyTorch @ robot CPU",              # Index 0
-    "Local · SOL @ robot CPU",                  # Index 1
+    "Local · Torchcompile @ robot CPU",           # Index 0
+    "Local · SOL @ robot CPU",                    # Index 1
     f"Remote · SOL + vAccel @ {REMOTE_HOST} CPU", # Index 2
     f"Remote · SOL + vAccel @ {REMOTE_HOST} GPU", # Index 3
 ]
@@ -52,11 +52,6 @@ def style_axes(ax):
         ax.spines[side].set_linewidth(SPINES_WIDTH)
 
 
-def base_model_name(model: str) -> str:
-    m = str(model).strip()
-    return m[:-4] if m.endswith("_sol") else m
-
-
 def add_value_labels(ax, xs, ys, yerrs, y_top):
     fs = max(6, int(plt.rcParams["font.size"] * 0.45))
     for x, y, e in zip(xs, ys, yerrs):
@@ -71,37 +66,25 @@ def add_value_labels(ax, xs, ys, yerrs, y_top):
         )
 
 
-# def classify_robot_cpu_variant(row) -> str | None:
-#     backend = str(row.get("backend", "")).lower().strip()
-#     device = str(row.get("device", "")).lower().strip()
-#     model = str(row.get("model", "")).strip()
-#     is_sol = model.endswith("_sol")
-
-#     if backend == "stock" and device == "cpu":
-#         return VARIANTS[0] if not is_sol else VARIANTS[1]
-
-#     # For System Stats, Robot Power is only relevant for Local Execution.
-#     # Remote execution power is measured on the Edge device (below).
-#     return None
-
 def classify_robot_cpu_variant(row) -> str | None:
     backend = str(row.get("backend", "")).lower().strip()
     device = str(row.get("device", "")).lower().strip()
-    model = str(row.get("model", "")).strip()
-    is_sol = model.endswith("_sol")
 
     # Local robot runs
-    if backend == "stock" and device == "cpu":
-        return VARIANTS[0] if not is_sol else VARIANTS[1]
+    if backend == "ptc" and device == "cpu":
+        return VARIANTS[0]
+    if backend == "sol" and device == "cpu":
+        return VARIANTS[1]
 
     # Remote vAccel runs (robot-side client overhead power)
-    if backend == "vaccel-remote":
-        if device == "cpu_target-cpu":
+    if "remote" in backend:
+        if "target-cpu" in device:
             return VARIANTS[2]
-        if device == "cpu_target-gpu":
+        if "target-gpu" in device:
             return VARIANTS[3]
 
     return None
+
 
 def load_robot_cpu_rows(cpu_df: pd.DataFrame):
     # Robot power stats
@@ -112,7 +95,7 @@ def load_robot_cpu_rows(cpu_df: pd.DataFrame):
         if v is None:
             continue
         rows.append({
-            "base_model": base_model_name(r["model"]),
+            "base_model": str(r["model"]).strip(),
             "variant": v,
             "mean": float(r["cpu_watts_mean"]),
             "std": float(r["cpu_watts_std"]) if pd.notna(r["cpu_watts_std"]) else np.nan,
@@ -123,18 +106,16 @@ def load_robot_cpu_rows(cpu_df: pd.DataFrame):
 def load_edge_cpu_remote_rows(cpu_df: pd.DataFrame):
     # Identify edge rows by folder name (e.g. 'edge-asus')
     sub = cpu_df[
-        (cpu_df["host"].str.contains("edge")) 
-        & (cpu_df["backend"] == "vaccel-remote")
+        (cpu_df["host"].str.contains("edge"))
+        & (cpu_df["backend"].str.contains("remote"))
         & (cpu_df["device"] == "cpu")
     ].copy()
 
     rows = []
     for _, r in sub.iterrows():
         model = str(r.get("model", "")).strip()
-        if not model.endswith("_sol"):
-            continue
         rows.append({
-            "base_model": base_model_name(model),
+            "base_model": model,
             "variant": VARIANTS[2],  # Remote Edge CPU variant
             "mean": float(r["cpu_watts_mean"]),
             "std": float(r["cpu_watts_std"]) if pd.notna(r["cpu_watts_std"]) else np.nan,
@@ -145,18 +126,16 @@ def load_edge_cpu_remote_rows(cpu_df: pd.DataFrame):
 def load_edge_gpu_remote_rows(gpu_df: pd.DataFrame):
     # Identify edge rows by folder name
     sub = gpu_df[
-        (gpu_df["host"].str.contains("edge")) 
-        & (gpu_df["backend"] == "vaccel-remote")
+        (gpu_df["host"].str.contains("edge"))
+        & (gpu_df["backend"].str.contains("remote"))
         & (gpu_df["device"] == "gpu")
     ].copy()
 
     rows = []
     for _, r in sub.iterrows():
         model = str(r.get("model", "")).strip()
-        if not model.endswith("_sol"):
-            continue
         rows.append({
-            "base_model": base_model_name(model),
+            "base_model": model,
             "variant": VARIANTS[3],  # Remote Edge GPU variant
             "mean": float(r["power_draw_w_mean"]),
             "std": float(r["power_draw_w_std"]) if pd.notna(r["power_draw_w_std"]) else np.nan,
@@ -301,7 +280,6 @@ def main():
 
     # Panels configuration mapping rows to specific variants
     panels = [
-        # ("robot_cpu", "robot\nCPU power (W)", robot_rows, [VARIANTS[0], VARIANTS[1]]),
         ("robot_cpu", "robot\nCPU power (W)", robot_rows, [VARIANTS[0], VARIANTS[1], VARIANTS[2], VARIANTS[3]]),
         ("edge_cpu", f"{REMOTE_HOST}\nCPU power (W)", edge_cpu_rows, [VARIANTS[2]]),
         ("edge_gpu", f"{REMOTE_HOST}\nGPU power (W)", edge_gpu_rows, [VARIANTS[3]]),

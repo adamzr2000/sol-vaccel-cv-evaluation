@@ -13,7 +13,7 @@ RUN apt-get update && \
       cmake make git gcc g++ binutils build-essential pkg-config \
       libmpfr-dev libssl-dev libcurl4-openssl-dev libfftw3-dev \
       python3 python3-pip python3-dev python3-setuptools python3-venv \
-      libstdc++6 libgomp1 libtbb2 \
+      libstdc++6 libgomp1 libtbb2 libgl1 \
       libglib2.0-0 libsm6 libxext6 libxrender1 libxcb1 && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
@@ -51,11 +51,12 @@ RUN python3 -m pip install \
 
 # vAccel
 RUN wget https://s3.nbfc.io/nbfc-assets/github/vaccel/rev/main/x86_64/release/vaccel_latest_amd64.deb && \
-    wget https://s3.nbfc.io/nbfc-assets/github/vaccel/plugins/rpc/rev/main/x86_64/release/vaccel-rpc_latest_amd64.deb && \
+    wget https://s3.nbfc.io/nbfc-assets/github/vaccel/plugins/rpc/rev/feat_genop_optional_send_write/x86_64/release/vaccel-rpc_latest_amd64.deb && \
     dpkg -i vaccel_latest_amd64.deb vaccel-rpc_latest_amd64.deb && \
     python3 -m pip install --force-reinstall git+https://github.com/nubificus/vaccel-python
 
 ENV VACCEL_PLUGINS=libvaccel-exec.so:libvaccel-rpc.so
 ENV TTRPC_TCP_NODELAY_ENABLED=1
+ENV VACCEL_RPC_SEND_WRITE_ENABLED=0
 
 WORKDIR /src

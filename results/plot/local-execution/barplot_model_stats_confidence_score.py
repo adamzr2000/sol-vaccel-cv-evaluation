@@ -23,8 +23,12 @@ FIG_HEIGHT_PER_SUBPLOT = 4.0  # Height per horizontal panel
 SHOW_VALUE_LABELS = False
 SHOW_ERROR_BARS = True
 
+# --- VARIANT CONFIGURATION ---
 INCLUDE_VACCEL_LOCAL = False
-VARIANT_ORDER = ["PyTorch", "SOL", "SOL + vAccel"] if INCLUDE_VACCEL_LOCAL else ["PyTorch", "SOL"]
+
+VARIANT_ORDER = ["PyTorch", "Torchcompile", "SOL"]
+if INCLUDE_VACCEL_LOCAL:
+    VARIANT_ORDER.append("SOL + vAccel")
 
 SMOOTH = False
 SMOOTH_WINDOW = 3
@@ -52,17 +56,24 @@ def ordered_models(models):
 
 
 def split_variant(model: str, backend: str):
+    """
+    Decides the legend label (Variant) based on backend.
+    """
     backend = str(backend).lower().strip()
     model = str(model).strip()
 
-    is_sol = model.endswith("_sol")
-    base = model[:-4] if is_sol else model
+    base = model  # clean name from JSON
 
-    if backend == "stock" and not is_sol:
+    if backend == "stock":
         return base, "PyTorch"
-    if backend == "stock" and is_sol:
+    
+    if backend == "ptc":
+        return base, "Torchcompile"
+
+    if backend == "sol":
         return base, "SOL"
-    if INCLUDE_VACCEL_LOCAL and backend == "vaccel-local" and is_sol:
+
+    if INCLUDE_VACCEL_LOCAL and backend == "vaccel-local-sol":
         return base, "SOL + vAccel"
 
     return base, None
@@ -105,9 +116,10 @@ def extract_rows(runs, host, device):
     host = str(host).lower().strip()
     device = str(device).lower().strip()
 
-    allowed_backends = {"stock"}
+    # UPDATED: Backends to extract
+    allowed_backends = {"stock", "ptc", "sol"}
     if INCLUDE_VACCEL_LOCAL:
-        allowed_backends.add("vaccel-local")
+        allowed_backends.add("vaccel-local-sol")
 
     sub = [
         r for r in runs
@@ -123,11 +135,13 @@ def extract_rows(runs, host, device):
     for r in sub:
         model = r.get("model", "")
         backend = r.get("backend", "")
+        
         base_model, variant = split_variant(model, backend)
+        
         if variant is None or variant not in VARIANT_ORDER:
             continue
 
-        # Strict filter to exclude segmentation models
+        # Strict filter to exclude segmentation models (as they lack single confidence scores)
         if base_model not in allowed_models:
             continue
 
@@ -180,12 +194,18 @@ def plot_confidence(ax, rows, host, device, color_map):
         y_lim_top = 105.0
 
     x = np.arange(len(base_models))
-    if len(variants) == 3:
-        width = 0.24
-        offsets = {"PyTorch": -width, "SOL": 0.0, "SOL + vAccel": +width}
-    else:
-        width = 0.34
-        offsets = {"PyTorch": -width / 2, "SOL": +width / 2}
+
+    # --- DYNAMIC BAR OFFSET CALCULATION ---
+    n_vars = len(variants)
+    group_width = 0.8
+    bar_width = group_width / n_vars
+    
+    offsets_arr = np.linspace(
+        -group_width/2 + bar_width/2, 
+        group_width/2 - bar_width/2, 
+        n_vars
+    )
+    offsets = {v: off for v, off in zip(variants, offsets_arr)}
 
     edgecolor = "black" if SHOW_ERROR_BARS else "none"
     linewidth = 1.0 if SHOW_ERROR_BARS else 0.0
@@ -196,7 +216,7 @@ def plot_confidence(ax, rows, host, device, color_map):
         stds = np.asarray([std_map[(m, v)] for m in base_models], dtype=float)
 
         ax.bar(
-            xs, means, width=width,
+            xs, means, width=bar_width,
             color=color_map[v],
             edgecolor=edgecolor, linewidth=linewidth,
             label=v, zorder=3,
@@ -258,7 +278,7 @@ def plot_separate(runs):
             print(f"[SKIP] No runs for host={host}, device={device}")
             continue
 
-        fig, ax = plt.subplots(figsize=FIG_SIZE_SINGLE)
+        fig, ax = plt.subplots(figsize=(9.0, 5.4))
         plot_confidence(ax, rows, host, device, color_map)
 
         plt.tight_layout()

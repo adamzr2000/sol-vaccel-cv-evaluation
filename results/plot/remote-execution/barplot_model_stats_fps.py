@@ -24,36 +24,29 @@ SMOOTH = False
 SMOOTH_WINDOW = 3
 
 MODEL_TYPE_ORDER = get_model_type_order()
+
+# --- VARIANT CONFIGURATION ---
 VARIANT_DEFINITIONS = [
     {
-        "label": "Local · PyTorch @ robot CPU",
-        "match": {"host": "robot", "backend": "stock", "device": "cpu"},
-        "is_sol": False
+        "label": "Local · Torchcompile @ robot CPU",
+        "match": {"host": "robot", "backend": "ptc", "device": "cpu"},
     },
     {
         "label": "Local · SOL @ robot CPU",
-        "match": {"host": "robot", "backend": "stock", "device": "cpu"},
-        "is_sol": True
+        "match": {"host": "robot", "backend": "sol", "device": "cpu"},
     },
     {
         "label": f"Remote · SOL + vAccel @ {REMOTE_HOST} CPU",
-        "match": {"host": "robot", "backend": "vaccel-remote"},
-        "run_id_contains": ["cpu_target-cpu"],
-        "is_sol": True
+        "match": {"host": "robot"},
+        "backend_contains": "remote",
+        "run_id_contains": ["target-cpu"],
     },
     {
         "label": f"Remote · SOL + vAccel @ {REMOTE_HOST} GPU",
-        "match": {"host": "robot", "backend": "vaccel-remote"},
-        "run_id_contains": ["cpu_target-gpu"],
-        "is_sol": True
+        "match": {"host": "robot"},
+        "backend_contains": "remote",
+        "run_id_contains": ["target-gpu"],
     },
-    # EXAMPLE: Future Edge-Xtreme case
-    # {
-    #     "label": "Remote · SOL + vAccel @ Edge-Xtreme GPU",
-    #     "match": {"host": "robot", "backend": "vaccel-remote"},
-    #     "run_id_contains": ["xtreme", "target-gpu"],
-    #     "is_sol": True
-    # },
 ]
 
 # Extract just the labels for ordering/colors
@@ -85,8 +78,8 @@ def moving_average(arr, window: int):
 
 
 def base_model_name(model: str) -> str:
-    m = str(model).strip()
-    return m[:-4] if m.endswith("_sol") else m
+    # Model names are already clean in the new pipeline
+    return str(model).strip()
 
 
 def classify_variant(run: dict):
@@ -96,25 +89,23 @@ def classify_variant(run: dict):
     run_id = str(run.get("run_id", "")).strip()
     backend = str(run.get("backend", "")).lower().strip()
     host = str(run.get("host", "")).lower().strip()
-    model = str(run.get("model", "")).strip()
     device = str(run.get("device", "")).lower().strip()
-    is_model_sol = model.endswith("_sol")
 
     for v_def in VARIANT_DEFINITIONS:
-        # 1. Check strict SOL status matching
-        if v_def.get("is_sol") is not None:
-            if v_def["is_sol"] != is_model_sol:
-                continue
-
-        # 2. Check exact matches (host, device, backend)
+        # 1. Check exact matches (host, device, backend)
         match_criteria = v_def.get("match", {})
         matches = True
         for key, val in match_criteria.items():
-            run_val = locals().get(key)
-            if run_val != val:
+            if locals().get(key) != val:
                 matches = False
                 break
+        
         if not matches:
+            continue
+
+        # 2. Check backend substring (useful for vaccel-remote-sol)
+        backend_sub = v_def.get("backend_contains")
+        if backend_sub and backend_sub not in backend:
             continue
 
         # 3. Check Run ID substrings (e.g. "target-gpu")
@@ -202,17 +193,21 @@ def plot_fps(rows):
     fig, ax = plt.subplots(figsize=FIG_SIZE)
 
     x = np.arange(len(base_models))
-    width = 0.18
+    
     # Calculate offsets dynamically based on number of variants
-    start = -((len(variants) - 1) * width) / 2
-    offsets = {v: start + i * width for i, v in enumerate(variants)}
+    n_vars = len(variants)
+    group_width = 0.8
+    bar_width = min(0.2, group_width / n_vars)
+    
+    start = -((n_vars - 1) * bar_width) / 2
+    offsets = {v: start + i * bar_width for i, v in enumerate(variants)}
 
     for v in variants:
         xs = x + offsets[v]
         vals = np.asarray([val_map[(m, v)] for m in base_models], dtype=float)
 
         ax.bar(
-            xs, vals, width=width,
+            xs, vals, width=bar_width,
             color=color_map[v],
             edgecolor="none", linewidth=0.0,
             label=v, zorder=3,

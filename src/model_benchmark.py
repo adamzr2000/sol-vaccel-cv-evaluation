@@ -4,156 +4,77 @@ import glob
 import csv
 import json
 import torch
-import numpy as np
-import cv2
 import logging
 import warnings
 from pathlib import Path
-from datetime import datetime, timezone
 
 from model_adapter import get_model_adapter
+from benchmark_utils import (
+    get_benchmark_config,
+    get_duration_ms,
+    get_utc_timestamps,
+    calculate_stats,
+    process_segmentation,
+    process_classification,
+    process_detection,
+    COCO_CLASSES,
+    COLORS,
+    analyze_segmentation_mask,
+    start_docker_monitor,
+    stop_docker_monitor,
+    start_system_monitor,
+    stop_system_monitor,
+    stabilize_torch_compile
+)
 
-try:
-    from segmentation_utils import COLORS, analyze_segmentation_mask
-except ImportError:
-    COLORS = np.random.randint(0, 255, (256, 3), dtype=np.uint8)
-    def analyze_segmentation_mask(mask): return ""
-
-try:
-    from detection_utils import COCO_CLASSES
-except ImportError:
-    # Fallback to string IDs if the file is missing
-    COCO_CLASSES = [str(i) for i in range(80)]
-    
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 warnings.filterwarnings("ignore", category=FutureWarning)
-# ==========================================
-# HELPER: STATS CALCULATOR
-# ==========================================
-def calculate_stats(data_list):
-    """Calculates detailed statistics for a list of numbers."""
-    if not data_list:
-        return {k: 0.0 for k in ["mean", "std", "min", "max", "p25", "p50", "p75", "p90", "p95", "p99"]}
-    
-    data = np.array(data_list)
-    return {
-        "mean": round(float(np.mean(data)), 4),
-        "std":  round(float(np.std(data)), 4),
-        "min":  round(float(np.min(data)), 4),
-        "max":  round(float(np.max(data)), 4),
-        "p25":  round(float(np.percentile(data, 25)), 4),
-        "p50":  round(float(np.percentile(data, 50)), 4),
-        "p75":  round(float(np.percentile(data, 75)), 4),
-        "p90":  round(float(np.percentile(data, 90)), 4),
-        "p95":  round(float(np.percentile(data, 95)), 4),
-        "p99":  round(float(np.percentile(data, 99)), 4)
-    }
-
-
-# ==========================================
-# CONFIGURATION
-# ==========================================
-# Backend: 'stock' (default), 'vaccel-local' (or 'vaccel') or 'vaccel-remote'
-BACKEND = os.environ.get("BACKEND", "stock")
-if BACKEND not in ["stock", "vaccel", "vaccel-local", "vaccel-remote"]:
-    print(f"⚠️  Unknown BACKEND '{BACKEND}', defaulting to 'stock'")
-    BACKEND = "stock"
-
-if "remote" in BACKEND:
-    print(f"   🔎 VACCEL_RPC_ADDRESS={os.environ.get('VACCEL_RPC_ADDRESS')}")
-
-TARGET_DEVICE = os.environ.get("DEVICE", "cpu").lower()
-if TARGET_DEVICE == "gpu":
-    DEVICE = "cuda"
-    if "remote" in BACKEND:
-        TORCH_DEVICE = torch.device("cpu")
-    else:
-        TORCH_DEVICE = torch.device("cuda")
-else:
-    DEVICE = "cpu"
-    TORCH_DEVICE = torch.device("cpu")
-
-# ---------------------------------------------------------------------------
-# UPDATED HOST LOGIC: Default to 'edge', allow any string (flexible)
-# ---------------------------------------------------------------------------
-HOST = os.environ.get("HOST", "edge").lower()
-
-# Model: Full folder name
-MODEL_ARCH = os.environ.get("MODEL", "resnet50")
-
-# Separate limits for Images and Videos
-BENCH_NUM_IMAGES = int(os.environ.get("NUM_IMAGES", "64"))
-BENCH_NUM_VIDEOS = int(os.environ.get("NUM_VIDEOS", "10"))
-
-EXPORT_RESULTS = os.environ.get("EXPORT_RESULTS", "false").strip().lower() in ("1", "true", "yes", "y", "on")
-EXPORT_OUTPUT_IMAGES = os.environ.get("EXPORT_OUTPUT_IMAGES", "false").strip().lower() in ("1", "true", "yes", "y", "on")
-
-DATA_DIRS = [Path("data/images"), Path("data/videos")]
-MODELS_DIR = Path("models")
-
-# ---------------------------------------------------------------------------
-# UPDATED RESULTS PATHS: Automatically append /<HOST> to directories
-# ---------------------------------------------------------------------------
-# Path: Saves to 'model-stats/<HOST>' automatically
-_BASE_RESULTS = Path(os.environ.get("RESULTS_DIR", "/results/experiments/model-stats"))
-RESULTS_DIR = _BASE_RESULTS / HOST  # e.g. /results/experiments/model-stats/edge-xtreme/
-
-# Directory is simply the model name
-CURRENT_MODEL_DIR = MODELS_DIR / MODEL_ARCH
-
-# Helper to check type (strip _sol suffix)
-CORE_MODEL_NAME = MODEL_ARCH.replace("_sol", "")
-VIDEO_MODELS = ["mc3_18", "r3d_18", "r2plus1d_18", "swin3d_t", "swin3d_s", "swin3d_b"]
-DETECTION_MODELS = ["yolov5s"]
-
-IS_VIDEO_MODEL = CORE_MODEL_NAME in VIDEO_MODELS
-
-if IS_VIDEO_MODEL:
-    MODEL_TYPE = "video_classification"
-elif CORE_MODEL_NAME in ["resnet50", "mobilenet_v3_large", "swin_t", "swin_s", "swin_v2_b"]:
-    MODEL_TYPE = "image_classification"
-elif CORE_MODEL_NAME in DETECTION_MODELS:
-    MODEL_TYPE = "object_detection"
-else:
-    MODEL_TYPE = "semantic_segmentation"
-
 
 def main():
+    # 1. LOAD CONFIGURATION FROM UTILS
+    config = get_benchmark_config()
+
+    if "remote" in config["backend"]:
+        print(f"   🔎 VACCEL_RPC_ADDRESS={os.environ.get('VACCEL_RPC_ADDRESS')}")
+
     print(f"\n🚀 STARTING MODEL BENCHMARK")
-    print(f"   Backend: {BACKEND}")
-    print(f"   Host:    {HOST}")
-    print(f"   Model:   {MODEL_ARCH}")
-    print(f"   Type:    {MODEL_TYPE}")
-    print(f"   Device:  {TARGET_DEVICE}")
+    print(f"   Backend: {config['backend']}")
+    print(f"   Host:    {config['host']}")
+    print(f"   Model:   {config['core_model_name']}")
+    print(f"   Type:    {config['model_type']}")
+    print(f"   Device:  {config['target_device']}")
+    print(f"   Monitor: {'ON' if config['monitor_resources'] else 'OFF'}")
+
+    CURRENT_MODEL_DIR = Path("models") / config['model_arch']
     print(f"   Loading: {CURRENT_MODEL_DIR}")
 
-    if TORCH_DEVICE.type == "cuda" and not torch.cuda.is_available():
+    if config['torch_device'].type == "cuda" and not torch.cuda.is_available():
         print("   ❌ GPU was selected but no GPU is available.")
         return
 
     try:
-        adapter = get_model_adapter(MODEL_ARCH, BACKEND, DEVICE)
+        adapter = get_model_adapter(config['model_arch'], config['backend'], config['device'])
         adapter.load_model(CURRENT_MODEL_DIR)
     except Exception as e:
         print(f"   ❌ Error loading model: {e}")
         return
 
-    # 1. SCAN FILES
-    image_files = []
-    video_files = []
+    # 2. SCAN FILES
+    DATA_DIRS = [Path("data/images"), Path("data/videos")]
+    image_files, video_files = [], []
     for d in DATA_DIRS:
         if d.exists():
             image_files.extend(sorted(glob.glob(str(d / "*.jpg"))))
             video_files.extend(sorted(glob.glob(str(d / "*.mp4"))))
 
-    # 2. INTELLIGENT SELECTION LOGIC
+    # 3. INTELLIGENT SELECTION LOGIC
     files_to_process = []
     is_processing_video_files = False
 
-    if IS_VIDEO_MODEL:
+    if config['is_video_model']:
         if video_files:
             print(f"   🎥 Found {len(video_files)} video files.")
-            limit = BENCH_NUM_VIDEOS
+            limit = config['num_videos']
             files_to_process = video_files[:limit]
             is_processing_video_files = True
             print(f"   ✅ Selected {len(files_to_process)} videos for benchmarking (Limit: {limit}).")
@@ -161,282 +82,224 @@ def main():
             print(f"   ⚠️  No .mp4 videos found, but found {len(image_files)} images.")
             print(f"      Video models need temporal data. Simulating with static image stacking.")
             try:
-                # Default to 'y' for automated batch runs if interactive input fails
-                choice = input(f"      Do you want to use {BENCH_NUM_IMAGES} images as fake static videos? [y/N]: ").strip().lower()
+                choice = input(f"      Do you want to use {config['num_images']} images as fake static videos? [y/N]: ").strip().lower()
             except EOFError:
                 choice = 'y'
 
             if choice == 'y':
-                files_to_process = image_files[:BENCH_NUM_IMAGES]
+                files_to_process = image_files[:config['num_images']]
                 print(f"   ✅ Using {len(files_to_process)} images as fake videos.")
             else:
                 print("   ❌ Aborting benchmark.")
                 return
         else:
-            print("   ❌ No data found (images or videos).")
+            print("   ❌ No data found.")
             return
     else:
-        files_to_process = image_files[:BENCH_NUM_IMAGES]
+        files_to_process = image_files[:config['num_images']]
         if not files_to_process:
-             print("   ❌ No images found.")
-             return
+            print("   ❌ No images found.")
+            return
         print(f"   📸 Using {len(files_to_process)} images.")
 
+    # --- torch.compile stabilization (ptc only) ---
+    if config["backend"] == "ptc" and files_to_process:
+        stabilize_torch_compile(
+            adapter=adapter,
+            sample_path=files_to_process[0],
+            torch_device=config["torch_device"],
+            iters=int(os.environ.get("PTC_STABILIZE_ITERS", "10")),
+            do_postprocess=False,
+        )
 
-    # 3. PREPARE OUTPUT ID (Run Tag Logic)
-    # -------------------------------------------------------------------------
-    run_tag = os.environ.get("RUN_TAG")
-    if run_tag:
-        prefix = run_tag
-    else:
-        prefix = time.strftime("%d-%m-%Y_%H-%M-%S")
+    # 4. PREPARE OUTPUT ID & DIRECTORIES
+    prefix = config['run_tag'] if config['run_tag'] else time.strftime("%d-%m-%Y_%H-%M-%S")
+    local_mode = "gpu" if (config['torch_device'].type == "cuda") else "cpu"
 
-    local_mode = "gpu" if (TORCH_DEVICE.type == "cuda") else "cpu"
-    
-    is_vaccel_remote_run = (HOST == "robot" and BACKEND == "vaccel-remote")
+    is_vaccel_remote_run = (config['host'] == "robot" and "remote" in config['backend'])
     if is_vaccel_remote_run:
-        # local_mode may always be "cpu" here; add target device to avoid collisions
-        run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{HOST}_{local_mode}_target-{TARGET_DEVICE}"
+        run_id = f"{prefix}_{config['core_model_name']}_{config['backend']}_{config['host']}_{local_mode}_target-{config['target_device']}"
     else:
-        run_id = f"{prefix}_{MODEL_ARCH}_{BACKEND}_{HOST}_{local_mode}"
-    # -------------------------------------------------------------------------
+        run_id = f"{prefix}_{config['core_model_name']}_{config['backend']}_{config['host']}_{local_mode}"
 
-    run_dir = RESULTS_DIR / run_id
+    run_dir = config['base_results_dir'] / config['host'] / run_id
     img_out_dir = run_dir / "output_images"
 
-    if EXPORT_RESULTS:
+    if config['export_results']:
         run_dir.mkdir(parents=True, exist_ok=True)
-        if EXPORT_OUTPUT_IMAGES: img_out_dir.mkdir(exist_ok=True)
+        if config['export_output_images']:
+            img_out_dir.mkdir(exist_ok=True)
         print(f"   📂 Output Directory: {run_dir}")
 
-    # 4. WARMUP
+    # 5. WARMUP
     print("   🔥 Warming up (30 iterations)...")
     for i in range(min(30, len(files_to_process))):
         try:
-            dummy_tensor = adapter.preprocess(files_to_process[i])
-            with torch.no_grad():
-                _ = adapter.infer(dummy_tensor)
-                if TORCH_DEVICE.type == 'cuda': torch.cuda.synchronize()
+            dummy_input = adapter.preprocess(files_to_process[i])
+            with torch.inference_mode():
+                raw_output = adapter.infer(dummy_input)
+                _ = adapter.postprocess(raw_output)
+                if config['torch_device'].type == 'cuda': torch.cuda.synchronize()
         except Exception as e:
             print(f"      Warmup failed on {os.path.basename(files_to_process[i])}: {e}")
 
-    # Capture Start Time (ISO format for alignment with Stats)
-    t_start_dt = datetime.now(timezone.utc)
-    t_start_iso = t_start_dt.isoformat()
-    t_stop_iso = None
+    # --- 6. RESOURCE MONITORING (START) ---
+    if config['monitor_resources']:
+        docker_csv_dir = str(Path(config['docker_csv_base']) / config['host'])
+        system_csv_dir = str(Path(config['system_csv_base']) / config['host'])
 
-    # Determine frames per sample for FPS calculation
-    # Video models process a block of 16 frames per inference call
-    frames_per_sample = 16 if IS_VIDEO_MODEL else 1
+        start_docker_monitor(run_id, config['docker_endpoint'], docker_csv_dir, "torchvision-app", "torchvision-app_")
+        start_system_monitor(run_id, config['system_endpoint'], system_csv_dir, local_mode)
 
-    # 5. RUN LOOP
+        if is_vaccel_remote_run:
+            vaccel_remote_run_id = f"{prefix}_{config['core_model_name']}_{config['backend']}_edge-asus_{config['target_device']}"
+            rem_docker_csv_dir = str(Path(config['docker_csv_base']) / "edge-asus")
+            rem_system_csv_dir = str(Path(config['system_csv_base']) / "edge-asus")
+
+            start_docker_monitor(vaccel_remote_run_id, config['remote_docker_endpoint'], rem_docker_csv_dir, "torchvision-app-agent", "torchvision-app-agent_")
+            start_system_monitor(vaccel_remote_run_id, config['remote_system_endpoint'], rem_system_csv_dir, config['target_device'])
+
+        time.sleep(1.2)  # Prime the monitors
+
+    # Capture Start Time
+    t_start_dt, t_start_iso = get_utc_timestamps()
+    frames_per_sample = 16 if config['is_video_model'] else 1
+
+    # 7. RUN LOOP
     print("   ⏱️  Running Inference...")
+    inference_latencies_ms, preprocessing_latencies_ms = [], []
+    postprocessing_latencies_ms, total_system_latencies_ms = [], []
+    confidence_scores_list, detailed_sample_records = [], []
 
-    # Lists to store raw duration data (in milliseconds)
-    inference_latencies_ms = []
-    preprocessing_latencies_ms = []
-    postprocessing_latencies_ms = []
-    total_system_latencies_ms = []
+    try:
+        for i, file_path in enumerate(files_to_process):
+            file_name = os.path.basename(file_path)
+            stem_name = os.path.splitext(file_name)[0]
 
-    # List to store confidence scores
-    confidence_scores_list = []
+            # --- A. SYSTEM START ---
+            system_start_time_ns = time.perf_counter_ns()
 
-    # Detailed Records
-    detailed_sample_records = []
+            # --- B. PREPROCESSING ---
+            if config['torch_device'].type == 'cuda':
+                torch.cuda.synchronize()
+            preprocessing_start_time_ns = time.perf_counter_ns()
 
-    # Determine frames per sample (16 for Video models, 1 for Image models)
-    frames_per_sample = 16 if IS_VIDEO_MODEL else 1
-
-    for i, file_path in enumerate(files_to_process):
-        file_name = os.path.basename(file_path)
-        stem_name = os.path.splitext(file_name)[0]
-
-        # Synchronize GPU before starting the total system timer
-        if TORCH_DEVICE.type == 'cuda': torch.cuda.synchronize()
-
-        # --- A. SYSTEM START ---
-        system_start_time = time.perf_counter()
-
-        # --- B. PREPROCESSING ---
-        preprocessing_start_time = time.perf_counter()
-        try:
             input_tensor = adapter.preprocess(file_path)
-        except Exception as e:
-            print(f"      Skipping {file_name}: {e}")
-            continue
 
-        if TORCH_DEVICE.type == 'cuda': torch.cuda.synchronize()
-        preprocessing_end_time = time.perf_counter()
+            if config['torch_device'].type == 'cuda': 
+                torch.cuda.synchronize()
+            preprocessing_end_time_ns = time.perf_counter_ns()
 
-        # --- C. INFERENCE ---
-        inference_start_time = time.perf_counter()
-        with torch.no_grad():
-            raw_output = adapter.infer(input_tensor)
+            # --- C. INFERENCE ---
+            if config['torch_device'].type == 'cuda': 
+                torch.cuda.synchronize()
+            inference_start_time_ns = time.perf_counter_ns()
 
-        if TORCH_DEVICE.type == 'cuda': torch.cuda.synchronize()
-        inference_end_time = time.perf_counter()
+            with torch.inference_mode():
+                raw_output = adapter.infer(input_tensor)
 
-        # --- D. POSTPROCESSING ---
-        postprocessing_start_time = time.perf_counter()
+            if config['torch_device'].type == 'cuda': 
+                torch.cuda.synchronize()
+            inference_end_time_ns = time.perf_counter_ns()
 
-        # Initialize defaults
-        confidence_score = 0.0
-        detected_info = ""
-        class_id = -1
+            # --- D. POSTPROCESSING ---
+            if config['torch_device'].type == 'cuda': 
+                torch.cuda.synchronize()
+            postprocessing_start_time_ns = time.perf_counter_ns()
 
-        try:
-            result = adapter.postprocess(raw_output)
+            class_id, confidence_score, detected_info = -1, 0.0, ""
 
-            # --- SEGMENTATION ---
-            if isinstance(result, torch.Tensor) and result.ndim >= 2:
-                mask_idx = result.numpy()
-                if EXPORT_OUTPUT_IMAGES:
-                    mask_colored = COLORS[mask_idx]
-                    mask_bgr = cv2.cvtColor(mask_colored, cv2.COLOR_RGB2BGR)
-                    cv2.imwrite(str(img_out_dir / f"{i:04d}_pred_{stem_name}.png"), mask_bgr)
+            try:
+                result = adapter.postprocess(raw_output)
 
-                detected_info = analyze_segmentation_mask(mask_idx)
+                if config['model_type'] == "semantic_segmentation":
+                    class_id, confidence_score, detected_info = process_segmentation(
+                        result, img_out_dir, stem_name, i, config['export_output_images'], COLORS, analyze_segmentation_mask
+                    )
+                elif config['model_type'] in ["image_classification", "video_classification"]:
+                    class_id, confidence_score, detected_info = process_classification(
+                        result, file_path, img_out_dir, stem_name, i, config['export_output_images'], adapter, is_processing_video_files
+                    )
+                elif config['model_type'] == "object_detection":
+                    class_id, confidence_score, detected_info = process_detection(
+                        result, file_path, img_out_dir, stem_name, i, config['export_output_images'], COCO_CLASSES
+                    )
 
-            # --- CLASSIFICATION / VIDEO ---
-            elif isinstance(result, tuple):
-                class_id_tensor, prob_tensor = result
-                class_id = int(class_id_tensor.item())
-                confidence_score = float(prob_tensor.item()) * 100
+            except Exception as e:
+                print(f"Error post-processing {file_name}: {e}")
 
-                if hasattr(adapter, 'categories') and adapter.categories:
-                    class_name = adapter.categories[class_id]
-                else:
-                    class_name = f"Class {class_id}"
+            if config['torch_device'].type == 'cuda': 
+                torch.cuda.synchronize()
+            postprocessing_end_time_ns = time.perf_counter_ns()
 
-                detected_info = f" -> {class_name} ({confidence_score:.1f}%)"
+            # --- TOTAL PROCESS END ---
+            system_end_time_ns = time.perf_counter_ns()
 
-                if EXPORT_OUTPUT_IMAGES:
-                    display_img = None
-                    if is_processing_video_files:
-                        cap = cv2.VideoCapture(str(file_path))
-                        ret, frame = cap.read()
-                        cap.release()
-                        if ret: display_img = frame
-                    else:
-                        display_img = cv2.imread(file_path)
+            # --- CALCULATE RAW DURATIONS (Milliseconds) ---
+            current_preprocessing_ms = get_duration_ms(preprocessing_start_time_ns, preprocessing_end_time_ns)
+            current_inference_ms = get_duration_ms(inference_start_time_ns, inference_end_time_ns)
+            current_postprocessing_ms = get_duration_ms(postprocessing_start_time_ns, postprocessing_end_time_ns)
+            current_system_ms = get_duration_ms(system_start_time_ns, system_end_time_ns)
 
-                    if display_img is not None:
-                        display_img = cv2.resize(display_img, (224, 224))
-                        label_text = f"{class_name} ({confidence_score:.1f}%)"
-                        cv2.rectangle(display_img, (5, 5), (250, 25), (0, 0, 0), -1)
-                        cv2.putText(display_img, label_text, (10, 20),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
-                        cv2.imwrite(str(img_out_dir / f"{i:04d}_pred_{stem_name}.jpg"), display_img)
+            # Store raw data
+            preprocessing_latencies_ms.append(current_preprocessing_ms)
+            inference_latencies_ms.append(current_inference_ms)
+            postprocessing_latencies_ms.append(current_postprocessing_ms)
+            total_system_latencies_ms.append(current_system_ms)
+            if confidence_score > 0:
+                confidence_scores_list.append(confidence_score)
 
-            elif isinstance(result, dict) and "boxes" in result:
-                boxes = result["boxes"]
-                scores = result["scores"]
-                classes = result["classes"]
-                
-                num_objects = len(boxes)
-                
-                if num_objects > 0:
-                    # Log the confidence of the most confident object for the CSV stats
-                    max_idx = torch.argmax(scores).item()
-                    confidence_score = float(scores[max_idx].item()) * 100
-                    class_id = int(classes[max_idx].item())
-                    # Convert the ID to a string name
-                    top_class_name = COCO_CLASSES[class_id] if class_id < len(COCO_CLASSES) else str(class_id)
-                    detected_info = f" -> Detected {num_objects} object(s) (Top: {top_class_name} @ {confidence_score:.1f}%)"
-                else:
-                    confidence_score = 0.0
-                    class_id = -1
-                    detected_info = " -> Detected 0 objects"
-                    
-                if EXPORT_OUTPUT_IMAGES:
-                    display_img = cv2.imread(file_path)
-                    if display_img is not None:
-                        # Resize display image to 640x640 because our adapter bounding boxes are mapped to the 640x640 scale
-                        display_img = cv2.resize(display_img, (640, 640))
-                        
-                        # Draw every detected object
-                        for idx in range(num_objects):
-                            x1, y1, x2, y2 = boxes[idx].int().tolist()
-                            conf = float(scores[idx].item()) * 100
-                            cls = int(classes[idx].item())
-                            
-                            # Convert the ID to a string name for the image label
-                            class_name = COCO_CLASSES[cls] if cls < len(COCO_CLASSES) else str(cls)
-                            
-                            cv2.rectangle(display_img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                            cv2.putText(display_img, f"{class_name} {conf:.1f}%", (x1, y1 - 5), 
-                                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
-                            
-                        cv2.imwrite(str(img_out_dir / f"{i:04d}_pred_{stem_name}.jpg"), display_img)
-        except Exception as e:
-            print(f"Error post-processing {file_name}: {e}")
+            print(f"    [{i+1}/{len(files_to_process)}] {file_name} "
+                  f"| Pre: {current_preprocessing_ms:.1f}ms "
+                  f"| Inf: {current_inference_ms:.1f}ms "
+                  f"| Post: {current_postprocessing_ms:.1f}ms "
+                  f"| Total: {current_system_ms:.1f}ms"
+                  f" {detected_info}")
 
-        if TORCH_DEVICE.type == 'cuda': torch.cuda.synchronize()
-        postprocessing_end_time = time.perf_counter()
+            detailed_sample_records.append({
+                "filename": file_name,
+                "preprocessing_ms": round(current_preprocessing_ms, 4),
+                "inference_ms": round(current_inference_ms, 4),
+                "postprocessing_ms": round(current_postprocessing_ms, 4),
+                "e2e_ms": round(current_system_ms, 4),
+                "class_id": class_id,
+                "confidence": round(confidence_score, 2),
+                "info": str(detected_info)
+            })
 
-        # --- TOTAL PROCESS END ---
-        system_end_time = time.perf_counter()
+    finally:
+        # Capture Stop Time
+        t_stop_dt, t_stop_iso = get_utc_timestamps()
 
-        # --- CALCULATE RAW DURATIONS (Milliseconds) ---
-        current_preprocessing_ms = (preprocessing_end_time - preprocessing_start_time) * 1000.0
-        current_inference_ms = (inference_end_time - inference_start_time) * 1000.0
-        current_postprocessing_ms = (postprocessing_end_time - postprocessing_start_time) * 1000.0
-        current_system_ms = (system_end_time - system_start_time) * 1000.0
+        # --- 8. RESOURCE MONITORING (STOP) ---
+        if config['monitor_resources']:
+            if config['torch_device'].type == "cuda":
+                torch.cuda.synchronize()
+            time.sleep(0.2)  # small buffer for final data metrics
 
-        # Store raw data
-        preprocessing_latencies_ms.append(current_preprocessing_ms)
-        inference_latencies_ms.append(current_inference_ms)
-        postprocessing_latencies_ms.append(current_postprocessing_ms)
-        total_system_latencies_ms.append(current_system_ms)
+            stop_docker_monitor(config['docker_endpoint'])
+            stop_system_monitor(config['system_endpoint'])
 
-        # Store confidence
-        if confidence_score > 0:
-            confidence_scores_list.append(confidence_score)
+            if is_vaccel_remote_run:
+                stop_docker_monitor(config['remote_docker_endpoint'])
+                stop_system_monitor(config['remote_system_endpoint'])
 
-        print(f"    [{i+1}/{len(files_to_process)}] {file_name} "
-              f"| Pre: {current_preprocessing_ms:.1f}ms "
-              f"| Inf: {current_inference_ms:.1f}ms "
-              f"| Post: {current_postprocessing_ms:.1f}ms "
-              f"| Total: {current_system_ms:.1f}ms"
-              f" {detected_info}")
-
-        # Store detailed record
-        detailed_sample_records.append({
-            "filename": file_name,
-            "preprocessing_ms": round(current_preprocessing_ms, 4),
-            "inference_ms": round(current_inference_ms, 4),
-            "postprocessing_ms": round(current_postprocessing_ms, 4),
-            "e2e_ms": round(current_system_ms, 4),
-            "class_id": class_id,
-            "confidence": round(confidence_score, 2),
-            "info": str(detected_info)
-        })
-
-    # Capture Stop Time
-    t_stop_dt = datetime.now(timezone.utc)
-    t_stop_iso = t_stop_dt.isoformat()
-
-    # 6. FINAL CALCULATIONS & EXPORT
+    # 9. FINAL CALCULATIONS & EXPORT
     if not inference_latencies_ms:
         print("❌ No successful inferences recorded.")
         return
 
-    # --- Metrics Calculations (using Helper) ---
     stats_preprocessing = calculate_stats(preprocessing_latencies_ms)
     stats_inference = calculate_stats(inference_latencies_ms)
     stats_postprocessing = calculate_stats(postprocessing_latencies_ms)
     stats_system = calculate_stats(total_system_latencies_ms)
     stats_confidence = calculate_stats(confidence_scores_list)
 
-    # --- FPS Calculations ---
-    # Use mean from stats
-    avg_inf = stats_inference["mean"]
-    avg_sys = stats_system["mean"]
+    avg_inf, avg_sys = stats_inference["mean"], stats_system["mean"]
     inference_fps = (1000.0 / avg_inf) * frames_per_sample if avg_inf > 0 else 0
     system_fps = (1000.0 / avg_sys) * frames_per_sample if avg_sys > 0 else 0
 
-    # Print Summary to Console
-    print(f"\n📊 BENCHMARK SUMMARY ({MODEL_ARCH})")
+    print(f"\n📊 BENCHMARK SUMMARY ({config['core_model_name']})")
     print(f"   ---------------------------------------------")
     print(f"   Avg Preprocessing:  {stats_preprocessing['mean']:.2f} ms")
     print(f"   Avg Inference:      {stats_inference['mean']:.2f} ms (P90: {stats_inference['p90']:.2f})")
@@ -447,50 +310,44 @@ def main():
     print(f"   System FPS:         {system_fps:.2f}")
     print(f"   ---------------------------------------------")
 
-    if EXPORT_RESULTS:
-        # 1. Export JSON Summary
+    if config['export_results']:
+        # Export JSON
         json_output_path = run_dir / "benchmark_summary.json"
-        
         final_output_data = {
             "run_id": run_id,
-            "backend": BACKEND,
-            "host": HOST,
-            "model": MODEL_ARCH,
-            "model_type": MODEL_TYPE,
-            "device": TARGET_DEVICE,
+            "backend": config['backend'],
+            "host": config['host'],
+            "model": config['core_model_name'],
+            "model_type": config['model_type'],
+            "device": config['target_device'],
             "num_samples": len(inference_latencies_ms),
-            
             "time_window": {
                 "start": t_start_iso,
                 "stop": t_stop_iso,
-                "duration_sec": (t_stop_dt - t_start_dt).total_seconds() if t_stop_iso else 0
+                "duration_sec": (t_stop_dt - t_start_dt).total_seconds()
             },
-            
             "frames_per_sample": frames_per_sample,
-            "fps": {
-                "inference": round(inference_fps, 2),
-                "system": round(system_fps, 2)
-            },
+            "fps": {"inference": round(inference_fps, 2), "system": round(system_fps, 2)},
             "preprocessing_ms": stats_preprocessing,
             "inference_ms": stats_inference,
             "postprocessing_ms": stats_postprocessing,
             "system_ms": stats_system,
             "confidence_score": stats_confidence
         }
+        if "sol" in config['backend']:
+            final_output_data["sol_run_mode"] = int(os.environ.get("SOL_RUN_MODE", "2").strip())
 
         with open(json_output_path, 'w') as json_file:
             json.dump(final_output_data, json_file, indent=4)
         print(f"   ✅ JSON Summary saved to {json_output_path}")
 
-        # 2. Export CSV Data
+        # Export CSV
         csv_output_path = run_dir / "benchmark_data.csv"
-        
         if detailed_sample_records:
-            keys = detailed_sample_records[0].keys()
             with open(csv_output_path, 'w', newline='') as csv_file:
-                dict_writer = csv.DictWriter(csv_file, fieldnames=keys)
-                dict_writer.writeheader()
-                dict_writer.writerows(detailed_sample_records)
+                writer = csv.DictWriter(csv_file, fieldnames=detailed_sample_records[0].keys())
+                writer.writeheader()
+                writer.writerows(detailed_sample_records)
             print(f"   ✅ CSV Data saved to {csv_output_path}")
 
 if __name__ == "__main__":

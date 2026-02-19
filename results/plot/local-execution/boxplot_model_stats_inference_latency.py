@@ -21,11 +21,14 @@ SPINES_WIDTH = 1.0
 FIG_SIZE_WIDTH = 10.5
 FIG_HEIGHT_PER_SUBPLOT = 4.0  # Height per horizontal panel
 
+# --- VARIANT CONFIGURATION ---
 INCLUDE_VACCEL_LOCAL = False
-VARIANT_ORDER = ["PyTorch", "SOL", "SOL + vAccel"] if INCLUDE_VACCEL_LOCAL else ["PyTorch", "SOL"]
+
+VARIANT_ORDER = ["PyTorch", "Torchcompile", "SOL"]
+if INCLUDE_VACCEL_LOCAL:
+    VARIANT_ORDER.append("SOL + vAccel")
 
 # Strict filter + order (consistent behavior)
-
 MODEL_TYPE_ORDER = get_model_type_order()
 
 # --- HARDCODED TARGETS (Updated for new folder structure) ---
@@ -34,9 +37,6 @@ TARGETS = [
     ("robot", "cpu", "model_stats_inference_latency_robot_cpu_boxplot_local_exec.pdf", "upper right"),
     ("edge-asus", "cpu", "model_stats_inference_latency_edge_asus_cpu_boxplot_local_exec.pdf", "upper right"),
     ("edge-asus", "gpu", "model_stats_inference_latency_edge_asus_gpu_boxplot_local_exec.pdf", "upper right"),
-    
-    # Future placeholder:
-    # ("edge-xtreme", "gpu", "model_stats_inference_latency_edge_xtreme_gpu_boxplot_local_exec.pdf", "upper right"),
 ]
 
 
@@ -48,17 +48,24 @@ def ordered_models(models):
 
 
 def split_variant(model: str, backend: str):
+    """
+    Decides the legend label (Variant) based on backend.
+    """
     backend = str(backend).lower().strip()
     model = str(model).strip()
 
-    is_sol = model.endswith("_sol")
-    base = model[:-4] if is_sol else model
+    base = model  # clean name from JSON
 
-    if backend == "stock" and not is_sol:
+    if backend == "stock":
         return base, "PyTorch"
-    if backend == "stock" and is_sol:
+    
+    if backend == "ptc":
+        return base, "Torchcompile"
+
+    if backend == "sol":
         return base, "SOL"
-    if INCLUDE_VACCEL_LOCAL and backend == "vaccel-local" and is_sol:
+
+    if INCLUDE_VACCEL_LOCAL and backend == "vaccel-local-sol":
         return base, "SOL + vAccel"
 
     return base, None
@@ -70,6 +77,7 @@ def collect_latency_samples(run: dict):
     backend = str(run.get("backend", "")).lower().strip()
 
     base_model, variant = split_variant(run.get("model", ""), backend)
+    
     if variant is None or variant not in VARIANT_ORDER:
         return None
 
@@ -98,6 +106,7 @@ def collect_latency_samples(run: dict):
         except Exception:
             n = 256
 
+    # Reconstruct a synthetic distribution for the boxplot based on mean/std
     n = max(10, min(n, 1024))
     sd = 0.0 if (not np.isfinite(sd) or sd < 0) else sd
     vals = np.random.normal(loc=mu, scale=max(sd, 1e-9), size=n)
@@ -156,7 +165,7 @@ def plot_target(sub: pd.DataFrame, host: str, device: str, color_map, leg_loc: s
     # remove title; put context on y-axis
     host_u = str(host).strip()
     device_u = str(device).upper().strip()
-    
+
     #ax.set_xlabel("ML Model")
     ax.set_ylabel(f"{host_u}\n{device_u} inference time (ms)")
     ax.tick_params(axis="x", labelrotation=20)
@@ -218,7 +227,10 @@ def main():
     if PLOT_MODE not in {"combined", "separate"}:
         raise SystemExit("PLOT_MODE must be 'combined' or 'separate'.")
 
-    allowed_backends = ["stock"] + (["vaccel-local"] if INCLUDE_VACCEL_LOCAL else [])
+    # UPDATED: Backends to include
+    allowed_backends = {"stock", "ptc", "sol"}
+    if INCLUDE_VACCEL_LOCAL:
+        allowed_backends.add("vaccel-local-sol")
 
     # --- SEPARATE ---
     if PLOT_MODE == "separate":
@@ -244,7 +256,7 @@ def main():
         # Dynamic Height
         total_height = num_plots * FIG_HEIGHT_PER_SUBPLOT
         fig, axes = plt.subplots(num_plots, 1, figsize=(FIG_SIZE_WIDTH, total_height))
-        
+
         if num_plots == 1:
             axes = [axes]
 

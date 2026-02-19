@@ -55,12 +55,9 @@ echo "[clean] run-tag=${RUN_TAG}"
 echo "[clean] root=$(pwd)"
 [[ "$DRY_RUN" -eq 1 ]] && echo "[clean] DRY-RUN (no deletions)"
 
-# Safer match: tag appears as a token boundary (start, _, -, or end)
-# Examples that match RUN_TAG=run1:
-#   run1_foo, foo_run1_bar, foo-run1-bar, run1
-# Won't match:
-#   run10_foo (good)
-NAME_EXPR=(-regextype posix-extended -regex ".*/([^/]*(^|[_-])${RUN_TAG}([_-]|$)[^/]*)")
+# Simplified: Look for the tag preceded by / or _ or -
+# And followed by . or _ or - or end of string.
+NAME_EXPR=(-regextype posix-extended -regex ".*[/_-]${RUN_TAG}([._-].*|$)")
 
 do_rm() {
   if [[ "$DRY_RUN" -eq 1 ]]; then
@@ -81,9 +78,10 @@ do_rmdir_rf() {
 rm_csv_recursive() {
   local dir="$1"
   [[ -d "$dir" ]] || { echo "[clean] skip (missing): $dir"; return 0; }
-  echo "[clean] csv (recursive): $dir"
+  echo "[clean] csv (recursive, excluding failed/): $dir"
 
-  find "$dir" -type f -name "*.csv" "${NAME_EXPR[@]}" -print0 |
+  # We use -print0 INSIDE the parentheses to ensure matched items are output
+  find "$dir" -path "*/failed" -prune -o \( -type f -name "*.csv" "${NAME_EXPR[@]}" -print0 \) |
     tee >(tr '\0' '\n' >&2) |
     do_rm >/dev/null
 }
@@ -91,20 +89,18 @@ rm_csv_recursive() {
 rm_model_stats() {
   local dir="model-stats"
   [[ -d "$dir" ]] || { echo "[clean] skip (missing): $dir"; return 0; }
-  echo "[clean] model-stats (run dirs + summary outputs only): $dir"
+  echo "[clean] model-stats (excluding failed/): $dir"
 
-  # Run output directories (e.g., model-stats/robot/run1_...)
-  find "$dir" -type d "${NAME_EXPR[@]}" -print0 |
+  # 1. Clean Directories (excluding 'failed')
+  # Note: we use -mindepth 1 so we don't accidentally match the root 'model-stats' dir itself
+  find "$dir" -mindepth 1 -path "*/failed" -prune -o \( -type d "${NAME_EXPR[@]}" -print0 \) |
     tee >(tr '\0' '\n' >&2) |
     do_rmdir_rf >/dev/null
 
-  # Summary outputs: only .json/.csv
-  find "$dir" -type f \( -name "*.json" -o -name "*.csv" \) "${NAME_EXPR[@]}" -print0 |
+  # 2. Clean Summary files (excluding 'failed')
+  find "$dir" -path "*/failed" -prune -o \( -type f \( -name "*.json" -o -name "*.csv" \) "${NAME_EXPR[@]}" -print0 \) |
     tee >(tr '\0' '\n' >&2) |
     do_rm >/dev/null
-
-  # If perms require sudo, you can re-run:
-  #   sudo ./clean_all_results.sh --run-tag run1
 }
 
 rm_csv_recursive "docker-stats"

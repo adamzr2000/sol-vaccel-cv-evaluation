@@ -90,19 +90,18 @@ Execute `model_benchmark.py` with the following environment variables.
 
 - **MODEL**: neural network model to benchmark  
   - **Segmentation**:  
-    `deeplabv3_resnet50`, `deeplabv3_resnet50_sol`,  
-    `fcn_resnet50`, `fcn_resnet50_sol`
+    `deeplabv3_resnet50`, `deeplabv3_resnet101`, `fcn_resnet50`, `fcn_resnet101`,
+    `deeplabv3_mobilenet_v3_large`
   - **Image classification**:  
-    `resnet50`, `resnet50_sol`,  
-    `mobilenet_v3_large`, `mobilenet_v3_large_sol`
+    `resnet50`, `swin_t`, `swin_s`, `swin_v2_b`, `swin_s`,
+    `mobilenet_v3_large`
   - **Video classification**:  
-    `mc3_18`, `mc3_18_sol`,  
-    `r3d_18`, `r3d_18_sol` 
+    `swin3d_t`, `swin3d_s`, `swin3d_b`, `mc3_18`, `r3d_18`, `r2dplus1d_18` 
   - **Object detection**:  
     `yolov5s`
 
 - **BACKEND**: inference backend  
-  - `stock` (default), `vaccel-local` (or `vaccel`) or `vaccel-remote`
+  - `stock` (default), `ptc`, `sol`, `vaccel-local-sol`, `vaccel-remote-sol`
 
 - **ENABLE_VACCEL_PROFILER**: enable vAccel execution profiling *(vAccel SOL models only)*  
   - `true` or `false` (default: `false`)
@@ -130,7 +129,7 @@ Execute `model_benchmark.py` with the following environment variables.
   - Outputs `benchmark_data.csv` and `benchmark_summary.json`  
   - `true` or `false` (default: `false`)
 
-- **RUN_TAG**: Experiment run prefix identifier *(optional)*  
+- **RUN_TAG**: experiment run prefix identifier *(optional)*  
   - Used to tag the output directory under  
     `/results/experiments/model-stats`  
   - The final directory name is always auto-generated as:  
@@ -144,14 +143,14 @@ Execute `model_benchmark.py` with the following environment variables.
 Examples:
 
 ```shell
-# Stock image classification (CPU)
-DEVICE=cpu MODEL=resnet50 NUM_IMAGES=64 OMP_NUM_THREADS=10 python3 model_benchmark.py
-# Stock image classification (GPU)
-DEVICE=gpu MODEL=resnet50 NUM_IMAGES=64 python3 model_benchmark.py
-# vAccel remote image classification (CPU)
-DEVICE=cpu BACKEND=vaccel-remote MODEL=resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
-# vAccel remote image classification (GPU)
-DEVICE=gpu BACKEND=vaccel-remote MODEL=resnet50_sol NUM_IMAGES=64 python3 model_benchmark.py
+# Pytorch image classification (CPU)
+DEVICE=cpu BACKEND=stock MODEL=resnet50 OMP_NUM_THREADS=10 python3 model_benchmark.py
+# Pytorch image classification (GPU)
+DEVICE=gpu BACKEND=stock MODEL=resnet50 python3 model_benchmark.py
+# SOL image classification (GPU)
+DEVICE=gpu BACKEND=sol MODEL=resnet50 python3 model_benchmark.py
+# vAccel remote + SOL image classification (GPU)
+DEVICE=gpu BACKEND=vaccel-remote-sol MODEL=resnet50 python3 model_benchmark.py
 ```
 
 > Note: Results and images are not saved by default to avoid unnecessary disk usage. Set `EXPORT_RESULTS=1` to save benchmark metrics, and also set `EXPORT_OUTPUT_IMAGES=1` to store output images in the [results/experiments/model-stats](./results/experiments/model-stats/) directory.
@@ -184,22 +183,19 @@ Start the container in CPU or GPU mode:
 
 ### 2. Run benchmark script
 
-Execute `model_benchmark_resources.py` with the following environment variables.
+Execute `model_benchmark.py` with the following environment variables.
 
 Examples:
 ```shell
-NUM_IMAGES=32 BACKEND=stock HOST=robot DEVICE=cpu MODEL=resnet50_sol RUN_TAG=run1 DOCKER_STATS_ENDPOINT=http://192.168.2.2:6000 SYSTEM_STATS_ENDPOINT=http://192.168.2.2:6001 python3 model_benchmark_resources.py
+RESOURCE_MONITORING=1 EXPORT_RESULTS=1 NUM_IMAGES=32 BACKEND=stock HOST=robot DEVICE=cpu MODEL=resnet50 RUN_TAG=run1 DOCKER_STATS_ENDPOINT=http://192.168.2.2:6000 SYSTEM_STATS_ENDPOINT=http://192.168.2.2:6001 python3 model_benchmark_resources.py
 
-NUM_IMAGES=32 BACKEND=vaccel-remote HOST=robot DEVICE=gpu MODEL=resnet50_sol RUN_TAG=run1 DOCKER_STATS_ENDPOINT=http://192.168.2.2:6000 SYSTEM_STATS_ENDPOINT=http://192.168.2.2:6001 DOCKER_STATS_REMOTE_ENDPOINT=http://10.5.1.20:6000 SYSTEM_STATS_REMOTE_ENDPOINT=http://10.5.1.20:6001 python3 model_benchmark_resources.py
+RESOURCE_MONITORING=1 EXPORT_RESULTS=1 NUM_IMAGES=32 BACKEND=vaccel-remote-sol HOST=robot DEVICE=gpu MODEL=resnet50 RUN_TAG=run1 DOCKER_STATS_ENDPOINT=http://192.168.2.2:6000 SYSTEM_STATS_ENDPOINT=http://192.168.2.2:6001 DOCKER_STATS_REMOTE_ENDPOINT=http://10.5.1.20:6000 SYSTEM_STATS_REMOTE_ENDPOINT=http://10.5.1.20:6001 python3 model_benchmark_resources.py
 ```
 
 Auto:
 ```shell
-./evaluate_models.sh --backend stock --host robot --device cpu --run-tag run1 --sleep 10
-./evaluate_models.sh --backend vaccel-local --host robot --device cpu --run-tag run1 --sleep 10
-
-./evaluate_models.sh --backend stock --host edge-asus --device gpu --run-tag run1 --sleep 10
-./evaluate_models.sh --backend vaccel-local --host edge-asus --device gpu --run-tag run1 --sleep 10
+./evaluate_models.sh --backend stock --host edge-asus --device cpu --run-tag run1 --sleep 10
+./evaluate_models.sh --backend vaccel-local-sol --host edge-asus --device cpu --run-tag run1 --sleep 10
 ```
 
 ### GPU laptop specs

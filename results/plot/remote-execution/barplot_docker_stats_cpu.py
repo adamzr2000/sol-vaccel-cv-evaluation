@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from plot_config import get_path, load_config, get_model_type_order
 
-
 # --- CONFIGURATION ---
 cfg = load_config()
 REMOTE_HOST = cfg.get("remote_host", "edge-asus")
@@ -26,8 +25,8 @@ SHOW_ERROR_BARS = True
 # Define variants and where they should appear
 VARIANT_DEFINITIONS = [
     {
-        "id": "local_pytorch_cpu",
-        "label": "Local · PyTorch @ robot CPU",
+        "id": "local_torchcompile_cpu",
+        "label": "Local · Torchcompile @ robot CPU",
         "show_on_robot": True,
         "show_on_edge": False
     },
@@ -67,15 +66,15 @@ def variants_for_host(host: str):
     Returns list of variant labels that should be plotted for the given host.
     """
     host = str(host).lower().strip()
-    
+
     # 1. Robot Host
     if "robot" in host:
         return [v["label"] for v in VARIANT_DEFINITIONS if v["show_on_robot"]]
-    
+
     # 2. Edge Host (matches "edge", "edge-asus", "edge-xtreme", etc.)
     if "edge" in host:
         return [v["label"] for v in VARIANT_DEFINITIONS if v["show_on_edge"]]
-    
+
     return []
 
 
@@ -94,25 +93,18 @@ def style_axes(ax):
         ax.spines[side].set_linewidth(SPINES_WIDTH)
 
 
-def split_model_base(model: str):
-    m = str(model).strip()
-    is_sol = m.endswith("_sol")
-    base = m[:-4] if is_sol else m
-    return base, is_sol
-
-
 def classify_variant(row: dict):
     """
-    Maps a CSV row to a Variant Label defined in VARIANT_DEFINITIONS.
-    Handles differences between Robot-side and Edge-side data recording.
+    Maps a CSV row to a Variant Label defined in VARIANT_DEFINITIONS based
+    on the new explicit backend names (ptc, sol, vaccel-remote-sol).
     """
     container = str(row.get("container", "")).lower().strip()
     host = str(row.get("host", "")).lower().strip()
     backend = str(row.get("backend", "")).lower().strip()
     device = str(row.get("device", "")).lower().strip()
-    model = str(row.get("model", "")).strip()
-
-    base, is_sol = split_model_base(model)
+    
+    # Model name is already clean in the new CSV (e.g. 'resnet50')
+    base = str(row.get("model", "")).strip()
 
     # Helper to look up label by ID
     def get_label(vid):
@@ -124,19 +116,21 @@ def classify_variant(row: dict):
     if "robot" in host:
         if container == "torchvision-app":
             # Local Execution
-            if backend == "stock" and device == "cpu":
-                return base, get_label("local_sol_cpu" if is_sol else "local_pytorch_cpu")
-            
+            if backend == "ptc" and device == "cpu":
+                return base, get_label("local_torchcompile_cpu")
+            if backend == "sol" and device == "cpu":
+                return base, get_label("local_sol_cpu")
+
             # Remote Execution (Robot Perspective)
-            if backend == "vaccel-remote" and is_sol:
-                if "cpu_target-cpu" in device:
+            if "remote" in backend:
+                if "target-cpu" in device:
                     return base, get_label("remote_sol_edge_cpu")
-                if "cpu_target-gpu" in device:
+                if "target-gpu" in device:
                     return base, get_label("remote_sol_edge_gpu")
 
     # --- CASE 2: EDGE HOST ---
     if "edge" in host:
-        if container == "torchvision-app-agent" and backend == "vaccel-remote" and is_sol:
+        if container == "torchvision-app-agent" and "remote" in backend:
             if device == "cpu":
                 return base, get_label("remote_sol_edge_cpu")
             if device == "gpu":
@@ -153,10 +147,10 @@ def plot_host(ax, dfh: pd.DataFrame, host: str, base_models, color_map, y_lim_to
 
     x = np.arange(len(base_models))
     n = len(variants)
-    
+
     # Adjust bar width based on number of bars
     width = 0.24 if n == 2 else 0.18
-    
+
     # Dynamic offsets calculation
     start = -((n - 1) * width) / 2
     offsets = {v: start + i * width for i, v in enumerate(variants)}
@@ -204,7 +198,7 @@ def plot_host(ax, dfh: pd.DataFrame, host: str, base_models, color_map, y_lim_to
     ax.set_ylim(0, y_lim_top)
 
     style_axes(ax)
-    
+
     # Pick legend loc based on host string (default to upper right)
     loc = "upper right"
     if "robot" in host.lower(): loc = LEGEND_LOC.get("robot", "upper right")
@@ -236,7 +230,7 @@ def main():
 
     # Model Filter
     allowed_models = [m.strip() for m in MODEL_TYPE_ORDER]
-    
+
     rows = []
     dropped_models = set()
 

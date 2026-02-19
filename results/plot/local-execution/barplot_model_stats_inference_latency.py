@@ -23,25 +23,26 @@ FIG_HEIGHT_PER_SUBPLOT = 4.0  # Height allocated for each host/device row
 SHOW_VALUE_LABELS = True
 SHOW_ERROR_BARS = True
 
-HIGHLIGHT_SOL_SLOWER_THAN_PYTORCH = True
+# Logic to highlight labels if SOL is slower
+HIGHLIGHT_SOL_SLOWER_THAN_TORCHCOMPILE = True
 
+# --- VARIANT CONFIGURATION ---
 INCLUDE_VACCEL_LOCAL = False
-VARIANT_ORDER = ["PyTorch", "SOL", "SOL + vAccel"] if INCLUDE_VACCEL_LOCAL else ["PyTorch", "SOL"]
+
+VARIANT_ORDER = ["PyTorch", "Torchcompile", "SOL"]
+if INCLUDE_VACCEL_LOCAL:
+    VARIANT_ORDER.append("SOL + vAccel")
 
 SMOOTH = False
 SMOOTH_WINDOW = 3
 
 MODEL_TYPE_ORDER = get_model_type_order()
 
-# --- HARDCODED TARGETS (Updated for new folder structure) ---
-# Format: (host, device, output_filename, legend_loc)
+# --- HARDCODED TARGETS (Host, Device, Output Filename, Legend Loc) ---
 TARGETS = [
     ("robot", "cpu", "model_stats_inference_latency_robot_cpu_barplot.pdf", "upper left"),
     ("edge-asus", "cpu", "model_stats_inference_latency_edge_asus_cpu_barplot.pdf", "upper left"),
     ("edge-asus", "gpu", "model_stats_inference_latency_edge_asus_gpu_barplot.pdf", "upper left"),
-    
-    ("edge-xtreme", "cpu", "model_stats_inference_latency_edge_xtreme_cpu_barplot.pdf", "upper left"),
-    ("edge-xtreme", "gpu", "model_stats_inference_latency_edge_xtreme_gpu_barplot.pdf", "upper left"),
 ]
 
 
@@ -53,17 +54,24 @@ def ordered_models(models):
 
 
 def split_variant(model: str, backend: str):
+    """
+    Decides the legend label (Variant) based on backend.
+    """
     backend = str(backend).lower().strip()
     model = str(model).strip()
 
-    is_sol = model.endswith("_sol")
-    base = model[:-4] if is_sol else model
+    base = model  # Model names are now clean in the JSON (e.g. "resnet50")
 
-    if backend == "stock" and not is_sol:
+    if backend == "stock":
         return base, "PyTorch"
-    if backend == "stock" and is_sol:
+    
+    if backend == "ptc":
+        return base, "Torchcompile"
+
+    if backend == "sol":
         return base, "SOL"
-    if INCLUDE_VACCEL_LOCAL and backend == "vaccel-local" and is_sol:
+
+    if INCLUDE_VACCEL_LOCAL and backend == "vaccel-local-sol":
         return base, "SOL + vAccel"
 
     return base, None
@@ -108,9 +116,10 @@ def extract_rows(runs, host, device):
     host = str(host).lower().strip()
     device = str(device).lower().strip()
 
-    allowed_backends = {"stock"}
+    # UPDATED: Backends to extract
+    allowed_backends = {"stock", "ptc", "sol"}
     if INCLUDE_VACCEL_LOCAL:
-        allowed_backends.add("vaccel-local")
+        allowed_backends.add("vaccel-local-sol")
 
     sub = [
         r for r in runs
@@ -126,7 +135,9 @@ def extract_rows(runs, host, device):
     for r in sub:
         model = r.get("model", "")
         backend = r.get("backend", "")
+        
         base_model, variant = split_variant(model, backend)
+        
         if variant is None or variant not in VARIANT_ORDER:
             continue
 
@@ -178,12 +189,18 @@ def plot_latency(ax, rows, host, device, color_map, leg_loc: str):
     y_lim_top = (y_max * 1.25) if np.isfinite(y_max) and y_max > 0 else 1.0
 
     x = np.arange(len(base_models))
-    if len(variants) == 3:
-        width = 0.24
-        offsets = {"PyTorch": -width, "SOL": 0.0, "SOL + vAccel": +width}
-    else:
-        width = 0.34
-        offsets = {"PyTorch": -width / 2, "SOL": +width / 2}
+
+    # --- DYNAMIC BAR OFFSET CALCULATION ---
+    n_vars = len(variants)
+    group_width = 0.8
+    bar_width = group_width / n_vars
+    
+    offsets_arr = np.linspace(
+        -group_width/2 + bar_width/2, 
+        group_width/2 - bar_width/2, 
+        n_vars
+    )
+    offsets = {v: off for v, off in zip(variants, offsets_arr)}
 
     edgecolor = "black" if SHOW_ERROR_BARS else "none"
     linewidth = 1.0 if SHOW_ERROR_BARS else 0.0
@@ -194,7 +211,7 @@ def plot_latency(ax, rows, host, device, color_map, leg_loc: str):
         stds = np.asarray([std_map[(m, v)] for m in base_models], dtype=float)
 
         ax.bar(
-            xs, means, width=width,
+            xs, means, width=bar_width,
             color=color_map[v],
             edgecolor=edgecolor, linewidth=linewidth,
             label=v, zorder=3,
@@ -233,9 +250,9 @@ def plot_latency(ax, rows, host, device, color_map, leg_loc: str):
     ax.set_xticklabels(base_models, rotation=30, ha="right")
     ax.set_ylim(0, y_lim_top)
 
-    if HIGHLIGHT_SOL_SLOWER_THAN_PYTORCH:
+    if HIGHLIGHT_SOL_SLOWER_THAN_TORCHCOMPILE:
         for tick, m in zip(ax.get_xticklabels(), base_models):
-            mu_pt = mean_map.get((m, "PyTorch"), np.nan)
+            mu_pt = mean_map.get((m, "Torchcompile"), np.nan)
             mu_sol = mean_map.get((m, "SOL"), np.nan)
             if np.isfinite(mu_pt) and np.isfinite(mu_sol) and (mu_sol > mu_pt):
                 tick.set_color("red")
@@ -286,7 +303,7 @@ def plot_combined(runs):
     # Dynamic Height Calculation
     total_height = num_plots * FIG_HEIGHT_PER_SUBPLOT
     fig, axes = plt.subplots(num_plots, 1, figsize=(FIG_SIZE_WIDTH, total_height))
-    
+
     if num_plots == 1:
         axes = [axes]
 

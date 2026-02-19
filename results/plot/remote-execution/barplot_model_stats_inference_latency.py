@@ -24,38 +24,28 @@ HIGHLIGHT_SOL_SLOWER_THAN_PYTORCH = True
 
 MODEL_TYPE_ORDER = get_model_type_order()
 
+# --- VARIANT CONFIGURATION ---
 VARIANT_DEFINITIONS = [
     {
-        "label": "Local · PyTorch @ robot CPU",
-        "match": {"host": "robot", "device": "cpu", "backend": "stock"},
-        "is_sol": False
+        "label": "Local · Torchcompile @ robot CPU",
+        "match": {"host": "robot", "device": "cpu", "backend": "ptc"},
     },
     {
         "label": "Local · SOL @ robot CPU",
-        "match": {"host": "robot", "device": "cpu"}, 
-        # Note: We handle 'backend' logic for local SOL (stock vs vaccel-local) dynamically below, 
-        # or you can be explicit like: "backend": "vaccel-local"
-        "is_sol": True
+        "match": {"host": "robot", "device": "cpu", "backend": "sol"},
     },
     {
         "label": f"Remote · SOL + vAccel @ {REMOTE_HOST} CPU",
-        "match": {"host": "robot", "backend": "vaccel-remote"},
-        "run_id_contains": ["cpu_target-cpu"], # Distinguishes target CPU
-        "is_sol": True
+        "match": {"host": "robot"},
+        "backend_contains": "remote",
+        "run_id_contains": ["target-cpu"], # Distinguishes target CPU
     },
     {
         "label": f"Remote · SOL + vAccel @ {REMOTE_HOST} GPU",
-        "match": {"host": "robot", "backend": "vaccel-remote"},
-        "run_id_contains": ["cpu_target-gpu"], # Distinguishes target GPU
-        "is_sol": True
+        "match": {"host": "robot"},
+        "backend_contains": "remote",
+        "run_id_contains": ["target-gpu"], # Distinguishes target GPU
     },
-    # EXAMPLE: Future Edge-Xtreme case
-    # {
-    #     "label": "Remote · SOL + vAccel @ Edge-Xtreme GPU",
-    #     "match": {"host": "robot", "backend": "vaccel-remote"},
-    #     "run_id_contains": ["xtreme", "target-gpu"],
-    #     "is_sol": True
-    # },
 ]
 
 # Extract just the labels for ordering/colors
@@ -77,51 +67,34 @@ def style_axes(ax):
 
 
 def base_model_name(model: str) -> str:
-    m = str(model).strip()
-    return m[:-4] if m.endswith("_sol") else m
+    # Model names are already clean in the new pipeline (e.g., 'resnet50')
+    return str(model).strip()
 
 
 def classify_variant(run: dict):
     """
     Generic classifier that checks the run against VARIANT_DEFINITIONS.
-    You should NOT need to modify this function.
     """
     run_id = str(run.get("run_id", "")).strip()
     backend = str(run.get("backend", "")).lower().strip()
     host = str(run.get("host", "")).lower().strip()
-    model = str(run.get("model", "")).strip()
     device = str(run.get("device", "")).lower().strip()
-    is_model_sol = model.endswith("_sol")
 
     for v_def in VARIANT_DEFINITIONS:
-        # 1. Check strict SOL status matching
-        if v_def.get("is_sol") is not None:
-            if v_def["is_sol"] != is_model_sol:
-                continue
-
-        # 2. Check exact matches (host, device, backend)
+        # 1. Check exact matches (host, device, backend)
         match_criteria = v_def.get("match", {})
         matches = True
         for key, val in match_criteria.items():
-            run_val = locals().get(key) # get variable from current scope
-            # Handle special case for local SOL backends if not strictly defined
-            if key == "backend" and val is None: 
-                continue 
-            
-            # Special case: Allow 'vaccel-local' to match 'stock' or vice versa if loosely defined?
-            # No, keep strict. But for Local SOL, we often see 'stock' OR 'vaccel-local'.
-            # Let's strictly enforce what is in the config.
-            if run_val != val:
+            if locals().get(key) != val:
                 matches = False
                 break
         
-        # Special handling for Local SOL legacy behavior (backend can be stock OR vaccel-local)
-        # If the config didn't specify a backend, but we know it's SOL, we accept generic backends.
-        if matches and "backend" not in match_criteria and is_model_sol:
-             if backend not in ["stock", "vaccel-local"]:
-                 matches = False
-
         if not matches:
+            continue
+
+        # 2. Check backend substring (useful for vaccel-remote-sol)
+        backend_sub = v_def.get("backend_contains")
+        if backend_sub and backend_sub not in backend:
             continue
 
         # 3. Check Run ID substrings (e.g. "target-gpu")
@@ -223,9 +196,14 @@ def plot_latency(rows):
     fig, ax = plt.subplots(figsize=FIG_SIZE)
 
     x = np.arange(len(base_models))
-    width = 0.18
-    start = -((len(variants) - 1) * width) / 2
-    offsets = {v: start + i * width for i, v in enumerate(variants)}
+    
+    # Calculate offsets dynamically for perfect centering
+    n_vars = len(variants)
+    group_width = 0.8
+    bar_width = min(0.2, group_width / n_vars)
+    
+    start = -((n_vars - 1) * bar_width) / 2
+    offsets = {v: start + i * bar_width for i, v in enumerate(variants)}
 
     for v in variants:
         xs = x + offsets[v]
@@ -233,7 +211,7 @@ def plot_latency(rows):
         yerr = np.asarray([std_map[(m, v)] for m in base_models], dtype=float)
 
         ax.bar(
-            xs, vals, width=width,
+            xs, vals, width=bar_width,
             color=color_map[v],
             edgecolor=("black" if SHOW_ERROR_BARS else "none"),
             linewidth=(1.0 if SHOW_ERROR_BARS else 0.0),
@@ -255,13 +233,13 @@ def plot_latency(rows):
     ax.set_ylim(0, y_lim_top)
 
     if HIGHLIGHT_SOL_SLOWER_THAN_PYTORCH:
-        # Check first two variants (usually local pytorch vs local sol)
+        # Highlight if Local SOL is slower than Local Torchcompile
         if len(VARIANTS) >= 2:
             v0, v1 = VARIANTS[0], VARIANTS[1]
             for tick, m in zip(ax.get_xticklabels(), base_models):
-                mu_pt = val_map.get((m, v0), np.nan)
+                mu_tc = val_map.get((m, v0), np.nan)
                 mu_sol = val_map.get((m, v1), np.nan)
-                if np.isfinite(mu_pt) and np.isfinite(mu_sol) and (mu_sol > mu_pt):
+                if np.isfinite(mu_tc) and np.isfinite(mu_sol) and (mu_sol > mu_tc):
                     tick.set_color("red")
 
     style_axes(ax)

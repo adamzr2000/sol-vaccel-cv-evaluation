@@ -13,10 +13,11 @@ case "$MODE" in
   gpu)
     IMAGE="torchvision-app:gpu"
     LIB_TYPE="lib_gpu"
-    GPU_ARGS=(--gpus all)
+    # Added --gpus all and the OMP_NUM_THREADS env flag
+    GPU_ARGS=(--gpus all -e OMP_NUM_THREADS=10)
     ;;
   *)
-    echo "Usage: $0 [cpu|gpu]"
+    echo "Usage: $0 [cpu|gpu] [remote_address]"
     exit 1
     ;;
 esac
@@ -40,23 +41,17 @@ SOL_LIBS="/src/models/deeplabv3_resnet50_sol/${LIB_TYPE}:\
 /src/models/swin3d_b_sol/${LIB_TYPE}"
 
 # Add cuDNN wheel libs only for GPU runs
+CUDNN_LIBS=""
 if [[ "$MODE" == "gpu" ]]; then
   CUDNN_LIBS="/.venv/lib/python3.10/site-packages/nvidia/cudnn/lib"
-else
-  CUDNN_LIBS=""
 fi
 
-# Build LD_LIBRARY_PATH (avoid trailing/duplicate colons)
+# Build LD_LIBRARY_PATH (cleanly)
 LD_PARTS=("$SOL_LIBS")
-if [[ -n "$CUDNN_LIBS" ]]; then
-  LD_PARTS+=("$CUDNN_LIBS")
-fi
-if [[ -n "${LD_LIBRARY_PATH:-}" ]]; then
-  LD_PARTS+=("$LD_LIBRARY_PATH")
-fi
+[[ -n "$CUDNN_LIBS" ]] && LD_PARTS+=("$CUDNN_LIBS")
+[[ -n "${LD_LIBRARY_PATH:-}" ]] && LD_PARTS+=("$LD_LIBRARY_PATH")
 
-export LD_LIBRARY_PATH
-LD_LIBRARY_PATH="$(IFS=:; echo "${LD_PARTS[*]}"):/src/models"
+FINAL_LD_LIBRARY_PATH="$(IFS=:; echo "${LD_PARTS[*]}"):/src/models"
 
 docker run -it --rm \
   --name torchvision-app \
@@ -64,7 +59,7 @@ docker run -it --rm \
   -v "$(pwd)"/scripts:/scripts \
   -v "$(pwd)"/src:/src \
   -v "$(pwd)"/results/experiments:/results/experiments \
-  -e LD_LIBRARY_PATH="$LD_LIBRARY_PATH" \
+  -e LD_LIBRARY_PATH="$FINAL_LD_LIBRARY_PATH" \
   -e VACCEL_RPC_ADDRESS="tcp://${REMOTE_ADDRESS}" \
   "${GPU_ARGS[@]}" \
   --entrypoint /bin/bash \

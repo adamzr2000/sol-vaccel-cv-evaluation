@@ -64,7 +64,7 @@ def main() -> None:
     extra_prefix = f"{run_tag}-{link}_"
     extra_matched = [
         p for p in all_summaries
-        if p.parent.name.startswith(extra_prefix) and "vaccel-remote" in p.parent.name
+        if p.parent.name.startswith(extra_prefix) and "remote" in p.parent.name
     ]
 
     # Merge + deduplicate while preserving order
@@ -116,7 +116,7 @@ def main() -> None:
     with out_path.open("w", encoding="utf-8") as f:
         json.dump(output_obj, f, indent=2)
 
-    print(f"✅ RUN_TAG '{run_tag}' aggregated (+ vaccel-remote '{run_tag}-{link}_*')")
+    print(f"✅ RUN_TAG '{run_tag}' aggregated (+ remote '{run_tag}-{link}_*')")
     print(f"📄 Output written to: {out_path}")
 
     if skipped:

@@ -14,7 +14,7 @@ case "$MODE" in
     IMAGE="torchvision-app:gpu"
     LIB_TYPE="lib_gpu"
     # Added --gpus all and the OMP_NUM_THREADS env flag
-    GPU_ARGS=(--gpus all -e OMP_NUM_THREADS=10)
+    GPU_ARGS=(--gpus all -e OMP_NUM_THREADS=12)
     ;;
   *)
     echo "Usage: $0 [cpu|gpu] [remote_address]"

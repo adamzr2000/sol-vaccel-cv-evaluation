@@ -378,7 +378,7 @@ def stop_system_monitor(endpoint):
 
 def stabilize_torch_compile(
     adapter,
-    sample_path: str,
+    sample_input,  # Renamed from sample_path
     torch_device: torch.device,
     iters: int = 10,
     do_postprocess: bool = False,
@@ -387,13 +387,23 @@ def stabilize_torch_compile(
     Force torch.compile (Inductor) to finish compiling/caching before timing.
     Should be called ONLY for backend == 'ptc'.
 
-    - Uses one representative sample_path (same input kind as benchmark loop).
+    - Uses one representative sample_input (either a string path OR a numpy array).
     - Runs a few inference iterations and synchronizes so compile work completes.
     """
     print(f"   🧠 Stabilizing torch.compile graphs ({iters} iters)...")
 
     # Build one fixed-shape input (important for compile stability)
-    x = adapter.preprocess(sample_path)
+    if isinstance(sample_input, str) or isinstance(sample_input, Path):
+        # Static file benchmark mode
+        x = adapter.preprocess(str(sample_input))
+    elif isinstance(sample_input, list) and len(sample_input) > 0 and isinstance(sample_input[0], np.ndarray):
+        # ROS live video mode (list of frames)
+        x = adapter.preprocess_frames(sample_input)
+    elif isinstance(sample_input, np.ndarray):
+        # ROS live image mode (single frame)
+        x = adapter.preprocess_frame(sample_input)
+    else:
+        raise ValueError(f"stabilize_torch_compile received unknown input type: {type(sample_input)}")
 
     # Run a few times to trigger compile + cache
     for _ in range(iters):

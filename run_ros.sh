@@ -1,8 +1,44 @@
 #!/bin/bash
 set -euo pipefail
 
-MODE="${1:-cpu}"   # usage: ./run.sh [cpu|gpu] [remote_address]
-REMOTE_ADDRESS="${2:-10.5.1.20:9125}"
+MODE="cpu"
+REMOTE_ADDRESS="10.5.1.20:9125"
+DDS_INTERFACE="enp130s0"
+RMW="${RMW:-rmw_cyclonedds_cpp}"
+
+usage() {
+  echo "Usage: $0 [cpu|gpu] [--remote HOST:PORT] [--iface IFNAME]"
+  exit 1
+}
+
+# Optional first positional: cpu|gpu
+if [[ "${1:-}" == "cpu" || "${1:-}" == "gpu" ]]; then
+  MODE="$1"
+  shift
+fi
+
+# Long-option parsing
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --remote)
+      [[ $# -ge 2 ]] || usage
+      REMOTE_ADDRESS="$2"
+      shift 2
+      ;;
+    --iface|--if|--interface)
+      [[ $# -ge 2 ]] || usage
+      DDS_INTERFACE="$2"
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      ;;
+    *)
+      echo "Unknown argument: $1"
+      usage
+      ;;
+  esac
+done
 
 case "$MODE" in
   cpu)
@@ -58,14 +94,48 @@ fi
 export LD_LIBRARY_PATH
 LD_LIBRARY_PATH="$(IFS=:; echo "${LD_PARTS[*]}"):/src/models"
 
+
+HOST_DDS_CFG_DIR="./dds"
+CONT_DDS_CFG_DIR="/etc/dds"
+
+mkdir -p "$HOST_DDS_CFG_DIR"
+
+cat > "$HOST_DDS_CFG_DIR/cyclonedds.xml" <<EOF
+<CycloneDDS>
+  <Domain>
+    <General>
+      <Interfaces>
+        <NetworkInterface autodetermine="false" name="${DDS_INTERFACE}" priority="default" multicast="default"/>
+      </Interfaces>
+      <AllowMulticast>default</AllowMulticast>
+      <MaxMessageSize>65500B</MaxMessageSize>
+    </General>
+    <Internal>
+      <SocketReceiveBufferSize min="10MB"/>
+      <Watermarks>
+        <WhcHigh>500kB</WhcHigh>
+      </Watermarks>
+    </Internal>
+  </Domain>
+</CycloneDDS>
+EOF
+
+EXTRA_VOL_ARGS=( --volume="${HOST_DDS_CFG_DIR}:${CONT_DDS_CFG_DIR}:ro" )
+EXTRA_ENV_ARGS=(
+  --env="RMW_IMPLEMENTATION=${RMW}"
+  --env="CYCLONEDDS_URI=file://${CONT_DDS_CFG_DIR}/cyclonedds.xml"
+)
+
 docker run -it --rm \
-  --name torchvision-ros-app \
+  --name torchvision-app \
   --net host \
   -v "$(pwd)"/scripts:/scripts \
   -v "$(pwd)"/src:/src \
   -v "$(pwd)"/results/experiments:/results/experiments \
   -e LD_LIBRARY_PATH="$LD_LIBRARY_PATH" \
   -e VACCEL_RPC_ADDRESS="tcp://${REMOTE_ADDRESS}" \
+  "${EXTRA_VOL_ARGS[@]}" \
+  "${EXTRA_ENV_ARGS[@]}" \
   "${GPU_ARGS[@]}" \
   --entrypoint /bin/bash \
   "$IMAGE"

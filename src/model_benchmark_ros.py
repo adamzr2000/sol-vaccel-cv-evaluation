@@ -29,7 +29,8 @@ from benchmark_utils import (
     start_docker_monitor, stop_docker_monitor,
     start_system_monitor, stop_system_monitor,
     COLORS, analyze_segmentation_mask,
-    COCO_CLASSES, stabilize_torch_compile
+    COCO_CLASSES, stabilize_torch_compile,
+    parse_boolean_env
 )
 
 from model_adapter import get_model_adapter
@@ -65,17 +66,17 @@ frames_per_sample = 16 if IS_VIDEO_MODEL else 1
 # ==========================================
 # ROS-SPECIFIC CONFIGURATION
 # ==========================================
-INPUT_TOPIC = os.environ.get("INPUT_TOPIC", "/camera/color/image_raw")
+INPUT_TOPIC = os.environ.get("INPUT_TOPIC", "go2/sensor/camera")
 
 # Publish topics (you can disable any by setting it to empty string)
 OUTPUT_MASK_TOPIC = os.environ.get("OUTPUT_MASK_TOPIC", "/benchmark/mask")
 OUTPUT_OVERLAY_TOPIC = os.environ.get("OUTPUT_OVERLAY_TOPIC", "/benchmark/overlay")
 OUTPUT_CLASS_TOPIC = os.environ.get("OUTPUT_CLASS_TOPIC", "/benchmark/classification")
 
-# Controls to avoid inflating postprocessing numbers
-PUBLISH_MASK = os.environ.get("PUBLISH_MASK", "0").strip().lower() in ("1", "true", "yes", "y", "on")
-PUBLISH_OVERLAY = os.environ.get("PUBLISH_OVERLAY", "0").strip().lower() in ("1", "true", "yes", "y", "on")
-PUBLISH_CLASS = os.environ.get("PUBLISH_CLASS", "1").strip().lower() in ("1", "true", "yes", "y", "on")
+# Controls to avoid inflating postprocessing numbers (Now using parse_boolean_env)
+PUBLISH_MASK = parse_boolean_env("PUBLISH_MASK", "false")
+PUBLISH_OVERLAY = parse_boolean_env("PUBLISH_OVERLAY", "false")
+PUBLISH_CLASS = parse_boolean_env("PUBLISH_CLASS", "true")
 
 # Run control
 EXPERIMENT_DURATION_SEC = float(os.environ.get("EXPERIMENT_DURATION_SEC", "30"))
@@ -87,7 +88,10 @@ QUEUE_SIZE = int(os.environ.get("QUEUE_SIZE", "1"))  # 1=latest-only
 VIDEO_BUFFER_LEN = int(os.environ.get("VIDEO_BUFFER_LEN", "16"))
 
 # Duplicate control (default realistic)
-AVOID_DUPLICATES = os.environ.get("AVOID_DUPLICATES", "1").strip().lower() in ("1", "true", "yes", "y", "on")
+AVOID_DUPLICATES = parse_boolean_env("AVOID_DUPLICATES", "true")
+
+# Track ROS Data Age (Disable if using rosbags without use_sim_time)
+TRACK_ROS_DATA_AGE = parse_boolean_env("TRACK_ROS_DATA_AGE", "false")
 
 
 class RosFrameBuffer:
@@ -175,6 +179,9 @@ class RosFrameBuffer:
             return 0.0
 
         return 1e9 / mean_delta_ns
+    def reset_counters(self):
+        with self.lock:
+            self.total_received = 0
 
 
 def main():
@@ -195,6 +202,7 @@ def main():
     print(f"   Export:    EXPORT_RESULTS={EXPORT_RESULTS}")
     print(f"   Monitors:  RESOURCE_MONITORING={cfg['monitor_resources']}")
     print(f"   Control:   AVOID_DUPLICATES={AVOID_DUPLICATES} MAX_FPS={MAX_FPS}")
+    print(f"   Data Age:  TRACK_ROS_DATA_AGE={TRACK_ROS_DATA_AGE}")
 
     if TORCH_DEVICE.type == "cuda" and not torch.cuda.is_available():
         print("   ❌ GPU was selected but no GPU is available.")
@@ -211,7 +219,6 @@ def main():
         rclpy.shutdown()
         return
 
-    # --- UPDATED RUN ID LOGIC ---
     run_tag = cfg["run_tag"]
     prefix = run_tag if run_tag else time.strftime("%d-%m-%Y_%H-%M-%S")
 
@@ -310,30 +317,29 @@ def main():
         if dummy_input is not None:
             stabilize_torch_compile(
                 adapter=adapter,
-                sample_path=dummy_input,  # adapter in utils usually handles paths, but if adapter handles arrays natively for ROS, ensure compat here.
+                sample_input=dummy_input,
                 torch_device=TORCH_DEVICE,
                 iters=int(os.environ.get("PTC_STABILIZE_ITERS", "10")),
                 do_postprocess=False,
             )
 
     # --- START RESOURCE MONITORING ---
-    if cfg["monitor_resources"]:
-        docker_csv_dir = str(Path(cfg['docker_csv_base']) / HOST)
-        system_csv_dir = str(Path(cfg['system_csv_base']) / HOST)
+    if cfg['monitor_resources']:
+        docker_csv_dir = str(Path(cfg['docker_csv_base']) / cfg['host'])
+        system_csv_dir = str(Path(cfg['system_csv_base']) / cfg['host'])
 
-        container_ref = "vaccelrt" if "vaccel" in BACKEND else f"ros_{BACKEND}"
-        start_docker_monitor(run_id, cfg['docker_endpoint'], docker_csv_dir, container_ref, "ros_run_")
+        start_docker_monitor(run_id, cfg['docker_endpoint'], docker_csv_dir, "torchvision-app", "torchvision-app_")
         start_system_monitor(run_id, cfg['system_endpoint'], system_csv_dir, local_mode)
-        
+
         if is_vaccel_remote_run:
-            vaccel_remote_run_id = f"{prefix}_{CORE_MODEL_NAME}_{BACKEND}_edge-asus_{TARGET_DEVICE}"
+            vaccel_remote_run_id = f"{prefix}_{cfg['core_model_name']}_{cfg['backend']}_edge-asus_{cfg['target_device']}"
             rem_docker_csv_dir = str(Path(cfg['docker_csv_base']) / "edge-asus")
             rem_system_csv_dir = str(Path(cfg['system_csv_base']) / "edge-asus")
 
             start_docker_monitor(vaccel_remote_run_id, cfg['remote_docker_endpoint'], rem_docker_csv_dir, "torchvision-app-agent", "torchvision-app-agent_")
-            start_system_monitor(vaccel_remote_run_id, cfg['remote_system_endpoint'], rem_system_csv_dir, TARGET_DEVICE)
-            
-        time.sleep(1.2) # Prime monitors
+            start_system_monitor(vaccel_remote_run_id, cfg['remote_system_endpoint'], rem_system_csv_dir, cfg['target_device'])
+
+        time.sleep(1.2)  # Prime the monitors
 
     # Capture Start Time (Using Utils)
     t_start_dt, t_start_iso = get_utc_timestamps()
@@ -354,6 +360,9 @@ def main():
 
     print("   ⏱️  Running Inference...")
 
+    # RESET COUNTERS HERE so we don't count warmup/compile dropped frames!
+    frame_buf.reset_counters()
+    
     start_wall = time.time()
     sample_idx = 0
     last_tick = 0.0
@@ -406,12 +415,15 @@ def main():
             torch.cuda.synchronize()
 
         # --- CALCULATE ROS DATA AGE ---
-        frame_stamp_ns = frame_buf.get_latest_stamp_ns()
-        current_ros_time_ns = node.get_clock().now().nanoseconds
-        if frame_stamp_ns is not None:
-            current_ros_data_age_ms = (current_ros_time_ns - frame_stamp_ns) / 1_000_000.0
+        if TRACK_ROS_DATA_AGE:
+            frame_stamp_ns = frame_buf.get_latest_stamp_ns()
+            current_ros_time_ns = node.get_clock().now().nanoseconds
+            if frame_stamp_ns is not None:
+                current_ros_data_age_ms = (current_ros_time_ns - frame_stamp_ns) / 1_000_000.0
+            else:
+                current_ros_data_age_ms = 0.0
         else:
-            current_ros_data_age_ms = 0.0
+            current_ros_data_age_ms = -1.0
 
         system_start_time_ns = time.perf_counter_ns()
 
@@ -499,11 +511,10 @@ def main():
                     max_idx = torch.argmax(scores).item()
                     confidence_score = float(scores[max_idx].item()) * 100.0
                     class_id = int(classes[max_idx].item())
-                    
-                    # Protect against index out of bounds if dict classes don't match COCO
+
                     top_class_name = COCO_CLASSES[class_id] if class_id < len(COCO_CLASSES) else f"Obj_{class_id}"
                     detected_info = f" -> Detected {num_objects} obj (Top: {top_class_name} {confidence_score:.1f}%)"
-                    
+
                     if PUBLISH_CLASS and pub_class is not None:
                         to_publish_class_str = f"{top_class_name},{confidence_score:.2f}"
                 else:
@@ -584,7 +595,7 @@ def main():
         if TORCH_DEVICE.type == "cuda":
             torch.cuda.synchronize()
         time.sleep(0.2)
-        
+
         stop_docker_monitor(cfg['docker_endpoint'])
         stop_system_monitor(cfg['system_endpoint'])
 
@@ -620,7 +631,10 @@ def main():
 
     print(f"\n📊 BENCHMARK SUMMARY ({CORE_MODEL_NAME})")
     print(f"   ---------------------------------------------")
-    print(f"   Avg ROS Data Age:   {stats_ros_data_age['mean']:.2f} ms")
+    if TRACK_ROS_DATA_AGE:
+        print(f"   Avg ROS Data Age:   {stats_ros_data_age['mean']:.2f} ms")
+    else:
+        print(f"   Avg ROS Data Age:   -1 (Disabled)")
     print(f"   Avg Preprocessing:  {stats_pre['mean']:.2f} ms")
     print(f"   Avg Inference:      {stats_inf['mean']:.2f} ms (P90: {stats_inf['p90']:.2f})")
     print(f"   Avg Postprocessing: {stats_post['mean']:.2f} ms")

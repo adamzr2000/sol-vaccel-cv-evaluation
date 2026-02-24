@@ -1,0 +1,101 @@
+{
+    "run_id": "run2_r3d_18_sol_edge-asus_cpu",
+    "backend": "sol",
+    "host": "edge-asus",
+    "model": "r3d_18",
+    "model_type": "video_classification",
+    "device": "cpu",
+    "num_samples": 608,
+    "time_window": {
+        "start": "2026-02-20T15:22:52.151618+00:00",
+        "stop": "2026-02-20T15:23:52.158544+00:00",
+        "duration_sec": 60.006926
+    },
+    "frames_per_sample": 16,
+    "fps": {
+        "inference": 190.69,
+        "system": 169.67,
+        "processed": 10.13,
+        "camera_observed": 14.27
+    },
+    "stream": {
+        "avoid_duplicates": true,
+        "received_frames": 872,
+        "processed_frames": 608,
+        "drop_ratio": 0.302752,
+        "duplicates_skipped_loops": 11
+    },
+    "ros_data_age_ms": {
+        "mean": -1.0,
+        "std": 0.0,
+        "min": -1.0,
+        "max": -1.0,
+        "p25": -1.0,
+        "p50": -1.0,
+        "p75": -1.0,
+        "p90": -1.0,
+        "p95": -1.0,
+        "p99": -1.0
+    },
+    "preprocessing_ms": {
+        "mean": 10.1992,
+        "std": 1.1131,
+        "min": 8.8061,
+        "max": 15.057,
+        "p25": 9.5178,
+        "p50": 9.7625,
+        "p75": 10.3155,
+        "p90": 12.212,
+        "p95": 12.7511,
+        "p99": 13.5198
+    },
+    "inference_ms": {
+        "mean": 83.905,
+        "std": 2.2254,
+        "min": 77.1148,
+        "max": 94.6532,
+        "p25": 82.5388,
+        "p50": 83.5147,
+        "p75": 84.8712,
+        "p90": 87.0705,
+        "p95": 88.0817,
+        "p99": 90.0798
+    },
+    "postprocessing_ms": {
+        "mean": 0.1308,
+        "std": 0.0419,
+        "min": 0.0982,
+        "max": 1.0126,
+        "p25": 0.1255,
+        "p50": 0.1295,
+        "p75": 0.1312,
+        "p90": 0.1344,
+        "p95": 0.1367,
+        "p99": 0.1505
+    },
+    "system_ms": {
+        "mean": 94.3001,
+        "std": 2.628,
+        "min": 87.778,
+        "max": 106.7531,
+        "p25": 92.6251,
+        "p50": 93.7222,
+        "p75": 95.6058,
+        "p90": 97.7344,
+        "p95": 98.9564,
+        "p99": 102.4888
+    },
+    "confidence_score": {
+        "mean": 25.9213,
+        "std": 13.5333,
+        "min": 4.0214,
+        "max": 73.8075,
+        "p25": 15.4032,
+        "p50": 23.6052,
+        "p75": 34.3284,
+        "p90": 42.6883,
+        "p95": 51.2888,
+        "p99": 67.663
+    },
+    "sol_run_mode": 2
+}

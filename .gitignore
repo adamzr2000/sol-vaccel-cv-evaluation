@@ -9,3 +9,6 @@ sol-installers/
 __pycache__
 .env
 app/static/videos/uploads/
+
+dds
+.db3

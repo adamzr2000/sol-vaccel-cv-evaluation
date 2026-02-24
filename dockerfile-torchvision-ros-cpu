@@ -39,11 +39,12 @@ RUN python3 -m venv $VENV
 ENV PATH="$VENV/bin:$PATH"
 
 # Python deps
-RUN python3 -m pip install --upgrade pip && \
+RUN python3 -m pip install --upgrade pip "setuptools>=70.0.0" && \
     python3 -m pip install \
       "numpy<2" \
       psutil \
-      opencv-python-headless
+      ultralytics itsdangerous python-dotenv requests \
+      pandas tqdm seaborn gitpython
 
 # PyTorch
 RUN python3 -m pip install \
@@ -54,12 +55,13 @@ RUN python3 -m pip install \
 
 # vAccel
 RUN wget https://s3.nbfc.io/nbfc-assets/github/vaccel/rev/main/x86_64/release/vaccel_latest_amd64.deb && \
-    wget https://s3.nbfc.io/nbfc-assets/github/vaccel/plugins/rpc/rev/main/x86_64/release/vaccel-rpc_latest_amd64.deb && \
+    wget https://s3.nbfc.io/nbfc-assets/github/vaccel/plugins/rpc/rev/feat_genop_optional_send_write/x86_64/release/vaccel-rpc_latest_amd64.deb && \
     dpkg -i vaccel_latest_amd64.deb vaccel-rpc_latest_amd64.deb && \
     python3 -m pip install --force-reinstall git+https://github.com/nubificus/vaccel-python
 
 ENV VACCEL_PLUGINS=libvaccel-exec.so:libvaccel-rpc.so
 ENV TTRPC_TCP_NODELAY_ENABLED=1
+ENV VACCEL_RPC_SEND_WRITE_ENABLED=0
 
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
 

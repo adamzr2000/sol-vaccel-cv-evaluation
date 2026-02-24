@@ -9,6 +9,10 @@ sudo docker build -f dockerfile-torchvision-gpu . -t torchvision-app:gpu
 
 # vAccel agent on the GPU host
 sudo docker build -f dockerfile-torchvision-gpu-agent . -t torchvision-app:agent
+
+# ROS integration
+sudo docker build -f dockerfile-torchvision-ros-cpu . -t torchvision-ros-app:cpu
+sudo docker build -f dockerfile-torchvision-ros-gpu . -t torchvision-ros-app:gpu
 ```
 
 ## Download models
@@ -83,7 +87,7 @@ Execute `model_benchmark.py` with the following environment variables.
 
 - **DEVICE**: execution device  
   - `cpu` or `gpu`
-  - If using `cpu` on ASUS G815 laptop, set `OMP_NUM_THREADS=10`
+  - If using `cpu` on ASUS G815 laptop, set `OMP_NUM_THREADS=12`
 
 - **HOST**: execution host identifier  
   - Default: `edge-asus`
@@ -144,13 +148,16 @@ Examples:
 
 ```shell
 # Pytorch image classification (CPU)
-DEVICE=cpu BACKEND=stock MODEL=resnet50 OMP_NUM_THREADS=10 python3 model_benchmark.py
+DEVICE=cpu BACKEND=stock MODEL=resnet50 OMP_NUM_THREADS=12 python3 model_benchmark.py
 # Pytorch image classification (GPU)
 DEVICE=gpu BACKEND=stock MODEL=resnet50 python3 model_benchmark.py
 # SOL image classification (GPU)
 DEVICE=gpu BACKEND=sol MODEL=resnet50 python3 model_benchmark.py
 # vAccel remote + SOL image classification (GPU)
 DEVICE=gpu BACKEND=vaccel-remote-sol MODEL=resnet50 python3 model_benchmark.py
+
+
+EXPERIMENT_DURATION_SEC=30 DEVICE=gpu BACKEND=stock MODEL=resnet50 python3 model_benchmark_ros.py
 ```
 
 > Note: Results and images are not saved by default to avoid unnecessary disk usage. Set `EXPORT_RESULTS=1` to save benchmark metrics, and also set `EXPORT_OUTPUT_IMAGES=1` to store output images in the [results/experiments/model-stats](./results/experiments/model-stats/) directory.
@@ -181,20 +188,21 @@ Start the container in CPU or GPU mode:
 ./run.sh gpu
 ```
 
-### 2. Run benchmark script
-
-Execute `model_benchmark.py` with the following environment variables.
-
-Examples:
-```shell
-RESOURCE_MONITORING=1 EXPORT_RESULTS=1 NUM_IMAGES=32 BACKEND=stock HOST=robot DEVICE=cpu MODEL=resnet50 RUN_TAG=run1 DOCKER_STATS_ENDPOINT=http://192.168.2.2:6000 SYSTEM_STATS_ENDPOINT=http://192.168.2.2:6001 python3 model_benchmark_resources.py
-
-RESOURCE_MONITORING=1 EXPORT_RESULTS=1 NUM_IMAGES=32 BACKEND=vaccel-remote-sol HOST=robot DEVICE=gpu MODEL=resnet50 RUN_TAG=run1 DOCKER_STATS_ENDPOINT=http://192.168.2.2:6000 SYSTEM_STATS_ENDPOINT=http://192.168.2.2:6001 DOCKER_STATS_REMOTE_ENDPOINT=http://10.5.1.20:6000 SYSTEM_STATS_REMOTE_ENDPOINT=http://10.5.1.20:6001 python3 model_benchmark_resources.py
+```bash
+# robot
+./run_ros.sh cpu --iface enp2s0
+# edge
+./run_ros.sh gpu --iface enp130s0
 ```
 
-Auto:
+### 2. Run benchmark script
+
 ```shell
 ./evaluate_models.sh --backend stock --host edge-asus --device cpu --run-tag run1 --sleep 10
+./evaluate_models.sh --backend vaccel-local-sol --host edge-asus --device cpu --run-tag run1 --sleep 10
+```
+
+```bash
 ./evaluate_models.sh --backend vaccel-local-sol --host edge-asus --device cpu --run-tag run1 --sleep 10
 ```
 
@@ -314,28 +322,4 @@ To run `sol_mobilenet_v3_large` correctly, **cuDNN must be downgraded to 9.1.1.1
 # On torchvision-app:gpu container
 python3 -m pip install --no-cache-dir --force-reinstall \
   "nvidia-cudnn-cu12==9.1.1.17" --no-deps
-```
-
----
-
-## ROS Integration
-
-### Build docker images
-Build the container image according to the target device:
-
-```bash
-sudo docker build -f dockerfile-torchvision-ros-cpu . -t torchvision-ros-app:cpu
-sudo docker build -f dockerfile-torchvision-ros-gpu . -t torchvision-ros-app:gpu
-```
-
-### Start the container in CPU or GPU mode:
-
-```bash
-./run_ros.sh cpu
-# or
-./run_ros.sh gpu
-```
-
-```bash
-EXPERIMENT_DURATION_SEC=30 HOST=edge-asus BACKEND=stock DEVICE=cpu MODEL=resnet50 INPUT_TOPIC=/camera/color/image_raw python3 model_benchmark_ros.py
 ```

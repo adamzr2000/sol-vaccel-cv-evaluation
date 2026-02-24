@@ -19,7 +19,7 @@ done
 docker run -it --rm \
   --name torchvision-app-agent \
   --gpus all \
-  --env OMP_NUM_THREADS=10 \
+  --env OMP_NUM_THREADS=12 \
   --env VACCEL_LOG_LEVEL=3 \
   --env VACCEL_PROFILING_ENABLED=$PROFILING \
   --publish ${PORT}:${CONT_PORT} \

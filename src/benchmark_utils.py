@@ -17,7 +17,13 @@ def get_benchmark_config():
     """Parses environment variables and determines model/device paths."""
     # 1. Backend
     backend = os.environ.get("BACKEND", "stock").strip().lower()
-    valid_backends = ["stock", "ptc", "sol", "vaccel-local-sol", "vaccel-remote-sol"]
+    valid_backends = [
+        "stock", "ptc",
+        "sol",
+        "vaccel-local-torch", "vaccel-remote-torch",
+        "vaccel-local-ptc", "vaccel-remote-ptc",
+        "vaccel-local-sol", "vaccel-remote-sol",
+    ]
 
     if backend not in valid_backends:
         print(f"⚠️  Unknown BACKEND '{backend}', defaulting to 'stock'")

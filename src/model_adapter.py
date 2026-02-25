@@ -7,6 +7,15 @@ import os
 import sys
 import importlib
 import numpy as np
+from pathlib import Path
+
+try:
+    import vaccel
+    import vaccel.ops.torch as vaccel_torch
+    HAS_VACCEL = True
+except ImportError:
+    HAS_VACCEL = False
+
 
 # =========================================================
 # SOL execution mode:
@@ -112,6 +121,7 @@ class _OutOnly(torch.nn.Module):
 def _infer_aux_loss_from_state_dict(state_dict: dict) -> bool:
     # DeepLab/FCN aux head present?
     return any(k.startswith("aux_classifier.") for k in state_dict.keys())
+
 
 # =========================================================
 # 1. ADAPTER FOR PYTORCH BASELINES
@@ -408,6 +418,79 @@ class PyTorchBaselineAdapter(BaseModelAdapter):
             # Return a list of dictionaries, or a combined tensor, depending on your evaluation script needs.
             return {"boxes": final_boxes, "scores": final_conf, "classes": final_classes}
 
+
+class VaccelPyTorchAdapter(PyTorchBaselineAdapter):
+    def __init__(
+        self,
+        device,
+        builder_func,
+        weights_filename,
+        model_type,
+        weights_enum=None,
+        use_compile=False,
+        use_remote=False
+    ):
+        self.use_remote = use_remote
+        self.vaccel_session = self._init_vaccel(use_remote)
+
+        super().__init__(
+            device,
+            builder_func,
+            weights_filename,
+            model_type,
+            weights_enum,
+            use_compile
+        )
+
+    def _init_vaccel(self, use_remote) -> vaccel.Session:
+        plugin_type = vaccel.PluginType.TORCH
+        if use_remote:
+            plugin_type = vaccel.PluginType.REMOTE | plugin_type
+
+        return vaccel.Session(plugin_type)
+
+    def load_model(self, model_dir):
+        weights_path = Path(model_dir) / self.weights_filename
+        model_name = weights_path.stem.replace("_state_dict", "")
+
+        if self.use_compile:
+            torch_type = 'AOTI'
+            suffix = ".pt2"
+        else:
+            torch_type = 'Torchscript'
+            suffix = ".torchscript"
+
+        model_path = weights_path.with_name(
+            f"{model_name}_{self.device}{suffix}"
+        )
+        if not model_path.exists() and suffix == ".torchscript":
+            model_path = model_path.with_stem(model_name)
+        if not model_path.exists():
+            msg = f"{torch_type} model not found at {model_path.resolve()}"
+            raise FileNotFoundError(msg)
+
+        model_path = model_path.resolve()
+        print(
+            "   [VaccelTorch] "
+            f"Loading {torch_type} {self.model_type} model from {model_path}"
+        )
+
+        session = self.vaccel_session
+
+        model = vaccel.Resource(model_path, vaccel.ResourceType.MODEL)
+        model.register(session)
+        session.torch_model_load(model)
+        self.model = model
+
+    def infer(self, input_tensor):
+        session = self.vaccel_session
+        model = self.model
+
+        tensor = vaccel_torch.Tensor.from_torch(input_tensor)
+        outputs = session.torch_model_run(model, [tensor])
+        return outputs[0].as_torch().detach().clone()
+
+
 # =========================================================
 # 2. ADAPTER FOR SOL COMPILER
 # =========================================================
@@ -671,6 +754,7 @@ class SolAdapter(BaseModelAdapter):
             return torch.argmax(output_tensor.squeeze(0), dim=0).byte().cpu()
         return output_tensor
 
+
 class VaccelSolAdapter(SolAdapter):
     def __init__(self, device, model_name, model_type="classification", weights_enum=None, use_remote=False):
         self.use_remote = use_remote
@@ -679,6 +763,7 @@ class VaccelSolAdapter(SolAdapter):
     def load_model(self, model_dir):
         lib_path = self._get_model_lib_path(model_dir)
         self._load_model_from_path(os.path.join(lib_path, "vaccel"), self.use_remote)
+
 
 # =========================================================
 # 3. ADAPTER FACTORY
@@ -725,17 +810,42 @@ def get_model_adapter(model_name, backend, device):
 
     builder, m_type, w_enum = BASELINE_REGISTRY[core_name]
 
+    if "vaccel" in backend and not HAS_VACCEL:
+        msg = "vAccel Python package not installed. Install with: pip install vaccel"
+        raise RuntimeError(msg)
+
     # 3. Route to the exact Adapter explicitly checking the 'backend'
     if "sol" in backend:
         if "vaccel" in backend:
             use_remote = ("remote" in backend)
-            return VaccelSolAdapter(device, core_name, model_type=m_type, weights_enum=w_enum, use_remote=use_remote)
-        else:
-            return SolAdapter(device, core_name, model_type=m_type, weights_enum=w_enum)
+            return VaccelSolAdapter(
+                device,
+                core_name,
+                model_type=m_type,
+                weights_enum=w_enum,
+                use_remote=use_remote
+            )
+
+        return SolAdapter(device, core_name, model_type=m_type, weights_enum=w_enum)
     else:
-        use_compile = (backend == "ptc")
-        w_filename = f"{core_name}.pt" if m_type == "object_detection" else f"{core_name}_state_dict.pt"
-        
+        use_compile = ("ptc" in backend)
+        w_filename = (
+            f"{core_name}.pt"
+            if m_type == "object_detection" else f"{core_name}_state_dict.pt"
+        )
+
+        if "vaccel" in backend:
+            use_remote = ("remote" in backend)
+            return VaccelPyTorchAdapter(
+                device,
+                builder,
+                w_filename,
+                model_type=m_type,
+                weights_enum=w_enum,
+                use_compile=use_compile,
+                use_remote=use_remote
+           )
+
         return PyTorchBaselineAdapter(
             device,
             builder,

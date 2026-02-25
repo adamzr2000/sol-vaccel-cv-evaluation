@@ -106,7 +106,7 @@ def main():
     if config["backend"] == "ptc" and files_to_process:
         stabilize_torch_compile(
             adapter=adapter,
-            sample_path=files_to_process[0],
+            sample_input=files_to_process[0],
             torch_device=config["torch_device"],
             iters=int(os.environ.get("PTC_STABILIZE_ITERS", "10")),
             do_postprocess=False,

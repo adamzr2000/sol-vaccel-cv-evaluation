@@ -619,8 +619,11 @@ def main():
 
     avg_inf = stats_inf["mean"]
     avg_sys = stats_sys["mean"]
-    inference_fps = (1000.0 / avg_inf) * frames_per_sample if avg_inf > 0 else 0
-    system_fps = (1000.0 / avg_sys) * frames_per_sample if avg_sys > 0 else 0
+    # inference_fps = (1000.0 / avg_inf) * frames_per_sample if avg_inf > 0 else 0
+    # system_fps = (1000.0 / avg_sys) * frames_per_sample if avg_sys > 0 else 0
+
+    inference_fps = (1000.0 / avg_inf) if avg_inf > 0 else 0
+    system_fps = (1000.0 / avg_sys) if avg_sys > 0 else 0
 
     # Effective throughput + observed camera Hz
     processed_fps = float(processed_samples) / wall_duration_sec if wall_duration_sec > 0 else 0.0

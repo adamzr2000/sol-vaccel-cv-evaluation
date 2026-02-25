@@ -1,3 +1,0 @@
-../../../deeplabv3_resnet50_sol/lib_cpu/libsol-dnn-dnnl-deployment-0.8.0rc5-3.7.1.so
-../libsol_deeplabv3_resnet101.so
-libsol_deeplabv3_resnet101_wrapper.so

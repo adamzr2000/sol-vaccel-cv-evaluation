@@ -5,12 +5,12 @@ MODE="${1:-cpu}"   # usage: ./run.sh [cpu|gpu]
 
 case "$MODE" in
   cpu)
-    IMAGE="sol-deploy:rc5"
+    IMAGE="sol-deploy:rc6"
     LIB_TYPE="lib_cpu"
     GPU_ARGS=()
     ;;
   gpu)
-    IMAGE="sol-deploy:rc5"
+    IMAGE="sol-deploy:rc6"
     LIB_TYPE="lib_gpu"
     GPU_ARGS=(--gpus all)
     ;;

@@ -378,7 +378,7 @@ def stop_system_monitor(endpoint):
 
 def stabilize_torch_compile(
     adapter,
-    sample_input,  # Renamed from sample_path
+    sample_input,
     torch_device: torch.device,
     iters: int = 10,
     do_postprocess: bool = False,

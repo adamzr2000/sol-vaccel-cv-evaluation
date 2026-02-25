@@ -1,4 +1,4 @@
-# Generated with SOL v0.8.0rc5
+# Generated with SOL v0.8.0rc6
 import numpy as np
 import ctypes
 from numpy.ctypeslib import ndpointer, as_ctypes_type
@@ -97,9 +97,9 @@ def run_example():
 	out__0_out = lib(in__input, )
 	print(f"Max_V: {np.max(out__0_out, axis=1)}\nMax_I: {np.argmax(out__0_out, axis=1)}")
 
+	####### Option 2: Run the underlying lib with predefined buffers #######
 	vdims = np.array([vdims_0, ], dtype=np.int64)
 
-	in__input = np.random.rand(vdims_0, 3, 224, 224).astype(np.float32)
 	out__0_out = np.zeros((vdims_0, 21, 224, 224), dtype=np.float32)
 	dp_args = [in__input, out__0_out, vdims] # Inputs, Outputs, VDims must be in this exact order!
 
@@ -108,13 +108,15 @@ def run_example():
 	lib.init() # optional, loads parameters on host
 	lib.set_seed(271828) # optional
 
-	####### Option 2: Run the underlying lib with predefined buffers #######
 	lib.run(*dp_args)
 	print(f"Max_V: {np.max(out__0_out, axis=1)}\nMax_I: {np.argmax(out__0_out, axis=1)}")
 
 	####### Option 3: Run after setting in- and outputs #######
+	lib = sol_lraspp_mobilenet_v3_large()
+	lib.init() # optional, loads parameters on host
+	lib.set_seed(271828) # optional
 	lib.set_IO(dp_args)
-	lib.optimize(level=2)
+	lib.optimize(level=2) # optional
 	lib.run() # (async)
 	lib.get_output() # syncs
 	print(f"Max_V: {np.max(out__0_out, axis=1)}\nMax_I: {np.argmax(out__0_out, axis=1)}")

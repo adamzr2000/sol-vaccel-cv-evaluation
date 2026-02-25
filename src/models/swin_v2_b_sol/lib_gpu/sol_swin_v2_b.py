@@ -1,4 +1,4 @@
-# Generated with SOL v0.8.0rc5
+# Generated with SOL v0.8.0rc6
 import numpy as np
 import ctypes
 from numpy.ctypeslib import ndpointer, as_ctypes_type
@@ -93,9 +93,9 @@ def run_example():
 	out__0 = lib(in__input_0, )
 	print(f"Max_V: {np.max(out__0, axis=1)}\nMax_I: {np.argmax(out__0, axis=1)}")
 
+	####### Option 2: Run the underlying lib with predefined buffers #######
 	vdims = np.ndarray((1), dtype=np.int64)
 
-	in__input_0 = np.random.rand(1, 3, 224, 224).astype(np.float32)
 	out__0 = np.zeros((1, 1000), dtype=np.float32)
 	dp_args = [in__input_0, out__0, vdims] # Inputs, Outputs, VDims must be in this exact order!
 
@@ -104,13 +104,15 @@ def run_example():
 	lib.init() # optional, loads parameters on host
 	lib.set_seed(271828) # optional
 
-	####### Option 2: Run the underlying lib with predefined buffers #######
 	lib.run(*dp_args)
 	print(f"Max_V: {np.max(out__0, axis=1)}\nMax_I: {np.argmax(out__0, axis=1)}")
 
 	####### Option 3: Run after setting in- and outputs #######
+	lib = sol_swin_v2_b()
+	lib.init() # optional, loads parameters on host
+	lib.set_seed(271828) # optional
 	lib.set_IO(dp_args)
-	lib.optimize(level=2)
+	lib.optimize(level=2) # optional
 	lib.run() # (async)
 	lib.get_output() # syncs
 	print(f"Max_V: {np.max(out__0, axis=1)}\nMax_I: {np.argmax(out__0, axis=1)}")

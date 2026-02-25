@@ -1,4 +1,4 @@
-// Generated with SOL v0.8.0rc5
+// Generated with SOL v0.8.0rc6
 #include "sol_fcn_resnet101.h"
 #include <stdlib.h>
 #ifdef __cplusplus

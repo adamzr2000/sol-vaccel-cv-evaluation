@@ -1,5 +1,0 @@
-../../../mobilenet_v3_large_sol/lib_cpu/libsol-dnn-mkl-deployment-0.8.0rc5-2025.3.0.so
-../../../deeplabv3_resnet50_sol/lib_cpu/libsol-dnn-dnnl-deployment-0.8.0rc5-3.7.1.so
-../../../mobilenet_v3_large_sol/lib_cpu/libsol-dnn-aoclblas-deployment-0.8.0rc5-5.0.0.so
-../libsol_swin_t.so
-libsol_swin_t_wrapper.so

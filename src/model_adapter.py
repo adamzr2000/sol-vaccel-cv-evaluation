@@ -523,6 +523,7 @@ class SolAdapter(BaseModelAdapter):
             self.output_buffer = np.zeros((1, 21, 224, 224), dtype=np.float32)
             self.aux_buffer = np.zeros((1, 21, 224, 224), dtype=np.float32)
             self.execution_args = [self.input_buffer, self.output_buffer, self.aux_buffer, self.vdims]
+            
 
         # --- 3. PURE SOL MODE SELECTION ---
         print(f"   [SOL] {'GPU' if self.device == 'cuda' else 'CPU'} mode | SOL_RUN_MODE={SOL_RUN_MODE}")
@@ -536,6 +537,8 @@ class SolAdapter(BaseModelAdapter):
             "deeplabv3resnet101",
             "fcnresnet101"
         }
+
+        _skip_mode2_gpu_opt = {}
 
         can_gpu_optimize = (self.device == "cuda") and (_norm_name not in _skip_mode2_gpu_opt)
 
@@ -556,7 +559,6 @@ class SolAdapter(BaseModelAdapter):
             # Option 2: explicit buffers each call
             print("   [SOL] Option 2 selected: using run(*args) each call")
 
-            # BUT: you want to still do set_IO/optimize for GPU for most models
             if can_gpu_optimize:
                 try:
                     if hasattr(self.model, "set_IO"):
@@ -637,6 +639,7 @@ class SolAdapter(BaseModelAdapter):
 
         clip = torch.stack(frames_list, dim=1)  # (3,16,112,112)
         return clip.unsqueeze(0).numpy()
+    
     
     def infer(self, input_numpy):
         # 1. Prepare Input

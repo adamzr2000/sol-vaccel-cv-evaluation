@@ -40,15 +40,18 @@ SOL_LIBS="/src/models/deeplabv3_resnet50_sol/${LIB_TYPE}:\
 /src/models/swin3d_s_sol/${LIB_TYPE}:\
 /src/models/swin3d_b_sol/${LIB_TYPE}"
 
-# Add cuDNN wheel libs only for GPU runs
-CUDNN_LIBS=""
+# For GPU runs
+CUDA_HOME="/usr/local/cuda"
+CUDA_LIBS=""
 if [[ "$MODE" == "gpu" ]]; then
-  CUDNN_LIBS="/.venv/lib/python3.10/site-packages/nvidia/cudnn/lib"
+  CUDA_LIBS="${CUDA_HOME}/lib64:/.venv/lib/python3.10/site-packages/nvidia/cuda_runtime/lib:/.venv/lib/python3.10/site-packages/nvidia/cudnn/lib"
+  # Optional if you ever see cublas missing:
+  # CUDA_LIBS="${CUDA_LIBS}:/.venv/lib/python3.10/site-packages/nvidia/cublas/lib"
 fi
 
 # Build LD_LIBRARY_PATH (cleanly)
 LD_PARTS=("$SOL_LIBS")
-[[ -n "$CUDNN_LIBS" ]] && LD_PARTS+=("$CUDNN_LIBS")
+[[ -n "$CUDA_LIBS" ]] && LD_PARTS+=("$CUDA_LIBS")
 [[ -n "${LD_LIBRARY_PATH:-}" ]] && LD_PARTS+=("$LD_LIBRARY_PATH")
 
 FINAL_LD_LIBRARY_PATH="$(IFS=:; echo "${LD_PARTS[*]}"):/src/models"
@@ -60,6 +63,7 @@ docker run -it --rm \
   -v "$(pwd)"/src:/src \
   -v "$(pwd)"/results/experiments:/results/experiments \
   -e LD_LIBRARY_PATH="$FINAL_LD_LIBRARY_PATH" \
+  -e CUDA_HOME="$CUDA_HOME" \
   -e VACCEL_RPC_ADDRESS="tcp://${REMOTE_ADDRESS}" \
   "${GPU_ARGS[@]}" \
   --entrypoint /bin/bash \

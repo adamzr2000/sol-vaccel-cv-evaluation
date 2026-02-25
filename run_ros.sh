@@ -75,17 +75,20 @@ SOL_LIBS="/src/models/deeplabv3_resnet50_sol/${LIB_TYPE}:\
 /src/models/swin3d_s_sol/${LIB_TYPE}:\
 /src/models/swin3d_b_sol/${LIB_TYPE}"
 
-# Add cuDNN wheel libs only for GPU runs
+# For GPU runs: prefer system CUDA, but add venv NVIDIA runtime libs (cudart + cudnn)
 if [[ "$MODE" == "gpu" ]]; then
-  CUDNN_LIBS="/.venv/lib/python3.10/site-packages/nvidia/cudnn/lib"
+  CUDA_HOME="/usr/local/cuda"
+  CUDA_LIBS="${CUDA_HOME}/lib64:/.venv/lib/python3.10/site-packages/nvidia/cuda_runtime/lib:/.venv/lib/python3.10/site-packages/nvidia/cudnn/lib"
+  # Optional if you ever see cublas missing:
+  # CUDA_LIBS="${CUDA_LIBS}:/.venv/lib/python3.10/site-packages/nvidia/cublas/lib"
 else
-  CUDNN_LIBS=""
+  CUDA_LIBS=""
 fi
 
 # Build LD_LIBRARY_PATH (avoid trailing/duplicate colons)
 LD_PARTS=("$SOL_LIBS")
-if [[ -n "$CUDNN_LIBS" ]]; then
-  LD_PARTS+=("$CUDNN_LIBS")
+if [[ -n "$CUDA_LIBS" ]]; then
+  LD_PARTS+=("$CUDA_LIBS")
 fi
 if [[ -n "${LD_LIBRARY_PATH:-}" ]]; then
   LD_PARTS+=("$LD_LIBRARY_PATH")
@@ -125,6 +128,10 @@ EXTRA_ENV_ARGS=(
   --env="RMW_IMPLEMENTATION=${RMW}"
   --env="CYCLONEDDS_URI=file://${CONT_DDS_CFG_DIR}/cyclonedds.xml"
 )
+
+if [[ "$MODE" == "gpu" ]]; then
+  EXTRA_ENV_ARGS+=( --env="CUDA_HOME=${CUDA_HOME}" )
+fi
 
 docker run -it --rm \
   --name torchvision-app \

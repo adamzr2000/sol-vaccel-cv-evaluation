@@ -45,8 +45,10 @@ RUN python3 -m pip install --upgrade pip "setuptools>=70.0.0" && \
       ultralytics itsdangerous python-dotenv requests \
       pandas tqdm seaborn gitpython && \
     python3 -m pip install --pre \
-      torch torchvision torchaudio \
-      --index-url https://download.pytorch.org/whl/nightly/cu128
+      torch==2.8.0 \
+      torchvision==0.23.0 \
+      torchaudio==2.8.0 \
+      --index-url https://download.pytorch.org/whl/cu128
 
 # vAccel
 RUN wget https://s3.nbfc.io/nbfc-assets/github/vaccel/rev/main/x86_64/release/vaccel_latest_amd64.deb && \

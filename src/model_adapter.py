@@ -570,7 +570,7 @@ class SolAdapter(BaseModelAdapter):
                     print(f"   ⚠️ SOL (Mode 2) Optimization warning: {e}")
             else:
                 if self.device == "cuda":
-                    print("   [SOL] (Mode 2) Skipping GPU optimize for this model (deeplabv3/fcn)")
+                    print("   [SOL] (Mode 2) Skipping GPU optimize for this model (semantic segmentation)")
 
     def preprocess(self, input_path):
         if self.model_type == "video_classification":

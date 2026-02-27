@@ -43,9 +43,6 @@ RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install --pre \
       torch torchvision torchaudio \
       --index-url https://download.pytorch.org/whl/nightly/cu121 && \
-    # Workaround for sol_mobilenet_v3_large \
-    python3 -m pip install --force-reinstall --no-deps \
-      nvidia-cudnn-cu12==9.1.1.17
 
 # RUN python3 -m pip install --pre \
 #       torch==2.11.0.dev20260108+cu128 \

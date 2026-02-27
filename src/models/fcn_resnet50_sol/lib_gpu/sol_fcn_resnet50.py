@@ -122,6 +122,7 @@ def run_example():
 	lib.init() # optional, loads parameters on host
 	lib.set_seed(271828) # optional
 	lib.set_IO(dp_args)
+	
 	lib.optimize(level=2) # optional
 	lib.run() # (async)
 	lib.get_output() # syncs

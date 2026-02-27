@@ -1,0 +1,5 @@
+../libsol-dnn-cudnn-deployment-0.8.0rc6-9.10.2.so
+../libsol-dnn-cublaslt-deployment-0.8.0rc6-12.so
+../libsol-dnn-cublas-deployment-0.8.0rc6-12.so
+../libsol_swin3d_t.so
+libsol_swin3d_t_wrapper.so

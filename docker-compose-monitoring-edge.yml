@@ -20,8 +20,7 @@ services:
       context: ./monitoring/system-stats-collector
       dockerfile: Dockerfile
     privileged: true
-    ports:
-      - "6001:6000"
+    network_mode: "host"
     volumes:
       - /sys/class/powercap:/sys/class/powercap:ro
       - /sys/class/thermal:/sys/class/thermal:ro

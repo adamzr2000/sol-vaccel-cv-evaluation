@@ -9,6 +9,7 @@ Uses the PARENT DIRECTORY NAME as the 'host' identifier.
 Outputs (written under ./_summary):
   - {run_tag}_overall_cpu_stats_{link}.csv
   - {run_tag}_overall_gpu_stats_{link}.csv
+  - {run_tag}_overall_net_stats_{link}.csv
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ import pandas as pd
 
 CPU_METRICS = ["cpu_watts", "cpu_util_percent", "cpu_temp_c"]
 GPU_METRICS = ["power_draw_w", "util_gpu_percent", "util_mem_percent", "mem_used_mb", "temp_c"]
+NET_METRICS = ["net_rx_mb", "net_tx_mb"]
 
 CPU_OUT_FIELDS = [
     "host", "model", "backend", "device",
@@ -45,6 +47,13 @@ GPU_OUT_FIELDS = [
     "gpu_energy_j",
 ]
 
+NET_OUT_FIELDS = [
+    "host", "model", "backend", "device",
+    "net_rx_mbps_mean", "net_rx_mbps_std",
+    "net_tx_mbps_mean", "net_tx_mbps_std",
+    "duration_sec", "num_samples",
+]
+
 
 def fmt(x: Optional[float], decimals: int = 6) -> str:
     return "" if x is None else f"{x:.{decimals}f}"
@@ -62,6 +71,11 @@ def parse_stem_and_folder(path: Path, run_tag: str) -> Optional[Tuple[str, str, 
     Parse metadata from filename, BUT take 'host' from the parent folder name.
     """
     stem = path.stem
+    
+    # NEW: Strip trailing "_net" so parsing logic correctly finds the device/backend
+    if stem.endswith("_net"):
+        stem = stem[:-4]
+        
     needle = f"{run_tag}_"
     if not stem.startswith(needle):
         return None
@@ -183,6 +197,7 @@ def _print_summary_table(csv_path: Path, title: str) -> None:
             "host", "model", "backend", "device",
             "cpu_watts_mean", "cpu_util_percent_mean",
             "power_draw_w_mean", "util_gpu_percent_mean", "gpu_energy_j",
+            "net_rx_mbps_mean", "net_tx_mbps_mean", 
             "duration_sec"
         ]
         cols = [c for c in cols if c in df.columns]
@@ -198,7 +213,6 @@ def _print_summary_table(csv_path: Path, title: str) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(add_help=False)
     ap.add_argument("--run-tag")
-    # NEW: which extra vaccel-remote family to include
     ap.add_argument("--link", choices=["5g", "wifi"], default="5g")
     ap.add_argument("-h", "--help", action="store_true")
     args = ap.parse_args()
@@ -229,13 +243,11 @@ def main() -> None:
     run_tag = args.run_tag.strip()
     link = args.link.strip()
 
-    # 1) ORIGINAL behavior: include run_tag_*
     base_matched = [
         p for p in csv_files
         if "_summary" not in p.parts and p.name.startswith(f"{run_tag}_")
     ]
 
-    # 2) EXTENSION: include ONLY remote in run_tag-{link}_*
     extra_matched = [
         p for p in csv_files
         if "_summary" not in p.parts
@@ -243,7 +255,6 @@ def main() -> None:
         and "remote" in p.stem
     ]
 
-    # Merge + dedup preserving order
     seen = set()
     matched = []
     for p in base_matched + extra_matched:
@@ -258,12 +269,13 @@ def main() -> None:
     out_dir = cwd / "_summary"
     out_dir.mkdir(exist_ok=True)
 
-    # NEW: output naming includes _5g or _wifi
     cpu_out_path = out_dir / f"{run_tag}_overall_cpu_stats_{link}.csv"
     gpu_out_path = out_dir / f"{run_tag}_overall_gpu_stats_{link}.csv"
+    net_out_path = out_dir / f"{run_tag}_overall_net_stats_{link}.csv"
 
     cpu_rows: Dict[Tuple[str, str, str, str], Dict[str, str]] = {}
     gpu_rows: Dict[Tuple[str, str, str, str], Dict[str, str]] = {}
+    net_rows: Dict[Tuple[str, str, str, str], Dict[str, str]] = {}
 
     print(
         f"🔍 Found {len(matched)} files "
@@ -271,9 +283,6 @@ def main() -> None:
     )
 
     for csv_path in matched:
-        # Parse metadata:
-        # - base files: parse with run_tag
-        # - extra files: parse with run_tag-link (e.g. run1-wifi)
         parsed = parse_stem_and_folder(csv_path, run_tag)
         if not parsed:
             parsed = parse_stem_and_folder(csv_path, f"{run_tag}-{link}")
@@ -288,14 +297,12 @@ def main() -> None:
 
         is_cpu = "cpu_watts" in header or "cpu_util_percent" in header
         is_gpu = "power_draw_w" in header or "util_gpu_percent" in header
+        is_net = "net_rx_mb" in header or "net_tx_mb" in header
 
         if is_cpu:
             metrics, duration_sec, n = read_duration_and_metrics(csv_path, CPU_METRICS)
             row: Dict[str, str] = {
-                "host": host,
-                "model": model,
-                "backend": backend,
-                "device": device,
+                "host": host, "model": model, "backend": backend, "device": device,
             }
             for k in CPU_METRICS:
                 mu, sd = mean_std(metrics[k])
@@ -303,21 +310,15 @@ def main() -> None:
                 row[f"{k}_std"] = fmt(sd, 6)
             row["duration_sec"] = fmt(duration_sec, 3)
             row["num_samples"] = str(n)
-
-            key = (host, model, backend, device)
-            cpu_rows[key] = row
+            cpu_rows[(host, model, backend, device)] = row
 
         elif is_gpu:
             metrics, duration_sec, n = read_duration_and_metrics(csv_path, GPU_METRICS)
             gpu_count, gpu_names = read_gpu_id_info(csv_path)
 
             row = {
-                "host": host,
-                "model": model,
-                "backend": backend,
-                "device": device,
-                "gpu_count": str(gpu_count),
-                "gpu_names": gpu_names,
+                "host": host, "model": model, "backend": backend, "device": device,
+                "gpu_count": str(gpu_count), "gpu_names": gpu_names,
             }
             for k in GPU_METRICS:
                 mu, sd = mean_std(metrics[k])
@@ -328,21 +329,31 @@ def main() -> None:
             row["num_samples"] = str(n)
 
             p_mean = None
-            d_sec = duration_sec
             try:
                 if metrics["power_draw_w"]:
                     p_mean = float(np.mean(np.asarray(metrics["power_draw_w"], dtype=float)))
             except Exception:
                 pass
 
-            gpu_energy_j = None
-            if p_mean is not None and d_sec is not None:
-                gpu_energy_j = p_mean * d_sec
-
+            gpu_energy_j = p_mean * duration_sec if p_mean is not None and duration_sec is not None else None
             row["gpu_energy_j"] = fmt(gpu_energy_j, 3)
+            gpu_rows[(host, model, backend, device)] = row
+            
+        elif is_net:
+            metrics, duration_sec, n = read_duration_and_metrics(csv_path, NET_METRICS)
+            row = {
+                "host": host, "model": model, "backend": backend, "device": device,
+            }
+            # Maps "net_rx_mb" to "net_rx_mbps_mean"
+            for k in NET_METRICS:
+                mu, sd = mean_std(metrics[k])
+                out_k = k.replace("_mb", "_mbps")
+                row[f"{out_k}_mean"] = fmt(mu, 6)
+                row[f"{out_k}_std"] = fmt(sd, 6)
 
-            key = (host, model, backend, device)
-            gpu_rows[key] = row
+            row["duration_sec"] = fmt(duration_sec, 3)
+            row["num_samples"] = str(n)
+            net_rows[(host, model, backend, device)] = row
 
     # --- Write CPU ---
     if cpu_rows:
@@ -365,6 +376,17 @@ def main() -> None:
         _print_summary_table(gpu_out_path, "GPU SUMMARY")
     else:
         print("⚠️  No GPU CSVs found/matched.")
+        
+    # --- Write NET ---
+    if net_rows:
+        with net_out_path.open("w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=NET_OUT_FIELDS)
+            writer.writeheader()
+            writer.writerows(net_rows.values())
+        print(f"📄 NET summary written to: {net_out_path} (rows={len(net_rows)})")
+        _print_summary_table(net_out_path, "NET SUMMARY")
+    else:
+        print("⚠️  No NET CSVs found/matched.")
 
     print("✅ Done.")
 

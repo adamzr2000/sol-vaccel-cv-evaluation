@@ -30,10 +30,10 @@ MODEL_TYPE_ORDER = get_model_type_order()
 
 # Define variants dynamically based on configuration
 VARIANTS = [
-    "Robot CPU (torch.compile)",           # Index 0
-    "Robot CPU (SOL)",                    # Index 1
-    "5G Edge CPU (vAccel + SOL)", # Index 2
-    "5G Edge GPU (vAccel + SOL)", # Index 3
+    "Robot CPU (vaccel-local-torch.compile)",           # Index 0
+    "Robot CPU (vaccel-local-sol)",                    # Index 1
+    "Edge CPU (vaccel-remote-sol)", # Index 2
+    "Edge GPU (vaccel-remote-sol)", # Index 3
 ]
 
 
@@ -167,7 +167,9 @@ def _apply_model_filter(rows, allowed_models):
     return kept, dropped
 
 
-def plot_panel(ax, rows, ylabel, variants_present, color_map):
+def plot_panel(ax, rows, ylabel, variants_present, color_map, hatched_variants=None):
+    if hatched_variants is None:
+        hatched_variants = set()
     if not rows:
         ax.axis("off")
         ax.text(0.5, 0.5, "No data", ha="center", va="center", transform=ax.transAxes)
@@ -199,10 +201,13 @@ def plot_panel(ax, rows, ylabel, variants_present, color_map):
         means = np.asarray([mean_map[(m, v)] for m in base_models], dtype=float)
         stds = np.asarray([std_map[(m, v)] for m in base_models], dtype=float)
 
+        hatch_pattern = "///" if v in hatched_variants else None
+
         ax.bar(
             xs, means, width=width,
             color=color_map[v],
             edgecolor=edgecolor, linewidth=linewidth,
+            hatch=hatch_pattern,
             label=v, zorder=3,
         )
 
@@ -224,6 +229,7 @@ def plot_panel(ax, rows, ylabel, variants_present, color_map):
     ax.set_ylim(0, y_lim_top)
     ax.margins(x=0.015)
     style_axes(ax)
+    # Hatched bars indicate robot CPU power when acting as a remote client (overhead only)
     ax.legend(
         title=None,
         loc="upper right",
@@ -278,10 +284,11 @@ def main():
     color_map = {v: pal[i] for i, v in enumerate(VARIANTS)}
 
     # Panels configuration mapping rows to specific variants
+    # Each tuple: (key, ylabel, rows, variants_present, hatched_variants)
     panels = [
-        ("robot_cpu", "Robot CPU power consumption (W)", robot_rows, [VARIANTS[0], VARIANTS[1], VARIANTS[2], VARIANTS[3]]),
-        ("edge_cpu", f"Edge CPU power consumption (W)", edge_cpu_rows, [VARIANTS[2]]),
-        ("edge_gpu", f"Edge GPU power consumption (W)", edge_gpu_rows, [VARIANTS[3]]),
+        ("robot_cpu", "Robot CPU power consumption (W)", robot_rows, [VARIANTS[0], VARIANTS[1], VARIANTS[2], VARIANTS[3]], {VARIANTS[2], VARIANTS[3]}),
+        ("edge_cpu", f"Edge CPU power consumption (W)", edge_cpu_rows, [VARIANTS[2]], set()),
+        ("edge_gpu", f"Edge GPU power consumption (W)", edge_gpu_rows, [VARIANTS[3]], set()),
     ]
 
     if PLOT_MODE not in {"combined", "separate"}:
@@ -292,8 +299,8 @@ def main():
         if not isinstance(axes, (list, np.ndarray)):
             axes = [axes]
 
-        for ax, (_key, ylabel, rows, vars_present) in zip(axes, panels):
-            plot_panel(ax, rows, ylabel, vars_present, color_map)
+        for ax, (_key, ylabel, rows, vars_present, hatched_vars) in zip(axes, panels):
+            plot_panel(ax, rows, ylabel, vars_present, color_map, hatched_variants=hatched_vars)
 
         plt.tight_layout()
         out = f"{OUTPUT_BASENAME}.pdf"
@@ -302,9 +309,9 @@ def main():
         plt.close(fig)
 
     else:
-        for key, ylabel, rows, vars_present in panels:
+        for key, ylabel, rows, vars_present, hatched_vars in panels:
             fig, ax = plt.subplots(1, 1, figsize=FIG_SIZE_SINGLE)
-            plot_panel(ax, rows, ylabel, vars_present, color_map)
+            plot_panel(ax, rows, ylabel, vars_present, color_map, hatched_variants=hatched_vars)
 
             plt.tight_layout()
             out = f"{OUTPUT_BASENAME}_{key}.pdf"

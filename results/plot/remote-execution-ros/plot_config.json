@@ -1,5 +1,5 @@
 {
-    "run_tag": "run2",
+    "run_tag": "finalPerformance",
     "link": "wifi",
     "model_type_order": [
         "resnet50",

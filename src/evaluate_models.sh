@@ -4,10 +4,19 @@ set -euo pipefail
 SCRIPT="model_benchmark.py"
 SLEEP_SEC=10
 BACKEND="stock"
+SELECTED_MODEL="" # Default empty means run all
+
+# Cleanup on exit (Ctrl+C or error)
+trap 'echo -e "\n[bench] Interrupted. Exiting..."; exit 1' SIGINT SIGTERM
+
+if [[ ! -f "${SCRIPT}" ]]; then
+  echo "[err] ${SCRIPT} not found in $(pwd)"
+  exit 1
+fi
 
 usage() {
   cat <<EOF
-Usage: $(basename "$0") --host <edge-asus|edge-xtreme|robot> --device <cpu|gpu> --run-tag <tag> [--backend <stock|ptc|sol|vaccel-local-sol|vaccel-remote-sol>] [--sleep <seconds>]
+Usage: $(basename "$0") --host <edge-asus|edge-xtreme|robot> --device <cpu|gpu> --run-tag <tag> [options]
 
 Required:
   --host     edge-asus|edge-xtreme|robot
@@ -15,13 +24,16 @@ Required:
   --run-tag  run identifier (e.g., run1)
 
 Optional:
-  --backend  stock|ptc|sol|vaccel-local-sol|vaccel-remote-sol (default: ${BACKEND})
+  --backend  stock|ptc|sol|vaccel-local-torch|vaccel-remote-torch\
+             |vaccel-local-ptc|vaccel-remote-ptc\
+             |vaccel-local-sol|vaccel-remote-sol (default: ${BACKEND})
   --sleep    seconds to wait between runs (default: ${SLEEP_SEC})
+  --model    specific model to run (default: all)
 
 Examples:
   $(basename "$0") --host edge-asus   --device gpu --run-tag run1
   $(basename "$0") --host edge-xtreme --device gpu --run-tag run1 --backend vaccel-local-sol
-  $(basename "$0") --host robot       --device cpu --run-tag testA --sleep 2
+  $(basename "$0") --host robot       --device cpu --run-tag testA --sleep 2 --model resnet50
 EOF
 }
 
@@ -37,86 +49,44 @@ NUM_VIDEOS=64
 # ---- Parse args ----
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --host)
-      [[ $# -ge 2 ]] || { echo "[err] --host requires a value"; usage; exit 2; }
-      HOST="$2"
-      shift 2
-      ;;
-    --device)
-      [[ $# -ge 2 ]] || { echo "[err] --device requires a value"; usage; exit 2; }
-      DEVICE="$2"
-      shift 2
-      ;;
-    --run-tag)
-      [[ $# -ge 2 ]] || { echo "[err] --run-tag requires a value"; usage; exit 2; }
-      RUN_TAG="$2"
-      shift 2
-      ;;
-    --backend)
-      [[ $# -ge 2 ]] || { echo "[err] --backend requires a value"; usage; exit 2; }
-      BACKEND="$2"
-      shift 2
-      ;;
-    --sleep)
-      [[ $# -ge 2 ]] || { echo "[err] --sleep requires a value"; usage; exit 2; }
-      SLEEP_SEC="$2"
-      shift 2
-      ;;
-    -h|--help)
-      usage
-      exit 0
-      ;;
-    *)
-      echo "[err] Unknown argument: $1"
-      usage
-      exit 2
-      ;;
+    --host) HOST="$2"; shift 2 ;;
+    --device) DEVICE="$2"; shift 2 ;;
+    --run-tag) RUN_TAG="$2"; shift 2 ;;
+    --backend) BACKEND="$2"; shift 2 ;;
+    --sleep) SLEEP_SEC="$2"; shift 2 ;;
+    --model) SELECTED_MODEL="$2"; shift 2 ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "[err] Unknown argument: $1"; usage; exit 2 ;;
   esac
 done
 
 # ---- Validate required args ----
 if [[ -z "${HOST}" || -z "${DEVICE}" || -z "${RUN_TAG}" ]]; then
   echo "[err] Missing required arguments."
-  usage
-  exit 2
+  usage; exit 2
 fi
 
 if [[ "${HOST}" != "edge-asus" && "${HOST}" != "edge-xtreme" && "${HOST}" != "robot" ]]; then
-  echo "[err] --host must be one of: edge-asus, edge-xtreme, robot (got: ${HOST})"
-  usage
-  exit 2
+  echo "[err] --host must be one of: edge-asus, edge-xtreme, robot (got: ${HOST})"; exit 2
 fi
 
 if [[ "${DEVICE}" != "cpu" && "${DEVICE}" != "gpu" ]]; then
-  echo "[err] --device must be one of: cpu, gpu (got: ${DEVICE})"
-  usage
-  exit 2
+  echo "[err] --device must be one of: cpu, gpu (got: ${DEVICE})"; exit 2
 fi
 
-# ---- Validate backend ----
 case "${BACKEND}" in
-  stock|ptc|sol|vaccel-local-sol|vaccel-remote-sol) ;;
-  *)
-    echo "[err] --backend must be one of: stock, ptc, sol, vaccel-local-sol, vaccel-remote-sol (got: ${BACKEND})"
-    usage
-    exit 2
-    ;;
+  stock|ptc|sol|\
+  vaccel-local-torch|vaccel-remote-torch|\
+  vaccel-local-ptc|vaccel-remote-ptc|\
+  vaccel-local-sol|vaccel-remote-sol) ;;
+  *) echo "[err] invalid backend: ${BACKEND}"; exit 2 ;;
 esac
 
 # ---- Host defaults (IP assignment) ----
 case "${HOST}" in
-  robot)
-    DOCKER_STATS_ENDPOINT="http://192.168.2.2:6000"
-    SYSTEM_STATS_ENDPOINT="http://192.168.2.2:6001"
-    ;;
-  edge-asus)
-    DOCKER_STATS_ENDPOINT="http://10.5.1.20:6000"
-    SYSTEM_STATS_ENDPOINT="http://10.5.1.20:6001"
-    ;;
-  edge-xtreme)
-    DOCKER_STATS_ENDPOINT="http://10.5.1.21:6000"
-    SYSTEM_STATS_ENDPOINT="http://10.5.1.21:6001"
-    ;;
+  robot)       DOCKER_STATS_ENDPOINT="http://192.168.2.2:6000";  SYSTEM_STATS_ENDPOINT="http://192.168.2.2:6001" ;;
+  edge-asus)   DOCKER_STATS_ENDPOINT="http://10.5.1.20:6000"; SYSTEM_STATS_ENDPOINT="http://10.5.1.20:6001" ;;
+  edge-xtreme) DOCKER_STATS_ENDPOINT="http://10.5.1.21:6000"; SYSTEM_STATS_ENDPOINT="http://10.5.1.21:6001" ;;
 esac
 
 echo "[bench] host=${HOST}"
@@ -129,94 +99,56 @@ echo "[bench] backend=${BACKEND}"
 run_one () {
   local model="$1"
 
+  # If a specific model was requested, skip all others
+  if [[ -n "${SELECTED_MODEL}" && "${model}" != "${SELECTED_MODEL}" ]]; then
+    return
+  fi
+
   echo "[bench] run: ${model}"
 
-  # MATCH any edge host (asus/xtreme) for the CPU optimization block
-  if [[ "${HOST}" == edge* && "${DEVICE}" == "cpu" && "${BACKEND}" != "vaccel-remote-sol" ]]; then
-    local threads=10
-    
-    OMP_NUM_THREADS="${threads}" \
-    EXPORT_RESULTS="${EXPORT_RESULTS}" \
-    RESOURCE_MONITORING="${RESOURCE_MONITORING}" \
-    NUM_IMAGES="${NUM_IMAGES}" \
-    NUM_VIDEOS="${NUM_VIDEOS}" \
-    HOST="${HOST}" \
-    DOCKER_STATS_ENDPOINT="${DOCKER_STATS_ENDPOINT}" \
-    SYSTEM_STATS_ENDPOINT="${SYSTEM_STATS_ENDPOINT}" \
-    DEVICE="${DEVICE}" \
-    BACKEND="${BACKEND}" \
-    MODEL="${model}" \
-    RUN_TAG="${RUN_TAG}" \
-    python3 "${SCRIPT}"
+  # Set base environment variables
+  export EXPORT_RESULTS="${EXPORT_RESULTS}" \
+         RESOURCE_MONITORING="${RESOURCE_MONITORING}" \
+         NUM_IMAGES="${NUM_IMAGES}" \
+         NUM_VIDEOS="${NUM_VIDEOS}" \
+         HOST="${HOST}" \
+         DOCKER_STATS_ENDPOINT="${DOCKER_STATS_ENDPOINT}" \
+         SYSTEM_STATS_ENDPOINT="${SYSTEM_STATS_ENDPOINT}" \
+         DEVICE="${DEVICE}" \
+         BACKEND="${BACKEND}" \
+         MODEL="${model}" \
+         RUN_TAG="${RUN_TAG}"
 
-  elif [[ "${HOST}" == "robot" && "${DEVICE}" == "cpu" && "${BACKEND}" != "vaccel-remote-sol" ]]; then
-    EXPORT_RESULTS="${EXPORT_RESULTS}" \
-    RESOURCE_MONITORING="${RESOURCE_MONITORING}" \
-    NUM_IMAGES="${NUM_IMAGES}" \
-    NUM_VIDEOS="${NUM_VIDEOS}" \
-    HOST="${HOST}" \
-    DOCKER_STATS_ENDPOINT="${DOCKER_STATS_ENDPOINT}" \
-    SYSTEM_STATS_ENDPOINT="${SYSTEM_STATS_ENDPOINT}" \
-    DEVICE="${DEVICE}" \
-    BACKEND="${BACKEND}" \
-    MODEL="${model}" \
-    RUN_TAG="${RUN_TAG}" \
-    python3 "${SCRIPT}"
-    
-  elif [[ "${HOST}" == "robot" && "${BACKEND}" == "vaccel-remote-sol" ]]; then
-    EXPORT_RESULTS="${EXPORT_RESULTS}" \
-    RESOURCE_MONITORING="${RESOURCE_MONITORING}" \
-    NUM_IMAGES="${NUM_IMAGES}" \
-    NUM_VIDEOS="${NUM_VIDEOS}" \
-    HOST="${HOST}" \
-    DOCKER_STATS_ENDPOINT="${DOCKER_STATS_ENDPOINT}" \
-    SYSTEM_STATS_ENDPOINT="${SYSTEM_STATS_ENDPOINT}" \
-    DOCKER_STATS_REMOTE_ENDPOINT="http://10.5.1.20:6000" \
-    SYSTEM_STATS_REMOTE_ENDPOINT="http://10.5.1.20:6001" \
-    DEVICE="${DEVICE}" \
-    BACKEND="${BACKEND}" \
-    MODEL="${model}" \
-    RUN_TAG="${RUN_TAG}" \
-    python3 "${SCRIPT}"
-  else
-    EXPORT_RESULTS="${EXPORT_RESULTS}" \
-    RESOURCE_MONITORING="${RESOURCE_MONITORING}" \
-    NUM_IMAGES="${NUM_IMAGES}" \
-    NUM_VIDEOS="${NUM_VIDEOS}" \
-    HOST="${HOST}" \
-    DOCKER_STATS_ENDPOINT="${DOCKER_STATS_ENDPOINT}" \
-    SYSTEM_STATS_ENDPOINT="${SYSTEM_STATS_ENDPOINT}" \
-    DEVICE="${DEVICE}" \
-    BACKEND="${BACKEND}" \
-    MODEL="${model}" \
-    RUN_TAG="${RUN_TAG}" \
-    python3 "${SCRIPT}"
+  # Apply conditional logic
+  if [[ "${HOST}" == edge* && "${BACKEND}" != vaccel-remote-* ]]; then
+    export OMP_NUM_THREADS=12
+  elif [[ "${HOST}" == "robot" && "${BACKEND}" == vaccel-remote-* ]]; then
+    export DOCKER_STATS_REMOTE_ENDPOINT="http://10.5.1.20:6000"
+    export SYSTEM_STATS_REMOTE_ENDPOINT="http://10.5.1.20:6001"
   fi
+
+  python3 -u "${SCRIPT}"
+
+  # Clean up conditional variables to prevent leaking to next runs
+  unset OMP_NUM_THREADS DOCKER_STATS_REMOTE_ENDPOINT SYSTEM_STATS_REMOTE_ENDPOINT
 
   echo "[bench] done: ${model} (sleep ${SLEEP_SEC}s)"
   sleep "${SLEEP_SEC}"
 }
 
-# ---- Image Classification ----
-#run_one "mobilenet_v3_large"
-run_one "resnet50"
-run_one "swin_t"
-run_one "swin_s"
-run_one "swin_v2_b"
+# ---- Model Lists ----
+MODELS=(
+  # Image Classification
+  "resnet50" "swin_t" "swin_s" "swin_v2_b"
+  # Video Classification
+  "swin3d_t" "swin3d_s" "swin3d_b" "mc3_18" "r3d_18" "r2plus1d_18"
+  # Semantic Segmentation
+  "deeplabv3_resnet50" "fcn_resnet50" "deeplabv3_resnet101" "fcn_resnet101"
+)
 
-# ---- Video Classification ----
-run_one "swin3d_t"
-run_one "swin3d_s"
-run_one "swin3d_b"
-run_one "mc3_18"
-run_one "r3d_18"
-run_one "r2plus1d_18"
-
-# ---- Semantic Segmentation ----
-#run_one "deeplabv3_mobilenet_v3_large"
-run_one "deeplabv3_resnet50"
-run_one "fcn_resnet50"
-run_one "deeplabv3_resnet101"
-run_one "fcn_resnet101"
+# Execute
+for m in "${MODELS[@]}"; do
+  run_one "$m"
+done
 
 echo "[bench] all done ✅"

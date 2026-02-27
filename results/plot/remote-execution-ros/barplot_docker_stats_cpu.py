@@ -26,25 +26,25 @@ SHOW_ERROR_BARS = True
 VARIANT_DEFINITIONS = [
     {
         "id": "local_torchcompile_cpu",
-        "label": "Robot CPU (torch.compile)",
+        "label": "Robot CPU (vaccel-local-torch.compile)",
         "show_on_robot": True,
         "show_on_edge": False
     },
     {
         "id": "local_sol_cpu",
-        "label": "Robot CPU (SOL)",
+        "label": "Robot CPU (vaccel-local-sol)",
         "show_on_robot": True,
         "show_on_edge": False
     },
     {
         "id": "remote_sol_edge_cpu",
-        "label": "5G Edge CPU (vAccel + SOL)",
+        "label": "Edge CPU (vaccel-remote-sol)",
         "show_on_robot": True,
         "show_on_edge": True
     },
     {
         "id": "remote_sol_edge_gpu",
-        "label": "5G Edge GPU (vAccel + SOL)",
+        "label": "Edge GPU (vaccel-remote-sol)",
         "show_on_robot": True,
         "show_on_edge": True
     },

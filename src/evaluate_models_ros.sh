@@ -24,7 +24,9 @@ Required:
   --run-tag   run identifier (e.g., run1)
 
 Optional:
-  --backend   stock|ptc|sol|vaccel-local-sol|vaccel-remote-sol (default: ${BACKEND})
+  --backend   stock|ptc|sol|vaccel-local-torch|vaccel-remote-torch\
+              |vaccel-local-ptc|vaccel-remote-ptc\
+              |vaccel-local-sol|vaccel-remote-sol (default: ${BACKEND})
   --sleep     seconds to wait between runs (default: ${SLEEP_SEC})
   --model     specific model to run (default: all)
 
@@ -60,6 +62,15 @@ if [[ -z "${HOST}" || -z "${DEVICE}" || -z "${RUN_TAG}" ]]; then
   usage; exit 2
 fi
 
+# ---- Validate backend ----
+case "${BACKEND}" in
+  stock|ptc|sol|\
+  vaccel-local-torch|vaccel-remote-torch|\
+  vaccel-local-ptc|vaccel-remote-ptc|\
+  vaccel-local-sol|vaccel-remote-sol) ;;
+  *) echo "[err] invalid backend: ${BACKEND}"; exit 2 ;;
+esac
+
 # ---- Host defaults ----
 case "${HOST}" in
   robot) DOCKER_STATS_ENDPOINT="http://192.168.2.2:6000"; SYSTEM_STATS_ENDPOINT="http://192.168.2.2:6001" ;;
@@ -90,9 +101,9 @@ run_one () {
          MODEL="${model}" \
          RUN_TAG="${RUN_TAG}"
 
-  if [[ "${HOST}" == edge* && "${BACKEND}" != "vaccel-remote-sol" ]]; then
+  if [[ "${HOST}" == edge* && "${BACKEND}" != vaccel-remote-* ]]; then
     export OMP_NUM_THREADS=12
-  elif [[ "${HOST}" == "robot" && "${BACKEND}" == "vaccel-remote-sol" ]]; then
+  elif [[ "${HOST}" == "robot" && "${BACKEND}" == vaccel-remote-* ]]; then
     export DOCKER_STATS_REMOTE_ENDPOINT="http://10.5.1.20:6000"
     export SYSTEM_STATS_REMOTE_ENDPOINT="http://10.5.1.20:6001"
   fi

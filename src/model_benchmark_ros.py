@@ -328,16 +328,29 @@ def main():
         docker_csv_dir = str(Path(cfg['docker_csv_base']) / cfg['host'])
         system_csv_dir = str(Path(cfg['system_csv_base']) / cfg['host'])
 
+        # Define network interface mapping
+        host_net_iface_map = {
+            "robot": "ue0",
+            "edge-asus": "enp130s0",
+            "edge-xtreme": "br10"
+        }
+
+        local_sys_mode = [local_mode, "net"]
+        local_net_iface = host_net_iface_map.get(HOST)
+
         start_docker_monitor(run_id, cfg['docker_endpoint'], docker_csv_dir, "torchvision-app", "torchvision-app_")
-        start_system_monitor(run_id, cfg['system_endpoint'], system_csv_dir, local_mode)
+        start_system_monitor(run_id, cfg['system_endpoint'], system_csv_dir, local_sys_mode, local_net_iface)
 
         if is_vaccel_remote_run:
             vaccel_remote_run_id = f"{prefix}_{cfg['core_model_name']}_{cfg['backend']}_edge-asus_{cfg['target_device']}"
             rem_docker_csv_dir = str(Path(cfg['docker_csv_base']) / "edge-asus")
             rem_system_csv_dir = str(Path(cfg['system_csv_base']) / "edge-asus")
 
+            remote_sys_mode = [cfg['target_device'], "net"]
+            remote_net_iface = host_net_iface_map.get("edge-asus")
+
             start_docker_monitor(vaccel_remote_run_id, cfg['remote_docker_endpoint'], rem_docker_csv_dir, "torchvision-app-agent", "torchvision-app-agent_")
-            start_system_monitor(vaccel_remote_run_id, cfg['remote_system_endpoint'], rem_system_csv_dir, cfg['target_device'])
+            start_system_monitor(vaccel_remote_run_id, cfg['remote_system_endpoint'], rem_system_csv_dir, remote_sys_mode, remote_net_iface)
 
         time.sleep(1.2)  # Prime the monitors
 
@@ -625,6 +638,12 @@ def main():
     inference_fps = (1000.0 / avg_inf) if avg_inf > 0 else 0
     system_fps = (1000.0 / avg_sys) if avg_sys > 0 else 0
 
+    system_fps_list = [(1000.0 / t) for t in total_system_latencies_ms if t > 0]
+    inference_fps_list = [(1000.0 / t) for t in inference_latencies_ms if t > 0]
+
+    sys_fps_std = float(np.std(system_fps_list)) if system_fps_list else 0.0
+    inf_fps_std = float(np.std(inference_fps_list)) if inference_fps_list else 0.0
+
     # Effective throughput + observed camera Hz
     processed_fps = float(processed_samples) / wall_duration_sec if wall_duration_sec > 0 else 0.0
     observed_camera_hz = float(np.mean(camera_hz_samples)) if camera_hz_samples else frame_buf.get_observed_hz()
@@ -677,7 +696,9 @@ def main():
             "frames_per_sample": frames_per_sample,
             "fps": {
                 "inference": round(inference_fps, 2),
+                "inference_std": round(inf_fps_std, 2),
                 "system": round(system_fps, 2),
+                "system_std": round(sys_fps_std, 2),
                 "processed": round(processed_fps, 2),
                 "camera_observed": round(observed_camera_hz, 2)
             },

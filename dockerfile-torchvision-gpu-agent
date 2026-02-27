@@ -35,11 +35,10 @@ ENV VENV=/.venv
 RUN python3 -m venv $VENV
 ENV PATH="$VENV/bin:$PATH"
 
-# Workaround for sol_mobilenet_v3_large
-RUN python3 -m pip install --force-reinstall --no-deps \
-    nvidia-cudnn-cu12==9.1.1.17
+# Install required cuDNN and cuBLAS dependencies for SOL rc6 segmentation models
+RUN python3 -m pip install nvidia-cudnn-cu12
 
-ENV LD_LIBRARY_PATH="/.venv/lib/python3.10/site-packages/nvidia/cudnn/lib"
+ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:/.venv/lib/python3.10/site-packages/nvidia/cuda_runtime/lib:/.venv/lib/python3.10/site-packages/nvidia/cudnn/lib"
 
 # vAccel
 RUN wget https://s3.nbfc.io/nbfc-assets/github/vaccel/rev/main/x86_64/release/vaccel_latest_amd64.deb && \

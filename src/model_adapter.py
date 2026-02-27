@@ -606,28 +606,21 @@ class SolAdapter(BaseModelAdapter):
             self.output_buffer = np.zeros((1, 21, 224, 224), dtype=np.float32)
             self.aux_buffer = np.zeros((1, 21, 224, 224), dtype=np.float32)
             self.execution_args = [self.input_buffer, self.output_buffer, self.aux_buffer, self.vdims]
+            # print( [type(x) for x in self.execution_args] )
+
             
 
         # --- 3. PURE SOL MODE SELECTION ---
         print(f"   [SOL] {'GPU' if self.device == 'cuda' else 'CPU'} mode | SOL_RUN_MODE={SOL_RUN_MODE}")
 
-        # Models where we DO NOT want to run GPU set_IO/optimize in mode 2
-        _norm_name = self.model_name.replace("_", "").lower()
-        _skip_mode2_gpu_opt = {
-            "deeplabv3resnet50",
-            "fcnresnet50",
-            "deeplabv3mobilenetv3large",
-            "deeplabv3resnet101",
-            "fcnresnet101"
-        }
-
-        _skip_mode2_gpu_opt = {}
-
-        can_gpu_optimize = (self.device == "cuda") and (_norm_name not in _skip_mode2_gpu_opt)
-
         if SOL_RUN_MODE == "3":
             # Option 3: bind buffers once; optimize only on GPU
             try:
+                if self.device == "cuda" and self.model_type == "segmentation":
+                    print("   [SOL] Running primer inference to lock memory for segmentation model...")
+                    self.model(self.execution_args[0])
+
+                # Bind the explicit buffers
                 if hasattr(self.model, "set_IO"):
                     self.model.set_IO(self.execution_args)
 
@@ -642,18 +635,21 @@ class SolAdapter(BaseModelAdapter):
             # Option 2: explicit buffers each call
             print("   [SOL] Option 2 selected: using run(*args) each call")
 
-            if can_gpu_optimize:
+            if self.device == "cuda":
                 try:
-                    if hasattr(self.model, "set_IO"):
-                        self.model.set_IO(self.execution_args)
+                    if self.model_type == "segmentation":
+                        print("   [SOL] Running primer inference to lock memory for segmentation model...")
+                        self.model(self.execution_args[0])
+                    else:
+                        # For non-segmentation models, set I/O before optimization
+                        if hasattr(self.model, "set_IO"):
+                            self.model.set_IO(self.execution_args)
+
                     if hasattr(self.model, "optimize"):
                         print("   [SOL] (Mode 2) Running GPU Optimization (Level 2)...")
                         self.model.optimize(2)
                 except Exception as e:
                     print(f"   ⚠️ SOL (Mode 2) Optimization warning: {e}")
-            else:
-                if self.device == "cuda":
-                    print("   [SOL] (Mode 2) Skipping GPU optimize for this model (semantic segmentation)")
 
     def preprocess(self, input_path):
         if self.model_type == "video_classification":

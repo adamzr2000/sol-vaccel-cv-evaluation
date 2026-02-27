@@ -1,0 +1,5 @@
+../libsol-dnn-mkl-deployment-0.8.0rc6-2025.3.1.so
+../libsol-dnn-dnnl-deployment-0.8.0rc6-3.7.1.so
+../libsol-dnn-aoclblas-deployment-0.8.0rc6-5.0.0.so
+../libsol_swin3d_b.so
+libsol_swin3d_b_wrapper.so

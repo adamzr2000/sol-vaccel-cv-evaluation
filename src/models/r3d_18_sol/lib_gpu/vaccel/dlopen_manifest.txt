@@ -1,0 +1,4 @@
+../libsol-dnn-cudnn-deployment-0.8.0rc6-9.10.2.so
+../libsol-dnn-cublaslt-deployment-0.8.0rc6-12.so
+../libsol_r3d_18.so
+libsol_r3d_18_wrapper.so

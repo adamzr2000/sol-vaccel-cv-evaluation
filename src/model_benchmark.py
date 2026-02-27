@@ -6,6 +6,7 @@ import json
 import torch
 import logging
 import warnings
+import numpy as np
 from pathlib import Path
 
 from model_adapter import get_model_adapter
@@ -149,16 +150,18 @@ def main():
         system_csv_dir = str(Path(config['system_csv_base']) / config['host'])
 
         start_docker_monitor(run_id, config['docker_endpoint'], docker_csv_dir, "torchvision-app", "torchvision-app_")
-        start_system_monitor(run_id, config['system_endpoint'], system_csv_dir, local_mode)
+        start_system_monitor(run_id, config['system_endpoint'], system_csv_dir, [local_mode])
 
         if is_vaccel_remote_run:
             vaccel_remote_run_id = f"{prefix}_{config['core_model_name']}_{config['backend']}_edge-asus_{config['target_device']}"
             rem_docker_csv_dir = str(Path(config['docker_csv_base']) / "edge-asus")
             rem_system_csv_dir = str(Path(config['system_csv_base']) / "edge-asus")
 
-            start_docker_monitor(vaccel_remote_run_id, config['remote_docker_endpoint'], rem_docker_csv_dir, "torchvision-app-agent", "torchvision-app-agent_")
-            start_system_monitor(vaccel_remote_run_id, config['remote_system_endpoint'], rem_system_csv_dir, config['target_device'])
+            remote_mode = "gpu" if config['target_device'].lower() in ["cuda", "gpu"] else "cpu"
 
+            start_docker_monitor(vaccel_remote_run_id, config['remote_docker_endpoint'], rem_docker_csv_dir, "torchvision-app-agent", "torchvision-app-agent_")
+            start_system_monitor(vaccel_remote_run_id, config['remote_system_endpoint'], rem_system_csv_dir, [remote_mode])
+        
         time.sleep(1.2)  # Prime the monitors
 
     # Capture Start Time
@@ -296,8 +299,14 @@ def main():
     stats_confidence = calculate_stats(confidence_scores_list)
 
     avg_inf, avg_sys = stats_inference["mean"], stats_system["mean"]
-    inference_fps = (1000.0 / avg_inf) * frames_per_sample if avg_inf > 0 else 0
-    system_fps = (1000.0 / avg_sys) * frames_per_sample if avg_sys > 0 else 0
+    inference_fps = (1000.0 / avg_inf) if avg_inf > 0 else 0
+    system_fps = (1000.0 / avg_sys) if avg_sys > 0 else 0
+
+    system_fps_list = [(1000.0 / t) for t in total_system_latencies_ms if t > 0]
+    inference_fps_list = [(1000.0 / t) for t in inference_latencies_ms if t > 0]
+
+    sys_fps_std = float(np.std(system_fps_list)) if system_fps_list else 0.0
+    inf_fps_std = float(np.std(inference_fps_list)) if inference_fps_list else 0.0
 
     print(f"\n📊 BENCHMARK SUMMARY ({config['core_model_name']})")
     print(f"   ---------------------------------------------")
@@ -327,7 +336,12 @@ def main():
                 "duration_sec": (t_stop_dt - t_start_dt).total_seconds()
             },
             "frames_per_sample": frames_per_sample,
-            "fps": {"inference": round(inference_fps, 2), "system": round(system_fps, 2)},
+            "fps": {
+                "inference": round(inference_fps, 2),
+                "inference_std": round(inf_fps_std, 2),
+                "system": round(system_fps, 2),
+                "system_std": round(sys_fps_std, 2)
+            },
             "preprocessing_ms": stats_preprocessing,
             "inference_ms": stats_inference,
             "postprocessing_ms": stats_postprocessing,

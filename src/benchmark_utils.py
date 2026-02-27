@@ -350,15 +350,32 @@ def stop_docker_monitor(endpoint):
     except Exception as e:
         print(f"   ⚠️ Could not stop Docker Monitor: {e}")
 
-def start_system_monitor(run_id, endpoint, csv_dir, mode):
+def start_system_monitor(run_id, endpoint, csv_dir, mode, net_interface=None):
+    if isinstance(mode, str):
+        mode = [mode]
+
     url = f"{endpoint}/monitor/start"
+    
+    # 1. Keep exact run_id for cpu/gpu, but append "_net" strictly for the network file
+    csv_names_dict = {}
+    for m in mode:
+        if m == "net":
+            csv_names_dict[m] = f"{run_id}_net.csv"
+        else:
+            csv_names_dict[m] = f"{run_id}.csv"
+    
     payload = {
         "interval": 1.0,
         "csv_dir": csv_dir,
         "mode": mode,
         "stdout": False,
-        "csv_names": { f"{mode}": f"{run_id}" }
+        "csv_names": csv_names_dict
     }
+
+    # Only inject the net_interface key if an argument was actually passed
+    if net_interface is not None:
+        payload["net_interface"] = net_interface
+
     try:
         print(f"   📡 Starting System Monitor: {url} (Mode: {mode})")
         resp = requests.post(url, json=payload, timeout=5)

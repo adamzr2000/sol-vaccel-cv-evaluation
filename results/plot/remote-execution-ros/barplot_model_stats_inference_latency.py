@@ -27,21 +27,21 @@ MODEL_TYPE_ORDER = get_model_type_order()
 # --- VARIANT CONFIGURATION ---
 VARIANT_DEFINITIONS = [
     {
-        "label": "Robot CPU (torch.compile)",
+        "label": "Robot CPU (vaccel-local-torch.compile)",
         "match": {"host": "robot", "backend": "ptc", "device": "cpu"},
     },
     {
-        "label": "Robot CPU (SOL)",
+        "label": "Robot CPU (vaccel-local-sol)",
         "match": {"host": "robot", "backend": "sol", "device": "cpu"},
     },
     {
-        "label": "5G Edge CPU (vAccel + SOL)",
+        "label": "Edge CPU (vaccel-remote-sol)",
         "match": {"host": "robot"},
         "backend_contains": "remote",
         "run_id_contains": ["target-cpu"],
     },
     {
-        "label": "5G Edge GPU (vAccel + SOL)",
+        "label": "Edge GPU (vaccel-remote-sol)",
         "match": {"host": "robot"},
         "backend_contains": "remote",
         "run_id_contains": ["target-gpu"],

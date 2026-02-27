@@ -1,0 +1,3 @@
+../libsol-dnn-cudnn-deployment-0.8.0rc6-9.10.2.so
+../libsol_lraspp_mobilenet_v3_large.so
+libsol_lraspp_mobilenet_v3_large_wrapper.so

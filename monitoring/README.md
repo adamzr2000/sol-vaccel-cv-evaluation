@@ -195,7 +195,7 @@ curl -X POST localhost:6001/monitor/start \
     "interval": 1.0,
     "csv_dir": null,
     "stdout": true,
-    "mode": "both"
+    "mode": ["cpu", "gpu", "net"]
   }' | jq
 ```
 
@@ -206,10 +206,12 @@ curl -X POST localhost:6001/monitor/start \
   -d '{
     "interval": 1.0,
     "csv_dir": "/results/experiments/system-stats",
-    "mode": "both",
+    "mode": ["cpu", "gpu", "net"],
+    "net_interface": "lo",
     "csv_names": {
       "cpu": "run1_benchmark_cpu.csv",
-      "gpu": "run1_benchmark_gpu.csv"
+      "gpu": "run1_benchmark_gpu.csv",
+      "net": "run1_benchmark_net.csv"
     },
     "stdout": false
   }' | jq

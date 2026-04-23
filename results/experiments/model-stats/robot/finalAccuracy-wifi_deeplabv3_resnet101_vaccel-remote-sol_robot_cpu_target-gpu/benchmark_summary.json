@@ -1,0 +1,86 @@
+{
+    "run_id": "finalAccuracy-wifi_deeplabv3_resnet101_vaccel-remote-sol_robot_cpu_target-gpu",
+    "backend": "vaccel-remote-sol",
+    "host": "robot",
+    "model": "deeplabv3_resnet101",
+    "model_type": "semantic_segmentation",
+    "device": "gpu",
+    "num_samples": 512,
+    "time_window": {
+        "start": "2026-02-28T00:18:18.866691+00:00",
+        "stop": "2026-02-28T00:19:59.255844+00:00",
+        "duration_sec": 100.389153
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 5.91,
+        "inference_std": 0.23,
+        "system": 5.35,
+        "system_std": 0.2
+    },
+    "accuracy": {
+        "metric": "mIoU",
+        "score": 0.4539
+    },
+    "preprocessing_ms": {
+        "mean": 7.3057,
+        "std": 1.1952,
+        "min": 3.1346,
+        "max": 15.8633,
+        "p25": 6.6032,
+        "p50": 7.4069,
+        "p75": 7.9667,
+        "p90": 8.6276,
+        "p95": 9.0563,
+        "p99": 9.8873
+    },
+    "inference_ms": {
+        "mean": 169.1716,
+        "std": 6.8158,
+        "min": 155.3311,
+        "max": 204.1395,
+        "p25": 164.0928,
+        "p50": 167.8641,
+        "p75": 174.5925,
+        "p90": 177.9756,
+        "p95": 180.2346,
+        "p99": 184.6065
+    },
+    "postprocessing_ms": {
+        "mean": 10.2692,
+        "std": 1.3173,
+        "min": 7.9913,
+        "max": 17.6788,
+        "p25": 9.7796,
+        "p50": 10.035,
+        "p75": 10.3215,
+        "p90": 10.5358,
+        "p95": 10.8002,
+        "p99": 17.278
+    },
+    "system_ms": {
+        "mean": 186.7612,
+        "std": 7.1333,
+        "min": 171.0449,
+        "max": 229.491,
+        "p25": 181.3135,
+        "p50": 185.6691,
+        "p75": 191.8932,
+        "p90": 195.4021,
+        "p95": 198.0034,
+        "p99": 205.6761
+    },
+    "confidence_score": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+    },
+    "sol_run_mode": 2
+}

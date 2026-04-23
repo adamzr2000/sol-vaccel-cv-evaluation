@@ -1,0 +1,86 @@
+{
+    "run_id": "finalOverheadv2_fcn_resnet101_sol_edge-asus_cpu",
+    "backend": "sol",
+    "host": "edge-asus",
+    "model": "fcn_resnet101",
+    "model_type": "semantic_segmentation",
+    "device": "cpu",
+    "num_samples": 512,
+    "time_window": {
+        "start": "2026-03-01T00:52:17.158238+00:00",
+        "stop": "2026-03-01T00:53:15.596845+00:00",
+        "duration_sec": 58.438607
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 9.69,
+        "inference_std": 0.2,
+        "system": 9.09,
+        "system_std": 0.18
+    },
+    "accuracy": {
+        "metric": "mIoU",
+        "score": 0.4448
+    },
+    "preprocessing_ms": {
+        "mean": 2.5794,
+        "std": 0.7041,
+        "min": 1.048,
+        "max": 5.4764,
+        "p25": 2.1477,
+        "p50": 2.5048,
+        "p75": 2.8624,
+        "p90": 3.3242,
+        "p95": 4.1046,
+        "p99": 4.9091
+    },
+    "inference_ms": {
+        "mean": 103.1808,
+        "std": 2.1094,
+        "min": 96.1661,
+        "max": 114.8259,
+        "p25": 101.6855,
+        "p50": 103.089,
+        "p75": 104.6256,
+        "p90": 105.8171,
+        "p95": 106.35,
+        "p99": 108.183
+    },
+    "postprocessing_ms": {
+        "mean": 4.265,
+        "std": 0.2688,
+        "min": 3.8674,
+        "max": 6.8355,
+        "p25": 4.1324,
+        "p50": 4.2377,
+        "p75": 4.3438,
+        "p90": 4.4674,
+        "p95": 4.5275,
+        "p99": 5.4315
+    },
+    "system_ms": {
+        "mean": 110.0308,
+        "std": 2.2147,
+        "min": 102.8906,
+        "max": 122.4701,
+        "p25": 108.479,
+        "p50": 109.9265,
+        "p75": 111.47,
+        "p90": 112.6209,
+        "p95": 113.4506,
+        "p99": 115.001
+    },
+    "confidence_score": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+    },
+    "sol_run_mode": 2
+}

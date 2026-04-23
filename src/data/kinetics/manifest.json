@@ -1,0 +1,395 @@
+{
+  "dataset": "nateraw/kinetics",
+  "num_videos_requested": 64,
+  "seed": 1234,
+  "generated_at_utc": "2026-02-27T12:34:11.983670Z",
+  "videos": [
+    {
+      "id": 1,
+      "file_name": "kinetics_val_0001_label_292.mp4",
+      "ground_truth_id": 292,
+      "ground_truth_label": "shaving_head"
+    },
+    {
+      "id": 2,
+      "file_name": "kinetics_val_0002_label_11.mp4",
+      "ground_truth_id": 11,
+      "ground_truth_label": "baking_cookies"
+    },
+    {
+      "id": 3,
+      "file_name": "kinetics_val_0003_label_254.mp4",
+      "ground_truth_id": 254,
+      "ground_truth_label": "presenting_weather_forecast"
+    },
+    {
+      "id": 4,
+      "file_name": "kinetics_val_0004_label_260.mp4",
+      "ground_truth_id": 260,
+      "ground_truth_label": "push_up"
+    },
+    {
+      "id": 5,
+      "file_name": "kinetics_val_0005_label_124.mp4",
+      "ground_truth_id": 124,
+      "ground_truth_label": "feeding_fish"
+    },
+    {
+      "id": 6,
+      "file_name": "kinetics_val_0006_label_240.mp4",
+      "ground_truth_id": 240,
+      "ground_truth_label": "playing_paintball"
+    },
+    {
+      "id": 7,
+      "file_name": "kinetics_val_0007_label_90.mp4",
+      "ground_truth_id": 90,
+      "ground_truth_label": "digging"
+    },
+    {
+      "id": 8,
+      "file_name": "kinetics_val_0008_label_4.mp4",
+      "ground_truth_id": 4,
+      "ground_truth_label": "applying_cream"
+    },
+    {
+      "id": 9,
+      "file_name": "kinetics_val_0009_label_155.mp4",
+      "ground_truth_id": 155,
+      "ground_truth_label": "holding_snake"
+    },
+    {
+      "id": 10,
+      "file_name": "kinetics_val_0010_label_132.mp4",
+      "ground_truth_id": 132,
+      "ground_truth_label": "folding_napkins"
+    },
+    {
+      "id": 11,
+      "file_name": "kinetics_val_0011_label_81.mp4",
+      "ground_truth_id": 81,
+      "ground_truth_label": "cutting_nails"
+    },
+    {
+      "id": 12,
+      "file_name": "kinetics_val_0012_label_161.mp4",
+      "ground_truth_id": 161,
+      "ground_truth_label": "hurling_sport"
+    },
+    {
+      "id": 13,
+      "file_name": "kinetics_val_0013_label_36.mp4",
+      "ground_truth_id": 36,
+      "ground_truth_label": "brushing_hair"
+    },
+    {
+      "id": 14,
+      "file_name": "kinetics_val_0014_label_227.mp4",
+      "ground_truth_id": 227,
+      "ground_truth_label": "playing_cricket"
+    },
+    {
+      "id": 15,
+      "file_name": "kinetics_val_0015_label_353.mp4",
+      "ground_truth_id": 353,
+      "ground_truth_label": "tasting_food"
+    },
+    {
+      "id": 16,
+      "file_name": "kinetics_val_0016_label_246.mp4",
+      "ground_truth_id": 246,
+      "ground_truth_label": "playing_tennis"
+    },
+    {
+      "id": 17,
+      "file_name": "kinetics_val_0017_label_302.mp4",
+      "ground_truth_id": 302,
+      "ground_truth_label": "side_kick"
+    },
+    {
+      "id": 18,
+      "file_name": "kinetics_val_0018_label_246.mp4",
+      "ground_truth_id": 246,
+      "ground_truth_label": "playing_tennis"
+    },
+    {
+      "id": 19,
+      "file_name": "kinetics_val_0019_label_336.mp4",
+      "ground_truth_id": 336,
+      "ground_truth_label": "surfing_crowd"
+    },
+    {
+      "id": 20,
+      "file_name": "kinetics_val_0020_label_341.mp4",
+      "ground_truth_id": 341,
+      "ground_truth_label": "swimming_butterfly_stroke"
+    },
+    {
+      "id": 21,
+      "file_name": "kinetics_val_0021_label_195.mp4",
+      "ground_truth_id": 195,
+      "ground_truth_label": "massaging_legs"
+    },
+    {
+      "id": 22,
+      "file_name": "kinetics_val_0022_label_250.mp4",
+      "ground_truth_id": 250,
+      "ground_truth_label": "playing_violin"
+    },
+    {
+      "id": 23,
+      "file_name": "kinetics_val_0023_label_199.mp4",
+      "ground_truth_id": 199,
+      "ground_truth_label": "motorcycling"
+    },
+    {
+      "id": 24,
+      "file_name": "kinetics_val_0024_label_58.mp4",
+      "ground_truth_id": 58,
+      "ground_truth_label": "clay_pottery_making"
+    },
+    {
+      "id": 25,
+      "file_name": "kinetics_val_0025_label_27.mp4",
+      "ground_truth_id": 27,
+      "ground_truth_label": "blowing_out_candles"
+    },
+    {
+      "id": 26,
+      "file_name": "kinetics_val_0026_label_310.mp4",
+      "ground_truth_id": 310,
+      "ground_truth_label": "skiing_slalom"
+    },
+    {
+      "id": 27,
+      "file_name": "kinetics_val_0027_label_233.mp4",
+      "ground_truth_id": 233,
+      "ground_truth_label": "playing_harmonica"
+    },
+    {
+      "id": 28,
+      "file_name": "kinetics_val_0028_label_43.mp4",
+      "ground_truth_id": 43,
+      "ground_truth_label": "capoeira"
+    },
+    {
+      "id": 29,
+      "file_name": "kinetics_val_0029_label_72.mp4",
+      "ground_truth_id": 72,
+      "ground_truth_label": "cooking_on_campfire"
+    },
+    {
+      "id": 30,
+      "file_name": "kinetics_val_0030_label_86.mp4",
+      "ground_truth_id": 86,
+      "ground_truth_label": "dancing_gangnam_style"
+    },
+    {
+      "id": 31,
+      "file_name": "kinetics_val_0031_label_50.mp4",
+      "ground_truth_id": 50,
+      "ground_truth_label": "catching_or_throwing_softball"
+    },
+    {
+      "id": 32,
+      "file_name": "kinetics_val_0032_label_160.mp4",
+      "ground_truth_id": 160,
+      "ground_truth_label": "hurdling"
+    },
+    {
+      "id": 33,
+      "file_name": "kinetics_val_0033_label_395.mp4",
+      "ground_truth_id": 395,
+      "ground_truth_label": "wrestling"
+    },
+    {
+      "id": 34,
+      "file_name": "kinetics_val_0034_label_2.mp4",
+      "ground_truth_id": 2,
+      "ground_truth_label": "answering_questions"
+    },
+    {
+      "id": 35,
+      "file_name": "kinetics_val_0035_label_271.mp4",
+      "ground_truth_id": 271,
+      "ground_truth_label": "riding_mountain_bike"
+    },
+    {
+      "id": 36,
+      "file_name": "kinetics_val_0036_label_139.mp4",
+      "ground_truth_id": 139,
+      "ground_truth_label": "getting_a_tattoo"
+    },
+    {
+      "id": 37,
+      "file_name": "kinetics_val_0037_label_172.mp4",
+      "ground_truth_id": 172,
+      "ground_truth_label": "jumping_into_pool"
+    },
+    {
+      "id": 38,
+      "file_name": "kinetics_val_0038_label_97.mp4",
+      "ground_truth_id": 97,
+      "ground_truth_label": "doing_nails"
+    },
+    {
+      "id": 39,
+      "file_name": "kinetics_val_0039_label_97.mp4",
+      "ground_truth_id": 97,
+      "ground_truth_label": "doing_nails"
+    },
+    {
+      "id": 40,
+      "file_name": "kinetics_val_0040_label_238.mp4",
+      "ground_truth_id": 238,
+      "ground_truth_label": "playing_monopoly"
+    },
+    {
+      "id": 41,
+      "file_name": "kinetics_val_0041_label_317.mp4",
+      "ground_truth_id": 317,
+      "ground_truth_label": "smoking_hookah"
+    },
+    {
+      "id": 42,
+      "file_name": "kinetics_val_0042_label_326.mp4",
+      "ground_truth_id": 326,
+      "ground_truth_label": "spinning_poi"
+    },
+    {
+      "id": 43,
+      "file_name": "kinetics_val_0043_label_367.mp4",
+      "ground_truth_id": 367,
+      "ground_truth_label": "triple_jump"
+    },
+    {
+      "id": 44,
+      "file_name": "kinetics_val_0044_label_128.mp4",
+      "ground_truth_id": 128,
+      "ground_truth_label": "fixing_hair"
+    },
+    {
+      "id": 45,
+      "file_name": "kinetics_val_0045_label_103.mp4",
+      "ground_truth_id": 103,
+      "ground_truth_label": "driving_car"
+    },
+    {
+      "id": 46,
+      "file_name": "kinetics_val_0046_label_82.mp4",
+      "ground_truth_id": 82,
+      "ground_truth_label": "cutting_pineapple"
+    },
+    {
+      "id": 47,
+      "file_name": "kinetics_val_0047_label_217.mp4",
+      "ground_truth_id": 217,
+      "ground_truth_label": "playing_accordion"
+    },
+    {
+      "id": 48,
+      "file_name": "kinetics_val_0048_label_114.mp4",
+      "ground_truth_id": 114,
+      "ground_truth_label": "eating_hotdog"
+    },
+    {
+      "id": 49,
+      "file_name": "kinetics_val_0049_label_66.mp4",
+      "ground_truth_id": 66,
+      "ground_truth_label": "climbing_a_rope"
+    },
+    {
+      "id": 50,
+      "file_name": "kinetics_val_0050_label_301.mp4",
+      "ground_truth_id": 301,
+      "ground_truth_label": "shuffling_cards"
+    },
+    {
+      "id": 51,
+      "file_name": "kinetics_val_0051_label_48.mp4",
+      "ground_truth_id": 48,
+      "ground_truth_label": "catching_or_throwing_baseball"
+    },
+    {
+      "id": 52,
+      "file_name": "kinetics_val_0052_label_7.mp4",
+      "ground_truth_id": 7,
+      "ground_truth_label": "arranging_flowers"
+    },
+    {
+      "id": 53,
+      "file_name": "kinetics_val_0053_label_331.mp4",
+      "ground_truth_id": 331,
+      "ground_truth_label": "sticking_tongue_out"
+    },
+    {
+      "id": 54,
+      "file_name": "kinetics_val_0054_label_365.mp4",
+      "ground_truth_id": 365,
+      "ground_truth_label": "trimming_or_shaving_beard"
+    },
+    {
+      "id": 55,
+      "file_name": "kinetics_val_0055_label_253.mp4",
+      "ground_truth_id": 253,
+      "ground_truth_label": "pole_vault"
+    },
+    {
+      "id": 56,
+      "file_name": "kinetics_val_0056_label_58.mp4",
+      "ground_truth_id": 58,
+      "ground_truth_label": "clay_pottery_making"
+    },
+    {
+      "id": 57,
+      "file_name": "kinetics_val_0057_label_325.mp4",
+      "ground_truth_id": 325,
+      "ground_truth_label": "somersaulting"
+    },
+    {
+      "id": 58,
+      "file_name": "kinetics_val_0058_label_121.mp4",
+      "ground_truth_id": 121,
+      "ground_truth_label": "extinguishing_fire"
+    },
+    {
+      "id": 59,
+      "file_name": "kinetics_val_0059_label_103.mp4",
+      "ground_truth_id": 103,
+      "ground_truth_label": "driving_car"
+    },
+    {
+      "id": 60,
+      "file_name": "kinetics_val_0060_label_130.mp4",
+      "ground_truth_id": 130,
+      "ground_truth_label": "flying_kite"
+    },
+    {
+      "id": 61,
+      "file_name": "kinetics_val_0061_label_337.mp4",
+      "ground_truth_id": 337,
+      "ground_truth_label": "surfing_water"
+    },
+    {
+      "id": 62,
+      "file_name": "kinetics_val_0062_label_225.mp4",
+      "ground_truth_id": 225,
+      "ground_truth_label": "playing_clarinet"
+    },
+    {
+      "id": 63,
+      "file_name": "kinetics_val_0063_label_220.mp4",
+      "ground_truth_id": 220,
+      "ground_truth_label": "playing_basketball"
+    },
+    {
+      "id": 64,
+      "file_name": "kinetics_val_0064_label_66.mp4",
+      "ground_truth_id": 66,
+      "ground_truth_label": "climbing_a_rope"
+    }
+  ],
+  "download_summary": {
+    "downloaded": 64
+  }
+}

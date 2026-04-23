@@ -1,0 +1,86 @@
+{
+    "run_id": "finalOverheadv2_fcn_resnet101_sol_edge-asus_gpu",
+    "backend": "sol",
+    "host": "edge-asus",
+    "model": "fcn_resnet101",
+    "model_type": "semantic_segmentation",
+    "device": "gpu",
+    "num_samples": 512,
+    "time_window": {
+        "start": "2026-03-01T01:27:35.910617+00:00",
+        "stop": "2026-03-01T01:27:44.656065+00:00",
+        "duration_sec": 8.745448
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 138.85,
+        "inference_std": 4.18,
+        "system": 74.81,
+        "system_std": 2.7
+    },
+    "accuracy": {
+        "metric": "mIoU",
+        "score": 0.4448
+    },
+    "preprocessing_ms": {
+        "mean": 2.0458,
+        "std": 0.4169,
+        "min": 0.682,
+        "max": 3.691,
+        "p25": 1.7481,
+        "p50": 2.0263,
+        "p75": 2.2996,
+        "p90": 2.5719,
+        "p95": 2.71,
+        "p99": 3.1227
+    },
+    "inference_ms": {
+        "mean": 7.2018,
+        "std": 0.2328,
+        "min": 6.6597,
+        "max": 10.0295,
+        "p25": 7.0848,
+        "p50": 7.2006,
+        "p75": 7.3122,
+        "p90": 7.4622,
+        "p95": 7.5452,
+        "p99": 7.6903
+    },
+    "postprocessing_ms": {
+        "mean": 4.0969,
+        "std": 0.1225,
+        "min": 3.8107,
+        "max": 4.5427,
+        "p25": 4.0172,
+        "p50": 4.0898,
+        "p75": 4.1633,
+        "p90": 4.2614,
+        "p95": 4.3164,
+        "p99": 4.4499
+    },
+    "system_ms": {
+        "mean": 13.368,
+        "std": 0.4889,
+        "min": 12.1039,
+        "max": 16.0335,
+        "p25": 13.05,
+        "p50": 13.3475,
+        "p75": 13.6834,
+        "p90": 13.9779,
+        "p95": 14.1725,
+        "p99": 14.6282
+    },
+    "confidence_score": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+    },
+    "sol_run_mode": 2
+}

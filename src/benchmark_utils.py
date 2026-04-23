@@ -6,7 +6,7 @@ import torch
 from pathlib import Path
 from datetime import datetime, timezone
 import requests
-
+import json
 # ==========================================
 # CONFIGURATION PARSER
 # ==========================================
@@ -440,3 +440,54 @@ def stabilize_torch_compile(
         _ = adapter.postprocess(y)
 
     print("   ✅ torch.compile stabilized.")
+
+
+def load_ground_truth(model_type):
+    """Loads the relevant manifest based on model type."""
+    paths = {
+        "image_classification": ("data/imagenet/manifest.json", "images"),
+        "video_classification": ("data/kinetics/manifest.json", "videos"),
+        "semantic_segmentation": ("data/coco_segmentation/manifest.json", "data"),
+        "object_detection": ("data/coco_detection/manifest.json", "data")
+    }
+    
+    if model_type not in paths: 
+        return None
+        
+    path_str, data_key = paths[model_type]
+    path = Path(path_str)
+    
+    if path.exists():
+        with open(path, 'r') as f:
+            return json.load(f)[data_key]
+    return None
+
+def process_segmentation(result, img_out_dir, stem_name, i, export_images, colors, analyze_fn):
+    """Parses segmentation output and optionally saves a colorized mask."""
+    # Squeeze is often needed depending on how the adapter outputs the mask (e.g., [1, H, W] -> [H, W])
+    mask_idx = result.squeeze().detach().cpu().numpy().astype(np.uint8) 
+    detected_info = analyze_fn(mask_idx)
+
+    if export_images:
+        mask_colored = colors[mask_idx]
+        mask_bgr = cv2.cvtColor(mask_colored, cv2.COLOR_RGB2BGR)
+        cv2.imwrite(str(img_out_dir / f"{i:04d}_pred_{stem_name}.png"), mask_bgr)
+
+    # We now return the numpy mask so the main loop can use it for IoU
+    return mask_idx, 0.0, detected_info
+
+def calculate_iou(pred_mask, gt_mask, num_classes=21):
+    """Calculates Intersection over Union for a single image."""
+    ious = []
+    for cls in range(num_classes):
+        pred_inds = (pred_mask == cls)
+        target_inds = (gt_mask == cls)
+        
+        intersection = np.logical_and(pred_inds, target_inds).sum()
+        union = np.logical_or(pred_inds, target_inds).sum()
+        
+        if union == 0:
+            ious.append(float('nan'))  # Class not present
+        else:
+            ious.append(intersection / union)
+    return np.nanmean(ious)

@@ -1,0 +1,4104 @@
+{
+  "dataset": "COCO 2017 Validation (VOC Classes Subset)",
+  "num_images": 512,
+  "seed": 1234,
+  "generated_at_utc": "2026-02-27T12:53:46.696171Z",
+  "data": [
+    {
+      "id": 1,
+      "original_coco_id": 570756,
+      "file_name": "coco_seg_val_0001.jpg",
+      "mask_name": "coco_seg_val_0001_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 2,
+      "original_coco_id": 458663,
+      "file_name": "coco_seg_val_0002.jpg",
+      "mask_name": "coco_seg_val_0002_mask.png",
+      "width": 640,
+      "height": 425
+    },
+    {
+      "id": 3,
+      "original_coco_id": 259640,
+      "file_name": "coco_seg_val_0003.jpg",
+      "mask_name": "coco_seg_val_0003_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 4,
+      "original_coco_id": 66635,
+      "file_name": "coco_seg_val_0004.jpg",
+      "mask_name": "coco_seg_val_0004_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 5,
+      "original_coco_id": 3553,
+      "file_name": "coco_seg_val_0005.jpg",
+      "mask_name": "coco_seg_val_0005_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 6,
+      "original_coco_id": 51314,
+      "file_name": "coco_seg_val_0006.jpg",
+      "mask_name": "coco_seg_val_0006_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 7,
+      "original_coco_id": 534827,
+      "file_name": "coco_seg_val_0007.jpg",
+      "mask_name": "coco_seg_val_0007_mask.png",
+      "width": 612,
+      "height": 612
+    },
+    {
+      "id": 8,
+      "original_coco_id": 556193,
+      "file_name": "coco_seg_val_0008.jpg",
+      "mask_name": "coco_seg_val_0008_mask.png",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 9,
+      "original_coco_id": 554328,
+      "file_name": "coco_seg_val_0009.jpg",
+      "mask_name": "coco_seg_val_0009_mask.png",
+      "width": 640,
+      "height": 499
+    },
+    {
+      "id": 10,
+      "original_coco_id": 473406,
+      "file_name": "coco_seg_val_0010.jpg",
+      "mask_name": "coco_seg_val_0010_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 11,
+      "original_coco_id": 344100,
+      "file_name": "coco_seg_val_0011.jpg",
+      "mask_name": "coco_seg_val_0011_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 12,
+      "original_coco_id": 18150,
+      "file_name": "coco_seg_val_0012.jpg",
+      "mask_name": "coco_seg_val_0012_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 13,
+      "original_coco_id": 397303,
+      "file_name": "coco_seg_val_0013.jpg",
+      "mask_name": "coco_seg_val_0013_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 14,
+      "original_coco_id": 409424,
+      "file_name": "coco_seg_val_0014.jpg",
+      "mask_name": "coco_seg_val_0014_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 15,
+      "original_coco_id": 47819,
+      "file_name": "coco_seg_val_0015.jpg",
+      "mask_name": "coco_seg_val_0015_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 16,
+      "original_coco_id": 55150,
+      "file_name": "coco_seg_val_0016.jpg",
+      "mask_name": "coco_seg_val_0016_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 17,
+      "original_coco_id": 452321,
+      "file_name": "coco_seg_val_0017.jpg",
+      "mask_name": "coco_seg_val_0017_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 18,
+      "original_coco_id": 208901,
+      "file_name": "coco_seg_val_0018.jpg",
+      "mask_name": "coco_seg_val_0018_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 19,
+      "original_coco_id": 141597,
+      "file_name": "coco_seg_val_0019.jpg",
+      "mask_name": "coco_seg_val_0019_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 20,
+      "original_coco_id": 9400,
+      "file_name": "coco_seg_val_0020.jpg",
+      "mask_name": "coco_seg_val_0020_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 21,
+      "original_coco_id": 16228,
+      "file_name": "coco_seg_val_0021.jpg",
+      "mask_name": "coco_seg_val_0021_mask.png",
+      "width": 640,
+      "height": 440
+    },
+    {
+      "id": 22,
+      "original_coco_id": 463542,
+      "file_name": "coco_seg_val_0022.jpg",
+      "mask_name": "coco_seg_val_0022_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 23,
+      "original_coco_id": 8211,
+      "file_name": "coco_seg_val_0023.jpg",
+      "mask_name": "coco_seg_val_0023_mask.png",
+      "width": 640,
+      "height": 459
+    },
+    {
+      "id": 24,
+      "original_coco_id": 202339,
+      "file_name": "coco_seg_val_0024.jpg",
+      "mask_name": "coco_seg_val_0024_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 25,
+      "original_coco_id": 383289,
+      "file_name": "coco_seg_val_0025.jpg",
+      "mask_name": "coco_seg_val_0025_mask.png",
+      "width": 640,
+      "height": 444
+    },
+    {
+      "id": 26,
+      "original_coco_id": 368456,
+      "file_name": "coco_seg_val_0026.jpg",
+      "mask_name": "coco_seg_val_0026_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 27,
+      "original_coco_id": 286422,
+      "file_name": "coco_seg_val_0027.jpg",
+      "mask_name": "coco_seg_val_0027_mask.png",
+      "width": 640,
+      "height": 425
+    },
+    {
+      "id": 28,
+      "original_coco_id": 364636,
+      "file_name": "coco_seg_val_0028.jpg",
+      "mask_name": "coco_seg_val_0028_mask.png",
+      "width": 640,
+      "height": 533
+    },
+    {
+      "id": 29,
+      "original_coco_id": 273642,
+      "file_name": "coco_seg_val_0029.jpg",
+      "mask_name": "coco_seg_val_0029_mask.png",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 30,
+      "original_coco_id": 87038,
+      "file_name": "coco_seg_val_0030.jpg",
+      "mask_name": "coco_seg_val_0030_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 31,
+      "original_coco_id": 51610,
+      "file_name": "coco_seg_val_0031.jpg",
+      "mask_name": "coco_seg_val_0031_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 32,
+      "original_coco_id": 109900,
+      "file_name": "coco_seg_val_0032.jpg",
+      "mask_name": "coco_seg_val_0032_mask.png",
+      "width": 640,
+      "height": 478
+    },
+    {
+      "id": 33,
+      "original_coco_id": 420281,
+      "file_name": "coco_seg_val_0033.jpg",
+      "mask_name": "coco_seg_val_0033_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 34,
+      "original_coco_id": 65288,
+      "file_name": "coco_seg_val_0034.jpg",
+      "mask_name": "coco_seg_val_0034_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 35,
+      "original_coco_id": 494759,
+      "file_name": "coco_seg_val_0035.jpg",
+      "mask_name": "coco_seg_val_0035_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 36,
+      "original_coco_id": 7574,
+      "file_name": "coco_seg_val_0036.jpg",
+      "mask_name": "coco_seg_val_0036_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 37,
+      "original_coco_id": 294855,
+      "file_name": "coco_seg_val_0037.jpg",
+      "mask_name": "coco_seg_val_0037_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 38,
+      "original_coco_id": 287527,
+      "file_name": "coco_seg_val_0038.jpg",
+      "mask_name": "coco_seg_val_0038_mask.png",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 39,
+      "original_coco_id": 516173,
+      "file_name": "coco_seg_val_0039.jpg",
+      "mask_name": "coco_seg_val_0039_mask.png",
+      "width": 408,
+      "height": 640
+    },
+    {
+      "id": 40,
+      "original_coco_id": 570448,
+      "file_name": "coco_seg_val_0040.jpg",
+      "mask_name": "coco_seg_val_0040_mask.png",
+      "width": 640,
+      "height": 484
+    },
+    {
+      "id": 41,
+      "original_coco_id": 149222,
+      "file_name": "coco_seg_val_0041.jpg",
+      "mask_name": "coco_seg_val_0041_mask.png",
+      "width": 500,
+      "height": 383
+    },
+    {
+      "id": 42,
+      "original_coco_id": 35682,
+      "file_name": "coco_seg_val_0042.jpg",
+      "mask_name": "coco_seg_val_0042_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 43,
+      "original_coco_id": 395388,
+      "file_name": "coco_seg_val_0043.jpg",
+      "mask_name": "coco_seg_val_0043_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 44,
+      "original_coco_id": 319696,
+      "file_name": "coco_seg_val_0044.jpg",
+      "mask_name": "coco_seg_val_0044_mask.png",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 45,
+      "original_coco_id": 535608,
+      "file_name": "coco_seg_val_0045.jpg",
+      "mask_name": "coco_seg_val_0045_mask.png",
+      "width": 500,
+      "height": 376
+    },
+    {
+      "id": 46,
+      "original_coco_id": 274708,
+      "file_name": "coco_seg_val_0046.jpg",
+      "mask_name": "coco_seg_val_0046_mask.png",
+      "width": 612,
+      "height": 612
+    },
+    {
+      "id": 47,
+      "original_coco_id": 38576,
+      "file_name": "coco_seg_val_0047.jpg",
+      "mask_name": "coco_seg_val_0047_mask.png",
+      "width": 438,
+      "height": 640
+    },
+    {
+      "id": 48,
+      "original_coco_id": 356428,
+      "file_name": "coco_seg_val_0048.jpg",
+      "mask_name": "coco_seg_val_0048_mask.png",
+      "width": 500,
+      "height": 281
+    },
+    {
+      "id": 49,
+      "original_coco_id": 399296,
+      "file_name": "coco_seg_val_0049.jpg",
+      "mask_name": "coco_seg_val_0049_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 50,
+      "original_coco_id": 50679,
+      "file_name": "coco_seg_val_0050.jpg",
+      "mask_name": "coco_seg_val_0050_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 51,
+      "original_coco_id": 302536,
+      "file_name": "coco_seg_val_0051.jpg",
+      "mask_name": "coco_seg_val_0051_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 52,
+      "original_coco_id": 343076,
+      "file_name": "coco_seg_val_0052.jpg",
+      "mask_name": "coco_seg_val_0052_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 53,
+      "original_coco_id": 24243,
+      "file_name": "coco_seg_val_0053.jpg",
+      "mask_name": "coco_seg_val_0053_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 54,
+      "original_coco_id": 160772,
+      "file_name": "coco_seg_val_0054.jpg",
+      "mask_name": "coco_seg_val_0054_mask.png",
+      "width": 640,
+      "height": 512
+    },
+    {
+      "id": 55,
+      "original_coco_id": 482319,
+      "file_name": "coco_seg_val_0055.jpg",
+      "mask_name": "coco_seg_val_0055_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 56,
+      "original_coco_id": 328430,
+      "file_name": "coco_seg_val_0056.jpg",
+      "mask_name": "coco_seg_val_0056_mask.png",
+      "width": 433,
+      "height": 640
+    },
+    {
+      "id": 57,
+      "original_coco_id": 34760,
+      "file_name": "coco_seg_val_0057.jpg",
+      "mask_name": "coco_seg_val_0057_mask.png",
+      "width": 426,
+      "height": 640
+    },
+    {
+      "id": 58,
+      "original_coco_id": 379476,
+      "file_name": "coco_seg_val_0058.jpg",
+      "mask_name": "coco_seg_val_0058_mask.png",
+      "width": 485,
+      "height": 640
+    },
+    {
+      "id": 59,
+      "original_coco_id": 178744,
+      "file_name": "coco_seg_val_0059.jpg",
+      "mask_name": "coco_seg_val_0059_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 60,
+      "original_coco_id": 284279,
+      "file_name": "coco_seg_val_0060.jpg",
+      "mask_name": "coco_seg_val_0060_mask.png",
+      "width": 640,
+      "height": 512
+    },
+    {
+      "id": 61,
+      "original_coco_id": 498709,
+      "file_name": "coco_seg_val_0061.jpg",
+      "mask_name": "coco_seg_val_0061_mask.png",
+      "width": 640,
+      "height": 425
+    },
+    {
+      "id": 62,
+      "original_coco_id": 209613,
+      "file_name": "coco_seg_val_0062.jpg",
+      "mask_name": "coco_seg_val_0062_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 63,
+      "original_coco_id": 158660,
+      "file_name": "coco_seg_val_0063.jpg",
+      "mask_name": "coco_seg_val_0063_mask.png",
+      "width": 612,
+      "height": 612
+    },
+    {
+      "id": 64,
+      "original_coco_id": 148730,
+      "file_name": "coco_seg_val_0064.jpg",
+      "mask_name": "coco_seg_val_0064_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 65,
+      "original_coco_id": 386912,
+      "file_name": "coco_seg_val_0065.jpg",
+      "mask_name": "coco_seg_val_0065_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 66,
+      "original_coco_id": 551350,
+      "file_name": "coco_seg_val_0066.jpg",
+      "mask_name": "coco_seg_val_0066_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 67,
+      "original_coco_id": 121497,
+      "file_name": "coco_seg_val_0067.jpg",
+      "mask_name": "coco_seg_val_0067_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 68,
+      "original_coco_id": 267300,
+      "file_name": "coco_seg_val_0068.jpg",
+      "mask_name": "coco_seg_val_0068_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 69,
+      "original_coco_id": 513688,
+      "file_name": "coco_seg_val_0069.jpg",
+      "mask_name": "coco_seg_val_0069_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 70,
+      "original_coco_id": 311789,
+      "file_name": "coco_seg_val_0070.jpg",
+      "mask_name": "coco_seg_val_0070_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 71,
+      "original_coco_id": 394206,
+      "file_name": "coco_seg_val_0071.jpg",
+      "mask_name": "coco_seg_val_0071_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 72,
+      "original_coco_id": 10092,
+      "file_name": "coco_seg_val_0072.jpg",
+      "mask_name": "coco_seg_val_0072_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 73,
+      "original_coco_id": 555705,
+      "file_name": "coco_seg_val_0073.jpg",
+      "mask_name": "coco_seg_val_0073_mask.png",
+      "width": 640,
+      "height": 371
+    },
+    {
+      "id": 74,
+      "original_coco_id": 297578,
+      "file_name": "coco_seg_val_0074.jpg",
+      "mask_name": "coco_seg_val_0074_mask.png",
+      "width": 500,
+      "height": 281
+    },
+    {
+      "id": 75,
+      "original_coco_id": 39769,
+      "file_name": "coco_seg_val_0075.jpg",
+      "mask_name": "coco_seg_val_0075_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 76,
+      "original_coco_id": 2473,
+      "file_name": "coco_seg_val_0076.jpg",
+      "mask_name": "coco_seg_val_0076_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 77,
+      "original_coco_id": 193674,
+      "file_name": "coco_seg_val_0077.jpg",
+      "mask_name": "coco_seg_val_0077_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 78,
+      "original_coco_id": 84362,
+      "file_name": "coco_seg_val_0078.jpg",
+      "mask_name": "coco_seg_val_0078_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 79,
+      "original_coco_id": 418062,
+      "file_name": "coco_seg_val_0079.jpg",
+      "mask_name": "coco_seg_val_0079_mask.png",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "id": 80,
+      "original_coco_id": 279145,
+      "file_name": "coco_seg_val_0080.jpg",
+      "mask_name": "coco_seg_val_0080_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 81,
+      "original_coco_id": 388258,
+      "file_name": "coco_seg_val_0081.jpg",
+      "mask_name": "coco_seg_val_0081_mask.png",
+      "width": 640,
+      "height": 478
+    },
+    {
+      "id": 82,
+      "original_coco_id": 222735,
+      "file_name": "coco_seg_val_0082.jpg",
+      "mask_name": "coco_seg_val_0082_mask.png",
+      "width": 474,
+      "height": 640
+    },
+    {
+      "id": 83,
+      "original_coco_id": 98839,
+      "file_name": "coco_seg_val_0083.jpg",
+      "mask_name": "coco_seg_val_0083_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 84,
+      "original_coco_id": 30494,
+      "file_name": "coco_seg_val_0084.jpg",
+      "mask_name": "coco_seg_val_0084_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 85,
+      "original_coco_id": 43581,
+      "file_name": "coco_seg_val_0085.jpg",
+      "mask_name": "coco_seg_val_0085_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 86,
+      "original_coco_id": 347370,
+      "file_name": "coco_seg_val_0086.jpg",
+      "mask_name": "coco_seg_val_0086_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 87,
+      "original_coco_id": 292060,
+      "file_name": "coco_seg_val_0087.jpg",
+      "mask_name": "coco_seg_val_0087_mask.png",
+      "width": 428,
+      "height": 640
+    },
+    {
+      "id": 88,
+      "original_coco_id": 96825,
+      "file_name": "coco_seg_val_0088.jpg",
+      "mask_name": "coco_seg_val_0088_mask.png",
+      "width": 640,
+      "height": 503
+    },
+    {
+      "id": 89,
+      "original_coco_id": 42563,
+      "file_name": "coco_seg_val_0089.jpg",
+      "mask_name": "coco_seg_val_0089_mask.png",
+      "width": 624,
+      "height": 640
+    },
+    {
+      "id": 90,
+      "original_coco_id": 329041,
+      "file_name": "coco_seg_val_0090.jpg",
+      "mask_name": "coco_seg_val_0090_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 91,
+      "original_coco_id": 129945,
+      "file_name": "coco_seg_val_0091.jpg",
+      "mask_name": "coco_seg_val_0091_mask.png",
+      "width": 640,
+      "height": 320
+    },
+    {
+      "id": 92,
+      "original_coco_id": 84477,
+      "file_name": "coco_seg_val_0092.jpg",
+      "mask_name": "coco_seg_val_0092_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 93,
+      "original_coco_id": 14380,
+      "file_name": "coco_seg_val_0093.jpg",
+      "mask_name": "coco_seg_val_0093_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 94,
+      "original_coco_id": 553731,
+      "file_name": "coco_seg_val_0094.jpg",
+      "mask_name": "coco_seg_val_0094_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 95,
+      "original_coco_id": 202445,
+      "file_name": "coco_seg_val_0095.jpg",
+      "mask_name": "coco_seg_val_0095_mask.png",
+      "width": 612,
+      "height": 612
+    },
+    {
+      "id": 96,
+      "original_coco_id": 455085,
+      "file_name": "coco_seg_val_0096.jpg",
+      "mask_name": "coco_seg_val_0096_mask.png",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "id": 97,
+      "original_coco_id": 62554,
+      "file_name": "coco_seg_val_0097.jpg",
+      "mask_name": "coco_seg_val_0097_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 98,
+      "original_coco_id": 565853,
+      "file_name": "coco_seg_val_0098.jpg",
+      "mask_name": "coco_seg_val_0098_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 99,
+      "original_coco_id": 311394,
+      "file_name": "coco_seg_val_0099.jpg",
+      "mask_name": "coco_seg_val_0099_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 100,
+      "original_coco_id": 82821,
+      "file_name": "coco_seg_val_0100.jpg",
+      "mask_name": "coco_seg_val_0100_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 101,
+      "original_coco_id": 396863,
+      "file_name": "coco_seg_val_0101.jpg",
+      "mask_name": "coco_seg_val_0101_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 102,
+      "original_coco_id": 180101,
+      "file_name": "coco_seg_val_0102.jpg",
+      "mask_name": "coco_seg_val_0102_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 103,
+      "original_coco_id": 267670,
+      "file_name": "coco_seg_val_0103.jpg",
+      "mask_name": "coco_seg_val_0103_mask.png",
+      "width": 450,
+      "height": 600
+    },
+    {
+      "id": 104,
+      "original_coco_id": 20571,
+      "file_name": "coco_seg_val_0104.jpg",
+      "mask_name": "coco_seg_val_0104_mask.png",
+      "width": 539,
+      "height": 640
+    },
+    {
+      "id": 105,
+      "original_coco_id": 244379,
+      "file_name": "coco_seg_val_0105.jpg",
+      "mask_name": "coco_seg_val_0105_mask.png",
+      "width": 640,
+      "height": 464
+    },
+    {
+      "id": 106,
+      "original_coco_id": 163682,
+      "file_name": "coco_seg_val_0106.jpg",
+      "mask_name": "coco_seg_val_0106_mask.png",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "id": 107,
+      "original_coco_id": 391722,
+      "file_name": "coco_seg_val_0107.jpg",
+      "mask_name": "coco_seg_val_0107_mask.png",
+      "width": 635,
+      "height": 640
+    },
+    {
+      "id": 108,
+      "original_coco_id": 473219,
+      "file_name": "coco_seg_val_0108.jpg",
+      "mask_name": "coco_seg_val_0108_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 109,
+      "original_coco_id": 21167,
+      "file_name": "coco_seg_val_0109.jpg",
+      "mask_name": "coco_seg_val_0109_mask.png",
+      "width": 426,
+      "height": 640
+    },
+    {
+      "id": 110,
+      "original_coco_id": 106235,
+      "file_name": "coco_seg_val_0110.jpg",
+      "mask_name": "coco_seg_val_0110_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 111,
+      "original_coco_id": 161799,
+      "file_name": "coco_seg_val_0111.jpg",
+      "mask_name": "coco_seg_val_0111_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 112,
+      "original_coco_id": 90155,
+      "file_name": "coco_seg_val_0112.jpg",
+      "mask_name": "coco_seg_val_0112_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 113,
+      "original_coco_id": 177213,
+      "file_name": "coco_seg_val_0113.jpg",
+      "mask_name": "coco_seg_val_0113_mask.png",
+      "width": 640,
+      "height": 359
+    },
+    {
+      "id": 114,
+      "original_coco_id": 564336,
+      "file_name": "coco_seg_val_0114.jpg",
+      "mask_name": "coco_seg_val_0114_mask.png",
+      "width": 640,
+      "height": 360
+    },
+    {
+      "id": 115,
+      "original_coco_id": 496597,
+      "file_name": "coco_seg_val_0115.jpg",
+      "mask_name": "coco_seg_val_0115_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 116,
+      "original_coco_id": 567886,
+      "file_name": "coco_seg_val_0116.jpg",
+      "mask_name": "coco_seg_val_0116_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 117,
+      "original_coco_id": 458992,
+      "file_name": "coco_seg_val_0117.jpg",
+      "mask_name": "coco_seg_val_0117_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 118,
+      "original_coco_id": 488710,
+      "file_name": "coco_seg_val_0118.jpg",
+      "mask_name": "coco_seg_val_0118_mask.png",
+      "width": 500,
+      "height": 400
+    },
+    {
+      "id": 119,
+      "original_coco_id": 274066,
+      "file_name": "coco_seg_val_0119.jpg",
+      "mask_name": "coco_seg_val_0119_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 120,
+      "original_coco_id": 21879,
+      "file_name": "coco_seg_val_0120.jpg",
+      "mask_name": "coco_seg_val_0120_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 121,
+      "original_coco_id": 333237,
+      "file_name": "coco_seg_val_0121.jpg",
+      "mask_name": "coco_seg_val_0121_mask.png",
+      "width": 640,
+      "height": 409
+    },
+    {
+      "id": 122,
+      "original_coco_id": 226903,
+      "file_name": "coco_seg_val_0122.jpg",
+      "mask_name": "coco_seg_val_0122_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 123,
+      "original_coco_id": 451090,
+      "file_name": "coco_seg_val_0123.jpg",
+      "mask_name": "coco_seg_val_0123_mask.png",
+      "width": 640,
+      "height": 435
+    },
+    {
+      "id": 124,
+      "original_coco_id": 205289,
+      "file_name": "coco_seg_val_0124.jpg",
+      "mask_name": "coco_seg_val_0124_mask.png",
+      "width": 640,
+      "height": 451
+    },
+    {
+      "id": 125,
+      "original_coco_id": 292005,
+      "file_name": "coco_seg_val_0125.jpg",
+      "mask_name": "coco_seg_val_0125_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 126,
+      "original_coco_id": 199395,
+      "file_name": "coco_seg_val_0126.jpg",
+      "mask_name": "coco_seg_val_0126_mask.png",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "id": 127,
+      "original_coco_id": 344816,
+      "file_name": "coco_seg_val_0127.jpg",
+      "mask_name": "coco_seg_val_0127_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 128,
+      "original_coco_id": 477805,
+      "file_name": "coco_seg_val_0128.jpg",
+      "mask_name": "coco_seg_val_0128_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 129,
+      "original_coco_id": 276055,
+      "file_name": "coco_seg_val_0129.jpg",
+      "mask_name": "coco_seg_val_0129_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 130,
+      "original_coco_id": 280930,
+      "file_name": "coco_seg_val_0130.jpg",
+      "mask_name": "coco_seg_val_0130_mask.png",
+      "width": 640,
+      "height": 425
+    },
+    {
+      "id": 131,
+      "original_coco_id": 23937,
+      "file_name": "coco_seg_val_0131.jpg",
+      "mask_name": "coco_seg_val_0131_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 132,
+      "original_coco_id": 460347,
+      "file_name": "coco_seg_val_0132.jpg",
+      "mask_name": "coco_seg_val_0132_mask.png",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "id": 133,
+      "original_coco_id": 550714,
+      "file_name": "coco_seg_val_0133.jpg",
+      "mask_name": "coco_seg_val_0133_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 134,
+      "original_coco_id": 277584,
+      "file_name": "coco_seg_val_0134.jpg",
+      "mask_name": "coco_seg_val_0134_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 135,
+      "original_coco_id": 510329,
+      "file_name": "coco_seg_val_0135.jpg",
+      "mask_name": "coco_seg_val_0135_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 136,
+      "original_coco_id": 478286,
+      "file_name": "coco_seg_val_0136.jpg",
+      "mask_name": "coco_seg_val_0136_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 137,
+      "original_coco_id": 352582,
+      "file_name": "coco_seg_val_0137.jpg",
+      "mask_name": "coco_seg_val_0137_mask.png",
+      "width": 425,
+      "height": 640
+    },
+    {
+      "id": 138,
+      "original_coco_id": 516677,
+      "file_name": "coco_seg_val_0138.jpg",
+      "mask_name": "coco_seg_val_0138_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 139,
+      "original_coco_id": 100283,
+      "file_name": "coco_seg_val_0139.jpg",
+      "mask_name": "coco_seg_val_0139_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 140,
+      "original_coco_id": 258883,
+      "file_name": "coco_seg_val_0140.jpg",
+      "mask_name": "coco_seg_val_0140_mask.png",
+      "width": 426,
+      "height": 640
+    },
+    {
+      "id": 141,
+      "original_coco_id": 432553,
+      "file_name": "coco_seg_val_0141.jpg",
+      "mask_name": "coco_seg_val_0141_mask.png",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "id": 142,
+      "original_coco_id": 459634,
+      "file_name": "coco_seg_val_0142.jpg",
+      "mask_name": "coco_seg_val_0142_mask.png",
+      "width": 640,
+      "height": 533
+    },
+    {
+      "id": 143,
+      "original_coco_id": 304560,
+      "file_name": "coco_seg_val_0143.jpg",
+      "mask_name": "coco_seg_val_0143_mask.png",
+      "width": 640,
+      "height": 425
+    },
+    {
+      "id": 144,
+      "original_coco_id": 476787,
+      "file_name": "coco_seg_val_0144.jpg",
+      "mask_name": "coco_seg_val_0144_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 145,
+      "original_coco_id": 257566,
+      "file_name": "coco_seg_val_0145.jpg",
+      "mask_name": "coco_seg_val_0145_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 146,
+      "original_coco_id": 174123,
+      "file_name": "coco_seg_val_0146.jpg",
+      "mask_name": "coco_seg_val_0146_mask.png",
+      "width": 500,
+      "height": 399
+    },
+    {
+      "id": 147,
+      "original_coco_id": 163118,
+      "file_name": "coco_seg_val_0147.jpg",
+      "mask_name": "coco_seg_val_0147_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 148,
+      "original_coco_id": 71711,
+      "file_name": "coco_seg_val_0148.jpg",
+      "mask_name": "coco_seg_val_0148_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 149,
+      "original_coco_id": 458325,
+      "file_name": "coco_seg_val_0149.jpg",
+      "mask_name": "coco_seg_val_0149_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 150,
+      "original_coco_id": 111207,
+      "file_name": "coco_seg_val_0150.jpg",
+      "mask_name": "coco_seg_val_0150_mask.png",
+      "width": 478,
+      "height": 640
+    },
+    {
+      "id": 151,
+      "original_coco_id": 244411,
+      "file_name": "coco_seg_val_0151.jpg",
+      "mask_name": "coco_seg_val_0151_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 152,
+      "original_coco_id": 256868,
+      "file_name": "coco_seg_val_0152.jpg",
+      "mask_name": "coco_seg_val_0152_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 153,
+      "original_coco_id": 453722,
+      "file_name": "coco_seg_val_0153.jpg",
+      "mask_name": "coco_seg_val_0153_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 154,
+      "original_coco_id": 67534,
+      "file_name": "coco_seg_val_0154.jpg",
+      "mask_name": "coco_seg_val_0154_mask.png",
+      "width": 306,
+      "height": 640
+    },
+    {
+      "id": 155,
+      "original_coco_id": 554291,
+      "file_name": "coco_seg_val_0155.jpg",
+      "mask_name": "coco_seg_val_0155_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 156,
+      "original_coco_id": 311518,
+      "file_name": "coco_seg_val_0156.jpg",
+      "mask_name": "coco_seg_val_0156_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 157,
+      "original_coco_id": 58384,
+      "file_name": "coco_seg_val_0157.jpg",
+      "mask_name": "coco_seg_val_0157_mask.png",
+      "width": 640,
+      "height": 466
+    },
+    {
+      "id": 158,
+      "original_coco_id": 485424,
+      "file_name": "coco_seg_val_0158.jpg",
+      "mask_name": "coco_seg_val_0158_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 159,
+      "original_coco_id": 492077,
+      "file_name": "coco_seg_val_0159.jpg",
+      "mask_name": "coco_seg_val_0159_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 160,
+      "original_coco_id": 286553,
+      "file_name": "coco_seg_val_0160.jpg",
+      "mask_name": "coco_seg_val_0160_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 161,
+      "original_coco_id": 222458,
+      "file_name": "coco_seg_val_0161.jpg",
+      "mask_name": "coco_seg_val_0161_mask.png",
+      "width": 640,
+      "height": 424
+    },
+    {
+      "id": 162,
+      "original_coco_id": 478420,
+      "file_name": "coco_seg_val_0162.jpg",
+      "mask_name": "coco_seg_val_0162_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 163,
+      "original_coco_id": 477955,
+      "file_name": "coco_seg_val_0163.jpg",
+      "mask_name": "coco_seg_val_0163_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 164,
+      "original_coco_id": 387387,
+      "file_name": "coco_seg_val_0164.jpg",
+      "mask_name": "coco_seg_val_0164_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 165,
+      "original_coco_id": 152686,
+      "file_name": "coco_seg_val_0165.jpg",
+      "mask_name": "coco_seg_val_0165_mask.png",
+      "width": 640,
+      "height": 400
+    },
+    {
+      "id": 166,
+      "original_coco_id": 377723,
+      "file_name": "coco_seg_val_0166.jpg",
+      "mask_name": "coco_seg_val_0166_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 167,
+      "original_coco_id": 116362,
+      "file_name": "coco_seg_val_0167.jpg",
+      "mask_name": "coco_seg_val_0167_mask.png",
+      "width": 612,
+      "height": 612
+    },
+    {
+      "id": 168,
+      "original_coco_id": 201934,
+      "file_name": "coco_seg_val_0168.jpg",
+      "mask_name": "coco_seg_val_0168_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 169,
+      "original_coco_id": 61171,
+      "file_name": "coco_seg_val_0169.jpg",
+      "mask_name": "coco_seg_val_0169_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 170,
+      "original_coco_id": 414795,
+      "file_name": "coco_seg_val_0170.jpg",
+      "mask_name": "coco_seg_val_0170_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 171,
+      "original_coco_id": 413395,
+      "file_name": "coco_seg_val_0171.jpg",
+      "mask_name": "coco_seg_val_0171_mask.png",
+      "width": 640,
+      "height": 421
+    },
+    {
+      "id": 172,
+      "original_coco_id": 474452,
+      "file_name": "coco_seg_val_0172.jpg",
+      "mask_name": "coco_seg_val_0172_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 173,
+      "original_coco_id": 91654,
+      "file_name": "coco_seg_val_0173.jpg",
+      "mask_name": "coco_seg_val_0173_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 174,
+      "original_coco_id": 343561,
+      "file_name": "coco_seg_val_0174.jpg",
+      "mask_name": "coco_seg_val_0174_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 175,
+      "original_coco_id": 532901,
+      "file_name": "coco_seg_val_0175.jpg",
+      "mask_name": "coco_seg_val_0175_mask.png",
+      "width": 600,
+      "height": 354
+    },
+    {
+      "id": 176,
+      "original_coco_id": 160728,
+      "file_name": "coco_seg_val_0176.jpg",
+      "mask_name": "coco_seg_val_0176_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 177,
+      "original_coco_id": 90208,
+      "file_name": "coco_seg_val_0177.jpg",
+      "mask_name": "coco_seg_val_0177_mask.png",
+      "width": 640,
+      "height": 429
+    },
+    {
+      "id": 178,
+      "original_coco_id": 496854,
+      "file_name": "coco_seg_val_0178.jpg",
+      "mask_name": "coco_seg_val_0178_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 179,
+      "original_coco_id": 559348,
+      "file_name": "coco_seg_val_0179.jpg",
+      "mask_name": "coco_seg_val_0179_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 180,
+      "original_coco_id": 424776,
+      "file_name": "coco_seg_val_0180.jpg",
+      "mask_name": "coco_seg_val_0180_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 181,
+      "original_coco_id": 188465,
+      "file_name": "coco_seg_val_0181.jpg",
+      "mask_name": "coco_seg_val_0181_mask.png",
+      "width": 640,
+      "height": 454
+    },
+    {
+      "id": 182,
+      "original_coco_id": 465549,
+      "file_name": "coco_seg_val_0182.jpg",
+      "mask_name": "coco_seg_val_0182_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 183,
+      "original_coco_id": 462904,
+      "file_name": "coco_seg_val_0183.jpg",
+      "mask_name": "coco_seg_val_0183_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 184,
+      "original_coco_id": 262587,
+      "file_name": "coco_seg_val_0184.jpg",
+      "mask_name": "coco_seg_val_0184_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 185,
+      "original_coco_id": 425221,
+      "file_name": "coco_seg_val_0185.jpg",
+      "mask_name": "coco_seg_val_0185_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 186,
+      "original_coco_id": 570664,
+      "file_name": "coco_seg_val_0186.jpg",
+      "mask_name": "coco_seg_val_0186_mask.png",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 187,
+      "original_coco_id": 44877,
+      "file_name": "coco_seg_val_0187.jpg",
+      "mask_name": "coco_seg_val_0187_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 188,
+      "original_coco_id": 231125,
+      "file_name": "coco_seg_val_0188.jpg",
+      "mask_name": "coco_seg_val_0188_mask.png",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 189,
+      "original_coco_id": 129416,
+      "file_name": "coco_seg_val_0189.jpg",
+      "mask_name": "coco_seg_val_0189_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 190,
+      "original_coco_id": 25386,
+      "file_name": "coco_seg_val_0190.jpg",
+      "mask_name": "coco_seg_val_0190_mask.png",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "id": 191,
+      "original_coco_id": 525083,
+      "file_name": "coco_seg_val_0191.jpg",
+      "mask_name": "coco_seg_val_0191_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 192,
+      "original_coco_id": 169356,
+      "file_name": "coco_seg_val_0192.jpg",
+      "mask_name": "coco_seg_val_0192_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 193,
+      "original_coco_id": 471756,
+      "file_name": "coco_seg_val_0193.jpg",
+      "mask_name": "coco_seg_val_0193_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 194,
+      "original_coco_id": 19221,
+      "file_name": "coco_seg_val_0194.jpg",
+      "mask_name": "coco_seg_val_0194_mask.png",
+      "width": 640,
+      "height": 478
+    },
+    {
+      "id": 195,
+      "original_coco_id": 132329,
+      "file_name": "coco_seg_val_0195.jpg",
+      "mask_name": "coco_seg_val_0195_mask.png",
+      "width": 426,
+      "height": 640
+    },
+    {
+      "id": 196,
+      "original_coco_id": 297085,
+      "file_name": "coco_seg_val_0196.jpg",
+      "mask_name": "coco_seg_val_0196_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 197,
+      "original_coco_id": 485480,
+      "file_name": "coco_seg_val_0197.jpg",
+      "mask_name": "coco_seg_val_0197_mask.png",
+      "width": 640,
+      "height": 281
+    },
+    {
+      "id": 198,
+      "original_coco_id": 50165,
+      "file_name": "coco_seg_val_0198.jpg",
+      "mask_name": "coco_seg_val_0198_mask.png",
+      "width": 640,
+      "height": 431
+    },
+    {
+      "id": 199,
+      "original_coco_id": 465129,
+      "file_name": "coco_seg_val_0199.jpg",
+      "mask_name": "coco_seg_val_0199_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 200,
+      "original_coco_id": 550691,
+      "file_name": "coco_seg_val_0200.jpg",
+      "mask_name": "coco_seg_val_0200_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 201,
+      "original_coco_id": 412887,
+      "file_name": "coco_seg_val_0201.jpg",
+      "mask_name": "coco_seg_val_0201_mask.png",
+      "width": 483,
+      "height": 640
+    },
+    {
+      "id": 202,
+      "original_coco_id": 185473,
+      "file_name": "coco_seg_val_0202.jpg",
+      "mask_name": "coco_seg_val_0202_mask.png",
+      "width": 640,
+      "height": 194
+    },
+    {
+      "id": 203,
+      "original_coco_id": 180135,
+      "file_name": "coco_seg_val_0203.jpg",
+      "mask_name": "coco_seg_val_0203_mask.png",
+      "width": 333,
+      "height": 500
+    },
+    {
+      "id": 204,
+      "original_coco_id": 272049,
+      "file_name": "coco_seg_val_0204.jpg",
+      "mask_name": "coco_seg_val_0204_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 205,
+      "original_coco_id": 37670,
+      "file_name": "coco_seg_val_0205.jpg",
+      "mask_name": "coco_seg_val_0205_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 206,
+      "original_coco_id": 345466,
+      "file_name": "coco_seg_val_0206.jpg",
+      "mask_name": "coco_seg_val_0206_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 207,
+      "original_coco_id": 153632,
+      "file_name": "coco_seg_val_0207.jpg",
+      "mask_name": "coco_seg_val_0207_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 208,
+      "original_coco_id": 502168,
+      "file_name": "coco_seg_val_0208.jpg",
+      "mask_name": "coco_seg_val_0208_mask.png",
+      "width": 640,
+      "height": 458
+    },
+    {
+      "id": 209,
+      "original_coco_id": 41635,
+      "file_name": "coco_seg_val_0209.jpg",
+      "mask_name": "coco_seg_val_0209_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 210,
+      "original_coco_id": 407083,
+      "file_name": "coco_seg_val_0210.jpg",
+      "mask_name": "coco_seg_val_0210_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 211,
+      "original_coco_id": 250901,
+      "file_name": "coco_seg_val_0211.jpg",
+      "mask_name": "coco_seg_val_0211_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 212,
+      "original_coco_id": 122166,
+      "file_name": "coco_seg_val_0212.jpg",
+      "mask_name": "coco_seg_val_0212_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 213,
+      "original_coco_id": 57232,
+      "file_name": "coco_seg_val_0213.jpg",
+      "mask_name": "coco_seg_val_0213_mask.png",
+      "width": 612,
+      "height": 612
+    },
+    {
+      "id": 214,
+      "original_coco_id": 231580,
+      "file_name": "coco_seg_val_0214.jpg",
+      "mask_name": "coco_seg_val_0214_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 215,
+      "original_coco_id": 117914,
+      "file_name": "coco_seg_val_0215.jpg",
+      "mask_name": "coco_seg_val_0215_mask.png",
+      "width": 333,
+      "height": 500
+    },
+    {
+      "id": 216,
+      "original_coco_id": 415990,
+      "file_name": "coco_seg_val_0216.jpg",
+      "mask_name": "coco_seg_val_0216_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 217,
+      "original_coco_id": 520264,
+      "file_name": "coco_seg_val_0217.jpg",
+      "mask_name": "coco_seg_val_0217_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 218,
+      "original_coco_id": 520659,
+      "file_name": "coco_seg_val_0218.jpg",
+      "mask_name": "coco_seg_val_0218_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 219,
+      "original_coco_id": 271116,
+      "file_name": "coco_seg_val_0219.jpg",
+      "mask_name": "coco_seg_val_0219_mask.png",
+      "width": 640,
+      "height": 424
+    },
+    {
+      "id": 220,
+      "original_coco_id": 293324,
+      "file_name": "coco_seg_val_0220.jpg",
+      "mask_name": "coco_seg_val_0220_mask.png",
+      "width": 640,
+      "height": 406
+    },
+    {
+      "id": 221,
+      "original_coco_id": 140840,
+      "file_name": "coco_seg_val_0221.jpg",
+      "mask_name": "coco_seg_val_0221_mask.png",
+      "width": 500,
+      "height": 281
+    },
+    {
+      "id": 222,
+      "original_coco_id": 478862,
+      "file_name": "coco_seg_val_0222.jpg",
+      "mask_name": "coco_seg_val_0222_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 223,
+      "original_coco_id": 467776,
+      "file_name": "coco_seg_val_0223.jpg",
+      "mask_name": "coco_seg_val_0223_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 224,
+      "original_coco_id": 212453,
+      "file_name": "coco_seg_val_0224.jpg",
+      "mask_name": "coco_seg_val_0224_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 225,
+      "original_coco_id": 504000,
+      "file_name": "coco_seg_val_0225.jpg",
+      "mask_name": "coco_seg_val_0225_mask.png",
+      "width": 640,
+      "height": 243
+    },
+    {
+      "id": 226,
+      "original_coco_id": 124798,
+      "file_name": "coco_seg_val_0226.jpg",
+      "mask_name": "coco_seg_val_0226_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 227,
+      "original_coco_id": 574315,
+      "file_name": "coco_seg_val_0227.jpg",
+      "mask_name": "coco_seg_val_0227_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 228,
+      "original_coco_id": 521717,
+      "file_name": "coco_seg_val_0228.jpg",
+      "mask_name": "coco_seg_val_0228_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 229,
+      "original_coco_id": 414673,
+      "file_name": "coco_seg_val_0229.jpg",
+      "mask_name": "coco_seg_val_0229_mask.png",
+      "width": 500,
+      "height": 332
+    },
+    {
+      "id": 230,
+      "original_coco_id": 248111,
+      "file_name": "coco_seg_val_0230.jpg",
+      "mask_name": "coco_seg_val_0230_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 231,
+      "original_coco_id": 104119,
+      "file_name": "coco_seg_val_0231.jpg",
+      "mask_name": "coco_seg_val_0231_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 232,
+      "original_coco_id": 345385,
+      "file_name": "coco_seg_val_0232.jpg",
+      "mask_name": "coco_seg_val_0232_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 233,
+      "original_coco_id": 123213,
+      "file_name": "coco_seg_val_0233.jpg",
+      "mask_name": "coco_seg_val_0233_mask.png",
+      "width": 640,
+      "height": 392
+    },
+    {
+      "id": 234,
+      "original_coco_id": 177934,
+      "file_name": "coco_seg_val_0234.jpg",
+      "mask_name": "coco_seg_val_0234_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 235,
+      "original_coco_id": 33104,
+      "file_name": "coco_seg_val_0235.jpg",
+      "mask_name": "coco_seg_val_0235_mask.png",
+      "width": 428,
+      "height": 500
+    },
+    {
+      "id": 236,
+      "original_coco_id": 475904,
+      "file_name": "coco_seg_val_0236.jpg",
+      "mask_name": "coco_seg_val_0236_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 237,
+      "original_coco_id": 206831,
+      "file_name": "coco_seg_val_0237.jpg",
+      "mask_name": "coco_seg_val_0237_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 238,
+      "original_coco_id": 313588,
+      "file_name": "coco_seg_val_0238.jpg",
+      "mask_name": "coco_seg_val_0238_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 239,
+      "original_coco_id": 89648,
+      "file_name": "coco_seg_val_0239.jpg",
+      "mask_name": "coco_seg_val_0239_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 240,
+      "original_coco_id": 293071,
+      "file_name": "coco_seg_val_0240.jpg",
+      "mask_name": "coco_seg_val_0240_mask.png",
+      "width": 335,
+      "height": 500
+    },
+    {
+      "id": 241,
+      "original_coco_id": 532481,
+      "file_name": "coco_seg_val_0241.jpg",
+      "mask_name": "coco_seg_val_0241_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 242,
+      "original_coco_id": 455937,
+      "file_name": "coco_seg_val_0242.jpg",
+      "mask_name": "coco_seg_val_0242_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 243,
+      "original_coco_id": 323828,
+      "file_name": "coco_seg_val_0243.jpg",
+      "mask_name": "coco_seg_val_0243_mask.png",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "id": 244,
+      "original_coco_id": 278973,
+      "file_name": "coco_seg_val_0244.jpg",
+      "mask_name": "coco_seg_val_0244_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 245,
+      "original_coco_id": 193717,
+      "file_name": "coco_seg_val_0245.jpg",
+      "mask_name": "coco_seg_val_0245_mask.png",
+      "width": 521,
+      "height": 640
+    },
+    {
+      "id": 246,
+      "original_coco_id": 81738,
+      "file_name": "coco_seg_val_0246.jpg",
+      "mask_name": "coco_seg_val_0246_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 247,
+      "original_coco_id": 77460,
+      "file_name": "coco_seg_val_0247.jpg",
+      "mask_name": "coco_seg_val_0247_mask.png",
+      "width": 428,
+      "height": 640
+    },
+    {
+      "id": 248,
+      "original_coco_id": 25393,
+      "file_name": "coco_seg_val_0248.jpg",
+      "mask_name": "coco_seg_val_0248_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 249,
+      "original_coco_id": 369037,
+      "file_name": "coco_seg_val_0249.jpg",
+      "mask_name": "coco_seg_val_0249_mask.png",
+      "width": 425,
+      "height": 640
+    },
+    {
+      "id": 250,
+      "original_coco_id": 97924,
+      "file_name": "coco_seg_val_0250.jpg",
+      "mask_name": "coco_seg_val_0250_mask.png",
+      "width": 600,
+      "height": 400
+    },
+    {
+      "id": 251,
+      "original_coco_id": 84664,
+      "file_name": "coco_seg_val_0251.jpg",
+      "mask_name": "coco_seg_val_0251_mask.png",
+      "width": 612,
+      "height": 612
+    },
+    {
+      "id": 252,
+      "original_coco_id": 492937,
+      "file_name": "coco_seg_val_0252.jpg",
+      "mask_name": "coco_seg_val_0252_mask.png",
+      "width": 612,
+      "height": 612
+    },
+    {
+      "id": 253,
+      "original_coco_id": 322864,
+      "file_name": "coco_seg_val_0253.jpg",
+      "mask_name": "coco_seg_val_0253_mask.png",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "id": 254,
+      "original_coco_id": 39480,
+      "file_name": "coco_seg_val_0254.jpg",
+      "mask_name": "coco_seg_val_0254_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 255,
+      "original_coco_id": 420840,
+      "file_name": "coco_seg_val_0255.jpg",
+      "mask_name": "coco_seg_val_0255_mask.png",
+      "width": 640,
+      "height": 424
+    },
+    {
+      "id": 256,
+      "original_coco_id": 189752,
+      "file_name": "coco_seg_val_0256.jpg",
+      "mask_name": "coco_seg_val_0256_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 257,
+      "original_coco_id": 100582,
+      "file_name": "coco_seg_val_0257.jpg",
+      "mask_name": "coco_seg_val_0257_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 258,
+      "original_coco_id": 1000,
+      "file_name": "coco_seg_val_0258.jpg",
+      "mask_name": "coco_seg_val_0258_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 259,
+      "original_coco_id": 395801,
+      "file_name": "coco_seg_val_0259.jpg",
+      "mask_name": "coco_seg_val_0259_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 260,
+      "original_coco_id": 398905,
+      "file_name": "coco_seg_val_0260.jpg",
+      "mask_name": "coco_seg_val_0260_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 261,
+      "original_coco_id": 33114,
+      "file_name": "coco_seg_val_0261.jpg",
+      "mask_name": "coco_seg_val_0261_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 262,
+      "original_coco_id": 376625,
+      "file_name": "coco_seg_val_0262.jpg",
+      "mask_name": "coco_seg_val_0262_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 263,
+      "original_coco_id": 50145,
+      "file_name": "coco_seg_val_0263.jpg",
+      "mask_name": "coco_seg_val_0263_mask.png",
+      "width": 480,
+      "height": 320
+    },
+    {
+      "id": 264,
+      "original_coco_id": 447522,
+      "file_name": "coco_seg_val_0264.jpg",
+      "mask_name": "coco_seg_val_0264_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 265,
+      "original_coco_id": 464689,
+      "file_name": "coco_seg_val_0265.jpg",
+      "mask_name": "coco_seg_val_0265_mask.png",
+      "width": 586,
+      "height": 640
+    },
+    {
+      "id": 266,
+      "original_coco_id": 86956,
+      "file_name": "coco_seg_val_0266.jpg",
+      "mask_name": "coco_seg_val_0266_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 267,
+      "original_coco_id": 538364,
+      "file_name": "coco_seg_val_0267.jpg",
+      "mask_name": "coco_seg_val_0267_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 268,
+      "original_coco_id": 130699,
+      "file_name": "coco_seg_val_0268.jpg",
+      "mask_name": "coco_seg_val_0268_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 269,
+      "original_coco_id": 20992,
+      "file_name": "coco_seg_val_0269.jpg",
+      "mask_name": "coco_seg_val_0269_mask.png",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 270,
+      "original_coco_id": 255401,
+      "file_name": "coco_seg_val_0270.jpg",
+      "mask_name": "coco_seg_val_0270_mask.png",
+      "width": 416,
+      "height": 500
+    },
+    {
+      "id": 271,
+      "original_coco_id": 229601,
+      "file_name": "coco_seg_val_0271.jpg",
+      "mask_name": "coco_seg_val_0271_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 272,
+      "original_coco_id": 434479,
+      "file_name": "coco_seg_val_0272.jpg",
+      "mask_name": "coco_seg_val_0272_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 273,
+      "original_coco_id": 189213,
+      "file_name": "coco_seg_val_0273.jpg",
+      "mask_name": "coco_seg_val_0273_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 274,
+      "original_coco_id": 125806,
+      "file_name": "coco_seg_val_0274.jpg",
+      "mask_name": "coco_seg_val_0274_mask.png",
+      "width": 640,
+      "height": 425
+    },
+    {
+      "id": 275,
+      "original_coco_id": 481480,
+      "file_name": "coco_seg_val_0275.jpg",
+      "mask_name": "coco_seg_val_0275_mask.png",
+      "width": 640,
+      "height": 444
+    },
+    {
+      "id": 276,
+      "original_coco_id": 543043,
+      "file_name": "coco_seg_val_0276.jpg",
+      "mask_name": "coco_seg_val_0276_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 277,
+      "original_coco_id": 224664,
+      "file_name": "coco_seg_val_0277.jpg",
+      "mask_name": "coco_seg_val_0277_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 278,
+      "original_coco_id": 512836,
+      "file_name": "coco_seg_val_0278.jpg",
+      "mask_name": "coco_seg_val_0278_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 279,
+      "original_coco_id": 538067,
+      "file_name": "coco_seg_val_0279.jpg",
+      "mask_name": "coco_seg_val_0279_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 280,
+      "original_coco_id": 166259,
+      "file_name": "coco_seg_val_0280.jpg",
+      "mask_name": "coco_seg_val_0280_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 281,
+      "original_coco_id": 316404,
+      "file_name": "coco_seg_val_0281.jpg",
+      "mask_name": "coco_seg_val_0281_mask.png",
+      "width": 640,
+      "height": 445
+    },
+    {
+      "id": 282,
+      "original_coco_id": 372577,
+      "file_name": "coco_seg_val_0282.jpg",
+      "mask_name": "coco_seg_val_0282_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 283,
+      "original_coco_id": 179765,
+      "file_name": "coco_seg_val_0283.jpg",
+      "mask_name": "coco_seg_val_0283_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 284,
+      "original_coco_id": 248314,
+      "file_name": "coco_seg_val_0284.jpg",
+      "mask_name": "coco_seg_val_0284_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 285,
+      "original_coco_id": 186422,
+      "file_name": "coco_seg_val_0285.jpg",
+      "mask_name": "coco_seg_val_0285_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 286,
+      "original_coco_id": 404922,
+      "file_name": "coco_seg_val_0286.jpg",
+      "mask_name": "coco_seg_val_0286_mask.png",
+      "width": 368,
+      "height": 500
+    },
+    {
+      "id": 287,
+      "original_coco_id": 342128,
+      "file_name": "coco_seg_val_0287.jpg",
+      "mask_name": "coco_seg_val_0287_mask.png",
+      "width": 488,
+      "height": 640
+    },
+    {
+      "id": 288,
+      "original_coco_id": 495732,
+      "file_name": "coco_seg_val_0288.jpg",
+      "mask_name": "coco_seg_val_0288_mask.png",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "id": 289,
+      "original_coco_id": 88970,
+      "file_name": "coco_seg_val_0289.jpg",
+      "mask_name": "coco_seg_val_0289_mask.png",
+      "width": 333,
+      "height": 500
+    },
+    {
+      "id": 290,
+      "original_coco_id": 491366,
+      "file_name": "coco_seg_val_0290.jpg",
+      "mask_name": "coco_seg_val_0290_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 291,
+      "original_coco_id": 312552,
+      "file_name": "coco_seg_val_0291.jpg",
+      "mask_name": "coco_seg_val_0291_mask.png",
+      "width": 400,
+      "height": 300
+    },
+    {
+      "id": 292,
+      "original_coco_id": 52412,
+      "file_name": "coco_seg_val_0292.jpg",
+      "mask_name": "coco_seg_val_0292_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 293,
+      "original_coco_id": 564091,
+      "file_name": "coco_seg_val_0293.jpg",
+      "mask_name": "coco_seg_val_0293_mask.png",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "id": 294,
+      "original_coco_id": 155145,
+      "file_name": "coco_seg_val_0294.jpg",
+      "mask_name": "coco_seg_val_0294_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 295,
+      "original_coco_id": 164883,
+      "file_name": "coco_seg_val_0295.jpg",
+      "mask_name": "coco_seg_val_0295_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 296,
+      "original_coco_id": 240250,
+      "file_name": "coco_seg_val_0296.jpg",
+      "mask_name": "coco_seg_val_0296_mask.png",
+      "width": 612,
+      "height": 612
+    },
+    {
+      "id": 297,
+      "original_coco_id": 233567,
+      "file_name": "coco_seg_val_0297.jpg",
+      "mask_name": "coco_seg_val_0297_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 298,
+      "original_coco_id": 502737,
+      "file_name": "coco_seg_val_0298.jpg",
+      "mask_name": "coco_seg_val_0298_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 299,
+      "original_coco_id": 334417,
+      "file_name": "coco_seg_val_0299.jpg",
+      "mask_name": "coco_seg_val_0299_mask.png",
+      "width": 640,
+      "height": 423
+    },
+    {
+      "id": 300,
+      "original_coco_id": 566758,
+      "file_name": "coco_seg_val_0300.jpg",
+      "mask_name": "coco_seg_val_0300_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 301,
+      "original_coco_id": 309173,
+      "file_name": "coco_seg_val_0301.jpg",
+      "mask_name": "coco_seg_val_0301_mask.png",
+      "width": 335,
+      "height": 500
+    },
+    {
+      "id": 302,
+      "original_coco_id": 64718,
+      "file_name": "coco_seg_val_0302.jpg",
+      "mask_name": "coco_seg_val_0302_mask.png",
+      "width": 640,
+      "height": 464
+    },
+    {
+      "id": 303,
+      "original_coco_id": 414170,
+      "file_name": "coco_seg_val_0303.jpg",
+      "mask_name": "coco_seg_val_0303_mask.png",
+      "width": 425,
+      "height": 640
+    },
+    {
+      "id": 304,
+      "original_coco_id": 221754,
+      "file_name": "coco_seg_val_0304.jpg",
+      "mask_name": "coco_seg_val_0304_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 305,
+      "original_coco_id": 162858,
+      "file_name": "coco_seg_val_0305.jpg",
+      "mask_name": "coco_seg_val_0305_mask.png",
+      "width": 428,
+      "height": 640
+    },
+    {
+      "id": 306,
+      "original_coco_id": 129135,
+      "file_name": "coco_seg_val_0306.jpg",
+      "mask_name": "coco_seg_val_0306_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 307,
+      "original_coco_id": 175443,
+      "file_name": "coco_seg_val_0307.jpg",
+      "mask_name": "coco_seg_val_0307_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 308,
+      "original_coco_id": 422886,
+      "file_name": "coco_seg_val_0308.jpg",
+      "mask_name": "coco_seg_val_0308_mask.png",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 309,
+      "original_coco_id": 490515,
+      "file_name": "coco_seg_val_0309.jpg",
+      "mask_name": "coco_seg_val_0309_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 310,
+      "original_coco_id": 569059,
+      "file_name": "coco_seg_val_0310.jpg",
+      "mask_name": "coco_seg_val_0310_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 311,
+      "original_coco_id": 232563,
+      "file_name": "coco_seg_val_0311.jpg",
+      "mask_name": "coco_seg_val_0311_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 312,
+      "original_coco_id": 29393,
+      "file_name": "coco_seg_val_0312.jpg",
+      "mask_name": "coco_seg_val_0312_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 313,
+      "original_coco_id": 563882,
+      "file_name": "coco_seg_val_0313.jpg",
+      "mask_name": "coco_seg_val_0313_mask.png",
+      "width": 640,
+      "height": 425
+    },
+    {
+      "id": 314,
+      "original_coco_id": 514586,
+      "file_name": "coco_seg_val_0314.jpg",
+      "mask_name": "coco_seg_val_0314_mask.png",
+      "width": 354,
+      "height": 500
+    },
+    {
+      "id": 315,
+      "original_coco_id": 489305,
+      "file_name": "coco_seg_val_0315.jpg",
+      "mask_name": "coco_seg_val_0315_mask.png",
+      "width": 305,
+      "height": 229
+    },
+    {
+      "id": 316,
+      "original_coco_id": 259597,
+      "file_name": "coco_seg_val_0316.jpg",
+      "mask_name": "coco_seg_val_0316_mask.png",
+      "width": 640,
+      "height": 312
+    },
+    {
+      "id": 317,
+      "original_coco_id": 139077,
+      "file_name": "coco_seg_val_0317.jpg",
+      "mask_name": "coco_seg_val_0317_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 318,
+      "original_coco_id": 458109,
+      "file_name": "coco_seg_val_0318.jpg",
+      "mask_name": "coco_seg_val_0318_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 319,
+      "original_coco_id": 289415,
+      "file_name": "coco_seg_val_0319.jpg",
+      "mask_name": "coco_seg_val_0319_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 320,
+      "original_coco_id": 97988,
+      "file_name": "coco_seg_val_0320.jpg",
+      "mask_name": "coco_seg_val_0320_mask.png",
+      "width": 612,
+      "height": 612
+    },
+    {
+      "id": 321,
+      "original_coco_id": 224200,
+      "file_name": "coco_seg_val_0321.jpg",
+      "mask_name": "coco_seg_val_0321_mask.png",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 322,
+      "original_coco_id": 181499,
+      "file_name": "coco_seg_val_0322.jpg",
+      "mask_name": "coco_seg_val_0322_mask.png",
+      "width": 640,
+      "height": 513
+    },
+    {
+      "id": 323,
+      "original_coco_id": 1490,
+      "file_name": "coco_seg_val_0323.jpg",
+      "mask_name": "coco_seg_val_0323_mask.png",
+      "width": 640,
+      "height": 315
+    },
+    {
+      "id": 324,
+      "original_coco_id": 41872,
+      "file_name": "coco_seg_val_0324.jpg",
+      "mask_name": "coco_seg_val_0324_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 325,
+      "original_coco_id": 283412,
+      "file_name": "coco_seg_val_0325.jpg",
+      "mask_name": "coco_seg_val_0325_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 326,
+      "original_coco_id": 231097,
+      "file_name": "coco_seg_val_0326.jpg",
+      "mask_name": "coco_seg_val_0326_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 327,
+      "original_coco_id": 176778,
+      "file_name": "coco_seg_val_0327.jpg",
+      "mask_name": "coco_seg_val_0327_mask.png",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "id": 328,
+      "original_coco_id": 252701,
+      "file_name": "coco_seg_val_0328.jpg",
+      "mask_name": "coco_seg_val_0328_mask.png",
+      "width": 640,
+      "height": 378
+    },
+    {
+      "id": 329,
+      "original_coco_id": 492878,
+      "file_name": "coco_seg_val_0329.jpg",
+      "mask_name": "coco_seg_val_0329_mask.png",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 330,
+      "original_coco_id": 403817,
+      "file_name": "coco_seg_val_0330.jpg",
+      "mask_name": "coco_seg_val_0330_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 331,
+      "original_coco_id": 484415,
+      "file_name": "coco_seg_val_0331.jpg",
+      "mask_name": "coco_seg_val_0331_mask.png",
+      "width": 320,
+      "height": 240
+    },
+    {
+      "id": 332,
+      "original_coco_id": 283268,
+      "file_name": "coco_seg_val_0332.jpg",
+      "mask_name": "coco_seg_val_0332_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 333,
+      "original_coco_id": 560474,
+      "file_name": "coco_seg_val_0333.jpg",
+      "mask_name": "coco_seg_val_0333_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 334,
+      "original_coco_id": 233771,
+      "file_name": "coco_seg_val_0334.jpg",
+      "mask_name": "coco_seg_val_0334_mask.png",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 335,
+      "original_coco_id": 370677,
+      "file_name": "coco_seg_val_0335.jpg",
+      "mask_name": "coco_seg_val_0335_mask.png",
+      "width": 500,
+      "height": 332
+    },
+    {
+      "id": 336,
+      "original_coco_id": 281759,
+      "file_name": "coco_seg_val_0336.jpg",
+      "mask_name": "coco_seg_val_0336_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 337,
+      "original_coco_id": 556000,
+      "file_name": "coco_seg_val_0337.jpg",
+      "mask_name": "coco_seg_val_0337_mask.png",
+      "width": 640,
+      "height": 515
+    },
+    {
+      "id": 338,
+      "original_coco_id": 166478,
+      "file_name": "coco_seg_val_0338.jpg",
+      "mask_name": "coco_seg_val_0338_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 339,
+      "original_coco_id": 350023,
+      "file_name": "coco_seg_val_0339.jpg",
+      "mask_name": "coco_seg_val_0339_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 340,
+      "original_coco_id": 216739,
+      "file_name": "coco_seg_val_0340.jpg",
+      "mask_name": "coco_seg_val_0340_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 341,
+      "original_coco_id": 386879,
+      "file_name": "coco_seg_val_0341.jpg",
+      "mask_name": "coco_seg_val_0341_mask.png",
+      "width": 426,
+      "height": 640
+    },
+    {
+      "id": 342,
+      "original_coco_id": 356261,
+      "file_name": "coco_seg_val_0342.jpg",
+      "mask_name": "coco_seg_val_0342_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 343,
+      "original_coco_id": 203294,
+      "file_name": "coco_seg_val_0343.jpg",
+      "mask_name": "coco_seg_val_0343_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 344,
+      "original_coco_id": 125405,
+      "file_name": "coco_seg_val_0344.jpg",
+      "mask_name": "coco_seg_val_0344_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 345,
+      "original_coco_id": 99242,
+      "file_name": "coco_seg_val_0345.jpg",
+      "mask_name": "coco_seg_val_0345_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 346,
+      "original_coco_id": 304404,
+      "file_name": "coco_seg_val_0346.jpg",
+      "mask_name": "coco_seg_val_0346_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 347,
+      "original_coco_id": 336053,
+      "file_name": "coco_seg_val_0347.jpg",
+      "mask_name": "coco_seg_val_0347_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 348,
+      "original_coco_id": 269942,
+      "file_name": "coco_seg_val_0348.jpg",
+      "mask_name": "coco_seg_val_0348_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 349,
+      "original_coco_id": 471869,
+      "file_name": "coco_seg_val_0349.jpg",
+      "mask_name": "coco_seg_val_0349_mask.png",
+      "width": 413,
+      "height": 500
+    },
+    {
+      "id": 350,
+      "original_coco_id": 543047,
+      "file_name": "coco_seg_val_0350.jpg",
+      "mask_name": "coco_seg_val_0350_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 351,
+      "original_coco_id": 279887,
+      "file_name": "coco_seg_val_0351.jpg",
+      "mask_name": "coco_seg_val_0351_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 352,
+      "original_coco_id": 389566,
+      "file_name": "coco_seg_val_0352.jpg",
+      "mask_name": "coco_seg_val_0352_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 353,
+      "original_coco_id": 14888,
+      "file_name": "coco_seg_val_0353.jpg",
+      "mask_name": "coco_seg_val_0353_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 354,
+      "original_coco_id": 470173,
+      "file_name": "coco_seg_val_0354.jpg",
+      "mask_name": "coco_seg_val_0354_mask.png",
+      "width": 446,
+      "height": 640
+    },
+    {
+      "id": 355,
+      "original_coco_id": 466256,
+      "file_name": "coco_seg_val_0355.jpg",
+      "mask_name": "coco_seg_val_0355_mask.png",
+      "width": 640,
+      "height": 425
+    },
+    {
+      "id": 356,
+      "original_coco_id": 427077,
+      "file_name": "coco_seg_val_0356.jpg",
+      "mask_name": "coco_seg_val_0356_mask.png",
+      "width": 344,
+      "height": 500
+    },
+    {
+      "id": 357,
+      "original_coco_id": 276024,
+      "file_name": "coco_seg_val_0357.jpg",
+      "mask_name": "coco_seg_val_0357_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 358,
+      "original_coco_id": 390246,
+      "file_name": "coco_seg_val_0358.jpg",
+      "mask_name": "coco_seg_val_0358_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 359,
+      "original_coco_id": 468954,
+      "file_name": "coco_seg_val_0359.jpg",
+      "mask_name": "coco_seg_val_0359_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 360,
+      "original_coco_id": 58539,
+      "file_name": "coco_seg_val_0360.jpg",
+      "mask_name": "coco_seg_val_0360_mask.png",
+      "width": 640,
+      "height": 421
+    },
+    {
+      "id": 361,
+      "original_coco_id": 14226,
+      "file_name": "coco_seg_val_0361.jpg",
+      "mask_name": "coco_seg_val_0361_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 362,
+      "original_coco_id": 214703,
+      "file_name": "coco_seg_val_0362.jpg",
+      "mask_name": "coco_seg_val_0362_mask.png",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "id": 363,
+      "original_coco_id": 465718,
+      "file_name": "coco_seg_val_0363.jpg",
+      "mask_name": "coco_seg_val_0363_mask.png",
+      "width": 640,
+      "height": 429
+    },
+    {
+      "id": 364,
+      "original_coco_id": 280918,
+      "file_name": "coco_seg_val_0364.jpg",
+      "mask_name": "coco_seg_val_0364_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 365,
+      "original_coco_id": 36660,
+      "file_name": "coco_seg_val_0365.jpg",
+      "mask_name": "coco_seg_val_0365_mask.png",
+      "width": 500,
+      "height": 323
+    },
+    {
+      "id": 366,
+      "original_coco_id": 82688,
+      "file_name": "coco_seg_val_0366.jpg",
+      "mask_name": "coco_seg_val_0366_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 367,
+      "original_coco_id": 520910,
+      "file_name": "coco_seg_val_0367.jpg",
+      "mask_name": "coco_seg_val_0367_mask.png",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "id": 368,
+      "original_coco_id": 347664,
+      "file_name": "coco_seg_val_0368.jpg",
+      "mask_name": "coco_seg_val_0368_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 369,
+      "original_coco_id": 192716,
+      "file_name": "coco_seg_val_0369.jpg",
+      "mask_name": "coco_seg_val_0369_mask.png",
+      "width": 518,
+      "height": 640
+    },
+    {
+      "id": 370,
+      "original_coco_id": 204871,
+      "file_name": "coco_seg_val_0370.jpg",
+      "mask_name": "coco_seg_val_0370_mask.png",
+      "width": 612,
+      "height": 612
+    },
+    {
+      "id": 371,
+      "original_coco_id": 444879,
+      "file_name": "coco_seg_val_0371.jpg",
+      "mask_name": "coco_seg_val_0371_mask.png",
+      "width": 640,
+      "height": 479
+    },
+    {
+      "id": 372,
+      "original_coco_id": 443969,
+      "file_name": "coco_seg_val_0372.jpg",
+      "mask_name": "coco_seg_val_0372_mask.png",
+      "width": 612,
+      "height": 612
+    },
+    {
+      "id": 373,
+      "original_coco_id": 171298,
+      "file_name": "coco_seg_val_0373.jpg",
+      "mask_name": "coco_seg_val_0373_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 374,
+      "original_coco_id": 176799,
+      "file_name": "coco_seg_val_0374.jpg",
+      "mask_name": "coco_seg_val_0374_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 375,
+      "original_coco_id": 402774,
+      "file_name": "coco_seg_val_0375.jpg",
+      "mask_name": "coco_seg_val_0375_mask.png",
+      "width": 425,
+      "height": 640
+    },
+    {
+      "id": 376,
+      "original_coco_id": 405249,
+      "file_name": "coco_seg_val_0376.jpg",
+      "mask_name": "coco_seg_val_0376_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 377,
+      "original_coco_id": 344888,
+      "file_name": "coco_seg_val_0377.jpg",
+      "mask_name": "coco_seg_val_0377_mask.png",
+      "width": 640,
+      "height": 416
+    },
+    {
+      "id": 378,
+      "original_coco_id": 191845,
+      "file_name": "coco_seg_val_0378.jpg",
+      "mask_name": "coco_seg_val_0378_mask.png",
+      "width": 640,
+      "height": 361
+    },
+    {
+      "id": 379,
+      "original_coco_id": 332901,
+      "file_name": "coco_seg_val_0379.jpg",
+      "mask_name": "coco_seg_val_0379_mask.png",
+      "width": 640,
+      "height": 395
+    },
+    {
+      "id": 380,
+      "original_coco_id": 173008,
+      "file_name": "coco_seg_val_0380.jpg",
+      "mask_name": "coco_seg_val_0380_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 381,
+      "original_coco_id": 332845,
+      "file_name": "coco_seg_val_0381.jpg",
+      "mask_name": "coco_seg_val_0381_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 382,
+      "original_coco_id": 117908,
+      "file_name": "coco_seg_val_0382.jpg",
+      "mask_name": "coco_seg_val_0382_mask.png",
+      "width": 500,
+      "height": 320
+    },
+    {
+      "id": 383,
+      "original_coco_id": 297830,
+      "file_name": "coco_seg_val_0383.jpg",
+      "mask_name": "coco_seg_val_0383_mask.png",
+      "width": 512,
+      "height": 640
+    },
+    {
+      "id": 384,
+      "original_coco_id": 476704,
+      "file_name": "coco_seg_val_0384.jpg",
+      "mask_name": "coco_seg_val_0384_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 385,
+      "original_coco_id": 442161,
+      "file_name": "coco_seg_val_0385.jpg",
+      "mask_name": "coco_seg_val_0385_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 386,
+      "original_coco_id": 165518,
+      "file_name": "coco_seg_val_0386.jpg",
+      "mask_name": "coco_seg_val_0386_mask.png",
+      "width": 612,
+      "height": 612
+    },
+    {
+      "id": 387,
+      "original_coco_id": 40471,
+      "file_name": "coco_seg_val_0387.jpg",
+      "mask_name": "coco_seg_val_0387_mask.png",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "id": 388,
+      "original_coco_id": 313562,
+      "file_name": "coco_seg_val_0388.jpg",
+      "mask_name": "coco_seg_val_0388_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 389,
+      "original_coco_id": 409542,
+      "file_name": "coco_seg_val_0389.jpg",
+      "mask_name": "coco_seg_val_0389_mask.png",
+      "width": 428,
+      "height": 640
+    },
+    {
+      "id": 390,
+      "original_coco_id": 356531,
+      "file_name": "coco_seg_val_0390.jpg",
+      "mask_name": "coco_seg_val_0390_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 391,
+      "original_coco_id": 123633,
+      "file_name": "coco_seg_val_0391.jpg",
+      "mask_name": "coco_seg_val_0391_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 392,
+      "original_coco_id": 198510,
+      "file_name": "coco_seg_val_0392.jpg",
+      "mask_name": "coco_seg_val_0392_mask.png",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 393,
+      "original_coco_id": 299887,
+      "file_name": "coco_seg_val_0393.jpg",
+      "mask_name": "coco_seg_val_0393_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 394,
+      "original_coco_id": 193926,
+      "file_name": "coco_seg_val_0394.jpg",
+      "mask_name": "coco_seg_val_0394_mask.png",
+      "width": 640,
+      "height": 477
+    },
+    {
+      "id": 395,
+      "original_coco_id": 187236,
+      "file_name": "coco_seg_val_0395.jpg",
+      "mask_name": "coco_seg_val_0395_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 396,
+      "original_coco_id": 270297,
+      "file_name": "coco_seg_val_0396.jpg",
+      "mask_name": "coco_seg_val_0396_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 397,
+      "original_coco_id": 159282,
+      "file_name": "coco_seg_val_0397.jpg",
+      "mask_name": "coco_seg_val_0397_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 398,
+      "original_coco_id": 48504,
+      "file_name": "coco_seg_val_0398.jpg",
+      "mask_name": "coco_seg_val_0398_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 399,
+      "original_coco_id": 448410,
+      "file_name": "coco_seg_val_0399.jpg",
+      "mask_name": "coco_seg_val_0399_mask.png",
+      "width": 640,
+      "height": 437
+    },
+    {
+      "id": 400,
+      "original_coco_id": 309678,
+      "file_name": "coco_seg_val_0400.jpg",
+      "mask_name": "coco_seg_val_0400_mask.png",
+      "width": 640,
+      "height": 411
+    },
+    {
+      "id": 401,
+      "original_coco_id": 348881,
+      "file_name": "coco_seg_val_0401.jpg",
+      "mask_name": "coco_seg_val_0401_mask.png",
+      "width": 640,
+      "height": 462
+    },
+    {
+      "id": 402,
+      "original_coco_id": 344621,
+      "file_name": "coco_seg_val_0402.jpg",
+      "mask_name": "coco_seg_val_0402_mask.png",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 403,
+      "original_coco_id": 323709,
+      "file_name": "coco_seg_val_0403.jpg",
+      "mask_name": "coco_seg_val_0403_mask.png",
+      "width": 640,
+      "height": 320
+    },
+    {
+      "id": 404,
+      "original_coco_id": 559956,
+      "file_name": "coco_seg_val_0404.jpg",
+      "mask_name": "coco_seg_val_0404_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 405,
+      "original_coco_id": 482275,
+      "file_name": "coco_seg_val_0405.jpg",
+      "mask_name": "coco_seg_val_0405_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 406,
+      "original_coco_id": 146498,
+      "file_name": "coco_seg_val_0406.jpg",
+      "mask_name": "coco_seg_val_0406_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 407,
+      "original_coco_id": 153529,
+      "file_name": "coco_seg_val_0407.jpg",
+      "mask_name": "coco_seg_val_0407_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 408,
+      "original_coco_id": 219440,
+      "file_name": "coco_seg_val_0408.jpg",
+      "mask_name": "coco_seg_val_0408_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 409,
+      "original_coco_id": 80666,
+      "file_name": "coco_seg_val_0409.jpg",
+      "mask_name": "coco_seg_val_0409_mask.png",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 410,
+      "original_coco_id": 511076,
+      "file_name": "coco_seg_val_0410.jpg",
+      "mask_name": "coco_seg_val_0410_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 411,
+      "original_coco_id": 15335,
+      "file_name": "coco_seg_val_0411.jpg",
+      "mask_name": "coco_seg_val_0411_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 412,
+      "original_coco_id": 230993,
+      "file_name": "coco_seg_val_0412.jpg",
+      "mask_name": "coco_seg_val_0412_mask.png",
+      "width": 640,
+      "height": 408
+    },
+    {
+      "id": 413,
+      "original_coco_id": 19042,
+      "file_name": "coco_seg_val_0413.jpg",
+      "mask_name": "coco_seg_val_0413_mask.png",
+      "width": 640,
+      "height": 371
+    },
+    {
+      "id": 414,
+      "original_coco_id": 393569,
+      "file_name": "coco_seg_val_0414.jpg",
+      "mask_name": "coco_seg_val_0414_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 415,
+      "original_coco_id": 23126,
+      "file_name": "coco_seg_val_0415.jpg",
+      "mask_name": "coco_seg_val_0415_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 416,
+      "original_coco_id": 126226,
+      "file_name": "coco_seg_val_0416.jpg",
+      "mask_name": "coco_seg_val_0416_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 417,
+      "original_coco_id": 394940,
+      "file_name": "coco_seg_val_0417.jpg",
+      "mask_name": "coco_seg_val_0417_mask.png",
+      "width": 426,
+      "height": 640
+    },
+    {
+      "id": 418,
+      "original_coco_id": 555050,
+      "file_name": "coco_seg_val_0418.jpg",
+      "mask_name": "coco_seg_val_0418_mask.png",
+      "width": 500,
+      "height": 322
+    },
+    {
+      "id": 419,
+      "original_coco_id": 183500,
+      "file_name": "coco_seg_val_0419.jpg",
+      "mask_name": "coco_seg_val_0419_mask.png",
+      "width": 640,
+      "height": 430
+    },
+    {
+      "id": 420,
+      "original_coco_id": 302990,
+      "file_name": "coco_seg_val_0420.jpg",
+      "mask_name": "coco_seg_val_0420_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 421,
+      "original_coco_id": 572462,
+      "file_name": "coco_seg_val_0421.jpg",
+      "mask_name": "coco_seg_val_0421_mask.png",
+      "width": 612,
+      "height": 612
+    },
+    {
+      "id": 422,
+      "original_coco_id": 255912,
+      "file_name": "coco_seg_val_0422.jpg",
+      "mask_name": "coco_seg_val_0422_mask.png",
+      "width": 640,
+      "height": 359
+    },
+    {
+      "id": 423,
+      "original_coco_id": 302760,
+      "file_name": "coco_seg_val_0423.jpg",
+      "mask_name": "coco_seg_val_0423_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 424,
+      "original_coco_id": 38829,
+      "file_name": "coco_seg_val_0424.jpg",
+      "mask_name": "coco_seg_val_0424_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 425,
+      "original_coco_id": 493799,
+      "file_name": "coco_seg_val_0425.jpg",
+      "mask_name": "coco_seg_val_0425_mask.png",
+      "width": 640,
+      "height": 483
+    },
+    {
+      "id": 426,
+      "original_coco_id": 520324,
+      "file_name": "coco_seg_val_0426.jpg",
+      "mask_name": "coco_seg_val_0426_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 427,
+      "original_coco_id": 180011,
+      "file_name": "coco_seg_val_0427.jpg",
+      "mask_name": "coco_seg_val_0427_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 428,
+      "original_coco_id": 155443,
+      "file_name": "coco_seg_val_0428.jpg",
+      "mask_name": "coco_seg_val_0428_mask.png",
+      "width": 640,
+      "height": 423
+    },
+    {
+      "id": 429,
+      "original_coco_id": 411953,
+      "file_name": "coco_seg_val_0429.jpg",
+      "mask_name": "coco_seg_val_0429_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 430,
+      "original_coco_id": 286660,
+      "file_name": "coco_seg_val_0430.jpg",
+      "mask_name": "coco_seg_val_0430_mask.png",
+      "width": 371,
+      "height": 500
+    },
+    {
+      "id": 431,
+      "original_coco_id": 343453,
+      "file_name": "coco_seg_val_0431.jpg",
+      "mask_name": "coco_seg_val_0431_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 432,
+      "original_coco_id": 132375,
+      "file_name": "coco_seg_val_0432.jpg",
+      "mask_name": "coco_seg_val_0432_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 433,
+      "original_coco_id": 203639,
+      "file_name": "coco_seg_val_0433.jpg",
+      "mask_name": "coco_seg_val_0433_mask.png",
+      "width": 486,
+      "height": 640
+    },
+    {
+      "id": 434,
+      "original_coco_id": 295478,
+      "file_name": "coco_seg_val_0434.jpg",
+      "mask_name": "coco_seg_val_0434_mask.png",
+      "width": 512,
+      "height": 640
+    },
+    {
+      "id": 435,
+      "original_coco_id": 47585,
+      "file_name": "coco_seg_val_0435.jpg",
+      "mask_name": "coco_seg_val_0435_mask.png",
+      "width": 424,
+      "height": 640
+    },
+    {
+      "id": 436,
+      "original_coco_id": 385029,
+      "file_name": "coco_seg_val_0436.jpg",
+      "mask_name": "coco_seg_val_0436_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 437,
+      "original_coco_id": 475064,
+      "file_name": "coco_seg_val_0437.jpg",
+      "mask_name": "coco_seg_val_0437_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 438,
+      "original_coco_id": 9590,
+      "file_name": "coco_seg_val_0438.jpg",
+      "mask_name": "coco_seg_val_0438_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 439,
+      "original_coco_id": 530820,
+      "file_name": "coco_seg_val_0439.jpg",
+      "mask_name": "coco_seg_val_0439_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 440,
+      "original_coco_id": 551794,
+      "file_name": "coco_seg_val_0440.jpg",
+      "mask_name": "coco_seg_val_0440_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 441,
+      "original_coco_id": 192670,
+      "file_name": "coco_seg_val_0441.jpg",
+      "mask_name": "coco_seg_val_0441_mask.png",
+      "width": 640,
+      "height": 433
+    },
+    {
+      "id": 442,
+      "original_coco_id": 506656,
+      "file_name": "coco_seg_val_0442.jpg",
+      "mask_name": "coco_seg_val_0442_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 443,
+      "original_coco_id": 334006,
+      "file_name": "coco_seg_val_0443.jpg",
+      "mask_name": "coco_seg_val_0443_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 444,
+      "original_coco_id": 137246,
+      "file_name": "coco_seg_val_0444.jpg",
+      "mask_name": "coco_seg_val_0444_mask.png",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 445,
+      "original_coco_id": 95707,
+      "file_name": "coco_seg_val_0445.jpg",
+      "mask_name": "coco_seg_val_0445_mask.png",
+      "width": 640,
+      "height": 360
+    },
+    {
+      "id": 446,
+      "original_coco_id": 530099,
+      "file_name": "coco_seg_val_0446.jpg",
+      "mask_name": "coco_seg_val_0446_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 447,
+      "original_coco_id": 293044,
+      "file_name": "coco_seg_val_0447.jpg",
+      "mask_name": "coco_seg_val_0447_mask.png",
+      "width": 288,
+      "height": 160
+    },
+    {
+      "id": 448,
+      "original_coco_id": 404839,
+      "file_name": "coco_seg_val_0448.jpg",
+      "mask_name": "coco_seg_val_0448_mask.png",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "id": 449,
+      "original_coco_id": 399560,
+      "file_name": "coco_seg_val_0449.jpg",
+      "mask_name": "coco_seg_val_0449_mask.png",
+      "width": 640,
+      "height": 478
+    },
+    {
+      "id": 450,
+      "original_coco_id": 525155,
+      "file_name": "coco_seg_val_0450.jpg",
+      "mask_name": "coco_seg_val_0450_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 451,
+      "original_coco_id": 312489,
+      "file_name": "coco_seg_val_0451.jpg",
+      "mask_name": "coco_seg_val_0451_mask.png",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 452,
+      "original_coco_id": 368294,
+      "file_name": "coco_seg_val_0452.jpg",
+      "mask_name": "coco_seg_val_0452_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 453,
+      "original_coco_id": 366711,
+      "file_name": "coco_seg_val_0453.jpg",
+      "mask_name": "coco_seg_val_0453_mask.png",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "id": 454,
+      "original_coco_id": 38210,
+      "file_name": "coco_seg_val_0454.jpg",
+      "mask_name": "coco_seg_val_0454_mask.png",
+      "width": 428,
+      "height": 640
+    },
+    {
+      "id": 455,
+      "original_coco_id": 85089,
+      "file_name": "coco_seg_val_0455.jpg",
+      "mask_name": "coco_seg_val_0455_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 456,
+      "original_coco_id": 312213,
+      "file_name": "coco_seg_val_0456.jpg",
+      "mask_name": "coco_seg_val_0456_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 457,
+      "original_coco_id": 491497,
+      "file_name": "coco_seg_val_0457.jpg",
+      "mask_name": "coco_seg_val_0457_mask.png",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 458,
+      "original_coco_id": 145620,
+      "file_name": "coco_seg_val_0458.jpg",
+      "mask_name": "coco_seg_val_0458_mask.png",
+      "width": 640,
+      "height": 436
+    },
+    {
+      "id": 459,
+      "original_coco_id": 407002,
+      "file_name": "coco_seg_val_0459.jpg",
+      "mask_name": "coco_seg_val_0459_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 460,
+      "original_coco_id": 97022,
+      "file_name": "coco_seg_val_0460.jpg",
+      "mask_name": "coco_seg_val_0460_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 461,
+      "original_coco_id": 297084,
+      "file_name": "coco_seg_val_0461.jpg",
+      "mask_name": "coco_seg_val_0461_mask.png",
+      "width": 612,
+      "height": 612
+    },
+    {
+      "id": 462,
+      "original_coco_id": 445792,
+      "file_name": "coco_seg_val_0462.jpg",
+      "mask_name": "coco_seg_val_0462_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 463,
+      "original_coco_id": 296222,
+      "file_name": "coco_seg_val_0463.jpg",
+      "mask_name": "coco_seg_val_0463_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 464,
+      "original_coco_id": 408112,
+      "file_name": "coco_seg_val_0464.jpg",
+      "mask_name": "coco_seg_val_0464_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 465,
+      "original_coco_id": 456015,
+      "file_name": "coco_seg_val_0465.jpg",
+      "mask_name": "coco_seg_val_0465_mask.png",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "id": 466,
+      "original_coco_id": 230008,
+      "file_name": "coco_seg_val_0466.jpg",
+      "mask_name": "coco_seg_val_0466_mask.png",
+      "width": 640,
+      "height": 360
+    },
+    {
+      "id": 467,
+      "original_coco_id": 500257,
+      "file_name": "coco_seg_val_0467.jpg",
+      "mask_name": "coco_seg_val_0467_mask.png",
+      "width": 500,
+      "height": 400
+    },
+    {
+      "id": 468,
+      "original_coco_id": 537153,
+      "file_name": "coco_seg_val_0468.jpg",
+      "mask_name": "coco_seg_val_0468_mask.png",
+      "width": 640,
+      "height": 396
+    },
+    {
+      "id": 469,
+      "original_coco_id": 190007,
+      "file_name": "coco_seg_val_0469.jpg",
+      "mask_name": "coco_seg_val_0469_mask.png",
+      "width": 640,
+      "height": 381
+    },
+    {
+      "id": 470,
+      "original_coco_id": 75612,
+      "file_name": "coco_seg_val_0470.jpg",
+      "mask_name": "coco_seg_val_0470_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 471,
+      "original_coco_id": 417085,
+      "file_name": "coco_seg_val_0471.jpg",
+      "mask_name": "coco_seg_val_0471_mask.png",
+      "width": 640,
+      "height": 360
+    },
+    {
+      "id": 472,
+      "original_coco_id": 331817,
+      "file_name": "coco_seg_val_0472.jpg",
+      "mask_name": "coco_seg_val_0472_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 473,
+      "original_coco_id": 334719,
+      "file_name": "coco_seg_val_0473.jpg",
+      "mask_name": "coco_seg_val_0473_mask.png",
+      "width": 640,
+      "height": 413
+    },
+    {
+      "id": 474,
+      "original_coco_id": 314251,
+      "file_name": "coco_seg_val_0474.jpg",
+      "mask_name": "coco_seg_val_0474_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 475,
+      "original_coco_id": 361506,
+      "file_name": "coco_seg_val_0475.jpg",
+      "mask_name": "coco_seg_val_0475_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 476,
+      "original_coco_id": 355905,
+      "file_name": "coco_seg_val_0476.jpg",
+      "mask_name": "coco_seg_val_0476_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 477,
+      "original_coco_id": 493864,
+      "file_name": "coco_seg_val_0477.jpg",
+      "mask_name": "coco_seg_val_0477_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 478,
+      "original_coco_id": 262487,
+      "file_name": "coco_seg_val_0478.jpg",
+      "mask_name": "coco_seg_val_0478_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 479,
+      "original_coco_id": 21839,
+      "file_name": "coco_seg_val_0479.jpg",
+      "mask_name": "coco_seg_val_0479_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 480,
+      "original_coco_id": 219271,
+      "file_name": "coco_seg_val_0480.jpg",
+      "mask_name": "coco_seg_val_0480_mask.png",
+      "width": 350,
+      "height": 500
+    },
+    {
+      "id": 481,
+      "original_coco_id": 38678,
+      "file_name": "coco_seg_val_0481.jpg",
+      "mask_name": "coco_seg_val_0481_mask.png",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 482,
+      "original_coco_id": 216497,
+      "file_name": "coco_seg_val_0482.jpg",
+      "mask_name": "coco_seg_val_0482_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 483,
+      "original_coco_id": 450399,
+      "file_name": "coco_seg_val_0483.jpg",
+      "mask_name": "coco_seg_val_0483_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 484,
+      "original_coco_id": 555005,
+      "file_name": "coco_seg_val_0484.jpg",
+      "mask_name": "coco_seg_val_0484_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 485,
+      "original_coco_id": 399655,
+      "file_name": "coco_seg_val_0485.jpg",
+      "mask_name": "coco_seg_val_0485_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 486,
+      "original_coco_id": 239347,
+      "file_name": "coco_seg_val_0486.jpg",
+      "mask_name": "coco_seg_val_0486_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 487,
+      "original_coco_id": 23272,
+      "file_name": "coco_seg_val_0487.jpg",
+      "mask_name": "coco_seg_val_0487_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 488,
+      "original_coco_id": 357742,
+      "file_name": "coco_seg_val_0488.jpg",
+      "mask_name": "coco_seg_val_0488_mask.png",
+      "width": 429,
+      "height": 640
+    },
+    {
+      "id": 489,
+      "original_coco_id": 362520,
+      "file_name": "coco_seg_val_0489.jpg",
+      "mask_name": "coco_seg_val_0489_mask.png",
+      "width": 424,
+      "height": 640
+    },
+    {
+      "id": 490,
+      "original_coco_id": 39785,
+      "file_name": "coco_seg_val_0490.jpg",
+      "mask_name": "coco_seg_val_0490_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 491,
+      "original_coco_id": 183716,
+      "file_name": "coco_seg_val_0491.jpg",
+      "mask_name": "coco_seg_val_0491_mask.png",
+      "width": 353,
+      "height": 500
+    },
+    {
+      "id": 492,
+      "original_coco_id": 136334,
+      "file_name": "coco_seg_val_0492.jpg",
+      "mask_name": "coco_seg_val_0492_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 493,
+      "original_coco_id": 578236,
+      "file_name": "coco_seg_val_0493.jpg",
+      "mask_name": "coco_seg_val_0493_mask.png",
+      "width": 429,
+      "height": 640
+    },
+    {
+      "id": 494,
+      "original_coco_id": 471567,
+      "file_name": "coco_seg_val_0494.jpg",
+      "mask_name": "coco_seg_val_0494_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 495,
+      "original_coco_id": 119828,
+      "file_name": "coco_seg_val_0495.jpg",
+      "mask_name": "coco_seg_val_0495_mask.png",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 496,
+      "original_coco_id": 578500,
+      "file_name": "coco_seg_val_0496.jpg",
+      "mask_name": "coco_seg_val_0496_mask.png",
+      "width": 640,
+      "height": 290
+    },
+    {
+      "id": 497,
+      "original_coco_id": 306437,
+      "file_name": "coco_seg_val_0497.jpg",
+      "mask_name": "coco_seg_val_0497_mask.png",
+      "width": 426,
+      "height": 640
+    },
+    {
+      "id": 498,
+      "original_coco_id": 407298,
+      "file_name": "coco_seg_val_0498.jpg",
+      "mask_name": "coco_seg_val_0498_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 499,
+      "original_coco_id": 560178,
+      "file_name": "coco_seg_val_0499.jpg",
+      "mask_name": "coco_seg_val_0499_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 500,
+      "original_coco_id": 224051,
+      "file_name": "coco_seg_val_0500.jpg",
+      "mask_name": "coco_seg_val_0500_mask.png",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "id": 501,
+      "original_coco_id": 349184,
+      "file_name": "coco_seg_val_0501.jpg",
+      "mask_name": "coco_seg_val_0501_mask.png",
+      "width": 428,
+      "height": 640
+    },
+    {
+      "id": 502,
+      "original_coco_id": 290179,
+      "file_name": "coco_seg_val_0502.jpg",
+      "mask_name": "coco_seg_val_0502_mask.png",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "id": 503,
+      "original_coco_id": 29187,
+      "file_name": "coco_seg_val_0503.jpg",
+      "mask_name": "coco_seg_val_0503_mask.png",
+      "width": 640,
+      "height": 491
+    },
+    {
+      "id": 504,
+      "original_coco_id": 15660,
+      "file_name": "coco_seg_val_0504.jpg",
+      "mask_name": "coco_seg_val_0504_mask.png",
+      "width": 640,
+      "height": 348
+    },
+    {
+      "id": 505,
+      "original_coco_id": 263299,
+      "file_name": "coco_seg_val_0505.jpg",
+      "mask_name": "coco_seg_val_0505_mask.png",
+      "width": 500,
+      "height": 335
+    },
+    {
+      "id": 506,
+      "original_coco_id": 473118,
+      "file_name": "coco_seg_val_0506.jpg",
+      "mask_name": "coco_seg_val_0506_mask.png",
+      "width": 346,
+      "height": 500
+    },
+    {
+      "id": 507,
+      "original_coco_id": 46048,
+      "file_name": "coco_seg_val_0507.jpg",
+      "mask_name": "coco_seg_val_0507_mask.png",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 508,
+      "original_coco_id": 484978,
+      "file_name": "coco_seg_val_0508.jpg",
+      "mask_name": "coco_seg_val_0508_mask.png",
+      "width": 640,
+      "height": 491
+    },
+    {
+      "id": 509,
+      "original_coco_id": 172935,
+      "file_name": "coco_seg_val_0509.jpg",
+      "mask_name": "coco_seg_val_0509_mask.png",
+      "width": 488,
+      "height": 364
+    },
+    {
+      "id": 510,
+      "original_coco_id": 552612,
+      "file_name": "coco_seg_val_0510.jpg",
+      "mask_name": "coco_seg_val_0510_mask.png",
+      "width": 612,
+      "height": 612
+    },
+    {
+      "id": 511,
+      "original_coco_id": 198805,
+      "file_name": "coco_seg_val_0511.jpg",
+      "mask_name": "coco_seg_val_0511_mask.png",
+      "width": 640,
+      "height": 398
+    },
+    {
+      "id": 512,
+      "original_coco_id": 86582,
+      "file_name": "coco_seg_val_0512.jpg",
+      "mask_name": "coco_seg_val_0512_mask.png",
+      "width": 640,
+      "height": 427
+    }
+  ]
+}

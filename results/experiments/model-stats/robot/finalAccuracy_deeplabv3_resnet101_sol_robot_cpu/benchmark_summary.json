@@ -1,0 +1,86 @@
+{
+    "run_id": "finalAccuracy_deeplabv3_resnet101_sol_robot_cpu",
+    "backend": "sol",
+    "host": "robot",
+    "model": "deeplabv3_resnet101",
+    "model_type": "semantic_segmentation",
+    "device": "cpu",
+    "num_samples": 512,
+    "time_window": {
+        "start": "2026-02-27T22:43:11.225557+00:00",
+        "stop": "2026-02-27T22:50:04.885692+00:00",
+        "duration_sec": 413.660135
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 1.27,
+        "inference_std": 0.01,
+        "system": 1.25,
+        "system_std": 0.01
+    },
+    "accuracy": {
+        "metric": "mIoU",
+        "score": 0.4539
+    },
+    "preprocessing_ms": {
+        "mean": 5.7846,
+        "std": 1.1095,
+        "min": 2.161,
+        "max": 11.1518,
+        "p25": 5.2187,
+        "p50": 5.7668,
+        "p75": 6.2774,
+        "p90": 6.8751,
+        "p95": 7.287,
+        "p99": 9.8512
+    },
+    "inference_ms": {
+        "mean": 785.1866,
+        "std": 10.1876,
+        "min": 764.6588,
+        "max": 917.6578,
+        "p25": 782.2898,
+        "p50": 784.9603,
+        "p75": 787.3188,
+        "p90": 789.3705,
+        "p95": 791.1807,
+        "p99": 802.0399
+    },
+    "postprocessing_ms": {
+        "mean": 7.8365,
+        "std": 0.4126,
+        "min": 6.928,
+        "max": 12.0194,
+        "p25": 7.5991,
+        "p50": 7.813,
+        "p75": 8.041,
+        "p90": 8.2099,
+        "p95": 8.2981,
+        "p99": 8.5589
+    },
+    "system_ms": {
+        "mean": 798.8208,
+        "std": 10.3235,
+        "min": 777.8956,
+        "max": 932.8149,
+        "p25": 795.6548,
+        "p50": 798.426,
+        "p75": 800.9156,
+        "p90": 803.2187,
+        "p95": 805.5162,
+        "p99": 816.8881
+    },
+    "confidence_score": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+    },
+    "sol_run_mode": 2
+}

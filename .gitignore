@@ -6,9 +6,19 @@ app/models/**/*
 
 sol-installers/
 
-__pycache__
+__pycache__/
+.sol/
+
 .env
+.venv/
 app/static/videos/uploads/
 
 dds
 .db3
+
+# ignore media artifacts under src/data
+src/data/**/*.jpg
+src/data/**/*.mp4
+
+# ignore large COCO train annotation jsons
+src/data/**/annotations/*_train2017.json

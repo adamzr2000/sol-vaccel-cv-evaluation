@@ -1,0 +1,86 @@
+{
+    "run_id": "finalOverheadv2_resnet50_sol_edge-asus_gpu",
+    "backend": "sol",
+    "host": "edge-asus",
+    "model": "resnet50",
+    "model_type": "image_classification",
+    "device": "gpu",
+    "num_samples": 512,
+    "time_window": {
+        "start": "2026-03-01T01:22:57.131591+00:00",
+        "stop": "2026-03-01T01:22:59.504251+00:00",
+        "duration_sec": 2.37266
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 305.37,
+        "inference_std": 15.99,
+        "system": 216.63,
+        "system_std": 25.53
+    },
+    "accuracy": {
+        "metric": "Top-1 Acc",
+        "score": 0.7344
+    },
+    "preprocessing_ms": {
+        "mean": 1.2969,
+        "std": 1.6646,
+        "min": 0.5111,
+        "max": 27.3092,
+        "p25": 0.9591,
+        "p50": 1.0756,
+        "p75": 1.1915,
+        "p90": 1.3475,
+        "p95": 1.7314,
+        "p99": 9.3121
+    },
+    "inference_ms": {
+        "mean": 3.2747,
+        "std": 0.2343,
+        "min": 2.9874,
+        "max": 6.9006,
+        "p25": 3.1739,
+        "p50": 3.2003,
+        "p75": 3.2937,
+        "p90": 3.4295,
+        "p95": 3.6876,
+        "p99": 3.9511
+    },
+    "postprocessing_ms": {
+        "mean": 0.0316,
+        "std": 0.0058,
+        "min": 0.028,
+        "max": 0.0855,
+        "p25": 0.0298,
+        "p50": 0.0305,
+        "p75": 0.0314,
+        "p90": 0.0327,
+        "p95": 0.0354,
+        "p99": 0.0645
+    },
+    "system_ms": {
+        "mean": 4.6162,
+        "std": 1.6986,
+        "min": 3.7147,
+        "max": 30.7832,
+        "p25": 4.2214,
+        "p50": 4.3662,
+        "p75": 4.5293,
+        "p90": 4.9005,
+        "p95": 5.1406,
+        "p99": 12.9172
+    },
+    "confidence_score": {
+        "mean": 78.8689,
+        "std": 24.9934,
+        "min": 8.1332,
+        "max": 100.0,
+        "p25": 61.1689,
+        "p50": 91.9539,
+        "p75": 99.4346,
+        "p90": 99.9596,
+        "p95": 99.9936,
+        "p99": 99.9999
+    },
+    "sol_run_mode": 2
+}

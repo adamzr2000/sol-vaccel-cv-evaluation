@@ -1,0 +1,85 @@
+{
+    "run_id": "finalAccuracy-wifi_swin3d_b_vaccel-remote-torch_robot_cpu_target-gpu",
+    "backend": "vaccel-remote-torch",
+    "host": "robot",
+    "model": "swin3d_b",
+    "model_type": "video_classification",
+    "device": "gpu",
+    "num_samples": 64,
+    "time_window": {
+        "start": "2026-02-27T23:22:20.005810+00:00",
+        "stop": "2026-02-27T23:23:45.141176+00:00",
+        "duration_sec": 85.135366
+    },
+    "frames_per_sample": 16,
+    "fps": {
+        "inference": 14.95,
+        "inference_std": 1.5,
+        "system": 0.75,
+        "system_std": 0.72
+    },
+    "accuracy": {
+        "metric": "Top-1 Acc",
+        "score": 0.6406
+    },
+    "preprocessing_ms": {
+        "mean": 1262.9428,
+        "std": 848.0561,
+        "min": 190.2927,
+        "max": 3532.7273,
+        "p25": 575.5615,
+        "p50": 871.2445,
+        "p75": 1940.688,
+        "p90": 2567.9342,
+        "p95": 2717.3919,
+        "p99": 3324.7847
+    },
+    "inference_ms": {
+        "mean": 66.8847,
+        "std": 6.7828,
+        "min": 55.5066,
+        "max": 81.0692,
+        "p25": 61.2014,
+        "p50": 65.7434,
+        "p75": 72.9005,
+        "p90": 76.7844,
+        "p95": 78.609,
+        "p99": 80.3851
+    },
+    "postprocessing_ms": {
+        "mean": 0.2302,
+        "std": 0.0388,
+        "min": 0.1733,
+        "max": 0.3689,
+        "p25": 0.199,
+        "p50": 0.2235,
+        "p75": 0.2466,
+        "p90": 0.2789,
+        "p95": 0.3135,
+        "p99": 0.3539
+    },
+    "system_ms": {
+        "mean": 1330.0719,
+        "std": 853.6922,
+        "min": 252.0347,
+        "max": 3606.2237,
+        "p25": 638.7072,
+        "p50": 937.274,
+        "p75": 2015.9584,
+        "p90": 2644.878,
+        "p95": 2791.6863,
+        "p99": 3401.6771
+    },
+    "confidence_score": {
+        "mean": 84.3563,
+        "std": 23.0037,
+        "min": 19.7152,
+        "max": 100.0,
+        "p25": 77.0706,
+        "p50": 97.1357,
+        "p75": 99.9363,
+        "p90": 99.9997,
+        "p95": 100.0,
+        "p99": 100.0
+    }
+}

@@ -1,0 +1,86 @@
+{
+    "run_id": "finalAccuracy-wifi_swin_s_vaccel-remote-sol_robot_cpu_target-gpu",
+    "backend": "vaccel-remote-sol",
+    "host": "robot",
+    "model": "swin_s",
+    "model_type": "image_classification",
+    "device": "gpu",
+    "num_samples": 512,
+    "time_window": {
+        "start": "2026-02-27T23:38:35.545187+00:00",
+        "stop": "2026-02-27T23:38:50.006416+00:00",
+        "duration_sec": 14.461229
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 50.26,
+        "inference_std": 4.71,
+        "system": 35.52,
+        "system_std": 4.11
+    },
+    "accuracy": {
+        "metric": "Top-1 Acc",
+        "score": 0.7344
+    },
+    "preprocessing_ms": {
+        "mean": 8.0681,
+        "std": 4.2674,
+        "min": 2.6389,
+        "max": 67.2406,
+        "p25": 6.7984,
+        "p50": 7.4932,
+        "p75": 8.2825,
+        "p90": 9.2221,
+        "p95": 10.038,
+        "p99": 32.0234
+    },
+    "inference_ms": {
+        "mean": 19.8953,
+        "std": 2.4313,
+        "min": 17.232,
+        "max": 42.4032,
+        "p25": 18.516,
+        "p50": 19.1739,
+        "p75": 20.5669,
+        "p90": 22.4363,
+        "p95": 24.0354,
+        "p99": 26.3417
+    },
+    "postprocessing_ms": {
+        "mean": 0.1834,
+        "std": 0.0474,
+        "min": 0.1203,
+        "max": 0.4909,
+        "p25": 0.1523,
+        "p50": 0.1706,
+        "p75": 0.1977,
+        "p90": 0.2374,
+        "p95": 0.2745,
+        "p99": 0.3596
+    },
+    "system_ms": {
+        "mean": 28.1565,
+        "std": 4.9133,
+        "min": 21.066,
+        "max": 87.6763,
+        "p25": 26.0303,
+        "p50": 27.1061,
+        "p75": 28.9328,
+        "p90": 31.5294,
+        "p95": 33.4467,
+        "p99": 51.8314
+    },
+    "confidence_score": {
+        "mean": 78.8689,
+        "std": 24.9934,
+        "min": 8.1332,
+        "max": 100.0,
+        "p25": 61.1689,
+        "p50": 91.9539,
+        "p75": 99.4346,
+        "p90": 99.9596,
+        "p95": 99.9936,
+        "p99": 99.9999
+    },
+    "sol_run_mode": 2
+}

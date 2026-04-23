@@ -1,0 +1,513 @@
+id,file_name,ground_truth_id,ground_truth_label,width,height
+1,imagenet_val_0001_label_396.jpg,396,lionfish,500,375
+2,imagenet_val_0002_label_370.jpg,370,"guenon, guenon monkey",350,500
+3,imagenet_val_0003_label_408.jpg,408,"amphibian, amphibious vehicle",613,510
+4,imagenet_val_0004_label_884.jpg,884,vault,500,370
+5,imagenet_val_0005_label_56.jpg,56,"king snake, kingsnake",500,375
+6,imagenet_val_0006_label_678.jpg,678,neck brace,375,500
+7,imagenet_val_0007_label_917.jpg,917,comic book,415,500
+8,imagenet_val_0008_label_937.jpg,937,broccoli,504,341
+9,imagenet_val_0009_label_964.jpg,964,potpie,500,375
+10,imagenet_val_0010_label_376.jpg,376,"proboscis monkey, Nasalis larvatus",500,334
+11,imagenet_val_0011_label_403.jpg,403,"aircraft carrier, carrier, flattop, attack aircraft carrier",500,375
+12,imagenet_val_0012_label_552.jpg,552,"feather boa, boa",500,500
+13,imagenet_val_0013_label_927.jpg,927,trifle,500,374
+14,imagenet_val_0014_label_458.jpg,458,"brass, memorial tablet, plaque",500,366
+15,imagenet_val_0015_label_907.jpg,907,wine bottle,414,500
+16,imagenet_val_0016_label_812.jpg,812,space shuttle,500,375
+17,imagenet_val_0017_label_202.jpg,202,soft-coated wheaten terrier,500,333
+18,imagenet_val_0018_label_421.jpg,421,"bannister, banister, balustrade, balusters, handrail",160,132
+19,imagenet_val_0019_label_240.jpg,240,Appenzeller,500,375
+20,imagenet_val_0020_label_178.jpg,178,Weimaraner,375,500
+21,imagenet_val_0021_label_693.jpg,693,"paddle, boat paddle",469,500
+22,imagenet_val_0022_label_239.jpg,239,Bernese mountain dog,500,375
+23,imagenet_val_0023_label_70.jpg,70,"harvestman, daddy longlegs, Phalangium opilio",500,400
+24,imagenet_val_0024_label_728.jpg,728,plastic bag,500,375
+25,imagenet_val_0025_label_494.jpg,494,"chime, bell, gong",429,500
+26,imagenet_val_0026_label_882.jpg,882,"vacuum, vacuum cleaner",500,375
+27,imagenet_val_0027_label_338.jpg,338,"guinea pig, Cavia cobaya",500,403
+28,imagenet_val_0028_label_47.jpg,47,"African chameleon, Chamaeleo chamaeleon",500,333
+29,imagenet_val_0029_label_769.jpg,769,"rule, ruler",400,400
+30,imagenet_val_0030_label_773.jpg,773,"saltshaker, salt shaker",386,450
+31,imagenet_val_0031_label_321.jpg,321,admiral,500,376
+32,imagenet_val_0032_label_790.jpg,790,shopping basket,307,500
+33,imagenet_val_0033_label_518.jpg,518,crash helmet,320,320
+34,imagenet_val_0034_label_543.jpg,543,dumbbell,500,375
+35,imagenet_val_0035_label_988.jpg,988,acorn,420,500
+36,imagenet_val_0036_label_790.jpg,790,shopping basket,350,308
+37,imagenet_val_0037_label_350.jpg,350,"ibex, Capra ibex",500,375
+38,imagenet_val_0038_label_670.jpg,670,"motor scooter, scooter",500,325
+39,imagenet_val_0039_label_4.jpg,4,"hammerhead, hammerhead shark",500,406
+40,imagenet_val_0040_label_338.jpg,338,"guinea pig, Cavia cobaya",500,421
+41,imagenet_val_0041_label_355.jpg,355,llama,500,333
+42,imagenet_val_0042_label_902.jpg,902,whistle,1024,768
+43,imagenet_val_0043_label_280.jpg,280,"grey fox, gray fox, Urocyon cinereoargenteus",500,332
+44,imagenet_val_0044_label_621.jpg,621,"lawn mower, mower",500,334
+45,imagenet_val_0045_label_630.jpg,630,Loafer,500,375
+46,imagenet_val_0046_label_10.jpg,10,"brambling, Fringilla montifringilla",500,450
+47,imagenet_val_0047_label_939.jpg,939,"zucchini, courgette",500,375
+48,imagenet_val_0048_label_393.jpg,393,anemone fish,500,375
+49,imagenet_val_0049_label_944.jpg,944,"artichoke, globe artichoke",500,334
+50,imagenet_val_0050_label_291.jpg,291,"lion, king of beasts, Panthera leo",289,215
+51,imagenet_val_0051_label_444.jpg,444,"bicycle-built-for-two, tandem bicycle, tandem",500,375
+52,imagenet_val_0052_label_218.jpg,218,Welsh springer spaniel,375,500
+53,imagenet_val_0053_label_769.jpg,769,"rule, ruler",500,344
+54,imagenet_val_0054_label_8.jpg,8,hen,500,375
+55,imagenet_val_0055_label_632.jpg,632,"loudspeaker, speaker, speaker unit, loudspeaker system, speaker system",500,333
+56,imagenet_val_0056_label_62.jpg,62,"rock python, rock snake, Python sebae",500,393
+57,imagenet_val_0057_label_824.jpg,824,stole,500,375
+58,imagenet_val_0058_label_273.jpg,273,"dingo, warrigal, warragal, Canis dingo",500,375
+59,imagenet_val_0059_label_188.jpg,188,wire-haired fox terrier,500,353
+60,imagenet_val_0060_label_954.jpg,954,banana,375,500
+61,imagenet_val_0061_label_651.jpg,651,"microwave, microwave oven",500,375
+62,imagenet_val_0062_label_156.jpg,156,Blenheim spaniel,500,375
+63,imagenet_val_0063_label_194.jpg,194,"Dandie Dinmont, Dandie Dinmont terrier",400,486
+64,imagenet_val_0064_label_777.jpg,777,scabbard,500,375
+65,imagenet_val_0065_label_144.jpg,144,pelican,500,413
+66,imagenet_val_0066_label_993.jpg,993,gyromitra,500,375
+67,imagenet_val_0067_label_732.jpg,732,"Polaroid camera, Polaroid Land camera",500,375
+68,imagenet_val_0068_label_13.jpg,13,"junco, snowbird",500,487
+69,imagenet_val_0069_label_0.jpg,0,"tench, Tinca tinca",500,375
+70,imagenet_val_0070_label_946.jpg,946,cardoon,375,500
+71,imagenet_val_0071_label_683.jpg,683,"oboe, hautboy, hautbois",400,264
+72,imagenet_val_0072_label_134.jpg,134,crane,375,500
+73,imagenet_val_0073_label_2.jpg,2,"great white shark, white shark, man-eater, man-eating shark, Carcharodon carcharias",500,375
+74,imagenet_val_0074_label_158.jpg,158,toy terrier,365,500
+75,imagenet_val_0075_label_243.jpg,243,bull mastiff,400,500
+76,imagenet_val_0076_label_857.jpg,857,throne,375,500
+77,imagenet_val_0077_label_645.jpg,645,maypole,500,375
+78,imagenet_val_0078_label_254.jpg,254,"pug, pug-dog",500,375
+79,imagenet_val_0079_label_383.jpg,383,"Madagascar cat, ring-tailed lemur, Lemur catta",384,288
+80,imagenet_val_0080_label_170.jpg,170,Irish wolfhound,500,375
+81,imagenet_val_0081_label_806.jpg,806,sock,500,431
+82,imagenet_val_0082_label_66.jpg,66,"horned viper, cerastes, sand viper, horned asp, Cerastes cornutus",500,393
+83,imagenet_val_0083_label_953.jpg,953,"pineapple, ananas",500,471
+84,imagenet_val_0084_label_74.jpg,74,"garden spider, Aranea diademata",500,375
+85,imagenet_val_0085_label_449.jpg,449,boathouse,500,375
+86,imagenet_val_0086_label_915.jpg,915,yurt,500,375
+87,imagenet_val_0087_label_674.jpg,674,mousetrap,500,333
+88,imagenet_val_0088_label_580.jpg,580,"greenhouse, nursery, glasshouse",421,500
+89,imagenet_val_0089_label_933.jpg,933,cheeseburger,500,375
+90,imagenet_val_0090_label_194.jpg,194,"Dandie Dinmont, Dandie Dinmont terrier",500,429
+91,imagenet_val_0091_label_10.jpg,10,"brambling, Fringilla montifringilla",500,388
+92,imagenet_val_0092_label_585.jpg,585,hair spray,375,500
+93,imagenet_val_0093_label_689.jpg,689,overskirt,500,375
+94,imagenet_val_0094_label_315.jpg,315,"mantis, mantid",500,375
+95,imagenet_val_0095_label_376.jpg,376,"proboscis monkey, Nasalis larvatus",500,333
+96,imagenet_val_0096_label_166.jpg,166,"Walker hound, Walker foxhound",500,375
+97,imagenet_val_0097_label_724.jpg,724,"pirate, pirate ship",500,375
+98,imagenet_val_0098_label_731.jpg,731,"plunger, plumber's helper",500,333
+99,imagenet_val_0099_label_157.jpg,157,papillon,500,337
+100,imagenet_val_0100_label_468.jpg,468,"cab, hack, taxi, taxicab",500,375
+101,imagenet_val_0101_label_992.jpg,992,agaric,500,375
+102,imagenet_val_0102_label_455.jpg,455,bottlecap,500,375
+103,imagenet_val_0103_label_883.jpg,883,vase,375,500
+104,imagenet_val_0104_label_415.jpg,415,"bakery, bakeshop, bakehouse",387,500
+105,imagenet_val_0105_label_446.jpg,446,"binder, ring-binder",500,375
+106,imagenet_val_0106_label_830.jpg,830,stretcher,500,346
+107,imagenet_val_0107_label_804.jpg,804,soap dispenser,500,451
+108,imagenet_val_0108_label_780.jpg,780,schooner,1024,685
+109,imagenet_val_0109_label_109.jpg,109,brain coral,500,375
+110,imagenet_val_0110_label_918.jpg,918,"crossword puzzle, crossword",500,375
+111,imagenet_val_0111_label_808.jpg,808,sombrero,500,488
+112,imagenet_val_0112_label_928.jpg,928,"ice cream, icecream",500,409
+113,imagenet_val_0113_label_382.jpg,382,"squirrel monkey, Saimiri sciureus",250,170
+114,imagenet_val_0114_label_137.jpg,137,"American coot, marsh hen, mud hen, water hen, Fulica americana",500,377
+115,imagenet_val_0115_label_462.jpg,462,broom,333,500
+116,imagenet_val_0116_label_830.jpg,830,stretcher,500,348
+117,imagenet_val_0117_label_100.jpg,100,"black swan, Cygnus atratus",500,473
+118,imagenet_val_0118_label_684.jpg,684,"ocarina, sweet potato",500,334
+119,imagenet_val_0119_label_337.jpg,337,beaver,500,375
+120,imagenet_val_0120_label_123.jpg,123,"spiny lobster, langouste, rock lobster, crawfish, crayfish, sea crawfish",375,500
+121,imagenet_val_0121_label_905.jpg,905,window shade,500,376
+122,imagenet_val_0122_label_284.jpg,284,"Siamese cat, Siamese",398,500
+123,imagenet_val_0123_label_165.jpg,165,black-and-tan coonhound,500,333
+124,imagenet_val_0124_label_552.jpg,552,"feather boa, boa",375,500
+125,imagenet_val_0125_label_76.jpg,76,tarantula,500,400
+126,imagenet_val_0126_label_561.jpg,561,forklift,500,394
+127,imagenet_val_0127_label_370.jpg,370,"guenon, guenon monkey",375,500
+128,imagenet_val_0128_label_142.jpg,142,dowitcher,500,391
+129,imagenet_val_0129_label_798.jpg,798,"slide rule, slipstick",500,338
+130,imagenet_val_0130_label_304.jpg,304,"leaf beetle, chrysomelid",500,447
+131,imagenet_val_0131_label_303.jpg,303,"long-horned beetle, longicorn, longicorn beetle",500,377
+132,imagenet_val_0132_label_246.jpg,246,Great Dane,456,500
+133,imagenet_val_0133_label_940.jpg,940,spaghetti squash,500,333
+134,imagenet_val_0134_label_110.jpg,110,"flatworm, platyhelminth",500,375
+135,imagenet_val_0135_label_171.jpg,171,Italian greyhound,500,375
+136,imagenet_val_0136_label_172.jpg,172,whippet,358,500
+137,imagenet_val_0137_label_148.jpg,148,"killer whale, killer, orca, grampus, sea wolf, Orcinus orca",500,375
+138,imagenet_val_0138_label_967.jpg,967,espresso,375,500
+139,imagenet_val_0139_label_138.jpg,138,bustard,500,483
+140,imagenet_val_0140_label_219.jpg,219,"cocker spaniel, English cocker spaniel, cocker",500,335
+141,imagenet_val_0141_label_946.jpg,946,cardoon,500,375
+142,imagenet_val_0142_label_491.jpg,491,"chain saw, chainsaw",333,500
+143,imagenet_val_0143_label_176.jpg,176,"Saluki, gazelle hound",500,442
+144,imagenet_val_0144_label_0.jpg,0,"tench, Tinca tinca",500,375
+145,imagenet_val_0145_label_861.jpg,861,toilet seat,500,375
+146,imagenet_val_0146_label_825.jpg,825,stone wall,500,335
+147,imagenet_val_0147_label_281.jpg,281,"tabby, tabby cat",500,375
+148,imagenet_val_0148_label_657.jpg,657,missile,500,375
+149,imagenet_val_0149_label_99.jpg,99,goose,500,396
+150,imagenet_val_0150_label_252.jpg,252,"affenpinscher, monkey pinscher, monkey dog",500,333
+151,imagenet_val_0151_label_546.jpg,546,electric guitar,337,500
+152,imagenet_val_0152_label_389.jpg,389,"barracouta, snoek",600,400
+153,imagenet_val_0153_label_78.jpg,78,tick,250,300
+154,imagenet_val_0154_label_226.jpg,226,briard,432,384
+155,imagenet_val_0155_label_473.jpg,473,"can opener, tin opener",599,491
+156,imagenet_val_0156_label_270.jpg,270,"white wolf, Arctic wolf, Canis lupus tundrarum",500,375
+157,imagenet_val_0157_label_813.jpg,813,spatula,500,375
+158,imagenet_val_0158_label_733.jpg,733,pole,500,375
+159,imagenet_val_0159_label_677.jpg,677,nail,375,500
+160,imagenet_val_0160_label_176.jpg,176,"Saluki, gazelle hound",500,426
+161,imagenet_val_0161_label_835.jpg,835,sundial,500,382
+162,imagenet_val_0162_label_748.jpg,748,purse,500,375
+163,imagenet_val_0163_label_29.jpg,29,"axolotl, mud puppy, Ambystoma mexicanum",600,450
+164,imagenet_val_0164_label_128.jpg,128,"black stork, Ciconia nigra",375,500
+165,imagenet_val_0165_label_898.jpg,898,water bottle,500,452
+166,imagenet_val_0166_label_219.jpg,219,"cocker spaniel, English cocker spaniel, cocker",500,332
+167,imagenet_val_0167_label_90.jpg,90,lorikeet,500,440
+168,imagenet_val_0168_label_780.jpg,780,schooner,889,591
+169,imagenet_val_0169_label_869.jpg,869,trench coat,335,500
+170,imagenet_val_0170_label_345.jpg,345,ox,500,375
+171,imagenet_val_0171_label_588.jpg,588,hamper,640,480
+172,imagenet_val_0172_label_812.jpg,812,space shuttle,500,375
+173,imagenet_val_0173_label_568.jpg,568,fur coat,500,375
+174,imagenet_val_0174_label_912.jpg,912,"worm fence, snake fence, snake-rail fence, Virginia fence",500,375
+175,imagenet_val_0175_label_673.jpg,673,"mouse, computer mouse",500,333
+176,imagenet_val_0176_label_489.jpg,489,chainlink fence,500,450
+177,imagenet_val_0177_label_322.jpg,322,"ringlet, ringlet butterfly",500,375
+178,imagenet_val_0178_label_49.jpg,49,"African crocodile, Nile crocodile, Crocodylus niloticus",500,375
+179,imagenet_val_0179_label_68.jpg,68,"sidewinder, horned rattlesnake, Crotalus cerastes",333,500
+180,imagenet_val_0180_label_771.jpg,771,safe,500,375
+181,imagenet_val_0181_label_720.jpg,720,pill bottle,500,375
+182,imagenet_val_0182_label_960.jpg,960,"chocolate sauce, chocolate syrup",500,375
+183,imagenet_val_0183_label_849.jpg,849,teapot,500,357
+184,imagenet_val_0184_label_80.jpg,80,black grouse,500,338
+185,imagenet_val_0185_label_163.jpg,163,"bloodhound, sleuthhound",600,316
+186,imagenet_val_0186_label_353.jpg,353,gazelle,500,333
+187,imagenet_val_0187_label_138.jpg,138,bustard,500,388
+188,imagenet_val_0188_label_764.jpg,764,rifle,500,316
+189,imagenet_val_0189_label_24.jpg,24,"great grey owl, great gray owl, Strix nebulosa",462,500
+190,imagenet_val_0190_label_89.jpg,89,"sulphur-crested cockatoo, Kakatoe galerita, Cacatua galerita",500,500
+191,imagenet_val_0191_label_74.jpg,74,"garden spider, Aranea diademata",500,375
+192,imagenet_val_0192_label_515.jpg,515,"cowboy hat, ten-gallon hat",500,416
+193,imagenet_val_0193_label_835.jpg,835,sundial,500,375
+194,imagenet_val_0194_label_81.jpg,81,ptarmigan,500,500
+195,imagenet_val_0195_label_415.jpg,415,"bakery, bakeshop, bakehouse",500,463
+196,imagenet_val_0196_label_102.jpg,102,"echidna, spiny anteater, anteater",335,500
+197,imagenet_val_0197_label_271.jpg,271,"red wolf, maned wolf, Canis rufus, Canis niger",500,336
+198,imagenet_val_0198_label_799.jpg,799,sliding door,385,500
+199,imagenet_val_0199_label_924.jpg,924,guacamole,500,375
+200,imagenet_val_0200_label_266.jpg,266,miniature poodle,375,500
+201,imagenet_val_0201_label_825.jpg,825,stone wall,500,334
+202,imagenet_val_0202_label_961.jpg,961,dough,500,375
+203,imagenet_val_0203_label_445.jpg,445,"bikini, two-piece",334,500
+204,imagenet_val_0204_label_596.jpg,596,hatchet,500,375
+205,imagenet_val_0205_label_939.jpg,939,"zucchini, courgette",500,375
+206,imagenet_val_0206_label_559.jpg,559,folding chair,500,375
+207,imagenet_val_0207_label_380.jpg,380,"titi, titi monkey",500,375
+208,imagenet_val_0208_label_536.jpg,536,"dock, dockage, docking facility",500,340
+209,imagenet_val_0209_label_659.jpg,659,mixing bowl,500,375
+210,imagenet_val_0210_label_961.jpg,961,dough,500,375
+211,imagenet_val_0211_label_980.jpg,980,volcano,500,375
+212,imagenet_val_0212_label_450.jpg,450,"bobsled, bobsleigh, bob",333,500
+213,imagenet_val_0213_label_818.jpg,818,"spotlight, spot",450,450
+214,imagenet_val_0214_label_596.jpg,596,hatchet,500,375
+215,imagenet_val_0215_label_550.jpg,550,espresso maker,120,126
+216,imagenet_val_0216_label_230.jpg,230,"Shetland sheepdog, Shetland sheep dog, Shetland",375,500
+217,imagenet_val_0217_label_356.jpg,356,weasel,600,397
+218,imagenet_val_0218_label_544.jpg,544,Dutch oven,500,375
+219,imagenet_val_0219_label_408.jpg,408,"amphibian, amphibious vehicle",475,281
+220,imagenet_val_0220_label_627.jpg,627,"limousine, limo",500,333
+221,imagenet_val_0221_label_397.jpg,397,"puffer, pufferfish, blowfish, globefish",500,400
+222,imagenet_val_0222_label_140.jpg,140,"red-backed sandpiper, dunlin, Erolia alpina",500,500
+223,imagenet_val_0223_label_442.jpg,442,"bell cote, bell cot",1024,685
+224,imagenet_val_0224_label_339.jpg,339,sorrel,452,500
+225,imagenet_val_0225_label_441.jpg,441,beer glass,500,498
+226,imagenet_val_0226_label_356.jpg,356,weasel,726,404
+227,imagenet_val_0227_label_868.jpg,868,tray,500,375
+228,imagenet_val_0228_label_317.jpg,317,leafhopper,500,333
+229,imagenet_val_0229_label_983.jpg,983,scuba diver,500,375
+230,imagenet_val_0230_label_479.jpg,479,car wheel,500,375
+231,imagenet_val_0231_label_451.jpg,451,"bolo tie, bolo, bola tie, bola",700,547
+232,imagenet_val_0232_label_631.jpg,631,lotion,505,365
+233,imagenet_val_0233_label_971.jpg,971,bubble,500,375
+234,imagenet_val_0234_label_708.jpg,708,"pedestal, plinth, footstall",375,500
+235,imagenet_val_0235_label_443.jpg,443,bib,375,500
+236,imagenet_val_0236_label_440.jpg,440,beer bottle,375,500
+237,imagenet_val_0237_label_614.jpg,614,kimono,375,500
+238,imagenet_val_0238_label_942.jpg,942,butternut squash,500,500
+239,imagenet_val_0239_label_186.jpg,186,Norwich terrier,500,375
+240,imagenet_val_0240_label_93.jpg,93,hornbill,380,500
+241,imagenet_val_0241_label_311.jpg,311,"grasshopper, hopper",500,375
+242,imagenet_val_0242_label_373.jpg,373,macaque,1898,2657
+243,imagenet_val_0243_label_813.jpg,813,spatula,424,480
+244,imagenet_val_0244_label_607.jpg,607,jack-o'-lantern,500,375
+245,imagenet_val_0245_label_279.jpg,279,"Arctic fox, white fox, Alopex lagopus",500,375
+246,imagenet_val_0246_label_236.jpg,236,"Doberman, Doberman pinscher",500,375
+247,imagenet_val_0247_label_403.jpg,403,"aircraft carrier, carrier, flattop, attack aircraft carrier",500,375
+248,imagenet_val_0248_label_918.jpg,918,"crossword puzzle, crossword",500,375
+249,imagenet_val_0249_label_83.jpg,83,"prairie chicken, prairie grouse, prairie fowl",500,403
+250,imagenet_val_0250_label_666.jpg,666,mortar,891,1200
+251,imagenet_val_0251_label_578.jpg,578,gown,500,339
+252,imagenet_val_0252_label_979.jpg,979,"valley, vale",500,335
+253,imagenet_val_0253_label_843.jpg,843,swing,375,500
+254,imagenet_val_0254_label_991.jpg,991,coral fungus,500,378
+255,imagenet_val_0255_label_920.jpg,920,"traffic light, traffic signal, stoplight",500,375
+256,imagenet_val_0256_label_267.jpg,267,standard poodle,500,375
+257,imagenet_val_0257_label_186.jpg,186,Norwich terrier,500,375
+258,imagenet_val_0258_label_901.jpg,901,whiskey jug,500,295
+259,imagenet_val_0259_label_2.jpg,2,"great white shark, white shark, man-eater, man-eating shark, Carcharodon carcharias",1730,1170
+260,imagenet_val_0260_label_190.jpg,190,"Sealyham terrier, Sealyham",645,380
+261,imagenet_val_0261_label_27.jpg,27,eft,500,375
+262,imagenet_val_0262_label_499.jpg,499,"cleaver, meat cleaver, chopper",500,375
+263,imagenet_val_0263_label_31.jpg,31,"tree frog, tree-frog",500,375
+264,imagenet_val_0264_label_93.jpg,93,hornbill,500,399
+265,imagenet_val_0265_label_948.jpg,948,Granny Smith,500,372
+266,imagenet_val_0266_label_221.jpg,221,Irish water spaniel,500,375
+267,imagenet_val_0267_label_200.jpg,200,"Tibetan terrier, chrysanthemum dog",500,375
+268,imagenet_val_0268_label_757.jpg,757,"recreational vehicle, RV, R.V.",500,403
+269,imagenet_val_0269_label_488.jpg,488,chain,500,391
+270,imagenet_val_0270_label_778.jpg,778,"scale, weighing machine",375,500
+271,imagenet_val_0271_label_63.jpg,63,"Indian cobra, Naja naja",468,507
+272,imagenet_val_0272_label_110.jpg,110,"flatworm, platyhelminth",500,377
+273,imagenet_val_0273_label_245.jpg,245,French bulldog,375,500
+274,imagenet_val_0274_label_525.jpg,525,"dam, dike, dyke",500,375
+275,imagenet_val_0275_label_17.jpg,17,jay,400,500
+276,imagenet_val_0276_label_755.jpg,755,"radio telescope, radio reflector",598,506
+277,imagenet_val_0277_label_548.jpg,548,entertainment center,166,166
+278,imagenet_val_0278_label_431.jpg,431,bassinet,500,375
+279,imagenet_val_0279_label_50.jpg,50,"American alligator, Alligator mississipiensis",500,375
+280,imagenet_val_0280_label_569.jpg,569,"garbage truck, dustcart",500,335
+281,imagenet_val_0281_label_404.jpg,404,airliner,375,500
+282,imagenet_val_0282_label_554.jpg,554,fireboat,500,381
+283,imagenet_val_0283_label_549.jpg,549,envelope,500,375
+284,imagenet_val_0284_label_993.jpg,993,gyromitra,500,400
+285,imagenet_val_0285_label_950.jpg,950,orange,500,375
+286,imagenet_val_0286_label_653.jpg,653,milk can,500,334
+287,imagenet_val_0287_label_960.jpg,960,"chocolate sauce, chocolate syrup",500,375
+288,imagenet_val_0288_label_543.jpg,543,dumbbell,500,359
+289,imagenet_val_0289_label_111.jpg,111,"nematode, nematode worm, roundworm",500,274
+290,imagenet_val_0290_label_955.jpg,955,"jackfruit, jak, jack",500,334
+291,imagenet_val_0291_label_360.jpg,360,otter,224,185
+292,imagenet_val_0292_label_574.jpg,574,golf ball,500,375
+293,imagenet_val_0293_label_756.jpg,756,rain barrel,375,500
+294,imagenet_val_0294_label_567.jpg,567,"frying pan, frypan, skillet",333,500
+295,imagenet_val_0295_label_65.jpg,65,sea snake,500,375
+296,imagenet_val_0296_label_324.jpg,324,cabbage butterfly,500,411
+297,imagenet_val_0297_label_468.jpg,468,"cab, hack, taxi, taxicab",500,379
+298,imagenet_val_0298_label_875.jpg,875,trombone,500,375
+299,imagenet_val_0299_label_190.jpg,190,"Sealyham terrier, Sealyham",1280,960
+300,imagenet_val_0300_label_979.jpg,979,"valley, vale",334,500
+301,imagenet_val_0301_label_673.jpg,673,"mouse, computer mouse",500,375
+302,imagenet_val_0302_label_299.jpg,299,"meerkat, mierkat",800,600
+303,imagenet_val_0303_label_833.jpg,833,"submarine, pigboat, sub, U-boat",333,500
+304,imagenet_val_0304_label_829.jpg,829,"streetcar, tram, tramcar, trolley, trolley car",500,338
+305,imagenet_val_0305_label_131.jpg,131,"little blue heron, Egretta caerulea",422,500
+306,imagenet_val_0306_label_829.jpg,829,"streetcar, tram, tramcar, trolley, trolley car",333,500
+307,imagenet_val_0307_label_477.jpg,477,"carpenter's kit, tool kit",500,375
+308,imagenet_val_0308_label_289.jpg,289,"snow leopard, ounce, Panthera uncia",333,500
+309,imagenet_val_0309_label_842.jpg,842,"swimming trunks, bathing trunks",500,375
+310,imagenet_val_0310_label_49.jpg,49,"African crocodile, Nile crocodile, Crocodylus niloticus",500,375
+311,imagenet_val_0311_label_498.jpg,498,"cinema, movie theater, movie theatre, movie house, picture palace",500,336
+312,imagenet_val_0312_label_691.jpg,691,oxygen mask,500,333
+313,imagenet_val_0313_label_538.jpg,538,dome,375,500
+314,imagenet_val_0314_label_992.jpg,992,agaric,500,500
+315,imagenet_val_0315_label_99.jpg,99,goose,500,375
+316,imagenet_val_0316_label_871.jpg,871,trimaran,300,400
+317,imagenet_val_0317_label_472.jpg,472,canoe,500,375
+318,imagenet_val_0318_label_537.jpg,537,"dogsled, dog sled, dog sleigh",500,351
+319,imagenet_val_0319_label_901.jpg,901,whiskey jug,500,375
+320,imagenet_val_0320_label_729.jpg,729,plate rack,375,500
+321,imagenet_val_0321_label_378.jpg,378,"capuchin, ringtail, Cebus capucinus",500,333
+322,imagenet_val_0322_label_337.jpg,337,beaver,500,333
+323,imagenet_val_0323_label_295.jpg,295,"American black bear, black bear, Ursus americanus, Euarctos americanus",500,333
+324,imagenet_val_0324_label_51.jpg,51,triceratops,500,375
+325,imagenet_val_0325_label_381.jpg,381,"spider monkey, Ateles geoffroyi",238,200
+326,imagenet_val_0326_label_362.jpg,362,badger,288,332
+327,imagenet_val_0327_label_603.jpg,603,"horse cart, horse-cart",500,332
+328,imagenet_val_0328_label_729.jpg,729,plate rack,500,354
+329,imagenet_val_0329_label_34.jpg,34,"leatherback turtle, leatherback, leathery turtle, Dermochelys coriacea",500,375
+330,imagenet_val_0330_label_693.jpg,693,"paddle, boat paddle",500,396
+331,imagenet_val_0331_label_666.jpg,666,mortar,400,400
+332,imagenet_val_0332_label_565.jpg,565,freight car,500,375
+333,imagenet_val_0333_label_541.jpg,541,"drum, membranophone, tympan",170,226
+334,imagenet_val_0334_label_384.jpg,384,"indri, indris, Indri indri, Indri brevicaudatus",500,334
+335,imagenet_val_0335_label_288.jpg,288,"leopard, Panthera pardus",500,382
+336,imagenet_val_0336_label_802.jpg,802,snowmobile,500,375
+337,imagenet_val_0337_label_432.jpg,432,bassoon,500,383
+338,imagenet_val_0338_label_103.jpg,103,"platypus, duckbill, duckbilled platypus, duck-billed platypus, Ornithorhynchus anatinus",500,333
+339,imagenet_val_0339_label_897.jpg,897,"washer, automatic washer, washing machine",500,375
+340,imagenet_val_0340_label_135.jpg,135,"limpkin, Aramus pictus",418,500
+341,imagenet_val_0341_label_26.jpg,26,"common newt, Triturus vulgaris",800,505
+342,imagenet_val_0342_label_764.jpg,764,rifle,500,353
+343,imagenet_val_0343_label_441.jpg,441,beer glass,500,398
+344,imagenet_val_0344_label_547.jpg,547,electric locomotive,500,375
+345,imagenet_val_0345_label_888.jpg,888,viaduct,500,375
+346,imagenet_val_0346_label_320.jpg,320,damselfly,500,465
+347,imagenet_val_0347_label_29.jpg,29,"axolotl, mud puppy, Ambystoma mexicanum",600,450
+348,imagenet_val_0348_label_635.jpg,635,magnetic compass,1024,825
+349,imagenet_val_0349_label_115.jpg,115,"sea slug, nudibranch",500,439
+350,imagenet_val_0350_label_825.jpg,825,stone wall,500,342
+351,imagenet_val_0351_label_473.jpg,473,"can opener, tin opener",640,480
+352,imagenet_val_0352_label_748.jpg,748,purse,500,500
+353,imagenet_val_0353_label_966.jpg,966,red wine,500,375
+354,imagenet_val_0354_label_875.jpg,875,trombone,500,334
+355,imagenet_val_0355_label_421.jpg,421,"bannister, banister, balustrade, balusters, handrail",500,357
+356,imagenet_val_0356_label_399.jpg,399,abaya,480,640
+357,imagenet_val_0357_label_629.jpg,629,"lipstick, lip rouge",375,500
+358,imagenet_val_0358_label_492.jpg,492,chest,500,375
+359,imagenet_val_0359_label_392.jpg,392,"rock beauty, Holocanthus tricolor",1200,1600
+360,imagenet_val_0360_label_454.jpg,454,"bookshop, bookstore, bookstall",500,375
+361,imagenet_val_0361_label_691.jpg,691,oxygen mask,753,403
+362,imagenet_val_0362_label_126.jpg,126,isopod,357,500
+363,imagenet_val_0363_label_590.jpg,590,"hand-held computer, hand-held microcomputer",1800,1200
+364,imagenet_val_0364_label_419.jpg,419,Band Aid,375,500
+365,imagenet_val_0365_label_69.jpg,69,trilobite,500,333
+366,imagenet_val_0366_label_96.jpg,96,toucan,500,460
+367,imagenet_val_0367_label_792.jpg,792,shovel,497,500
+368,imagenet_val_0368_label_280.jpg,280,"grey fox, gray fox, Urocyon cinereoargenteus",360,270
+369,imagenet_val_0369_label_980.jpg,980,volcano,500,375
+370,imagenet_val_0370_label_632.jpg,632,"loudspeaker, speaker, speaker unit, loudspeaker system, speaker system",333,500
+371,imagenet_val_0371_label_842.jpg,842,"swimming trunks, bathing trunks",500,375
+372,imagenet_val_0372_label_290.jpg,290,"jaguar, panther, Panthera onca, Felis onca",1024,768
+373,imagenet_val_0373_label_503.jpg,503,cocktail shaker,333,500
+374,imagenet_val_0374_label_356.jpg,356,weasel,364,285
+375,imagenet_val_0375_label_300.jpg,300,tiger beetle,500,354
+376,imagenet_val_0376_label_996.jpg,996,"hen-of-the-woods, hen of the woods, Polyporus frondosus, Grifola frondosa",500,375
+377,imagenet_val_0377_label_829.jpg,829,"streetcar, tram, tramcar, trolley, trolley car",500,375
+378,imagenet_val_0378_label_775.jpg,775,sarong,500,375
+379,imagenet_val_0379_label_660.jpg,660,"mobile home, manufactured home",481,500
+380,imagenet_val_0380_label_101.jpg,101,tusker,500,345
+381,imagenet_val_0381_label_517.jpg,517,crane2,375,500
+382,imagenet_val_0382_label_393.jpg,393,anemone fish,500,375
+383,imagenet_val_0383_label_314.jpg,314,"cockroach, roach",500,375
+384,imagenet_val_0384_label_847.jpg,847,"tank, army tank, armored combat vehicle, armoured combat vehicle",500,334
+385,imagenet_val_0385_label_426.jpg,426,barometer,500,375
+386,imagenet_val_0386_label_821.jpg,821,steel arch bridge,500,375
+387,imagenet_val_0387_label_264.jpg,264,"Cardigan, Cardigan Welsh corgi",500,304
+388,imagenet_val_0388_label_656.jpg,656,minivan,500,375
+389,imagenet_val_0389_label_873.jpg,873,triumphal arch,500,375
+390,imagenet_val_0390_label_391.jpg,391,"coho, cohoe, coho salmon, blue jack, silver salmon, Oncorhynchus kisutch",500,375
+391,imagenet_val_0391_label_417.jpg,417,balloon,500,333
+392,imagenet_val_0392_label_661.jpg,661,Model T,500,375
+393,imagenet_val_0393_label_19.jpg,19,chickadee,500,400
+394,imagenet_val_0394_label_832.jpg,832,"stupa, tope",375,500
+395,imagenet_val_0395_label_482.jpg,482,cassette player,305,154
+396,imagenet_val_0396_label_988.jpg,988,acorn,500,375
+397,imagenet_val_0397_label_146.jpg,146,"albatross, mollymawk",500,375
+398,imagenet_val_0398_label_157.jpg,157,papillon,334,500
+399,imagenet_val_0399_label_46.jpg,46,"green lizard, Lacerta viridis",500,375
+400,imagenet_val_0400_label_327.jpg,327,"starfish, sea star",500,373
+401,imagenet_val_0401_label_474.jpg,474,cardigan,160,160
+402,imagenet_val_0402_label_181.jpg,181,Bedlington terrier,500,333
+403,imagenet_val_0403_label_616.jpg,616,knot,500,375
+404,imagenet_val_0404_label_353.jpg,353,gazelle,500,335
+405,imagenet_val_0405_label_542.jpg,542,drumstick,500,375
+406,imagenet_val_0406_label_798.jpg,798,"slide rule, slipstick",500,375
+407,imagenet_val_0407_label_731.jpg,731,"plunger, plumber's helper",500,333
+408,imagenet_val_0408_label_789.jpg,789,shoji,600,800
+409,imagenet_val_0409_label_888.jpg,888,viaduct,500,388
+410,imagenet_val_0410_label_675.jpg,675,moving van,500,375
+411,imagenet_val_0411_label_941.jpg,941,acorn squash,500,375
+412,imagenet_val_0412_label_984.jpg,984,rapeseed,339,500
+413,imagenet_val_0413_label_177.jpg,177,"Scottish deerhound, deerhound",500,430
+414,imagenet_val_0414_label_581.jpg,581,"grille, radiator grille",356,500
+415,imagenet_val_0415_label_618.jpg,618,ladle,378,500
+416,imagenet_val_0416_label_704.jpg,704,parking meter,432,500
+417,imagenet_val_0417_label_269.jpg,269,"timber wolf, grey wolf, gray wolf, Canis lupus",300,330
+418,imagenet_val_0418_label_340.jpg,340,zebra,500,460
+419,imagenet_val_0419_label_694.jpg,694,"paddlewheel, paddle wheel",500,375
+420,imagenet_val_0420_label_843.jpg,843,swing,500,375
+421,imagenet_val_0421_label_16.jpg,16,bulbul,500,500
+422,imagenet_val_0422_label_641.jpg,641,maraca,320,270
+423,imagenet_val_0423_label_957.jpg,957,pomegranate,500,375
+424,imagenet_val_0424_label_936.jpg,936,head cabbage,500,493
+425,imagenet_val_0425_label_868.jpg,868,tray,418,500
+426,imagenet_val_0426_label_399.jpg,399,abaya,500,375
+427,imagenet_val_0427_label_647.jpg,647,measuring cup,500,377
+428,imagenet_val_0428_label_690.jpg,690,oxcart,600,450
+429,imagenet_val_0429_label_646.jpg,646,"maze, labyrinth",375,500
+430,imagenet_val_0430_label_603.jpg,603,"horse cart, horse-cart",500,343
+431,imagenet_val_0431_label_465.jpg,465,bulletproof vest,500,375
+432,imagenet_val_0432_label_228.jpg,228,komondor,1600,1200
+433,imagenet_val_0433_label_481.jpg,481,cassette,500,365
+434,imagenet_val_0434_label_269.jpg,269,"timber wolf, grey wolf, gray wolf, Canis lupus",800,811
+435,imagenet_val_0435_label_174.jpg,174,"Norwegian elkhound, elkhound",500,334
+436,imagenet_val_0436_label_994.jpg,994,"stinkhorn, carrion fungus",640,481
+437,imagenet_val_0437_label_598.jpg,598,"home theater, home theatre",500,337
+438,imagenet_val_0438_label_183.jpg,183,Kerry blue terrier,500,333
+439,imagenet_val_0439_label_544.jpg,544,Dutch oven,375,500
+440,imagenet_val_0440_label_753.jpg,753,radiator,500,500
+441,imagenet_val_0441_label_393.jpg,393,anemone fish,500,375
+442,imagenet_val_0442_label_618.jpg,618,ladle,500,375
+443,imagenet_val_0443_label_394.jpg,394,sturgeon,500,375
+444,imagenet_val_0444_label_536.jpg,536,"dock, dockage, docking facility",500,375
+445,imagenet_val_0445_label_260.jpg,260,"chow, chow chow",500,333
+446,imagenet_val_0446_label_790.jpg,790,shopping basket,500,380
+447,imagenet_val_0447_label_266.jpg,266,miniature poodle,500,500
+448,imagenet_val_0448_label_299.jpg,299,"meerkat, mierkat",1600,1200
+449,imagenet_val_0449_label_879.jpg,879,umbrella,500,400
+450,imagenet_val_0450_label_740.jpg,740,power drill,500,389
+451,imagenet_val_0451_label_13.jpg,13,"junco, snowbird",500,414
+452,imagenet_val_0452_label_60.jpg,60,"night snake, Hypsiglena torquata",500,337
+453,imagenet_val_0453_label_773.jpg,773,"saltshaker, salt shaker",495,371
+454,imagenet_val_0454_label_166.jpg,166,"Walker hound, Walker foxhound",500,375
+455,imagenet_val_0455_label_422.jpg,422,barbell,398,375
+456,imagenet_val_0456_label_984.jpg,984,rapeseed,500,333
+457,imagenet_val_0457_label_74.jpg,74,"garden spider, Aranea diademata",482,500
+458,imagenet_val_0458_label_781.jpg,781,scoreboard,500,500
+459,imagenet_val_0459_label_729.jpg,729,plate rack,500,333
+460,imagenet_val_0460_label_558.jpg,558,"flute, transverse flute",500,332
+461,imagenet_val_0461_label_424.jpg,424,barbershop,500,500
+462,imagenet_val_0462_label_754.jpg,754,"radio, wireless",500,375
+463,imagenet_val_0463_label_144.jpg,144,pelican,500,471
+464,imagenet_val_0464_label_562.jpg,562,fountain,500,341
+465,imagenet_val_0465_label_494.jpg,494,"chime, bell, gong",375,500
+466,imagenet_val_0466_label_651.jpg,651,"microwave, microwave oven",500,375
+467,imagenet_val_0467_label_780.jpg,780,schooner,428,252
+468,imagenet_val_0468_label_74.jpg,74,"garden spider, Aranea diademata",500,413
+469,imagenet_val_0469_label_275.jpg,275,"African hunting dog, hyena dog, Cape hunting dog, Lycaon pictus",500,351
+470,imagenet_val_0470_label_626.jpg,626,"lighter, light, igniter, ignitor",362,500
+471,imagenet_val_0471_label_789.jpg,789,shoji,500,375
+472,imagenet_val_0472_label_443.jpg,443,bib,500,375
+473,imagenet_val_0473_label_303.jpg,303,"long-horned beetle, longicorn, longicorn beetle",500,375
+474,imagenet_val_0474_label_540.jpg,540,"drilling platform, offshore rig",500,375
+475,imagenet_val_0475_label_85.jpg,85,quail,500,375
+476,imagenet_val_0476_label_563.jpg,563,fountain pen,333,500
+477,imagenet_val_0477_label_421.jpg,421,"bannister, banister, balustrade, balusters, handrail",500,500
+478,imagenet_val_0478_label_497.jpg,497,"church, church building",497,500
+479,imagenet_val_0479_label_365.jpg,365,"orangutan, orang, orangutang, Pongo pygmaeus",200,149
+480,imagenet_val_0480_label_400.jpg,400,"academic gown, academic robe, judge's robe",500,333
+481,imagenet_val_0481_label_281.jpg,281,"tabby, tabby cat",550,412
+482,imagenet_val_0482_label_474.jpg,474,cardigan,332,500
+483,imagenet_val_0483_label_115.jpg,115,"sea slug, nudibranch",500,468
+484,imagenet_val_0484_label_684.jpg,684,"ocarina, sweet potato",500,495
+485,imagenet_val_0485_label_500.jpg,500,cliff dwelling,500,484
+486,imagenet_val_0486_label_353.jpg,353,gazelle,500,473
+487,imagenet_val_0487_label_62.jpg,62,"rock python, rock snake, Python sebae",500,375
+488,imagenet_val_0488_label_730.jpg,730,"plow, plough",500,375
+489,imagenet_val_0489_label_405.jpg,405,"airship, dirigible",500,333
+490,imagenet_val_0490_label_116.jpg,116,"chiton, coat-of-mail shell, sea cradle, polyplacophore",500,263
+491,imagenet_val_0491_label_424.jpg,424,barbershop,400,500
+492,imagenet_val_0492_label_963.jpg,963,"pizza, pizza pie",375,500
+493,imagenet_val_0493_label_865.jpg,865,toyshop,500,375
+494,imagenet_val_0494_label_528.jpg,528,"dial telephone, dial phone",375,500
+495,imagenet_val_0495_label_240.jpg,240,Appenzeller,500,376
+496,imagenet_val_0496_label_157.jpg,157,papillon,500,333
+497,imagenet_val_0497_label_406.jpg,406,altar,500,366
+498,imagenet_val_0498_label_712.jpg,712,Petri dish,333,500
+499,imagenet_val_0499_label_390.jpg,390,eel,500,384
+500,imagenet_val_0500_label_365.jpg,365,"orangutan, orang, orangutang, Pongo pygmaeus",500,333
+501,imagenet_val_0501_label_861.jpg,861,toilet seat,375,500
+502,imagenet_val_0502_label_104.jpg,104,"wallaby, brush kangaroo",500,357
+503,imagenet_val_0503_label_424.jpg,424,barbershop,500,493
+504,imagenet_val_0504_label_403.jpg,403,"aircraft carrier, carrier, flattop, attack aircraft carrier",500,375
+505,imagenet_val_0505_label_806.jpg,806,sock,430,500
+506,imagenet_val_0506_label_343.jpg,343,warthog,500,334
+507,imagenet_val_0507_label_69.jpg,69,trilobite,500,333
+508,imagenet_val_0508_label_741.jpg,741,"prayer rug, prayer mat",375,500
+509,imagenet_val_0509_label_891.jpg,891,waffle iron,362,434
+510,imagenet_val_0510_label_185.jpg,185,Norfolk terrier,375,500
+511,imagenet_val_0511_label_728.jpg,728,plastic bag,500,500
+512,imagenet_val_0512_label_816.jpg,816,spindle,446,500

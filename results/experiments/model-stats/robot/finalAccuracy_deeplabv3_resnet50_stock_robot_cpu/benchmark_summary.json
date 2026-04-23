@@ -1,0 +1,85 @@
+{
+    "run_id": "finalAccuracy_deeplabv3_resnet50_stock_robot_cpu",
+    "backend": "stock",
+    "host": "robot",
+    "model": "deeplabv3_resnet50",
+    "model_type": "semantic_segmentation",
+    "device": "cpu",
+    "num_samples": 512,
+    "time_window": {
+        "start": "2026-02-28T01:12:26.330854+00:00",
+        "stop": "2026-02-28T01:17:47.251263+00:00",
+        "duration_sec": 320.920409
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 1.65,
+        "inference_std": 0.02,
+        "system": 1.62,
+        "system_std": 0.02
+    },
+    "accuracy": {
+        "metric": "mIoU",
+        "score": 0.4415
+    },
+    "preprocessing_ms": {
+        "mean": 5.6928,
+        "std": 0.9481,
+        "min": 1.9347,
+        "max": 8.9012,
+        "p25": 5.1953,
+        "p50": 5.754,
+        "p75": 6.2473,
+        "p90": 6.7991,
+        "p95": 7.1069,
+        "p99": 7.8051
+    },
+    "inference_ms": {
+        "mean": 604.3638,
+        "std": 6.8134,
+        "min": 574.404,
+        "max": 628.3741,
+        "p25": 600.4685,
+        "p50": 604.7923,
+        "p75": 608.8549,
+        "p90": 612.4521,
+        "p95": 614.1745,
+        "p99": 616.3747
+    },
+    "postprocessing_ms": {
+        "mean": 7.5818,
+        "std": 0.3431,
+        "min": 6.5945,
+        "max": 9.2556,
+        "p25": 7.3266,
+        "p50": 7.578,
+        "p75": 7.8167,
+        "p90": 8.019,
+        "p95": 8.1189,
+        "p99": 8.3275
+    },
+    "system_ms": {
+        "mean": 617.6507,
+        "std": 6.9468,
+        "min": 587.1233,
+        "max": 641.5006,
+        "p25": 613.8157,
+        "p50": 618.3373,
+        "p75": 621.9904,
+        "p90": 625.8871,
+        "p95": 627.0955,
+        "p99": 630.0783
+    },
+    "confidence_score": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+    }
+}

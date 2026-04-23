@@ -1,0 +1,85 @@
+{
+    "run_id": "finalOverheadv2_deeplabv3_resnet101_stock_edge-asus_gpu",
+    "backend": "stock",
+    "host": "edge-asus",
+    "model": "deeplabv3_resnet101",
+    "model_type": "semantic_segmentation",
+    "device": "gpu",
+    "num_samples": 512,
+    "time_window": {
+        "start": "2026-03-01T01:19:03.791663+00:00",
+        "stop": "2026-03-01T01:19:12.435762+00:00",
+        "duration_sec": 8.644099
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 142.54,
+        "inference_std": 3.03,
+        "system": 75.84,
+        "system_std": 2.71
+    },
+    "accuracy": {
+        "metric": "mIoU",
+        "score": 0.4539
+    },
+    "preprocessing_ms": {
+        "mean": 2.0538,
+        "std": 0.411,
+        "min": 0.6842,
+        "max": 3.3633,
+        "p25": 1.7748,
+        "p50": 2.0496,
+        "p75": 2.3289,
+        "p90": 2.5977,
+        "p95": 2.6937,
+        "p99": 3.0294
+    },
+    "inference_ms": {
+        "mean": 7.0157,
+        "std": 0.1477,
+        "min": 6.604,
+        "max": 7.3911,
+        "p25": 6.9415,
+        "p50": 7.02,
+        "p75": 7.1125,
+        "p90": 7.206,
+        "p95": 7.2435,
+        "p99": 7.3292
+    },
+    "postprocessing_ms": {
+        "mean": 4.0893,
+        "std": 0.1271,
+        "min": 3.6316,
+        "max": 4.5392,
+        "p25": 4.0104,
+        "p50": 4.0891,
+        "p75": 4.1613,
+        "p90": 4.2523,
+        "p95": 4.2931,
+        "p99": 4.409
+    },
+    "system_ms": {
+        "mean": 13.1848,
+        "std": 0.4694,
+        "min": 11.7983,
+        "max": 14.6397,
+        "p25": 12.8689,
+        "p50": 13.1914,
+        "p75": 13.5144,
+        "p90": 13.7682,
+        "p95": 13.9382,
+        "p99": 14.2825
+    },
+    "confidence_score": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+    }
+}

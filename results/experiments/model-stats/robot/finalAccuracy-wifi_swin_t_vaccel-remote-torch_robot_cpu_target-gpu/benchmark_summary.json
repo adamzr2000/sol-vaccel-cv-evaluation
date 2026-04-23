@@ -1,0 +1,85 @@
+{
+    "run_id": "finalAccuracy-wifi_swin_t_vaccel-remote-torch_robot_cpu_target-gpu",
+    "backend": "vaccel-remote-torch",
+    "host": "robot",
+    "model": "swin_t",
+    "model_type": "image_classification",
+    "device": "gpu",
+    "num_samples": 512,
+    "time_window": {
+        "start": "2026-02-27T23:18:37.094880+00:00",
+        "stop": "2026-02-27T23:18:51.443871+00:00",
+        "duration_sec": 14.348991
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 50.81,
+        "inference_std": 4.9,
+        "system": 35.79,
+        "system_std": 4.12
+    },
+    "accuracy": {
+        "metric": "Top-1 Acc",
+        "score": 0.8086
+    },
+    "preprocessing_ms": {
+        "mean": 8.1237,
+        "std": 4.3691,
+        "min": 2.4625,
+        "max": 65.7168,
+        "p25": 6.9049,
+        "p50": 7.568,
+        "p75": 8.2579,
+        "p90": 8.9495,
+        "p95": 10.1056,
+        "p99": 34.8309
+    },
+    "inference_ms": {
+        "mean": 19.6824,
+        "std": 1.9244,
+        "min": 15.8595,
+        "max": 26.1698,
+        "p25": 18.2468,
+        "p50": 19.4971,
+        "p75": 21.0221,
+        "p90": 22.1716,
+        "p95": 22.9404,
+        "p99": 24.5662
+    },
+    "postprocessing_ms": {
+        "mean": 0.1231,
+        "std": 0.0263,
+        "min": 0.0765,
+        "max": 0.2464,
+        "p25": 0.1049,
+        "p50": 0.1199,
+        "p75": 0.1363,
+        "p90": 0.1578,
+        "p95": 0.17,
+        "p99": 0.2069
+    },
+    "system_ms": {
+        "mean": 27.9387,
+        "std": 4.9063,
+        "min": 19.9855,
+        "max": 86.6504,
+        "p25": 25.9067,
+        "p50": 27.2356,
+        "p75": 28.7069,
+        "p90": 30.411,
+        "p95": 32.8546,
+        "p99": 54.757
+    },
+    "confidence_score": {
+        "mean": 70.9328,
+        "std": 22.2843,
+        "min": 10.7192,
+        "max": 99.4597,
+        "p25": 56.6185,
+        "p50": 79.8296,
+        "p75": 88.6368,
+        "p90": 91.9334,
+        "p95": 93.4437,
+        "p99": 96.9268
+    }
+}

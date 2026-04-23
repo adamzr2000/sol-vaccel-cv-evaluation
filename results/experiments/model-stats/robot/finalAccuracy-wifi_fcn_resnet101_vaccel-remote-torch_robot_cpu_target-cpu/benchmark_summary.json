@@ -1,0 +1,85 @@
+{
+    "run_id": "finalAccuracy-wifi_fcn_resnet101_vaccel-remote-torch_robot_cpu_target-cpu",
+    "backend": "vaccel-remote-torch",
+    "host": "robot",
+    "model": "fcn_resnet101",
+    "model_type": "semantic_segmentation",
+    "device": "cpu",
+    "num_samples": 512,
+    "time_window": {
+        "start": "2026-02-28T00:33:19.331774+00:00",
+        "stop": "2026-02-28T00:35:09.817444+00:00",
+        "duration_sec": 110.48567
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 5.23,
+        "inference_std": 0.12,
+        "system": 4.83,
+        "system_std": 0.11
+    },
+    "accuracy": {
+        "metric": "mIoU",
+        "score": 0.4448
+    },
+    "preprocessing_ms": {
+        "mean": 6.8512,
+        "std": 1.305,
+        "min": 1.9284,
+        "max": 21.3658,
+        "p25": 6.141,
+        "p50": 6.8573,
+        "p75": 7.6034,
+        "p90": 8.2389,
+        "p95": 8.56,
+        "p99": 9.4071
+    },
+    "inference_ms": {
+        "mean": 191.0666,
+        "std": 4.5653,
+        "min": 180.1982,
+        "max": 204.855,
+        "p25": 187.7875,
+        "p50": 190.7749,
+        "p75": 193.9648,
+        "p90": 197.1377,
+        "p95": 199.0194,
+        "p99": 202.2862
+    },
+    "postprocessing_ms": {
+        "mean": 9.1995,
+        "std": 0.63,
+        "min": 6.9624,
+        "max": 10.256,
+        "p25": 9.0747,
+        "p50": 9.333,
+        "p75": 9.6021,
+        "p90": 9.8142,
+        "p95": 9.8978,
+        "p99": 10.1089
+    },
+    "system_ms": {
+        "mean": 207.1317,
+        "std": 4.7807,
+        "min": 195.4517,
+        "max": 226.9412,
+        "p25": 203.713,
+        "p50": 206.9152,
+        "p75": 210.3554,
+        "p90": 213.4714,
+        "p95": 214.997,
+        "p99": 218.5423
+    },
+    "confidence_score": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+    }
+}

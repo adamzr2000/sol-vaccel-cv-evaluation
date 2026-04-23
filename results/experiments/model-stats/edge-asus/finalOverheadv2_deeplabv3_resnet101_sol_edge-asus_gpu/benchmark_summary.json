@@ -1,0 +1,86 @@
+{
+    "run_id": "finalOverheadv2_deeplabv3_resnet101_sol_edge-asus_gpu",
+    "backend": "sol",
+    "host": "edge-asus",
+    "model": "deeplabv3_resnet101",
+    "model_type": "semantic_segmentation",
+    "device": "gpu",
+    "num_samples": 512,
+    "time_window": {
+        "start": "2026-03-01T01:27:14.757455+00:00",
+        "stop": "2026-03-01T01:27:23.880911+00:00",
+        "duration_sec": 9.123456
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 126.85,
+        "inference_std": 3.32,
+        "system": 70.94,
+        "system_std": 2.61
+    },
+    "accuracy": {
+        "metric": "mIoU",
+        "score": 0.4539
+    },
+    "preprocessing_ms": {
+        "mean": 2.0732,
+        "std": 0.4495,
+        "min": 0.896,
+        "max": 4.3512,
+        "p25": 1.7848,
+        "p50": 2.0491,
+        "p75": 2.3242,
+        "p90": 2.6358,
+        "p95": 2.8007,
+        "p99": 3.3281
+    },
+    "inference_ms": {
+        "mean": 7.8835,
+        "std": 0.2069,
+        "min": 7.4206,
+        "max": 8.4754,
+        "p25": 7.7655,
+        "p50": 7.8838,
+        "p75": 7.996,
+        "p90": 8.1711,
+        "p95": 8.2309,
+        "p99": 8.3993
+    },
+    "postprocessing_ms": {
+        "mean": 4.1154,
+        "std": 0.1535,
+        "min": 3.7495,
+        "max": 5.2673,
+        "p25": 4.0165,
+        "p50": 4.1001,
+        "p75": 4.2007,
+        "p90": 4.2875,
+        "p95": 4.3515,
+        "p99": 4.6282
+    },
+    "system_ms": {
+        "mean": 14.0965,
+        "std": 0.5215,
+        "min": 12.4167,
+        "max": 16.3694,
+        "p25": 13.7266,
+        "p50": 14.1132,
+        "p75": 14.4431,
+        "p90": 14.7477,
+        "p95": 14.8851,
+        "p99": 15.3796
+    },
+    "confidence_score": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+    },
+    "sol_run_mode": 2
+}

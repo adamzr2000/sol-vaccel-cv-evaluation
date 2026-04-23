@@ -1,0 +1,86 @@
+{
+    "run_id": "finalAccuracy-wifi_swin3d_s_vaccel-remote-sol_robot_cpu_target-cpu",
+    "backend": "vaccel-remote-sol",
+    "host": "robot",
+    "model": "swin3d_s",
+    "model_type": "video_classification",
+    "device": "cpu",
+    "num_samples": 64,
+    "time_window": {
+        "start": "2026-02-27T23:41:19.563594+00:00",
+        "stop": "2026-02-27T23:42:47.817780+00:00",
+        "duration_sec": 88.254186
+    },
+    "frames_per_sample": 16,
+    "fps": {
+        "inference": 7.05,
+        "inference_std": 0.43,
+        "system": 0.73,
+        "system_std": 0.59
+    },
+    "accuracy": {
+        "metric": "Top-1 Acc",
+        "score": 0.0625
+    },
+    "preprocessing_ms": {
+        "mean": 1236.6173,
+        "std": 821.2102,
+        "min": 173.7447,
+        "max": 3372.1114,
+        "p25": 573.8089,
+        "p50": 843.9369,
+        "p75": 1903.6245,
+        "p90": 2430.2084,
+        "p95": 2726.7065,
+        "p99": 3281.397
+    },
+    "inference_ms": {
+        "mean": 141.8234,
+        "std": 8.754,
+        "min": 126.6493,
+        "max": 160.2657,
+        "p25": 134.4674,
+        "p50": 140.7498,
+        "p75": 149.2723,
+        "p90": 154.3256,
+        "p95": 155.9105,
+        "p99": 158.4346
+    },
+    "postprocessing_ms": {
+        "mean": 0.3484,
+        "std": 0.0287,
+        "min": 0.2984,
+        "max": 0.4133,
+        "p25": 0.3342,
+        "p50": 0.3433,
+        "p75": 0.3635,
+        "p90": 0.3816,
+        "p95": 0.4059,
+        "p99": 0.4124
+    },
+    "system_ms": {
+        "mean": 1378.8041,
+        "std": 827.8523,
+        "min": 311.4014,
+        "max": 3516.7141,
+        "p25": 707.5741,
+        "p50": 979.4683,
+        "p75": 2053.69,
+        "p90": 2583.6099,
+        "p95": 2877.9719,
+        "p99": 3431.2941
+    },
+    "confidence_score": {
+        "mean": 46.6081,
+        "std": 30.9156,
+        "min": 2.2786,
+        "max": 99.998,
+        "p25": 18.0761,
+        "p50": 38.2963,
+        "p75": 73.0198,
+        "p90": 95.2314,
+        "p95": 98.5483,
+        "p99": 99.7826
+    },
+    "sol_run_mode": 2
+}

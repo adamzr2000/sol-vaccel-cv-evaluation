@@ -1,0 +1,4 @@
+host,mean,std dev
+edge-asus-gpu-idle,7.56,0.779
+robot-cpu-idle,0.616,0.096
+edge-asus-cpu-idle,4.591,0.049

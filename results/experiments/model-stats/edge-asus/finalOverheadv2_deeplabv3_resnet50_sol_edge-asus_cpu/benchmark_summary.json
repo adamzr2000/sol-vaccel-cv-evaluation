@@ -1,0 +1,86 @@
+{
+    "run_id": "finalOverheadv2_deeplabv3_resnet50_sol_edge-asus_cpu",
+    "backend": "sol",
+    "host": "edge-asus",
+    "model": "deeplabv3_resnet50",
+    "model_type": "semantic_segmentation",
+    "device": "cpu",
+    "num_samples": 512,
+    "time_window": {
+        "start": "2026-03-01T00:48:35.944058+00:00",
+        "stop": "2026-03-01T00:49:11.450294+00:00",
+        "duration_sec": 35.506236
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 17.45,
+        "inference_std": 0.44,
+        "system": 15.56,
+        "system_std": 0.43
+    },
+    "accuracy": {
+        "metric": "mIoU",
+        "score": 0.4415
+    },
+    "preprocessing_ms": {
+        "mean": 2.7515,
+        "std": 0.7473,
+        "min": 1.2175,
+        "max": 7.2647,
+        "p25": 2.3573,
+        "p50": 2.656,
+        "p75": 2.9437,
+        "p90": 3.2908,
+        "p95": 3.6686,
+        "p99": 5.9252
+    },
+    "inference_ms": {
+        "mean": 57.2953,
+        "std": 1.5531,
+        "min": 53.1361,
+        "max": 70.5347,
+        "p25": 56.64,
+        "p50": 57.0725,
+        "p75": 57.5596,
+        "p90": 58.5322,
+        "p95": 59.5492,
+        "p99": 63.2332
+    },
+    "postprocessing_ms": {
+        "mean": 4.2254,
+        "std": 0.3607,
+        "min": 3.7314,
+        "max": 7.0168,
+        "p25": 4.1058,
+        "p50": 4.1814,
+        "p75": 4.2659,
+        "p90": 4.3641,
+        "p95": 4.4382,
+        "p99": 6.6049
+    },
+    "system_ms": {
+        "mean": 64.2782,
+        "std": 1.8791,
+        "min": 59.2045,
+        "max": 80.3471,
+        "p25": 63.3886,
+        "p50": 63.9415,
+        "p75": 64.5839,
+        "p90": 66.1937,
+        "p95": 68.467,
+        "p99": 70.2158
+    },
+    "confidence_score": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+    },
+    "sol_run_mode": 2
+}

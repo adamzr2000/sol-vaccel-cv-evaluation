@@ -1,0 +1,86 @@
+{
+    "run_id": "finalAccuracy_deeplabv3_resnet50_sol_robot_cpu",
+    "backend": "sol",
+    "host": "robot",
+    "model": "deeplabv3_resnet50",
+    "model_type": "semantic_segmentation",
+    "device": "cpu",
+    "num_samples": 512,
+    "time_window": {
+        "start": "2026-02-27T22:31:24.022038+00:00",
+        "stop": "2026-02-27T22:35:59.017724+00:00",
+        "duration_sec": 274.995686
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 1.94,
+        "inference_std": 0.03,
+        "system": 1.89,
+        "system_std": 0.03
+    },
+    "accuracy": {
+        "metric": "mIoU",
+        "score": 0.4415
+    },
+    "preprocessing_ms": {
+        "mean": 5.7717,
+        "std": 1.0312,
+        "min": 1.9566,
+        "max": 10.4365,
+        "p25": 5.2302,
+        "p50": 5.8107,
+        "p75": 6.3063,
+        "p90": 6.8903,
+        "p95": 7.2663,
+        "p99": 8.4395
+    },
+    "inference_ms": {
+        "mean": 514.1437,
+        "std": 8.715,
+        "min": 499.6931,
+        "max": 648.6691,
+        "p25": 512.1322,
+        "p50": 513.8086,
+        "p75": 515.2768,
+        "p90": 517.0545,
+        "p95": 518.0938,
+        "p99": 524.3928
+    },
+    "postprocessing_ms": {
+        "mean": 7.9411,
+        "std": 0.2787,
+        "min": 7.1256,
+        "max": 8.7676,
+        "p25": 7.7713,
+        "p50": 7.9542,
+        "p75": 8.1367,
+        "p90": 8.2932,
+        "p95": 8.376,
+        "p99": 8.573
+    },
+    "system_ms": {
+        "mean": 527.8691,
+        "std": 8.882,
+        "min": 512.937,
+        "max": 662.1913,
+        "p25": 525.5977,
+        "p50": 527.69,
+        "p75": 529.2702,
+        "p90": 530.9169,
+        "p95": 532.2188,
+        "p99": 538.1347
+    },
+    "confidence_score": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+    },
+    "sol_run_mode": 2
+}

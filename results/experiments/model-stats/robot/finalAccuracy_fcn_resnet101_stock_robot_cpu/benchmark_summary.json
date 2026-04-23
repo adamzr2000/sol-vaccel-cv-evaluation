@@ -1,0 +1,85 @@
+{
+    "run_id": "finalAccuracy_fcn_resnet101_stock_robot_cpu",
+    "backend": "stock",
+    "host": "robot",
+    "model": "fcn_resnet101",
+    "model_type": "semantic_segmentation",
+    "device": "cpu",
+    "num_samples": 512,
+    "time_window": {
+        "start": "2026-02-28T01:31:32.210113+00:00",
+        "stop": "2026-02-28T01:38:01.002206+00:00",
+        "duration_sec": 388.792093
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 1.36,
+        "inference_std": 0.01,
+        "system": 1.33,
+        "system_std": 0.01
+    },
+    "accuracy": {
+        "metric": "mIoU",
+        "score": 0.4448
+    },
+    "preprocessing_ms": {
+        "mean": 5.6742,
+        "std": 0.9593,
+        "min": 1.9398,
+        "max": 8.7209,
+        "p25": 5.1146,
+        "p50": 5.759,
+        "p75": 6.3114,
+        "p90": 6.7538,
+        "p95": 7.1589,
+        "p99": 7.7361
+    },
+    "inference_ms": {
+        "mean": 736.937,
+        "std": 6.996,
+        "min": 703.5793,
+        "max": 760.1886,
+        "p25": 735.3287,
+        "p50": 738.3839,
+        "p75": 740.7607,
+        "p90": 742.7638,
+        "p95": 744.453,
+        "p99": 747.398
+    },
+    "postprocessing_ms": {
+        "mean": 7.6318,
+        "std": 0.3157,
+        "min": 6.4905,
+        "max": 8.5142,
+        "p25": 7.3844,
+        "p50": 7.635,
+        "p75": 7.8746,
+        "p90": 8.0248,
+        "p95": 8.1377,
+        "p99": 8.3408
+    },
+    "system_ms": {
+        "mean": 750.2549,
+        "std": 6.9852,
+        "min": 716.8615,
+        "max": 770.7407,
+        "p25": 748.5747,
+        "p50": 751.6071,
+        "p75": 754.1026,
+        "p90": 756.3245,
+        "p95": 757.7664,
+        "p99": 761.3354
+    },
+    "confidence_score": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+    }
+}

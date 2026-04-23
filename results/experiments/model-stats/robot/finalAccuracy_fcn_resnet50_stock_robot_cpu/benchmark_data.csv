@@ -1,0 +1,513 @@
+filename,preprocessing_ms,inference_ms,postprocessing_ms,e2e_ms,class_id,confidence,accuracy,info
+coco_seg_val_0001.jpg,5.3558,465.2359,7.2534,477.8531,-1,0.0,0.5109, -> [person (Bottom): 4%]
+coco_seg_val_0002.jpg,5.635,467.4175,6.5398,479.6084,-1,0.0,0.2418, -> [background only]
+coco_seg_val_0003.jpg,5.4385,466.1016,7.2728,478.8233,-1,0.0,0.2704," -> [person (Bottom-Right): 12%, pottedplant (Bottom-Left): 1%]"
+coco_seg_val_0004.jpg,5.0461,467.2305,6.7422,479.0339,-1,0.0,0.6828, -> [tvmonitor (Top-Left): 35%]
+coco_seg_val_0005.jpg,5.4897,468.8494,7.4295,481.7842,-1,0.0,0.6979, -> [person (Center): 32%]
+coco_seg_val_0006.jpg,5.4613,468.2438,6.8816,480.6025,-1,0.0,0.6459, -> [person (Center): 17%]
+coco_seg_val_0007.jpg,5.8794,467.6609,7.5572,481.1139,-1,0.0,0.5946," -> [motorbike (Center): 15%, person (Center): 2%]"
+coco_seg_val_0008.jpg,4.1596,465.4657,7.6343,477.2763,-1,0.0,0.2986, -> [person (Center): 50%]
+coco_seg_val_0009.jpg,6.1887,471.9324,7.2818,485.4138,-1,0.0,0.4212, -> [person (Center): 58%]
+coco_seg_val_0010.jpg,5.7091,471.7574,6.9772,484.4604,-1,0.0,0.3514, -> [person (Center): 33%]
+coco_seg_val_0011.jpg,5.5624,472.3544,6.8582,484.7989,-1,0.0,0.1145, -> [diningtable (Bottom-Right): 6%]
+coco_seg_val_0012.jpg,6.6563,471.022,7.2462,484.9404,-1,0.0,0.2501, -> [person (Center): 59%]
+coco_seg_val_0013.jpg,5.8411,472.6989,6.8001,485.3564,-1,0.0,0.2486, -> [person (Right): 33%]
+coco_seg_val_0014.jpg,6.5476,474.5895,7.2465,488.3933,-1,0.0,0.1533, -> [diningtable (Bottom): 6%]
+coco_seg_val_0015.jpg,4.9512,473.1594,7.433,485.5538,-1,0.0,0.2733," -> [horse (Left): 7%, person (Left): 4%]"
+coco_seg_val_0016.jpg,5.7739,473.5965,7.0401,486.4213,-1,0.0,0.4421," -> [car (Center): 20%, person (Center): 6%]"
+coco_seg_val_0017.jpg,6.0973,470.6487,7.2791,484.0356,-1,0.0,0.7907, -> [bus (Center): 33%]
+coco_seg_val_0018.jpg,4.9097,473.7604,6.975,485.6605,-1,0.0,0.6641, -> [aeroplane (Center): 5%]
+coco_seg_val_0019.jpg,5.218,475.71,6.9707,487.9099,-1,0.0,0.616, -> [car (Bottom): 11%]
+coco_seg_val_0020.jpg,5.4058,475.1612,7.6928,488.2768,-1,0.0,0.6263, -> [person (Center): 29%]
+coco_seg_val_0021.jpg,5.8252,476.7995,7.4994,490.1392,-1,0.0,0.2172," -> [bus (Left): 8%, horse (Right): 13%]"
+coco_seg_val_0022.jpg,5.9845,474.4194,7.0174,487.4326,-1,0.0,0.482, -> [person (Top): 5%]
+coco_seg_val_0023.jpg,6.6967,473.7988,7.1587,487.6652,-1,0.0,0.2478," -> [motorbike (Left): 7%, person (Right): 8%]"
+coco_seg_val_0024.jpg,5.8044,476.5658,7.2346,489.6199,-1,0.0,0.5983," -> [bus (Top): 16%, person (Top): 17%]"
+coco_seg_val_0025.jpg,5.7852,472.7536,7.9971,486.5466,-1,0.0,0.5759," -> [car (Bottom-Left): 34%, person (Right): 19%]"
+coco_seg_val_0026.jpg,6.1909,474.4774,7.6806,488.3656,-1,0.0,0.8067, -> [train (Center): 67%]
+coco_seg_val_0027.jpg,5.369,477.3513,6.9071,489.6426,-1,0.0,0.2395, -> [boat (Bottom): 24%]
+coco_seg_val_0028.jpg,7.1528,476.3522,7.4977,491.0185,-1,0.0,0.7856, -> [dog (Center): 52%]
+coco_seg_val_0029.jpg,4.687,476.3165,7.0847,488.1044,-1,0.0,0.3589, -> [dog (Center): 60%]
+coco_seg_val_0030.jpg,6.1587,476.3366,7.0281,489.5337,-1,0.0,0.4296, -> [person (Center): 8%]
+coco_seg_val_0031.jpg,4.4058,476.6219,7.5927,488.6307,-1,0.0,0.3487," -> [car (Bottom-Left): 2%, person (Right): 17%]"
+coco_seg_val_0032.jpg,7.0234,478.7829,7.7792,493.5961,-1,0.0,0.3119," -> [aeroplane (Center): 1%, car (Right): 1%, person (Left): 7%]"
+coco_seg_val_0033.jpg,5.9672,476.9561,7.598,490.532,-1,0.0,0.6848, -> [person (Center): 79%]
+coco_seg_val_0034.jpg,7.9968,477.6052,6.9794,492.5982,-1,0.0,0.0979, -> [person (Top): 28%]
+coco_seg_val_0035.jpg,5.1168,478.0678,7.3305,490.5313,-1,0.0,0.5007, -> [person (Bottom-Right): 1%]
+coco_seg_val_0036.jpg,5.9118,477.5489,7.2577,490.7297,-1,0.0,0.4723, -> [bottle (Bottom): 4%]
+coco_seg_val_0037.jpg,4.5189,475.4151,7.239,487.1838,-1,0.0,0.3318, -> [background only]
+coco_seg_val_0038.jpg,7.3807,479.9792,7.2431,494.6142,-1,0.0,0.479, -> [person (Center): 100%]
+coco_seg_val_0039.jpg,4.8482,480.2203,7.2477,492.3327,-1,0.0,0.675, -> [person (Left): 29%]
+coco_seg_val_0040.jpg,5.7481,480.3799,6.9769,493.1159,-1,0.0,0.3901, -> [boat (Center): 3%]
+coco_seg_val_0041.jpg,3.5447,478.0401,7.6207,489.221,-1,0.0,0.297," -> [bottle (Bottom): 1%, tvmonitor (Top-Left): 36%]"
+coco_seg_val_0042.jpg,5.9264,478.4516,7.3875,491.7816,-1,0.0,0.3713," -> [diningtable (Bottom): 44%, person (Top): 29%]"
+coco_seg_val_0043.jpg,6.4249,479.6042,7.0087,493.0484,-1,0.0,0.4873, -> [person (Left): 31%]
+coco_seg_val_0044.jpg,4.3346,478.3204,6.7239,489.3895,-1,0.0,0.3106, -> [background only]
+coco_seg_val_0045.jpg,4.7124,479.7082,7.2197,491.6514,-1,0.0,0.3771, -> [chair (Bottom-Right): 2%]
+coco_seg_val_0046.jpg,5.7015,479.8187,6.9602,492.4906,-1,0.0,0.5559, -> [person (Left): 1%]
+coco_seg_val_0047.jpg,4.8979,480.7982,6.6766,492.3839,-1,0.0,0.4109, -> [background only]
+coco_seg_val_0048.jpg,4.1748,481.909,7.323,493.4218,-1,0.0,0.4465, -> [person (Top-Left): 1%]
+coco_seg_val_0049.jpg,5.7586,481.6488,7.2147,494.6325,-1,0.0,0.4862, -> [background only]
+coco_seg_val_0050.jpg,4.9741,481.6141,7.3535,493.9574,-1,0.0,0.5288, -> [car (Right): 1%]
+coco_seg_val_0051.jpg,4.1331,483.0197,7.6608,494.8244,-1,0.0,0.601," -> [person (Center): 32%, sofa (Bottom): 11%]"
+coco_seg_val_0052.jpg,5.2892,482.8227,7.6435,495.7652,-1,0.0,0.7024, -> [cat (Center): 57%]
+coco_seg_val_0053.jpg,6.9286,482.4086,7.4735,496.8268,-1,0.0,0.5288, -> [person (Left): 23%]
+coco_seg_val_0054.jpg,5.665,482.7097,6.9854,495.372,-1,0.0,0.46, -> [boat (Center): 17%]
+coco_seg_val_0055.jpg,5.8413,480.3506,7.5425,493.7455,-1,0.0,0.2702," -> [person (Center): 62%, sofa (Right): 1%]"
+coco_seg_val_0056.jpg,5.3605,481.0034,7.1978,493.5787,-1,0.0,0.38, -> [person (Bottom): 9%]
+coco_seg_val_0057.jpg,5.5807,482.2573,7.1805,495.0348,-1,0.0,0.617, -> [background only]
+coco_seg_val_0058.jpg,5.9379,478.3881,7.3215,491.6589,-1,0.0,0.1449, -> [train (Bottom-Right): 4%]
+coco_seg_val_0059.jpg,5.6394,480.8708,7.3222,493.8485,-1,0.0,0.4677, -> [boat (Center): 11%]
+coco_seg_val_0060.jpg,6.6296,481.8688,7.4664,495.9751,-1,0.0,0.1841," -> [bird (Right): 7%, bottle (Top-Left): 11%, bus (Bottom-Left): 3%, motorbike (Bottom-Left): 4%, train (Bottom-Left): 1%]"
+coco_seg_val_0061.jpg,5.6197,480.4812,7.8674,493.9846,-1,0.0,0.3594, -> [motorbike (Center): 62%]
+coco_seg_val_0062.jpg,6.582,480.8562,7.1444,494.6007,-1,0.0,0.4639, -> [sheep (Bottom): 15%]
+coco_seg_val_0063.jpg,5.9953,479.3409,6.8108,492.1629,-1,0.0,0.2919, -> [diningtable (Bottom-Left): 6%]
+coco_seg_val_0064.jpg,5.0324,482.4783,7.3986,494.9259,-1,0.0,0.6051, -> [boat (Center): 6%]
+coco_seg_val_0065.jpg,6.1225,480.744,7.3281,494.2106,-1,0.0,0.2734, -> [person (Center): 18%]
+coco_seg_val_0066.jpg,6.0169,479.9489,7.1675,493.1454,-1,0.0,0.486, -> [background only]
+coco_seg_val_0067.jpg,5.0779,482.2199,7.6974,495.0075,-1,0.0,0.5152, -> [person (Center): 28%]
+coco_seg_val_0068.jpg,5.1358,481.5109,7.5574,494.2205,-1,0.0,0.2544, -> [dog (Center): 42%]
+coco_seg_val_0069.jpg,5.4712,481.0147,8.0334,494.5355,-1,0.0,0.296, -> [chair (Left): 28%]
+coco_seg_val_0070.jpg,4.92,482.3479,7.4806,494.7592,-1,0.0,0.4524, -> [cat (Center): 78%]
+coco_seg_val_0071.jpg,6.2362,482.8352,7.4264,496.5104,-1,0.0,0.3702," -> [car (Bottom-Right): 3%, person (Center): 31%]"
+coco_seg_val_0072.jpg,5.7431,486.1401,7.0632,498.9568,-1,0.0,0.2375, -> [background only]
+coco_seg_val_0073.jpg,4.9145,483.0663,7.9008,495.8927,-1,0.0,0.6196, -> [cat (Center): 50%]
+coco_seg_val_0074.jpg,3.1867,479.8537,7.7575,490.8084,-1,0.0,0.3418, -> [person (Center): 57%]
+coco_seg_val_0075.jpg,6.4758,482.9608,7.7424,497.19,-1,0.0,0.1489," -> [cat (Center): 40%, dog (Bottom-Left): 2%, sofa (Top): 2%]"
+coco_seg_val_0076.jpg,4.8742,481.4081,7.8458,494.1391,-1,0.0,0.5962, -> [person (Center): 5%]
+coco_seg_val_0077.jpg,5.744,481.9146,6.8045,494.4734,-1,0.0,0.4056, -> [person (Right): 7%]
+coco_seg_val_0078.jpg,4.9755,485.6886,8.0125,498.6875,-1,0.0,0.2054," -> [cat (Bottom-Right): 16%, chair (Bottom-Left): 2%, person (Right): 3%, sofa (Left): 5%]"
+coco_seg_val_0079.jpg,5.6041,481.3495,8.0761,495.0406,-1,0.0,0.68, -> [person (Center): 71%]
+coco_seg_val_0080.jpg,7.3408,480.7794,7.1815,495.3136,-1,0.0,0.252, -> [pottedplant (Top): 21%]
+coco_seg_val_0081.jpg,5.4295,484.8496,6.9372,497.2322,-1,0.0,0.3633, -> [bicycle (Bottom): 34%]
+coco_seg_val_0082.jpg,4.2803,483.5815,7.1583,495.0314,-1,0.0,0.0873, -> [sofa (Left): 1%]
+coco_seg_val_0083.jpg,5.6778,482.505,7.8195,496.0169,-1,0.0,0.3799, -> [cat (Center): 27%]
+coco_seg_val_0084.jpg,7.2721,482.9035,7.4949,497.6875,-1,0.0,0.6321, -> [dog (Top-Left): 6%]
+coco_seg_val_0085.jpg,4.9016,480.1333,7.3881,492.4341,-1,0.0,0.6531, -> [diningtable (Center): 74%]
+coco_seg_val_0086.jpg,4.1593,484.9152,6.9379,496.0242,-1,0.0,0.2943, -> [diningtable (Bottom-Left): 4%]
+coco_seg_val_0087.jpg,5.6139,483.0663,7.554,496.2466,-1,0.0,0.4994, -> [background only]
+coco_seg_val_0088.jpg,6.3047,483.0501,7.0954,496.4659,-1,0.0,0.7386, -> [person (Center): 3%]
+coco_seg_val_0089.jpg,6.8741,480.1998,7.5315,494.6171,-1,0.0,0.6179, -> [train (Bottom): 1%]
+coco_seg_val_0090.jpg,5.3403,480.6171,7.3749,493.3485,-1,0.0,0.3879, -> [person (Right): 11%]
+coco_seg_val_0091.jpg,4.5393,481.1882,7.8731,493.6106,-1,0.0,0.4542, -> [person (Center): 18%]
+coco_seg_val_0092.jpg,5.2857,481.8225,7.4782,494.597,-1,0.0,0.4865, -> [chair (Bottom): 13%]
+coco_seg_val_0093.jpg,5.9495,482.1296,7.4732,495.5677,-1,0.0,0.3081, -> [background only]
+coco_seg_val_0094.jpg,5.0617,481.0414,7.6657,493.7803,-1,0.0,0.2858, -> [person (Center): 51%]
+coco_seg_val_0095.jpg,6.0175,485.9832,7.35,499.3615,-1,0.0,0.3951," -> [cat (Bottom): 5%, dog (Bottom): 10%]"
+coco_seg_val_0096.jpg,5.4406,481.1505,7.7526,494.3598,-1,0.0,0.2668, -> [bus (Center): 95%]
+coco_seg_val_0097.jpg,5.7101,481.6537,7.3825,494.763,-1,0.0,0.4379, -> [diningtable (Center): 55%]
+coco_seg_val_0098.jpg,3.7654,486.9516,7.5559,498.2895,-1,0.0,0.3633," -> [person (Center): 10%, tvmonitor (Right): 9%]"
+coco_seg_val_0099.jpg,5.7037,484.5156,7.6451,497.8794,-1,0.0,0.7382, -> [person (Center): 77%]
+coco_seg_val_0100.jpg,6.9238,487.6649,7.4933,502.0925,-1,0.0,0.2128, -> [boat (Right): 3%]
+coco_seg_val_0101.jpg,6.8016,484.6263,7.6663,499.111,-1,0.0,0.2793," -> [horse (Left): 14%, person (Top-Left): 6%]"
+coco_seg_val_0102.jpg,6.3252,484.2401,7.3913,497.9722,-1,0.0,0.4375," -> [chair (Top): 1%, diningtable (Bottom): 51%, person (Top): 29%]"
+coco_seg_val_0103.jpg,4.5023,483.7145,7.3256,495.5539,-1,0.0,0.3224, -> [diningtable (Bottom): 3%]
+coco_seg_val_0104.jpg,6.945,483.5581,7.1804,497.6944,-1,0.0,0.313, -> [boat (Center): 53%]
+coco_seg_val_0105.jpg,6.0461,484.0853,6.8597,497.0024,-1,0.0,0.4999, -> [background only]
+coco_seg_val_0106.jpg,5.5767,483.897,7.6005,497.0895,-1,0.0,0.4599," -> [chair (Bottom-Left): 1%, person (Center): 53%]"
+coco_seg_val_0107.jpg,8.1618,484.5142,7.842,500.535,-1,0.0,0.5489," -> [diningtable (Bottom-Right): 4%, person (Center): 71%]"
+coco_seg_val_0108.jpg,6.1702,484.3386,7.8356,498.3604,-1,0.0,0.2668, -> [person (Center): 61%]
+coco_seg_val_0109.jpg,4.5912,485.1633,7.6567,497.4278,-1,0.0,0.5952, -> [person (Center): 83%]
+coco_seg_val_0110.jpg,5.6592,484.4768,7.4957,497.6469,-1,0.0,0.2783," -> [pottedplant (Top): 7%, sofa (Center): 33%]"
+coco_seg_val_0111.jpg,5.6995,484.2379,7.0195,496.9724,-1,0.0,0.3982, -> [person (Top): 2%]
+coco_seg_val_0112.jpg,6.6935,486.3001,7.1248,500.1306,-1,0.0,0.6865, -> [train (Center): 28%]
+coco_seg_val_0113.jpg,5.3302,486.8744,7.6157,499.8312,-1,0.0,0.1786," -> [diningtable (Bottom): 2%, person (Top): 12%]"
+coco_seg_val_0114.jpg,5.1484,485.8775,7.5707,498.6125,-1,0.0,0.2611," -> [chair (Center): 6%, diningtable (Bottom): 25%, person (Left): 3%]"
+coco_seg_val_0115.jpg,5.4483,482.4533,7.6705,495.5876,-1,0.0,0.3523, -> [background only]
+coco_seg_val_0116.jpg,4.4815,482.1669,7.5835,494.2473,-1,0.0,0.6812, -> [person (Left): 9%]
+coco_seg_val_0117.jpg,5.9394,488.0341,7.2654,501.2548,-1,0.0,0.6963, -> [person (Center): 56%]
+coco_seg_val_0118.jpg,4.1535,484.2589,7.103,495.525,-1,0.0,0.7917, -> [person (Left): 39%]
+coco_seg_val_0119.jpg,6.1096,484.4071,7.2453,497.7728,-1,0.0,0.497, -> [person (Center): 22%]
+coco_seg_val_0120.jpg,6.1751,484.7374,7.5043,498.4276,-1,0.0,0.624, -> [person (Center): 10%]
+coco_seg_val_0121.jpg,6.0136,487.7096,6.6979,500.4375,-1,0.0,0.4926, -> [background only]
+coco_seg_val_0122.jpg,5.5046,485.0489,7.119,497.683,-1,0.0,0.1598," -> [bottle (Left): 1%, diningtable (Center): 8%]"
+coco_seg_val_0123.jpg,6.4942,482.8469,7.7041,497.0566,-1,0.0,0.5834, -> [boat (Bottom): 8%]
+coco_seg_val_0124.jpg,6.0495,485.8037,6.8691,498.7334,-1,0.0,0.3087, -> [car (Left): 6%]
+coco_seg_val_0125.jpg,6.1373,487.8845,7.0199,501.0573,-1,0.0,0.4966, -> [background only]
+coco_seg_val_0126.jpg,5.386,488.6095,7.0871,501.0974,-1,0.0,0.3315, -> [background only]
+coco_seg_val_0127.jpg,6.9076,483.6769,7.579,498.1751,-1,0.0,0.6534, -> [train (Center): 35%]
+coco_seg_val_0128.jpg,4.1225,488.2905,7.501,499.9236,-1,0.0,0.457, -> [person (Right): 17%]
+coco_seg_val_0129.jpg,4.4422,486.8207,7.5764,498.8565,-1,0.0,0.2423, -> [person (Center): 50%]
+coco_seg_val_0130.jpg,5.7727,486.7043,7.764,500.2514,-1,0.0,0.3474, -> [person (Right): 41%]
+coco_seg_val_0131.jpg,6.0806,486.6836,7.2528,500.0283,-1,0.0,0.3094, -> [sheep (Left): 4%]
+coco_seg_val_0132.jpg,5.7341,488.8195,7.1855,501.7499,-1,0.0,0.3331, -> [bus (Top): 8%]
+coco_seg_val_0133.jpg,5.7945,486.5683,7.1649,499.5403,-1,0.0,0.5661, -> [person (Center): 54%]
+coco_seg_val_0134.jpg,5.8207,487.2942,7.1026,500.233,-1,0.0,0.7416, -> [cat (Center): 6%]
+coco_seg_val_0135.jpg,6.5871,486.2134,7.2029,500.0197,-1,0.0,0.5834, -> [person (Left): 15%]
+coco_seg_val_0136.jpg,5.6778,495.9484,7.6666,509.304,-1,0.0,0.5261," -> [bus (Left): 2%, train (Center): 11%]"
+coco_seg_val_0137.jpg,5.6397,486.8486,7.2835,499.7822,-1,0.0,0.6945, -> [person (Center): 30%]
+coco_seg_val_0138.jpg,6.5993,486.3714,7.5622,500.5482,-1,0.0,0.5601, -> [person (Center): 15%]
+coco_seg_val_0139.jpg,6.6058,486.8875,6.9323,500.4415,-1,0.0,0.4907, -> [background only]
+coco_seg_val_0140.jpg,5.4183,487.4185,7.4474,500.3008,-1,0.0,0.6919, -> [person (Top-Left): 20%]
+coco_seg_val_0141.jpg,6.2384,486.8937,7.5381,500.6812,-1,0.0,0.3435," -> [dog (Left): 27%, person (Right): 43%]"
+coco_seg_val_0142.jpg,6.8455,485.8749,7.0814,499.8144,-1,0.0,0.426," -> [motorbike (Bottom): 6%, person (Bottom-Right): 7%]"
+coco_seg_val_0143.jpg,6.243,484.0747,8.0845,498.4171,-1,0.0,0.4548," -> [cat (Center): 42%, dog (Bottom-Left): 1%]"
+coco_seg_val_0144.jpg,6.0222,483.3303,7.6996,497.0677,-1,0.0,0.3719," -> [bottle (Top-Right): 17%, diningtable (Bottom-Left): 1%]"
+coco_seg_val_0145.jpg,6.4487,486.7205,7.2151,500.395,-1,0.0,0.4388," -> [boat (Center): 2%, person (Top): 1%]"
+coco_seg_val_0146.jpg,5.1213,485.3928,7.5224,498.0546,-1,0.0,0.2198, -> [diningtable (Bottom): 29%]
+coco_seg_val_0147.jpg,5.1488,485.5222,7.3803,498.0661,-1,0.0,0.4969, -> [person (Center): 19%]
+coco_seg_val_0148.jpg,5.9466,485.4314,7.4359,498.8257,-1,0.0,0.2914, -> [aeroplane (Left): 10%]
+coco_seg_val_0149.jpg,6.6201,486.2072,7.4919,500.3299,-1,0.0,0.5608," -> [car (Center): 15%, person (Center): 8%]"
+coco_seg_val_0150.jpg,6.1173,484.4838,7.2353,497.8465,-1,0.0,0.6466, -> [person (Center): 10%]
+coco_seg_val_0151.jpg,7.842,485.0397,7.5524,500.4497,-1,0.0,0.589, -> [cow (Center): 18%]
+coco_seg_val_0152.jpg,5.4179,484.847,7.3074,497.5843,-1,0.0,0.5248, -> [person (Center): 12%]
+coco_seg_val_0153.jpg,6.1656,485.7171,7.6151,499.5088,-1,0.0,0.37," -> [sofa (Bottom-Left): 4%, tvmonitor (Left): 2%]"
+coco_seg_val_0154.jpg,4.7558,482.8665,7.7277,495.3604,-1,0.0,0.1702," -> [chair (Bottom-Right): 1%, person (Center): 33%]"
+coco_seg_val_0155.jpg,5.2257,489.4679,6.9595,501.6637,-1,0.0,0.1424, -> [cat (Center): 27%]
+coco_seg_val_0156.jpg,6.2242,486.0404,7.2051,499.4853,-1,0.0,0.5957, -> [boat (Center): 13%]
+coco_seg_val_0157.jpg,5.896,485.4,7.278,498.5906,-1,0.0,0.4881, -> [background only]
+coco_seg_val_0158.jpg,5.989,487.7843,7.1742,500.9633,-1,0.0,0.4835, -> [background only]
+coco_seg_val_0159.jpg,6.4489,486.5563,7.8647,500.8862,-1,0.0,0.2614," -> [bicycle (Bottom-Left): 3%, person (Left): 18%]"
+coco_seg_val_0160.jpg,5.6738,487.2366,7.7241,500.6512,-1,0.0,0.3316," -> [diningtable (Bottom-Left): 10%, person (Center): 64%]"
+coco_seg_val_0161.jpg,5.4649,489.7298,6.801,502.0155,-1,0.0,0.5138, -> [person (Right): 1%]
+coco_seg_val_0162.jpg,5.7421,488.1111,7.0714,500.9356,-1,0.0,0.6055, -> [person (Center): 56%]
+coco_seg_val_0163.jpg,6.4221,487.6156,6.894,500.947,-1,0.0,0.5538, -> [person (Bottom): 2%]
+coco_seg_val_0164.jpg,6.3511,486.848,7.1119,500.3271,-1,0.0,0.4276," -> [bus (Right): 11%, train (Left): 17%]"
+coco_seg_val_0165.jpg,5.4875,485.8308,7.5703,498.9004,-1,0.0,0.5725, -> [person (Center): 20%]
+coco_seg_val_0166.jpg,6.1723,484.9325,7.4486,498.5651,-1,0.0,0.6175," -> [bus (Right): 17%, person (Bottom): 15%]"
+coco_seg_val_0167.jpg,6.0895,486.0258,7.4007,499.527,-1,0.0,0.1158, -> [diningtable (Center): 100%]
+coco_seg_val_0168.jpg,3.915,486.4871,7.4802,497.9012,-1,0.0,0.6793, -> [bus (Left): 30%]
+coco_seg_val_0169.jpg,6.3317,487.0777,7.6982,501.1186,-1,0.0,0.2973," -> [cow (Top): 54%, horse (Bottom-Left): 1%]"
+coco_seg_val_0170.jpg,5.9247,484.8699,7.1576,497.9691,-1,0.0,0.3721," -> [person (Bottom): 8%, sheep (Top-Right): 6%]"
+coco_seg_val_0171.jpg,4.9929,484.1003,7.3202,496.4296,-1,0.0,0.3465," -> [cat (Bottom-Left): 16%, person (Right): 31%]"
+coco_seg_val_0172.jpg,4.1983,482.6576,7.3881,494.2609,-1,0.0,0.4761, -> [car (Left): 2%]
+coco_seg_val_0173.jpg,6.3643,485.3184,7.3772,499.0713,-1,0.0,0.4752, -> [diningtable (Bottom): 23%]
+coco_seg_val_0174.jpg,6.322,484.773,7.8732,498.9805,-1,0.0,0.3907," -> [bicycle (Bottom): 28%, person (Center): 55%]"
+coco_seg_val_0175.jpg,5.2588,485.4971,7.1803,497.9472,-1,0.0,0.4006, -> [sofa (Bottom): 24%]
+coco_seg_val_0176.jpg,5.2655,486.4462,8.0842,499.8074,-1,0.0,0.3154," -> [boat (Bottom-Left): 6%, person (Bottom): 4%]"
+coco_seg_val_0177.jpg,6.2747,481.8742,7.6086,495.7723,-1,0.0,0.5898, -> [bus (Center): 72%]
+coco_seg_val_0178.jpg,6.174,487.5539,7.3874,501.1256,-1,0.0,0.3303, -> [person (Center): 47%]
+coco_seg_val_0179.jpg,5.5812,482.9262,7.5554,496.0788,-1,0.0,0.3475, -> [person (Top): 43%]
+coco_seg_val_0180.jpg,7.2394,485.2309,7.6189,500.1051,-1,0.0,0.6396, -> [aeroplane (Center): 31%]
+coco_seg_val_0181.jpg,6.1629,487.4828,7.2937,500.9503,-1,0.0,0.5166, -> [person (Top): 48%]
+coco_seg_val_0182.jpg,5.1649,487.003,7.6511,499.8345,-1,0.0,0.1914, -> [person (Center): 47%]
+coco_seg_val_0183.jpg,5.9373,487.0868,7.6176,500.6535,-1,0.0,0.2332," -> [horse (Center): 12%, person (Top): 1%]"
+coco_seg_val_0184.jpg,5.6884,485.5561,6.9265,498.1864,-1,0.0,0.5831, -> [background only]
+coco_seg_val_0185.jpg,5.7336,487.1095,7.3711,500.225,-1,0.0,0.2521, -> [person (Bottom-Left): 1%]
+coco_seg_val_0186.jpg,4.1116,486.1319,7.4057,497.6595,-1,0.0,0.2816, -> [cat (Right): 33%]
+coco_seg_val_0187.jpg,5.1236,485.1097,7.7794,498.0232,-1,0.0,0.2444," -> [chair (Bottom-Left): 3%, person (Center): 56%]"
+coco_seg_val_0188.jpg,4.8085,485.95,7.4111,498.1847,-1,0.0,0.442, -> [background only]
+coco_seg_val_0189.jpg,4.2646,487.4141,6.8171,498.5071,-1,0.0,0.5313, -> [cow (Center): 3%]
+coco_seg_val_0190.jpg,6.1762,487.9448,7.7527,501.8845,-1,0.0,0.2606," -> [diningtable (Bottom): 5%, person (Center): 56%]"
+coco_seg_val_0191.jpg,6.0702,486.0851,7.4202,499.5867,-1,0.0,0.1874, -> [chair (Bottom-Right): 2%]
+coco_seg_val_0192.jpg,6.6462,486.6297,6.8598,500.1468,-1,0.0,0.6232, -> [person (Top): 9%]
+coco_seg_val_0193.jpg,6.1588,489.7537,7.1412,503.0693,-1,0.0,0.4335," -> [boat (Bottom-Right): 1%, person (Right): 13%]"
+coco_seg_val_0194.jpg,5.4003,486.7466,7.6516,499.8092,-1,0.0,0.7862, -> [person (Bottom-Right): 13%]
+coco_seg_val_0195.jpg,4.8851,487.177,7.4776,499.5503,-1,0.0,0.4578, -> [bottle (Top-Left): 2%]
+coco_seg_val_0196.jpg,4.45,486.4433,7.191,498.1018,-1,0.0,0.2183," -> [person (Center): 2%, tvmonitor (Top-Left): 3%]"
+coco_seg_val_0197.jpg,4.4315,486.6548,7.5855,498.6876,-1,0.0,0.4535, -> [person (Center): 14%]
+coco_seg_val_0198.jpg,6.1428,489.3351,7.3146,502.8031,-1,0.0,0.7118, -> [train (Bottom): 14%]
+coco_seg_val_0199.jpg,5.9575,486.9903,7.1179,500.0819,-1,0.0,0.3918, -> [person (Left): 18%]
+coco_seg_val_0200.jpg,6.061,488.5859,7.2481,501.9114,-1,0.0,0.3254," -> [bus (Center): 43%, car (Bottom-Left): 2%]"
+coco_seg_val_0201.jpg,6.349,487.38,7.4214,501.1602,-1,0.0,0.4405, -> [cow (Center): 75%]
+coco_seg_val_0202.jpg,4.5396,486.1112,7.1435,497.8104,-1,0.0,0.3658, -> [horse (Center): 41%]
+coco_seg_val_0203.jpg,3.6902,483.1811,7.8992,494.7818,-1,0.0,0.5245, -> [person (Left): 64%]
+coco_seg_val_0204.jpg,7.6624,486.1298,7.0598,500.8625,-1,0.0,0.3196, -> [background only]
+coco_seg_val_0205.jpg,5.5573,487.7209,7.0862,500.3801,-1,0.0,0.4776, -> [background only]
+coco_seg_val_0206.jpg,4.6948,488.2879,7.483,500.4765,-1,0.0,0.5718, -> [person (Center): 26%]
+coco_seg_val_0207.jpg,5.4072,484.7795,7.9463,498.1432,-1,0.0,0.4129, -> [diningtable (Center): 83%]
+coco_seg_val_0208.jpg,6.2264,489.244,7.0262,502.5133,-1,0.0,0.3601," -> [boat (Right): 1%, person (Bottom-Right): 5%]"
+coco_seg_val_0209.jpg,5.6808,485.5829,7.4395,498.7178,-1,0.0,0.6516, -> [cow (Center): 31%]
+coco_seg_val_0210.jpg,6.0817,488.1239,7.271,501.4879,-1,0.0,0.2859," -> [dog (Bottom): 32%, person (Bottom-Right): 6%]"
+coco_seg_val_0211.jpg,5.6174,486.3284,7.6085,499.5654,-1,0.0,0.6163, -> [person (Top): 26%]
+coco_seg_val_0212.jpg,6.7395,484.4789,7.9046,499.1421,-1,0.0,0.2892," -> [car (Bottom): 20%, person (Bottom-Left): 4%]"
+coco_seg_val_0213.jpg,6.9697,485.8278,8.6336,501.4479,-1,0.0,0.1101, -> [background only]
+coco_seg_val_0214.jpg,6.6685,487.5434,7.6765,501.9086,-1,0.0,0.1761, -> [person (Bottom): 35%]
+coco_seg_val_0215.jpg,3.8686,487.0526,7.0309,497.9684,-1,0.0,0.4992, -> [background only]
+coco_seg_val_0216.jpg,3.9948,484.9995,7.3775,496.383,-1,0.0,0.3074, -> [cow (Center): 9%]
+coco_seg_val_0217.jpg,6.5859,485.329,7.5348,499.4598,-1,0.0,0.4734, -> [person (Bottom-Right): 26%]
+coco_seg_val_0218.jpg,6.016,485.8952,7.5619,499.4886,-1,0.0,0.2996, -> [person (Center): 4%]
+coco_seg_val_0219.jpg,5.3876,483.1468,7.7633,496.3135,-1,0.0,0.3753," -> [diningtable (Center): 11%, person (Center): 48%]"
+coco_seg_val_0220.jpg,4.9407,483.6064,7.4466,496.0046,-1,0.0,0.2855, -> [aeroplane (Bottom): 10%]
+coco_seg_val_0221.jpg,3.9459,484.1742,7.1308,495.2625,-1,0.0,0.4863, -> [person (Center): 3%]
+coco_seg_val_0222.jpg,5.703,483.7566,7.3279,496.7988,-1,0.0,0.5117," -> [aeroplane (Center): 27%, person (Bottom): 3%]"
+coco_seg_val_0223.jpg,6.3218,485.4348,7.4709,499.2402,-1,0.0,0.2377," -> [cow (Center): 17%, horse (Center): 12%]"
+coco_seg_val_0224.jpg,5.7545,485.9173,8.0074,499.69,-1,0.0,0.4104, -> [person (Bottom-Left): 9%]
+coco_seg_val_0225.jpg,4.1539,482.645,7.4649,494.2754,-1,0.0,0.4237, -> [aeroplane (Center): 44%]
+coco_seg_val_0226.jpg,6.7705,483.9955,7.4408,498.2185,-1,0.0,0.3585," -> [bus (Bottom): 18%, car (Bottom-Right): 1%]"
+coco_seg_val_0227.jpg,5.4346,486.7278,7.4194,499.5925,-1,0.0,0.642," -> [cat (Center): 23%, person (Top-Right): 18%, sofa (Top-Left): 21%]"
+coco_seg_val_0228.jpg,4.5963,487.804,6.9145,499.3252,-1,0.0,0.3618, -> [person (Center): 12%]
+coco_seg_val_0229.jpg,4.1627,488.4166,6.9905,499.5804,-1,0.0,0.2737, -> [person (Center): 21%]
+coco_seg_val_0230.jpg,4.4058,485.6504,7.4367,497.5036,-1,0.0,0.4997, -> [background only]
+coco_seg_val_0231.jpg,8.0117,488.6161,7.1703,503.8138,-1,0.0,0.6765, -> [bird (Center): 35%]
+coco_seg_val_0232.jpg,6.1801,487.1444,7.4913,500.8265,-1,0.0,0.1782, -> [person (Center): 41%]
+coco_seg_val_0233.jpg,4.6696,484.127,7.8087,496.6159,-1,0.0,0.2657, -> [person (Center): 34%]
+coco_seg_val_0234.jpg,8.1561,483.3951,8.2866,499.8484,-1,0.0,0.3432," -> [car (Right): 3%, motorbike (Left): 15%, person (Center): 11%]"
+coco_seg_val_0235.jpg,6.1976,484.7379,7.8931,498.8391,-1,0.0,0.4946, -> [person (Center): 55%]
+coco_seg_val_0236.jpg,7.5824,486.3001,7.6548,501.5482,-1,0.0,0.4651, -> [boat (Bottom-Right): 6%]
+coco_seg_val_0237.jpg,6.4858,487.9251,6.9981,501.4205,-1,0.0,0.702, -> [dog (Center): 71%]
+coco_seg_val_0238.jpg,6.7554,487.0753,7.784,501.6253,-1,0.0,0.5149," -> [car (Center): 4%, person (Right): 12%]"
+coco_seg_val_0239.jpg,5.3255,487.6281,7.912,500.8774,-1,0.0,0.1532," -> [motorbike (Bottom): 2%, person (Center): 27%]"
+coco_seg_val_0240.jpg,5.2375,488.7468,7.4657,501.4618,-1,0.0,0.568, -> [car (Top): 18%]
+coco_seg_val_0241.jpg,6.4802,487.0797,7.7872,501.358,-1,0.0,0.4204, -> [person (Center): 1%]
+coco_seg_val_0242.jpg,8.0199,486.1819,7.8466,502.0646,-1,0.0,0.3661," -> [chair (Bottom-Right): 9%, person (Left): 7%, sofa (Bottom): 9%, tvmonitor (Top-Right): 4%]"
+coco_seg_val_0243.jpg,5.8994,485.3364,7.6612,498.9078,-1,0.0,0.3503, -> [train (Center): 34%]
+coco_seg_val_0244.jpg,5.5518,488.3802,7.4205,501.3682,-1,0.0,0.6012, -> [person (Left): 14%]
+coco_seg_val_0245.jpg,5.2635,488.4784,7.162,500.9147,-1,0.0,0.3841, -> [person (Top-Right): 2%]
+coco_seg_val_0246.jpg,5.3616,486.9119,7.2002,499.4843,-1,0.0,0.2552," -> [diningtable (Bottom-Left): 3%, person (Right): 2%]"
+coco_seg_val_0247.jpg,4.6708,491.5292,6.8169,503.0329,-1,0.0,0.4892, -> [background only]
+coco_seg_val_0248.jpg,5.5689,488.4389,7.0274,501.0461,-1,0.0,0.3333, -> [person (Center): 30%]
+coco_seg_val_0249.jpg,5.284,487.237,7.4249,499.958,-1,0.0,0.4816, -> [person (Bottom-Right): 23%]
+coco_seg_val_0250.jpg,4.285,488.0544,7.7332,500.0882,-1,0.0,0.3196," -> [horse (Right): 2%, person (Center): 28%]"
+coco_seg_val_0251.jpg,6.2832,487.6801,7.379,501.3533,-1,0.0,0.1016, -> [diningtable (Center): 99%]
+coco_seg_val_0252.jpg,6.7746,487.4085,7.9207,502.1156,-1,0.0,0.5135," -> [bicycle (Center): 50%, person (Top-Right): 1%, train (Top-Right): 3%]"
+coco_seg_val_0253.jpg,5.5462,487.3527,7.5229,500.4335,-1,0.0,0.3538, -> [car (Bottom): 19%]
+coco_seg_val_0254.jpg,4.5183,484.0994,7.6512,496.2842,-1,0.0,0.7202, -> [person (Bottom): 11%]
+coco_seg_val_0255.jpg,6.5305,484.5679,7.3083,498.4231,-1,0.0,0.2232, -> [person (Center): 60%]
+coco_seg_val_0256.jpg,5.3725,487.6187,7.9254,500.9316,-1,0.0,0.2932," -> [diningtable (Bottom): 28%, person (Top): 36%]"
+coco_seg_val_0257.jpg,7.669,486.7494,7.0725,501.512,-1,0.0,0.0321, -> [background only]
+coco_seg_val_0258.jpg,7.0146,485.431,8.0358,500.4925,-1,0.0,0.6388, -> [person (Center): 54%]
+coco_seg_val_0259.jpg,6.8244,487.7352,7.471,502.0472,-1,0.0,0.2471, -> [person (Bottom-Right): 7%]
+coco_seg_val_0260.jpg,5.416,487.3216,7.0987,499.847,-1,0.0,0.6256, -> [person (Right): 38%]
+coco_seg_val_0261.jpg,5.3374,489.8399,7.0186,502.2129,-1,0.0,0.6378, -> [background only]
+coco_seg_val_0262.jpg,4.8007,487.2507,6.8926,498.9549,-1,0.0,0.1166, -> [bus (Center): 25%]
+coco_seg_val_0263.jpg,2.9284,487.7676,6.8863,497.5927,-1,0.0,0.3499, -> [person (Right): 24%]
+coco_seg_val_0264.jpg,6.3287,486.4397,7.3669,500.1459,-1,0.0,0.5008, -> [diningtable (Center): 99%]
+coco_seg_val_0265.jpg,7.2584,484.7695,7.0801,499.1195,-1,0.0,0.4966, -> [background only]
+coco_seg_val_0266.jpg,4.9993,488.9064,7.5396,501.4622,-1,0.0,0.3922, -> [person (Center): 64%]
+coco_seg_val_0267.jpg,7.6377,488.1451,7.4035,503.2027,-1,0.0,0.4593," -> [car (Center): 5%, motorbike (Right): 16%, person (Right): 3%]"
+coco_seg_val_0268.jpg,5.6046,487.6761,7.5393,500.832,-1,0.0,0.3547, -> [person (Bottom-Right): 6%]
+coco_seg_val_0269.jpg,3.6598,486.4233,7.8934,497.9868,-1,0.0,0.6249, -> [person (Center): 77%]
+coco_seg_val_0270.jpg,6.2529,485.2841,7.0564,498.6051,-1,0.0,0.2976, -> [chair (Right): 10%]
+coco_seg_val_0271.jpg,5.4737,489.0657,7.3861,501.9364,-1,0.0,0.4229, -> [person (Left): 11%]
+coco_seg_val_0272.jpg,4.6887,490.8101,6.9637,502.474,-1,0.0,0.1177, -> [diningtable (Bottom-Right): 2%]
+coco_seg_val_0273.jpg,3.5356,488.8445,7.5094,499.9052,-1,0.0,0.4721, -> [chair (Right): 1%]
+coco_seg_val_0274.jpg,5.6972,489.8957,7.354,502.9582,-1,0.0,0.7229, -> [cow (Center): 51%]
+coco_seg_val_0275.jpg,5.4989,489.0885,7.2014,501.7991,-1,0.0,0.3845, -> [horse (Bottom): 1%]
+coco_seg_val_0276.jpg,5.9639,488.0749,7.275,501.3244,-1,0.0,0.2745," -> [bus (Center): 1%, car (Bottom-Right): 19%, person (Bottom): 1%]"
+coco_seg_val_0277.jpg,5.1183,491.2384,7.1724,503.5395,-1,0.0,0.4995, -> [background only]
+coco_seg_val_0278.jpg,5.614,486.434,7.5803,499.644,-1,0.0,0.5778," -> [dog (Center): 10%, person (Center): 15%]"
+coco_seg_val_0279.jpg,3.8799,489.4384,7.1454,500.4747,-1,0.0,0.5005, -> [background only]
+coco_seg_val_0280.jpg,5.2488,489.6212,7.4638,502.3446,-1,0.0,0.6279, -> [bird (Center): 16%]
+coco_seg_val_0281.jpg,5.1662,487.5954,7.4277,500.2043,-1,0.0,0.4165, -> [person (Center): 54%]
+coco_seg_val_0282.jpg,6.1602,486.7755,7.5118,500.4581,-1,0.0,0.7057, -> [person (Center): 18%]
+coco_seg_val_0283.jpg,5.5545,484.7308,7.3401,497.6413,-1,0.0,0.6637, -> [motorbike (Center): 43%]
+coco_seg_val_0284.jpg,5.2668,485.3853,6.7629,497.4308,-1,0.0,0.2244, -> [background only]
+coco_seg_val_0285.jpg,5.1501,487.0293,6.8953,499.0853,-1,0.0,0.3111, -> [dog (Center): 6%]
+coco_seg_val_0286.jpg,4.1599,488.6558,7.5476,500.3786,-1,0.0,0.5702, -> [person (Center): 56%]
+coco_seg_val_0287.jpg,7.0077,489.161,7.5178,503.6974,-1,0.0,0.3359," -> [chair (Top): 9%, person (Center): 29%]"
+coco_seg_val_0288.jpg,5.0115,487.7698,8.156,500.9482,-1,0.0,0.3206," -> [person (Center): 56%, sofa (Bottom): 4%]"
+coco_seg_val_0289.jpg,3.9285,489.9291,7.1815,501.0553,-1,0.0,0.664, -> [person (Center): 17%]
+coco_seg_val_0290.jpg,3.8983,491.2666,7.4754,502.6508,-1,0.0,0.2613, -> [person (Bottom-Left): 16%]
+coco_seg_val_0291.jpg,2.5537,489.2425,7.4977,499.3041,-1,0.0,0.6779, -> [person (Center): 48%]
+coco_seg_val_0292.jpg,5.8914,487.4966,7.302,500.7007,-1,0.0,0.1875, -> [car (Bottom-Right): 5%]
+coco_seg_val_0293.jpg,4.7813,490.1999,7.6726,502.6645,-1,0.0,0.3695, -> [person (Top): 28%]
+coco_seg_val_0294.jpg,4.1911,490.6582,7.4071,502.272,-1,0.0,0.4029," -> [boat (Center): 8%, person (Center): 1%]"
+coco_seg_val_0295.jpg,4.2072,489.6375,7.8291,501.689,-1,0.0,0.63," -> [person (Left): 37%, tvmonitor (Right): 51%]"
+coco_seg_val_0296.jpg,7.064,485.2329,7.9696,500.2771,-1,0.0,0.5443," -> [chair (Top-Left): 1%, diningtable (Bottom): 35%, person (Top): 28%]"
+coco_seg_val_0297.jpg,8.2208,485.2875,8.1875,501.7127,-1,0.0,0.3596," -> [cow (Center): 17%, sheep (Center): 20%]"
+coco_seg_val_0298.jpg,6.5469,488.0889,7.1124,501.7601,-1,0.0,0.3116, -> [person (Bottom-Right): 33%]
+coco_seg_val_0299.jpg,4.8091,491.1828,7.6064,503.61,-1,0.0,0.6482, -> [person (Center): 51%]
+coco_seg_val_0300.jpg,6.2443,488.0188,7.5025,501.7768,-1,0.0,0.5004, -> [bus (Center): 42%]
+coco_seg_val_0301.jpg,3.5987,488.135,7.1308,498.8762,-1,0.0,0.4975, -> [background only]
+coco_seg_val_0302.jpg,6.341,487.2001,7.4547,501.0065,-1,0.0,0.6332, -> [person (Center): 30%]
+coco_seg_val_0303.jpg,5.7304,486.7826,7.6942,500.2187,-1,0.0,0.6993, -> [person (Center): 8%]
+coco_seg_val_0304.jpg,6.6193,487.7189,7.1672,501.5209,-1,0.0,0.3311, -> [background only]
+coco_seg_val_0305.jpg,5.5831,484.2262,7.4233,497.2443,-1,0.0,0.306, -> [car (Bottom): 29%]
+coco_seg_val_0306.jpg,7.7907,490.1115,7.481,505.3948,-1,0.0,0.9242, -> [train (Center): 39%]
+coco_seg_val_0307.jpg,5.7111,484.9937,7.4296,498.146,-1,0.0,0.4949, -> [background only]
+coco_seg_val_0308.jpg,7.0338,488.2562,7.6169,502.9229,-1,0.0,0.4468, -> [person (Center): 60%]
+coco_seg_val_0309.jpg,4.1601,490.2002,7.5899,501.9664,-1,0.0,0.6036, -> [person (Center): 6%]
+coco_seg_val_0310.jpg,5.0781,487.2762,7.1301,499.495,-1,0.0,0.3596, -> [tvmonitor (Top): 12%]
+coco_seg_val_0311.jpg,5.7764,483.7695,7.6594,497.2207,-1,0.0,0.7074, -> [person (Center): 57%]
+coco_seg_val_0312.jpg,5.9133,486.819,7.1944,499.938,-1,0.0,0.6905, -> [dog (Center): 14%]
+coco_seg_val_0313.jpg,5.2892,485.1134,7.9859,498.3995,-1,0.0,0.3205, -> [person (Center): 76%]
+coco_seg_val_0314.jpg,6.1045,489.3739,7.4457,502.9418,-1,0.0,0.3809, -> [person (Center): 37%]
+coco_seg_val_0315.jpg,2.0163,486.2551,8.0583,496.3402,-1,0.0,0.3792," -> [diningtable (Bottom): 25%, person (Top): 49%]"
+coco_seg_val_0316.jpg,4.6999,488.0328,7.8978,500.6423,-1,0.0,0.2863," -> [diningtable (Center): 4%, person (Center): 42%]"
+coco_seg_val_0317.jpg,4.4902,484.7547,8.112,497.3692,-1,0.0,0.4969," -> [person (Left): 8%, tvmonitor (Top-Right): 14%]"
+coco_seg_val_0318.jpg,6.6331,488.7978,7.7503,503.193,-1,0.0,0.5944, -> [train (Top): 49%]
+coco_seg_val_0319.jpg,5.6134,487.4452,8.1424,501.2123,-1,0.0,0.1866," -> [diningtable (Center): 66%, person (Top): 9%]"
+coco_seg_val_0320.jpg,9.3528,488.1638,7.7666,505.299,-1,0.0,0.3443, -> [person (Center): 16%]
+coco_seg_val_0321.jpg,6.6527,486.2502,7.7312,500.6509,-1,0.0,0.8335, -> [dog (Left): 13%]
+coco_seg_val_0322.jpg,5.8351,497.3036,7.5618,510.7175,-1,0.0,0.4364, -> [person (Bottom-Left): 2%]
+coco_seg_val_0323.jpg,3.9124,485.1682,7.337,496.4285,-1,0.0,0.494, -> [background only]
+coco_seg_val_0324.jpg,6.0659,487.6352,7.6931,501.4058,-1,0.0,0.1798," -> [chair (Bottom-Right): 2%, sofa (Bottom-Left): 3%]"
+coco_seg_val_0325.jpg,5.1586,486.2961,7.875,499.3411,-1,0.0,0.4017," -> [dog (Center): 49%, person (Top): 1%]"
+coco_seg_val_0326.jpg,4.9548,487.9237,8.0657,500.955,-1,0.0,0.2125, -> [diningtable (Center): 40%]
+coco_seg_val_0327.jpg,5.4431,488.2142,7.0649,500.733,-1,0.0,0.4828, -> [background only]
+coco_seg_val_0328.jpg,5.55,488.6506,7.1639,501.3751,-1,0.0,0.4667, -> [person (Top-Left): 9%]
+coco_seg_val_0329.jpg,8.1799,489.2104,7.5667,504.9676,-1,0.0,0.5087, -> [bottle (Center): 2%]
+coco_seg_val_0330.jpg,3.9885,490.402,8.0105,502.412,-1,0.0,0.709," -> [cat (Center): 35%, tvmonitor (Right): 13%]"
+coco_seg_val_0331.jpg,2.0933,495.1434,7.7941,505.0467,-1,0.0,0.7926, -> [person (Left): 29%]
+coco_seg_val_0332.jpg,4.964,488.398,7.1652,500.5388,-1,0.0,0.4037, -> [person (Right): 22%]
+coco_seg_val_0333.jpg,6.2531,487.6614,7.4787,501.4051,-1,0.0,0.4673, -> [car (Center): 70%]
+coco_seg_val_0334.jpg,6.8185,486.9474,7.3193,501.0971,-1,0.0,0.4636, -> [person (Bottom): 17%]
+coco_seg_val_0335.jpg,4.2613,489.2359,7.675,501.1841,-1,0.0,0.5831, -> [person (Bottom): 55%]
+coco_seg_val_0336.jpg,5.9914,491.059,7.4736,504.5348,-1,0.0,0.4138, -> [person (Center): 38%]
+coco_seg_val_0337.jpg,5.8462,490.9599,7.8073,504.6239,-1,0.0,0.3724," -> [chair (Bottom): 11%, person (Center): 31%]"
+coco_seg_val_0338.jpg,4.5028,495.2704,7.7224,507.5114,-1,0.0,0.5563," -> [person (Center): 33%, sofa (Bottom): 23%]"
+coco_seg_val_0339.jpg,4.7706,489.2572,6.9468,500.9907,-1,0.0,0.172, -> [car (Bottom): 1%]
+coco_seg_val_0340.jpg,5.3658,488.128,7.4517,500.9559,-1,0.0,0.4984, -> [background only]
+coco_seg_val_0341.jpg,6.83,489.7517,7.8457,504.4389,-1,0.0,0.6301, -> [person (Center): 59%]
+coco_seg_val_0342.jpg,6.5142,487.8351,7.4801,501.8451,-1,0.0,0.6909, -> [horse (Bottom-Left): 11%]
+coco_seg_val_0343.jpg,8.1502,488.156,7.0727,503.3953,-1,0.0,0.5625, -> [bus (Center): 41%]
+coco_seg_val_0344.jpg,5.2297,489.0438,7.7658,502.0499,-1,0.0,0.4161," -> [cow (Top-Right): 2%, dog (Center): 17%]"
+coco_seg_val_0345.jpg,5.2306,490.3248,6.9681,502.5331,-1,0.0,0.6488, -> [person (Center): 7%]
+coco_seg_val_0346.jpg,6.4084,487.0463,7.6091,501.079,-1,0.0,0.5626, -> [person (Center): 32%]
+coco_seg_val_0347.jpg,6.1984,489.7671,7.9026,503.8835,-1,0.0,0.3453," -> [chair (Top): 4%, diningtable (Bottom): 57%, person (Top): 14%]"
+coco_seg_val_0348.jpg,4.9992,489.8513,6.8323,501.7001,-1,0.0,0.4906, -> [car (Bottom-Left): 1%]
+coco_seg_val_0349.jpg,4.7356,488.9876,7.631,501.3696,-1,0.0,0.3024, -> [background only]
+coco_seg_val_0350.jpg,5.0464,488.9958,7.4081,501.4614,-1,0.0,0.2694, -> [chair (Center): 3%]
+coco_seg_val_0351.jpg,5.4829,489.6389,7.2444,502.3767,-1,0.0,0.2565, -> [motorbike (Right): 8%]
+coco_seg_val_0352.jpg,4.64,488.9209,7.927,501.5033,-1,0.0,0.4154," -> [car (Bottom): 5%, sheep (Left): 10%]"
+coco_seg_val_0353.jpg,7.4311,490.9838,7.9629,506.3888,-1,0.0,0.2373," -> [cat (Top-Left): 1%, cow (Top): 19%, dog (Top-Left): 15%]"
+coco_seg_val_0354.jpg,5.6868,490.5521,7.7513,504.0014,-1,0.0,0.1798," -> [horse (Top): 1%, person (Center): 26%]"
+coco_seg_val_0355.jpg,4.7539,490.2974,7.8253,502.8961,-1,0.0,0.4956, -> [diningtable (Center): 94%]
+coco_seg_val_0356.jpg,4.0439,490.7557,7.6682,502.4794,-1,0.0,0.6088, -> [person (Center): 20%]
+coco_seg_val_0357.jpg,6.8236,490.1672,8.0588,505.0613,-1,0.0,0.2607," -> [horse (Center): 5%, person (Right): 1%]"
+coco_seg_val_0358.jpg,9.414,490.3012,6.9145,506.6455,-1,0.0,0.4957, -> [background only]
+coco_seg_val_0359.jpg,5.3001,486.276,7.7791,499.3666,-1,0.0,0.3549, -> [person (Center): 83%]
+coco_seg_val_0360.jpg,5.6019,488.277,8.1284,502.019,-1,0.0,0.4133," -> [car (Center): 11%, person (Center): 65%]"
+coco_seg_val_0361.jpg,5.3988,488.9726,7.1758,501.5578,-1,0.0,0.2792, -> [person (Right): 30%]
+coco_seg_val_0362.jpg,5.4672,489.82,7.2349,502.5333,-1,0.0,0.5223, -> [person (Right): 3%]
+coco_seg_val_0363.jpg,5.2739,487.3808,7.5867,500.2527,-1,0.0,0.4237, -> [tvmonitor (Top): 34%]
+coco_seg_val_0364.jpg,5.7121,490.2429,8.0349,504.0004,-1,0.0,0.5188, -> [person (Left): 45%]
+coco_seg_val_0365.jpg,5.4174,497.3486,8.0529,510.8299,-1,0.0,0.0335," -> [diningtable (Center): 95%, person (Bottom): 2%]"
+coco_seg_val_0366.jpg,4.9448,489.8478,7.9519,502.7564,-1,0.0,0.5205, -> [person (Center): 74%]
+coco_seg_val_0367.jpg,4.8708,492.8082,7.2027,504.893,-1,0.0,0.7126, -> [person (Center): 12%]
+coco_seg_val_0368.jpg,5.902,489.614,7.1681,502.6949,-1,0.0,0.493, -> [background only]
+coco_seg_val_0369.jpg,7.9837,491.5977,7.4253,507.0185,-1,0.0,0.3286, -> [background only]
+coco_seg_val_0370.jpg,6.5293,490.6869,7.2276,504.4553,-1,0.0,0.2964, -> [car (Top-Right): 2%]
+coco_seg_val_0371.jpg,5.7074,492.103,7.5032,505.3256,-1,0.0,0.7423, -> [train (Center): 19%]
+coco_seg_val_0372.jpg,7.0083,499.619,7.3052,513.9428,-1,0.0,0.6032, -> [person (Center): 17%]
+coco_seg_val_0373.jpg,7.396,492.1431,7.3985,506.9494,-1,0.0,0.5173, -> [bus (Center): 67%]
+coco_seg_val_0374.jpg,5.341,491.8825,7.6189,504.8545,-1,0.0,0.4776, -> [person (Top-Right): 2%]
+coco_seg_val_0375.jpg,6.099,490.3286,7.6817,504.1197,-1,0.0,0.749, -> [person (Center): 24%]
+coco_seg_val_0376.jpg,4.4312,490.2605,7.7345,502.4374,-1,0.0,0.5162," -> [diningtable (Bottom-Left): 30%, person (Center): 63%]"
+coco_seg_val_0377.jpg,6.5281,492.2983,7.1679,506.0049,-1,0.0,0.3887, -> [horse (Right): 6%]
+coco_seg_val_0378.jpg,5.053,491.5298,7.5701,504.1637,-1,0.0,0.3881, -> [person (Top): 27%]
+coco_seg_val_0379.jpg,5.6269,489.9865,7.6607,503.2852,-1,0.0,0.197," -> [cow (Center): 36%, person (Top-Left): 1%]"
+coco_seg_val_0380.jpg,5.3829,488.4931,7.6184,501.5055,-1,0.0,0.6864, -> [person (Center): 38%]
+coco_seg_val_0381.jpg,5.4351,490.4301,7.1345,503.0152,-1,0.0,0.3759," -> [chair (Right): 4%, person (Center): 1%]"
+coco_seg_val_0382.jpg,3.7347,490.6703,7.4848,501.9018,-1,0.0,0.3756, -> [person (Left): 33%]
+coco_seg_val_0383.jpg,6.9882,488.6953,8.3644,504.0584,-1,0.0,0.4377," -> [bottle (Bottom-Left): 2%, cat (Bottom-Right): 5%, dog (Center): 41%]"
+coco_seg_val_0384.jpg,7.6671,488.7317,7.4447,503.8559,-1,0.0,0.2806, -> [bus (Center): 62%]
+coco_seg_val_0385.jpg,4.1779,488.4227,8.0293,500.6463,-1,0.0,0.5199, -> [person (Center): 66%]
+coco_seg_val_0386.jpg,5.8295,493.9192,7.447,507.2066,-1,0.0,0.6311," -> [motorbike (Center): 9%, person (Center): 3%]"
+coco_seg_val_0387.jpg,5.9281,490.1203,7.4446,503.5052,-1,0.0,0.5161, -> [bottle (Center): 1%]
+coco_seg_val_0388.jpg,6.1619,494.4683,7.5208,508.1629,-1,0.0,0.7198, -> [person (Right): 39%]
+coco_seg_val_0389.jpg,5.5348,490.4795,7.1906,503.2208,-1,0.0,0.4686, -> [person (Bottom-Right): 3%]
+coco_seg_val_0390.jpg,6.1433,489.3724,7.6595,503.1862,-1,0.0,0.3612," -> [diningtable (Bottom): 1%, person (Left): 34%]"
+coco_seg_val_0391.jpg,5.5095,488.9161,7.3629,501.8044,-1,0.0,0.2432," -> [diningtable (Bottom-Right): 2%, person (Center): 73%]"
+coco_seg_val_0392.jpg,8.8522,490.2627,8.1853,507.3124,-1,0.0,0.7561," -> [person (Bottom): 27%, train (Left): 13%]"
+coco_seg_val_0393.jpg,6.5593,491.4361,7.3298,505.337,-1,0.0,0.5324," -> [motorbike (Bottom-Left): 20%, person (Center): 42%]"
+coco_seg_val_0394.jpg,6.3226,490.2716,7.2895,503.8948,-1,0.0,0.327, -> [person (Bottom-Right): 1%]
+coco_seg_val_0395.jpg,6.041,488.8095,7.8754,502.7364,-1,0.0,0.2457," -> [cat (Center): 48%, dog (Bottom-Left): 5%, sofa (Bottom-Right): 14%]"
+coco_seg_val_0396.jpg,7.1623,490.3436,6.8534,504.3699,-1,0.0,0.4735, -> [train (Center): 8%]
+coco_seg_val_0397.jpg,5.1601,491.4124,7.8318,504.4206,-1,0.0,0.3496," -> [diningtable (Bottom): 9%, pottedplant (Center): 35%]"
+coco_seg_val_0398.jpg,6.1131,488.5124,7.4732,502.1104,-1,0.0,0.3001, -> [cow (Bottom-Left): 7%]
+coco_seg_val_0399.jpg,6.7152,490.2486,7.8729,504.8478,-1,0.0,0.3299," -> [person (Left): 1%, train (Center): 49%]"
+coco_seg_val_0400.jpg,5.8636,491.2008,7.6871,504.7674,-1,0.0,0.2917, -> [diningtable (Bottom): 25%]
+coco_seg_val_0401.jpg,6.055,490.8167,6.6273,503.5139,-1,0.0,0.2336, -> [background only]
+coco_seg_val_0402.jpg,4.4414,490.7872,7.7844,503.0238,-1,0.0,0.3472," -> [chair (Left): 2%, sofa (Right): 18%]"
+coco_seg_val_0403.jpg,5.1405,490.7132,7.38,503.2441,-1,0.0,0.5241, -> [aeroplane (Bottom): 23%]
+coco_seg_val_0404.jpg,6.7824,488.8611,7.8306,503.4896,-1,0.0,0.3315," -> [person (Left): 33%, sheep (Bottom-Right): 29%]"
+coco_seg_val_0405.jpg,7.6126,489.254,7.1252,504.003,-1,0.0,0.4964, -> [person (Center): 65%]
+coco_seg_val_0406.jpg,6.1044,491.9609,7.1271,505.203,-1,0.0,0.4993, -> [background only]
+coco_seg_val_0407.jpg,5.4529,489.0738,7.6197,502.1584,-1,0.0,0.6125, -> [person (Center): 33%]
+coco_seg_val_0408.jpg,5.1474,489.407,7.0965,501.6665,-1,0.0,0.7622, -> [cow (Center): 63%]
+coco_seg_val_0409.jpg,8.8668,489.9336,7.9515,506.7636,-1,0.0,0.5168, -> [cat (Center): 18%]
+coco_seg_val_0410.jpg,7.3887,490.1383,7.46,504.9989,-1,0.0,0.2287," -> [bird (Center): 9%, person (Right): 8%]"
+coco_seg_val_0411.jpg,6.3982,491.5068,7.5764,505.4959,-1,0.0,0.3175, -> [person (Center): 52%]
+coco_seg_val_0412.jpg,6.0558,490.3087,7.2313,503.612,-1,0.0,0.505, -> [person (Bottom): 24%]
+coco_seg_val_0413.jpg,5.5683,494.3158,7.5983,507.4979,-1,0.0,0.4982, -> [background only]
+coco_seg_val_0414.jpg,5.4073,491.8713,7.6124,504.9017,-1,0.0,0.3665, -> [person (Right): 8%]
+coco_seg_val_0415.jpg,5.057,492.175,7.9133,505.1557,-1,0.0,0.2753," -> [horse (Bottom): 16%, person (Left): 14%]"
+coco_seg_val_0416.jpg,6.5501,492.2516,7.3839,506.1958,-1,0.0,0.3846," -> [motorbike (Right): 3%, person (Top-Left): 8%]"
+coco_seg_val_0417.jpg,5.3549,488.3568,8.0667,501.7939,-1,0.0,0.3178," -> [diningtable (Bottom-Right): 7%, person (Center): 73%]"
+coco_seg_val_0418.jpg,4.111,491.9671,6.7571,502.8466,-1,0.0,0.1868, -> [car (Bottom-Left): 9%]
+coco_seg_val_0419.jpg,4.9714,488.4507,7.2923,500.7259,-1,0.0,0.4058, -> [aeroplane (Center): 26%]
+coco_seg_val_0420.jpg,6.0089,490.7804,7.4659,504.2668,-1,0.0,0.6823, -> [person (Center): 7%]
+coco_seg_val_0421.jpg,6.1941,491.8152,7.6746,505.6997,-1,0.0,0.4221," -> [person (Bottom-Right): 13%, train (Top-Left): 16%]"
+coco_seg_val_0422.jpg,5.7042,493.2959,7.7834,506.7999,-1,0.0,0.3196, -> [diningtable (Center): 88%]
+coco_seg_val_0423.jpg,4.1919,491.2109,7.535,502.9489,-1,0.0,0.5347, -> [bottle (Center): 1%]
+coco_seg_val_0424.jpg,8.1247,491.7835,7.3618,507.2817,-1,0.0,0.2997," -> [bicycle (Bottom-Left): 15%, person (Center): 27%]"
+coco_seg_val_0425.jpg,6.5888,491.595,7.1746,505.3697,-1,0.0,0.5031, -> [diningtable (Center): 98%]
+coco_seg_val_0426.jpg,6.1383,492.5558,7.4552,506.1606,-1,0.0,0.4791, -> [aeroplane (Center): 9%]
+coco_seg_val_0427.jpg,6.463,489.6311,7.1827,503.2881,-1,0.0,0.2938, -> [horse (Left): 5%]
+coco_seg_val_0428.jpg,5.8365,493.6007,7.3892,506.8378,-1,0.0,0.7395, -> [train (Center): 8%]
+coco_seg_val_0429.jpg,4.2875,494.2796,7.8259,506.4041,-1,0.0,0.6374, -> [person (Left): 43%]
+coco_seg_val_0430.jpg,4.8394,490.4859,7.6438,502.9806,-1,0.0,0.8086, -> [person (Right): 26%]
+coco_seg_val_0431.jpg,5.1454,492.1185,7.7512,505.0261,-1,0.0,0.7385, -> [person (Center): 25%]
+coco_seg_val_0432.jpg,5.7327,490.6559,7.4309,503.8299,-1,0.0,0.2864, -> [diningtable (Bottom): 34%]
+coco_seg_val_0433.jpg,9.4943,490.8527,7.445,507.8078,-1,0.0,0.7484, -> [person (Center): 30%]
+coco_seg_val_0434.jpg,6.793,491.3359,7.5856,505.7309,-1,0.0,0.5134, -> [person (Center): 24%]
+coco_seg_val_0435.jpg,5.9746,490.1995,7.7684,503.954,-1,0.0,0.6297, -> [person (Center): 61%]
+coco_seg_val_0436.jpg,6.0625,491.944,8.1168,506.1343,-1,0.0,0.395," -> [bottle (Top): 5%, diningtable (Center): 68%, person (Bottom-Left): 6%]"
+coco_seg_val_0437.jpg,5.898,490.8489,7.4088,504.1727,-1,0.0,0.5841, -> [person (Bottom-Left): 5%]
+coco_seg_val_0438.jpg,5.7452,490.4144,7.4025,503.5725,-1,0.0,0.2647," -> [diningtable (Bottom): 13%, person (Bottom-Left): 22%]"
+coco_seg_val_0439.jpg,5.5549,490.2947,7.6727,503.5338,-1,0.0,0.6678, -> [person (Center): 37%]
+coco_seg_val_0440.jpg,6.4018,490.337,7.0732,503.827,-1,0.0,0.5095," -> [motorbike (Bottom): 4%, person (Bottom): 7%]"
+coco_seg_val_0441.jpg,7.7646,489.4367,7.6592,504.8715,-1,0.0,0.2211," -> [car (Top): 8%, person (Center): 15%]"
+coco_seg_val_0442.jpg,6.4521,489.337,7.6637,503.4685,-1,0.0,0.3044," -> [horse (Center): 34%, person (Left): 5%]"
+coco_seg_val_0443.jpg,6.2441,490.5205,6.9275,503.704,-1,0.0,0.4245, -> [car (Left): 1%]
+coco_seg_val_0444.jpg,3.7826,489.8029,7.7323,501.3336,-1,0.0,0.2992," -> [person (Center): 37%, pottedplant (Bottom-Right): 6%]"
+coco_seg_val_0445.jpg,5.5286,489.8859,7.7727,503.198,-1,0.0,0.0861, -> [person (Bottom): 3%]
+coco_seg_val_0446.jpg,3.8889,488.7914,7.5338,500.2249,-1,0.0,0.393," -> [car (Bottom): 4%, cat (Center): 11%]"
+coco_seg_val_0447.jpg,1.9631,490.1693,7.507,499.6506,-1,0.0,0.4005, -> [diningtable (Right): 9%]
+coco_seg_val_0448.jpg,5.8543,494.0721,7.1457,507.0965,-1,0.0,0.5787, -> [person (Center): 74%]
+coco_seg_val_0449.jpg,6.2798,490.4075,7.768,504.4661,-1,0.0,0.3618," -> [cat (Center): 33%, tvmonitor (Top-Right): 8%]"
+coco_seg_val_0450.jpg,5.4646,491.0612,7.3007,503.8424,-1,0.0,0.3275," -> [person (Right): 31%, sheep (Center): 7%]"
+coco_seg_val_0451.jpg,4.1609,488.8653,7.4175,500.4598,-1,0.0,0.3811, -> [person (Center): 9%]
+coco_seg_val_0452.jpg,7.2967,489.5871,7.6207,504.5151,-1,0.0,0.631, -> [person (Bottom-Left): 24%]
+coco_seg_val_0453.jpg,7.2602,489.173,7.3192,503.7635,-1,0.0,0.3951," -> [diningtable (Right): 3%, person (Top): 14%]"
+coco_seg_val_0454.jpg,5.847,487.7674,7.358,500.9883,-1,0.0,0.653, -> [person (Bottom-Left): 11%]
+coco_seg_val_0455.jpg,5.3494,489.3069,7.0967,501.7642,-1,0.0,0.5065, -> [person (Center): 39%]
+coco_seg_val_0456.jpg,5.4837,491.6036,7.172,504.2696,-1,0.0,0.8041, -> [cat (Right): 32%]
+coco_seg_val_0457.jpg,4.4841,489.3175,7.4747,501.288,-1,0.0,0.3599, -> [tvmonitor (Left): 11%]
+coco_seg_val_0458.jpg,5.7163,491.2199,7.714,504.6617,-1,0.0,0.4534," -> [motorbike (Center): 10%, person (Top): 2%]"
+coco_seg_val_0459.jpg,6.5869,490.8754,7.4008,504.8974,-1,0.0,0.766, -> [person (Center): 15%]
+coco_seg_val_0460.jpg,6.5515,489.0453,6.6592,502.299,-1,0.0,0.4994, -> [background only]
+coco_seg_val_0461.jpg,7.5286,486.0807,7.9675,501.5927,-1,0.0,0.499," -> [bottle (Bottom-Left): 2%, diningtable (Bottom): 26%, person (Center): 33%]"
+coco_seg_val_0462.jpg,7.1686,485.7278,7.5866,500.4951,-1,0.0,0.3047, -> [person (Center): 69%]
+coco_seg_val_0463.jpg,5.7947,487.5558,7.3096,500.6755,-1,0.0,0.388, -> [person (Center): 50%]
+coco_seg_val_0464.jpg,6.0649,490.4097,7.344,503.8297,-1,0.0,0.5118, -> [aeroplane (Center): 12%]
+coco_seg_val_0465.jpg,6.1239,488.4332,7.5381,502.1068,-1,0.0,0.5182," -> [horse (Right): 13%, person (Top): 4%]"
+coco_seg_val_0466.jpg,6.0032,488.5471,7.8683,502.4341,-1,0.0,0.2303," -> [motorbike (Bottom): 38%, person (Left): 11%]"
+coco_seg_val_0467.jpg,5.1576,486.691,7.3056,499.169,-1,0.0,0.3088, -> [person (Center): 14%]
+coco_seg_val_0468.jpg,6.9946,489.3491,6.7395,503.0934,-1,0.0,0.4992, -> [background only]
+coco_seg_val_0469.jpg,6.2711,491.6416,7.06,504.9836,-1,0.0,0.6023, -> [person (Center): 2%]
+coco_seg_val_0470.jpg,6.0435,492.7239,7.3137,506.0918,-1,0.0,0.4245, -> [person (Center): 45%]
+coco_seg_val_0471.jpg,5.8388,490.7875,7.1787,503.816,-1,0.0,0.5918, -> [cow (Bottom-Right): 11%]
+coco_seg_val_0472.jpg,6.1692,491.4229,7.9505,505.5537,-1,0.0,0.4001," -> [diningtable (Bottom): 47%, person (Top-Right): 9%, tvmonitor (Top): 11%]"
+coco_seg_val_0473.jpg,5.4873,490.4452,7.3591,503.3084,-1,0.0,0.3617, -> [person (Center): 6%]
+coco_seg_val_0474.jpg,7.3609,490.1835,7.7735,505.3333,-1,0.0,0.2798," -> [motorbike (Bottom-Left): 1%, person (Bottom-Left): 3%]"
+coco_seg_val_0475.jpg,6.2109,489.6601,7.3934,503.2753,-1,0.0,0.2358, -> [background only]
+coco_seg_val_0476.jpg,5.1402,489.4978,7.4349,502.0851,-1,0.0,0.4208," -> [dog (Center): 31%, horse (Bottom): 1%]"
+coco_seg_val_0477.jpg,5.6404,490.1091,7.2801,503.0402,-1,0.0,0.7325, -> [person (Center): 20%]
+coco_seg_val_0478.jpg,7.2936,490.4312,7.3383,505.0781,-1,0.0,0.5935, -> [person (Bottom): 19%]
+coco_seg_val_0479.jpg,6.37,489.7338,7.4346,503.5493,-1,0.0,0.3862, -> [person (Bottom): 3%]
+coco_seg_val_0480.jpg,3.6512,491.1062,7.138,501.9059,-1,0.0,0.4887, -> [person (Bottom-Right): 6%]
+coco_seg_val_0481.jpg,6.3617,489.6259,7.5334,503.5324,-1,0.0,0.5769, -> [person (Center): 61%]
+coco_seg_val_0482.jpg,5.6343,492.0123,7.1418,504.805,-1,0.0,0.4153," -> [chair (Center): 4%, diningtable (Right): 3%]"
+coco_seg_val_0483.jpg,5.8195,486.2854,8.0238,500.1402,-1,0.0,0.2135," -> [diningtable (Center): 16%, person (Center): 36%]"
+coco_seg_val_0484.jpg,5.1913,488.9818,7.7143,501.8986,-1,0.0,0.149," -> [person (Bottom): 53%, sofa (Right): 1%]"
+coco_seg_val_0485.jpg,4.3616,489.6614,8.0272,502.0613,-1,0.0,0.1658," -> [dog (Right): 36%, person (Left): 23%]"
+coco_seg_val_0486.jpg,6.0556,489.1205,6.925,502.1117,-1,0.0,0.6904, -> [person (Center): 7%]
+coco_seg_val_0487.jpg,4.453,489.0539,7.7947,501.3122,-1,0.0,0.6803," -> [car (Center): 68%, cat (Top): 6%]"
+coco_seg_val_0488.jpg,5.5962,490.7438,7.3778,503.7334,-1,0.0,0.5558, -> [person (Bottom): 1%]
+coco_seg_val_0489.jpg,5.5841,489.5523,7.7199,502.8724,-1,0.0,0.6525, -> [person (Top): 33%]
+coco_seg_val_0490.jpg,4.6935,490.4292,7.2107,502.345,-1,0.0,0.6855, -> [person (Center): 1%]
+coco_seg_val_0491.jpg,4.0652,489.6506,7.8398,501.566,-1,0.0,0.3084, -> [person (Center): 97%]
+coco_seg_val_0492.jpg,5.9933,487.7965,7.3493,501.1494,-1,0.0,0.5557, -> [person (Bottom-Left): 2%]
+coco_seg_val_0493.jpg,4.8988,487.8973,7.6855,500.4928,-1,0.0,0.1931, -> [cat (Center): 1%]
+coco_seg_val_0494.jpg,5.761,486.6612,7.6033,500.0362,-1,0.0,0.4997, -> [background only]
+coco_seg_val_0495.jpg,4.3168,489.52,7.6049,501.4581,-1,0.0,0.5949, -> [cat (Center): 41%]
+coco_seg_val_0496.jpg,4.8921,490.5504,7.3044,502.7578,-1,0.0,0.2989," -> [pottedplant (Center): 3%, sofa (Bottom-Right): 11%]"
+coco_seg_val_0497.jpg,5.5898,489.0462,7.7933,502.4759,-1,0.0,0.4441, -> [person (Center): 4%]
+coco_seg_val_0498.jpg,5.9637,489.3141,7.156,502.445,-1,0.0,0.7969, -> [person (Left): 57%]
+coco_seg_val_0499.jpg,5.2164,490.7202,7.4698,503.4188,-1,0.0,0.8581, -> [person (Left): 24%]
+coco_seg_val_0500.jpg,7.3121,492.4555,7.753,507.5326,-1,0.0,0.3918," -> [bicycle (Right): 12%, car (Center): 1%, motorbike (Right): 2%]"
+coco_seg_val_0501.jpg,5.9618,492.5942,7.3685,505.9408,-1,0.0,0.4938, -> [person (Top-Left): 8%]
+coco_seg_val_0502.jpg,6.4605,491.8256,6.8051,505.1072,-1,0.0,0.1985, -> [background only]
+coco_seg_val_0503.jpg,7.3721,490.0889,7.392,504.8644,-1,0.0,0.4463," -> [horse (Center): 25%, person (Left): 4%]"
+coco_seg_val_0504.jpg,5.6063,492.3977,7.1048,505.1197,-1,0.0,0.3229, -> [person (Bottom-Left): 2%]
+coco_seg_val_0505.jpg,4.4963,489.9332,7.5743,502.0149,-1,0.0,0.4632, -> [train (Left): 26%]
+coco_seg_val_0506.jpg,4.0926,487.099,7.6022,498.8049,-1,0.0,0.4563, -> [person (Center): 21%]
+coco_seg_val_0507.jpg,5.5533,486.7407,7.3074,499.613,-1,0.0,0.5296, -> [person (Right): 2%]
+coco_seg_val_0508.jpg,5.2803,488.9798,7.9743,502.2461,-1,0.0,0.4514," -> [diningtable (Bottom): 6%, person (Left): 19%]"
+coco_seg_val_0509.jpg,3.1979,489.8835,6.9773,500.07,-1,0.0,0.342, -> [person (Top-Left): 1%]
+coco_seg_val_0510.jpg,6.1493,490.5574,6.9025,503.6201,-1,0.0,0.4554, -> [sheep (Center): 6%]
+coco_seg_val_0511.jpg,5.8747,488.9747,7.0601,501.9211,-1,0.0,0.4477, -> [car (Right): 8%]
+coco_seg_val_0512.jpg,5.3949,489.328,7.0363,501.775,-1,0.0,0.447, -> [pottedplant (Center): 8%]

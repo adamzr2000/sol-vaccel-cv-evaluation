@@ -39,7 +39,7 @@ HOST=""
 DEVICE=""
 RUN_TAG=""
 EXPORT_RESULTS=1
-RESOURCE_MONITORING=1
+RESOURCE_MONITORING=0
 EXPERIMENT_DURATION_SEC=60
 
 # ---- Parse args ----
@@ -116,10 +116,15 @@ run_one () {
 }
 
 # ---- Model Lists ----
+#MODELS=(
+#  "resnet50" "swin_t" "swin_s" "swin_v2_b"
+#  "swin3d_s" "swin3d_b" "mc3_18" "r3d_18" "r2plus1d_18"
+#  "deeplabv3_resnet50" "fcn_resnet50" "deeplabv3_resnet101" "fcn_resnet101"
+#)
+
 MODELS=(
-  "resnet50" "swin_t" "swin_s" "swin_v2_b"
-  "swin3d_t" "swin3d_s" "swin3d_b" "mc3_18" "r3d_18" "r2plus1d_18"
-  "deeplabv3_resnet50" "fcn_resnet50" "deeplabv3_resnet101" "fcn_resnet101"
+  "swin_v2_b"
+  "swin3d_b" "r2plus1d_18"
 )
 
 # Execute

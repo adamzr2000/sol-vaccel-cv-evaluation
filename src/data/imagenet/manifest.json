@@ -1,0 +1,4107 @@
+{
+  "dataset": "ImageNet-1K (ILSVRC-2012) validation",
+  "num_images_requested": 512,
+  "seed": 1234,
+  "generated_at_utc": "2026-02-27T12:11:52.203844Z",
+  "images": [
+    {
+      "id": 1,
+      "file_name": "imagenet_val_0001_label_396.jpg",
+      "ground_truth_id": 396,
+      "ground_truth_label": "lionfish",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 2,
+      "file_name": "imagenet_val_0002_label_370.jpg",
+      "ground_truth_id": 370,
+      "ground_truth_label": "guenon, guenon monkey",
+      "width": 350,
+      "height": 500
+    },
+    {
+      "id": 3,
+      "file_name": "imagenet_val_0003_label_408.jpg",
+      "ground_truth_id": 408,
+      "ground_truth_label": "amphibian, amphibious vehicle",
+      "width": 613,
+      "height": 510
+    },
+    {
+      "id": 4,
+      "file_name": "imagenet_val_0004_label_884.jpg",
+      "ground_truth_id": 884,
+      "ground_truth_label": "vault",
+      "width": 500,
+      "height": 370
+    },
+    {
+      "id": 5,
+      "file_name": "imagenet_val_0005_label_56.jpg",
+      "ground_truth_id": 56,
+      "ground_truth_label": "king snake, kingsnake",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 6,
+      "file_name": "imagenet_val_0006_label_678.jpg",
+      "ground_truth_id": 678,
+      "ground_truth_label": "neck brace",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 7,
+      "file_name": "imagenet_val_0007_label_917.jpg",
+      "ground_truth_id": 917,
+      "ground_truth_label": "comic book",
+      "width": 415,
+      "height": 500
+    },
+    {
+      "id": 8,
+      "file_name": "imagenet_val_0008_label_937.jpg",
+      "ground_truth_id": 937,
+      "ground_truth_label": "broccoli",
+      "width": 504,
+      "height": 341
+    },
+    {
+      "id": 9,
+      "file_name": "imagenet_val_0009_label_964.jpg",
+      "ground_truth_id": 964,
+      "ground_truth_label": "potpie",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 10,
+      "file_name": "imagenet_val_0010_label_376.jpg",
+      "ground_truth_id": 376,
+      "ground_truth_label": "proboscis monkey, Nasalis larvatus",
+      "width": 500,
+      "height": 334
+    },
+    {
+      "id": 11,
+      "file_name": "imagenet_val_0011_label_403.jpg",
+      "ground_truth_id": 403,
+      "ground_truth_label": "aircraft carrier, carrier, flattop, attack aircraft carrier",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 12,
+      "file_name": "imagenet_val_0012_label_552.jpg",
+      "ground_truth_id": 552,
+      "ground_truth_label": "feather boa, boa",
+      "width": 500,
+      "height": 500
+    },
+    {
+      "id": 13,
+      "file_name": "imagenet_val_0013_label_927.jpg",
+      "ground_truth_id": 927,
+      "ground_truth_label": "trifle",
+      "width": 500,
+      "height": 374
+    },
+    {
+      "id": 14,
+      "file_name": "imagenet_val_0014_label_458.jpg",
+      "ground_truth_id": 458,
+      "ground_truth_label": "brass, memorial tablet, plaque",
+      "width": 500,
+      "height": 366
+    },
+    {
+      "id": 15,
+      "file_name": "imagenet_val_0015_label_907.jpg",
+      "ground_truth_id": 907,
+      "ground_truth_label": "wine bottle",
+      "width": 414,
+      "height": 500
+    },
+    {
+      "id": 16,
+      "file_name": "imagenet_val_0016_label_812.jpg",
+      "ground_truth_id": 812,
+      "ground_truth_label": "space shuttle",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 17,
+      "file_name": "imagenet_val_0017_label_202.jpg",
+      "ground_truth_id": 202,
+      "ground_truth_label": "soft-coated wheaten terrier",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 18,
+      "file_name": "imagenet_val_0018_label_421.jpg",
+      "ground_truth_id": 421,
+      "ground_truth_label": "bannister, banister, balustrade, balusters, handrail",
+      "width": 160,
+      "height": 132
+    },
+    {
+      "id": 19,
+      "file_name": "imagenet_val_0019_label_240.jpg",
+      "ground_truth_id": 240,
+      "ground_truth_label": "Appenzeller",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 20,
+      "file_name": "imagenet_val_0020_label_178.jpg",
+      "ground_truth_id": 178,
+      "ground_truth_label": "Weimaraner",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 21,
+      "file_name": "imagenet_val_0021_label_693.jpg",
+      "ground_truth_id": 693,
+      "ground_truth_label": "paddle, boat paddle",
+      "width": 469,
+      "height": 500
+    },
+    {
+      "id": 22,
+      "file_name": "imagenet_val_0022_label_239.jpg",
+      "ground_truth_id": 239,
+      "ground_truth_label": "Bernese mountain dog",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 23,
+      "file_name": "imagenet_val_0023_label_70.jpg",
+      "ground_truth_id": 70,
+      "ground_truth_label": "harvestman, daddy longlegs, Phalangium opilio",
+      "width": 500,
+      "height": 400
+    },
+    {
+      "id": 24,
+      "file_name": "imagenet_val_0024_label_728.jpg",
+      "ground_truth_id": 728,
+      "ground_truth_label": "plastic bag",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 25,
+      "file_name": "imagenet_val_0025_label_494.jpg",
+      "ground_truth_id": 494,
+      "ground_truth_label": "chime, bell, gong",
+      "width": 429,
+      "height": 500
+    },
+    {
+      "id": 26,
+      "file_name": "imagenet_val_0026_label_882.jpg",
+      "ground_truth_id": 882,
+      "ground_truth_label": "vacuum, vacuum cleaner",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 27,
+      "file_name": "imagenet_val_0027_label_338.jpg",
+      "ground_truth_id": 338,
+      "ground_truth_label": "guinea pig, Cavia cobaya",
+      "width": 500,
+      "height": 403
+    },
+    {
+      "id": 28,
+      "file_name": "imagenet_val_0028_label_47.jpg",
+      "ground_truth_id": 47,
+      "ground_truth_label": "African chameleon, Chamaeleo chamaeleon",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 29,
+      "file_name": "imagenet_val_0029_label_769.jpg",
+      "ground_truth_id": 769,
+      "ground_truth_label": "rule, ruler",
+      "width": 400,
+      "height": 400
+    },
+    {
+      "id": 30,
+      "file_name": "imagenet_val_0030_label_773.jpg",
+      "ground_truth_id": 773,
+      "ground_truth_label": "saltshaker, salt shaker",
+      "width": 386,
+      "height": 450
+    },
+    {
+      "id": 31,
+      "file_name": "imagenet_val_0031_label_321.jpg",
+      "ground_truth_id": 321,
+      "ground_truth_label": "admiral",
+      "width": 500,
+      "height": 376
+    },
+    {
+      "id": 32,
+      "file_name": "imagenet_val_0032_label_790.jpg",
+      "ground_truth_id": 790,
+      "ground_truth_label": "shopping basket",
+      "width": 307,
+      "height": 500
+    },
+    {
+      "id": 33,
+      "file_name": "imagenet_val_0033_label_518.jpg",
+      "ground_truth_id": 518,
+      "ground_truth_label": "crash helmet",
+      "width": 320,
+      "height": 320
+    },
+    {
+      "id": 34,
+      "file_name": "imagenet_val_0034_label_543.jpg",
+      "ground_truth_id": 543,
+      "ground_truth_label": "dumbbell",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 35,
+      "file_name": "imagenet_val_0035_label_988.jpg",
+      "ground_truth_id": 988,
+      "ground_truth_label": "acorn",
+      "width": 420,
+      "height": 500
+    },
+    {
+      "id": 36,
+      "file_name": "imagenet_val_0036_label_790.jpg",
+      "ground_truth_id": 790,
+      "ground_truth_label": "shopping basket",
+      "width": 350,
+      "height": 308
+    },
+    {
+      "id": 37,
+      "file_name": "imagenet_val_0037_label_350.jpg",
+      "ground_truth_id": 350,
+      "ground_truth_label": "ibex, Capra ibex",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 38,
+      "file_name": "imagenet_val_0038_label_670.jpg",
+      "ground_truth_id": 670,
+      "ground_truth_label": "motor scooter, scooter",
+      "width": 500,
+      "height": 325
+    },
+    {
+      "id": 39,
+      "file_name": "imagenet_val_0039_label_4.jpg",
+      "ground_truth_id": 4,
+      "ground_truth_label": "hammerhead, hammerhead shark",
+      "width": 500,
+      "height": 406
+    },
+    {
+      "id": 40,
+      "file_name": "imagenet_val_0040_label_338.jpg",
+      "ground_truth_id": 338,
+      "ground_truth_label": "guinea pig, Cavia cobaya",
+      "width": 500,
+      "height": 421
+    },
+    {
+      "id": 41,
+      "file_name": "imagenet_val_0041_label_355.jpg",
+      "ground_truth_id": 355,
+      "ground_truth_label": "llama",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 42,
+      "file_name": "imagenet_val_0042_label_902.jpg",
+      "ground_truth_id": 902,
+      "ground_truth_label": "whistle",
+      "width": 1024,
+      "height": 768
+    },
+    {
+      "id": 43,
+      "file_name": "imagenet_val_0043_label_280.jpg",
+      "ground_truth_id": 280,
+      "ground_truth_label": "grey fox, gray fox, Urocyon cinereoargenteus",
+      "width": 500,
+      "height": 332
+    },
+    {
+      "id": 44,
+      "file_name": "imagenet_val_0044_label_621.jpg",
+      "ground_truth_id": 621,
+      "ground_truth_label": "lawn mower, mower",
+      "width": 500,
+      "height": 334
+    },
+    {
+      "id": 45,
+      "file_name": "imagenet_val_0045_label_630.jpg",
+      "ground_truth_id": 630,
+      "ground_truth_label": "Loafer",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 46,
+      "file_name": "imagenet_val_0046_label_10.jpg",
+      "ground_truth_id": 10,
+      "ground_truth_label": "brambling, Fringilla montifringilla",
+      "width": 500,
+      "height": 450
+    },
+    {
+      "id": 47,
+      "file_name": "imagenet_val_0047_label_939.jpg",
+      "ground_truth_id": 939,
+      "ground_truth_label": "zucchini, courgette",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 48,
+      "file_name": "imagenet_val_0048_label_393.jpg",
+      "ground_truth_id": 393,
+      "ground_truth_label": "anemone fish",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 49,
+      "file_name": "imagenet_val_0049_label_944.jpg",
+      "ground_truth_id": 944,
+      "ground_truth_label": "artichoke, globe artichoke",
+      "width": 500,
+      "height": 334
+    },
+    {
+      "id": 50,
+      "file_name": "imagenet_val_0050_label_291.jpg",
+      "ground_truth_id": 291,
+      "ground_truth_label": "lion, king of beasts, Panthera leo",
+      "width": 289,
+      "height": 215
+    },
+    {
+      "id": 51,
+      "file_name": "imagenet_val_0051_label_444.jpg",
+      "ground_truth_id": 444,
+      "ground_truth_label": "bicycle-built-for-two, tandem bicycle, tandem",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 52,
+      "file_name": "imagenet_val_0052_label_218.jpg",
+      "ground_truth_id": 218,
+      "ground_truth_label": "Welsh springer spaniel",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 53,
+      "file_name": "imagenet_val_0053_label_769.jpg",
+      "ground_truth_id": 769,
+      "ground_truth_label": "rule, ruler",
+      "width": 500,
+      "height": 344
+    },
+    {
+      "id": 54,
+      "file_name": "imagenet_val_0054_label_8.jpg",
+      "ground_truth_id": 8,
+      "ground_truth_label": "hen",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 55,
+      "file_name": "imagenet_val_0055_label_632.jpg",
+      "ground_truth_id": 632,
+      "ground_truth_label": "loudspeaker, speaker, speaker unit, loudspeaker system, speaker system",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 56,
+      "file_name": "imagenet_val_0056_label_62.jpg",
+      "ground_truth_id": 62,
+      "ground_truth_label": "rock python, rock snake, Python sebae",
+      "width": 500,
+      "height": 393
+    },
+    {
+      "id": 57,
+      "file_name": "imagenet_val_0057_label_824.jpg",
+      "ground_truth_id": 824,
+      "ground_truth_label": "stole",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 58,
+      "file_name": "imagenet_val_0058_label_273.jpg",
+      "ground_truth_id": 273,
+      "ground_truth_label": "dingo, warrigal, warragal, Canis dingo",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 59,
+      "file_name": "imagenet_val_0059_label_188.jpg",
+      "ground_truth_id": 188,
+      "ground_truth_label": "wire-haired fox terrier",
+      "width": 500,
+      "height": 353
+    },
+    {
+      "id": 60,
+      "file_name": "imagenet_val_0060_label_954.jpg",
+      "ground_truth_id": 954,
+      "ground_truth_label": "banana",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 61,
+      "file_name": "imagenet_val_0061_label_651.jpg",
+      "ground_truth_id": 651,
+      "ground_truth_label": "microwave, microwave oven",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 62,
+      "file_name": "imagenet_val_0062_label_156.jpg",
+      "ground_truth_id": 156,
+      "ground_truth_label": "Blenheim spaniel",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 63,
+      "file_name": "imagenet_val_0063_label_194.jpg",
+      "ground_truth_id": 194,
+      "ground_truth_label": "Dandie Dinmont, Dandie Dinmont terrier",
+      "width": 400,
+      "height": 486
+    },
+    {
+      "id": 64,
+      "file_name": "imagenet_val_0064_label_777.jpg",
+      "ground_truth_id": 777,
+      "ground_truth_label": "scabbard",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 65,
+      "file_name": "imagenet_val_0065_label_144.jpg",
+      "ground_truth_id": 144,
+      "ground_truth_label": "pelican",
+      "width": 500,
+      "height": 413
+    },
+    {
+      "id": 66,
+      "file_name": "imagenet_val_0066_label_993.jpg",
+      "ground_truth_id": 993,
+      "ground_truth_label": "gyromitra",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 67,
+      "file_name": "imagenet_val_0067_label_732.jpg",
+      "ground_truth_id": 732,
+      "ground_truth_label": "Polaroid camera, Polaroid Land camera",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 68,
+      "file_name": "imagenet_val_0068_label_13.jpg",
+      "ground_truth_id": 13,
+      "ground_truth_label": "junco, snowbird",
+      "width": 500,
+      "height": 487
+    },
+    {
+      "id": 69,
+      "file_name": "imagenet_val_0069_label_0.jpg",
+      "ground_truth_id": 0,
+      "ground_truth_label": "tench, Tinca tinca",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 70,
+      "file_name": "imagenet_val_0070_label_946.jpg",
+      "ground_truth_id": 946,
+      "ground_truth_label": "cardoon",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 71,
+      "file_name": "imagenet_val_0071_label_683.jpg",
+      "ground_truth_id": 683,
+      "ground_truth_label": "oboe, hautboy, hautbois",
+      "width": 400,
+      "height": 264
+    },
+    {
+      "id": 72,
+      "file_name": "imagenet_val_0072_label_134.jpg",
+      "ground_truth_id": 134,
+      "ground_truth_label": "crane",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 73,
+      "file_name": "imagenet_val_0073_label_2.jpg",
+      "ground_truth_id": 2,
+      "ground_truth_label": "great white shark, white shark, man-eater, man-eating shark, Carcharodon carcharias",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 74,
+      "file_name": "imagenet_val_0074_label_158.jpg",
+      "ground_truth_id": 158,
+      "ground_truth_label": "toy terrier",
+      "width": 365,
+      "height": 500
+    },
+    {
+      "id": 75,
+      "file_name": "imagenet_val_0075_label_243.jpg",
+      "ground_truth_id": 243,
+      "ground_truth_label": "bull mastiff",
+      "width": 400,
+      "height": 500
+    },
+    {
+      "id": 76,
+      "file_name": "imagenet_val_0076_label_857.jpg",
+      "ground_truth_id": 857,
+      "ground_truth_label": "throne",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 77,
+      "file_name": "imagenet_val_0077_label_645.jpg",
+      "ground_truth_id": 645,
+      "ground_truth_label": "maypole",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 78,
+      "file_name": "imagenet_val_0078_label_254.jpg",
+      "ground_truth_id": 254,
+      "ground_truth_label": "pug, pug-dog",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 79,
+      "file_name": "imagenet_val_0079_label_383.jpg",
+      "ground_truth_id": 383,
+      "ground_truth_label": "Madagascar cat, ring-tailed lemur, Lemur catta",
+      "width": 384,
+      "height": 288
+    },
+    {
+      "id": 80,
+      "file_name": "imagenet_val_0080_label_170.jpg",
+      "ground_truth_id": 170,
+      "ground_truth_label": "Irish wolfhound",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 81,
+      "file_name": "imagenet_val_0081_label_806.jpg",
+      "ground_truth_id": 806,
+      "ground_truth_label": "sock",
+      "width": 500,
+      "height": 431
+    },
+    {
+      "id": 82,
+      "file_name": "imagenet_val_0082_label_66.jpg",
+      "ground_truth_id": 66,
+      "ground_truth_label": "horned viper, cerastes, sand viper, horned asp, Cerastes cornutus",
+      "width": 500,
+      "height": 393
+    },
+    {
+      "id": 83,
+      "file_name": "imagenet_val_0083_label_953.jpg",
+      "ground_truth_id": 953,
+      "ground_truth_label": "pineapple, ananas",
+      "width": 500,
+      "height": 471
+    },
+    {
+      "id": 84,
+      "file_name": "imagenet_val_0084_label_74.jpg",
+      "ground_truth_id": 74,
+      "ground_truth_label": "garden spider, Aranea diademata",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 85,
+      "file_name": "imagenet_val_0085_label_449.jpg",
+      "ground_truth_id": 449,
+      "ground_truth_label": "boathouse",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 86,
+      "file_name": "imagenet_val_0086_label_915.jpg",
+      "ground_truth_id": 915,
+      "ground_truth_label": "yurt",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 87,
+      "file_name": "imagenet_val_0087_label_674.jpg",
+      "ground_truth_id": 674,
+      "ground_truth_label": "mousetrap",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 88,
+      "file_name": "imagenet_val_0088_label_580.jpg",
+      "ground_truth_id": 580,
+      "ground_truth_label": "greenhouse, nursery, glasshouse",
+      "width": 421,
+      "height": 500
+    },
+    {
+      "id": 89,
+      "file_name": "imagenet_val_0089_label_933.jpg",
+      "ground_truth_id": 933,
+      "ground_truth_label": "cheeseburger",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 90,
+      "file_name": "imagenet_val_0090_label_194.jpg",
+      "ground_truth_id": 194,
+      "ground_truth_label": "Dandie Dinmont, Dandie Dinmont terrier",
+      "width": 500,
+      "height": 429
+    },
+    {
+      "id": 91,
+      "file_name": "imagenet_val_0091_label_10.jpg",
+      "ground_truth_id": 10,
+      "ground_truth_label": "brambling, Fringilla montifringilla",
+      "width": 500,
+      "height": 388
+    },
+    {
+      "id": 92,
+      "file_name": "imagenet_val_0092_label_585.jpg",
+      "ground_truth_id": 585,
+      "ground_truth_label": "hair spray",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 93,
+      "file_name": "imagenet_val_0093_label_689.jpg",
+      "ground_truth_id": 689,
+      "ground_truth_label": "overskirt",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 94,
+      "file_name": "imagenet_val_0094_label_315.jpg",
+      "ground_truth_id": 315,
+      "ground_truth_label": "mantis, mantid",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 95,
+      "file_name": "imagenet_val_0095_label_376.jpg",
+      "ground_truth_id": 376,
+      "ground_truth_label": "proboscis monkey, Nasalis larvatus",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 96,
+      "file_name": "imagenet_val_0096_label_166.jpg",
+      "ground_truth_id": 166,
+      "ground_truth_label": "Walker hound, Walker foxhound",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 97,
+      "file_name": "imagenet_val_0097_label_724.jpg",
+      "ground_truth_id": 724,
+      "ground_truth_label": "pirate, pirate ship",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 98,
+      "file_name": "imagenet_val_0098_label_731.jpg",
+      "ground_truth_id": 731,
+      "ground_truth_label": "plunger, plumber's helper",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 99,
+      "file_name": "imagenet_val_0099_label_157.jpg",
+      "ground_truth_id": 157,
+      "ground_truth_label": "papillon",
+      "width": 500,
+      "height": 337
+    },
+    {
+      "id": 100,
+      "file_name": "imagenet_val_0100_label_468.jpg",
+      "ground_truth_id": 468,
+      "ground_truth_label": "cab, hack, taxi, taxicab",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 101,
+      "file_name": "imagenet_val_0101_label_992.jpg",
+      "ground_truth_id": 992,
+      "ground_truth_label": "agaric",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 102,
+      "file_name": "imagenet_val_0102_label_455.jpg",
+      "ground_truth_id": 455,
+      "ground_truth_label": "bottlecap",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 103,
+      "file_name": "imagenet_val_0103_label_883.jpg",
+      "ground_truth_id": 883,
+      "ground_truth_label": "vase",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 104,
+      "file_name": "imagenet_val_0104_label_415.jpg",
+      "ground_truth_id": 415,
+      "ground_truth_label": "bakery, bakeshop, bakehouse",
+      "width": 387,
+      "height": 500
+    },
+    {
+      "id": 105,
+      "file_name": "imagenet_val_0105_label_446.jpg",
+      "ground_truth_id": 446,
+      "ground_truth_label": "binder, ring-binder",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 106,
+      "file_name": "imagenet_val_0106_label_830.jpg",
+      "ground_truth_id": 830,
+      "ground_truth_label": "stretcher",
+      "width": 500,
+      "height": 346
+    },
+    {
+      "id": 107,
+      "file_name": "imagenet_val_0107_label_804.jpg",
+      "ground_truth_id": 804,
+      "ground_truth_label": "soap dispenser",
+      "width": 500,
+      "height": 451
+    },
+    {
+      "id": 108,
+      "file_name": "imagenet_val_0108_label_780.jpg",
+      "ground_truth_id": 780,
+      "ground_truth_label": "schooner",
+      "width": 1024,
+      "height": 685
+    },
+    {
+      "id": 109,
+      "file_name": "imagenet_val_0109_label_109.jpg",
+      "ground_truth_id": 109,
+      "ground_truth_label": "brain coral",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 110,
+      "file_name": "imagenet_val_0110_label_918.jpg",
+      "ground_truth_id": 918,
+      "ground_truth_label": "crossword puzzle, crossword",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 111,
+      "file_name": "imagenet_val_0111_label_808.jpg",
+      "ground_truth_id": 808,
+      "ground_truth_label": "sombrero",
+      "width": 500,
+      "height": 488
+    },
+    {
+      "id": 112,
+      "file_name": "imagenet_val_0112_label_928.jpg",
+      "ground_truth_id": 928,
+      "ground_truth_label": "ice cream, icecream",
+      "width": 500,
+      "height": 409
+    },
+    {
+      "id": 113,
+      "file_name": "imagenet_val_0113_label_382.jpg",
+      "ground_truth_id": 382,
+      "ground_truth_label": "squirrel monkey, Saimiri sciureus",
+      "width": 250,
+      "height": 170
+    },
+    {
+      "id": 114,
+      "file_name": "imagenet_val_0114_label_137.jpg",
+      "ground_truth_id": 137,
+      "ground_truth_label": "American coot, marsh hen, mud hen, water hen, Fulica americana",
+      "width": 500,
+      "height": 377
+    },
+    {
+      "id": 115,
+      "file_name": "imagenet_val_0115_label_462.jpg",
+      "ground_truth_id": 462,
+      "ground_truth_label": "broom",
+      "width": 333,
+      "height": 500
+    },
+    {
+      "id": 116,
+      "file_name": "imagenet_val_0116_label_830.jpg",
+      "ground_truth_id": 830,
+      "ground_truth_label": "stretcher",
+      "width": 500,
+      "height": 348
+    },
+    {
+      "id": 117,
+      "file_name": "imagenet_val_0117_label_100.jpg",
+      "ground_truth_id": 100,
+      "ground_truth_label": "black swan, Cygnus atratus",
+      "width": 500,
+      "height": 473
+    },
+    {
+      "id": 118,
+      "file_name": "imagenet_val_0118_label_684.jpg",
+      "ground_truth_id": 684,
+      "ground_truth_label": "ocarina, sweet potato",
+      "width": 500,
+      "height": 334
+    },
+    {
+      "id": 119,
+      "file_name": "imagenet_val_0119_label_337.jpg",
+      "ground_truth_id": 337,
+      "ground_truth_label": "beaver",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 120,
+      "file_name": "imagenet_val_0120_label_123.jpg",
+      "ground_truth_id": 123,
+      "ground_truth_label": "spiny lobster, langouste, rock lobster, crawfish, crayfish, sea crawfish",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 121,
+      "file_name": "imagenet_val_0121_label_905.jpg",
+      "ground_truth_id": 905,
+      "ground_truth_label": "window shade",
+      "width": 500,
+      "height": 376
+    },
+    {
+      "id": 122,
+      "file_name": "imagenet_val_0122_label_284.jpg",
+      "ground_truth_id": 284,
+      "ground_truth_label": "Siamese cat, Siamese",
+      "width": 398,
+      "height": 500
+    },
+    {
+      "id": 123,
+      "file_name": "imagenet_val_0123_label_165.jpg",
+      "ground_truth_id": 165,
+      "ground_truth_label": "black-and-tan coonhound",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 124,
+      "file_name": "imagenet_val_0124_label_552.jpg",
+      "ground_truth_id": 552,
+      "ground_truth_label": "feather boa, boa",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 125,
+      "file_name": "imagenet_val_0125_label_76.jpg",
+      "ground_truth_id": 76,
+      "ground_truth_label": "tarantula",
+      "width": 500,
+      "height": 400
+    },
+    {
+      "id": 126,
+      "file_name": "imagenet_val_0126_label_561.jpg",
+      "ground_truth_id": 561,
+      "ground_truth_label": "forklift",
+      "width": 500,
+      "height": 394
+    },
+    {
+      "id": 127,
+      "file_name": "imagenet_val_0127_label_370.jpg",
+      "ground_truth_id": 370,
+      "ground_truth_label": "guenon, guenon monkey",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 128,
+      "file_name": "imagenet_val_0128_label_142.jpg",
+      "ground_truth_id": 142,
+      "ground_truth_label": "dowitcher",
+      "width": 500,
+      "height": 391
+    },
+    {
+      "id": 129,
+      "file_name": "imagenet_val_0129_label_798.jpg",
+      "ground_truth_id": 798,
+      "ground_truth_label": "slide rule, slipstick",
+      "width": 500,
+      "height": 338
+    },
+    {
+      "id": 130,
+      "file_name": "imagenet_val_0130_label_304.jpg",
+      "ground_truth_id": 304,
+      "ground_truth_label": "leaf beetle, chrysomelid",
+      "width": 500,
+      "height": 447
+    },
+    {
+      "id": 131,
+      "file_name": "imagenet_val_0131_label_303.jpg",
+      "ground_truth_id": 303,
+      "ground_truth_label": "long-horned beetle, longicorn, longicorn beetle",
+      "width": 500,
+      "height": 377
+    },
+    {
+      "id": 132,
+      "file_name": "imagenet_val_0132_label_246.jpg",
+      "ground_truth_id": 246,
+      "ground_truth_label": "Great Dane",
+      "width": 456,
+      "height": 500
+    },
+    {
+      "id": 133,
+      "file_name": "imagenet_val_0133_label_940.jpg",
+      "ground_truth_id": 940,
+      "ground_truth_label": "spaghetti squash",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 134,
+      "file_name": "imagenet_val_0134_label_110.jpg",
+      "ground_truth_id": 110,
+      "ground_truth_label": "flatworm, platyhelminth",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 135,
+      "file_name": "imagenet_val_0135_label_171.jpg",
+      "ground_truth_id": 171,
+      "ground_truth_label": "Italian greyhound",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 136,
+      "file_name": "imagenet_val_0136_label_172.jpg",
+      "ground_truth_id": 172,
+      "ground_truth_label": "whippet",
+      "width": 358,
+      "height": 500
+    },
+    {
+      "id": 137,
+      "file_name": "imagenet_val_0137_label_148.jpg",
+      "ground_truth_id": 148,
+      "ground_truth_label": "killer whale, killer, orca, grampus, sea wolf, Orcinus orca",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 138,
+      "file_name": "imagenet_val_0138_label_967.jpg",
+      "ground_truth_id": 967,
+      "ground_truth_label": "espresso",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 139,
+      "file_name": "imagenet_val_0139_label_138.jpg",
+      "ground_truth_id": 138,
+      "ground_truth_label": "bustard",
+      "width": 500,
+      "height": 483
+    },
+    {
+      "id": 140,
+      "file_name": "imagenet_val_0140_label_219.jpg",
+      "ground_truth_id": 219,
+      "ground_truth_label": "cocker spaniel, English cocker spaniel, cocker",
+      "width": 500,
+      "height": 335
+    },
+    {
+      "id": 141,
+      "file_name": "imagenet_val_0141_label_946.jpg",
+      "ground_truth_id": 946,
+      "ground_truth_label": "cardoon",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 142,
+      "file_name": "imagenet_val_0142_label_491.jpg",
+      "ground_truth_id": 491,
+      "ground_truth_label": "chain saw, chainsaw",
+      "width": 333,
+      "height": 500
+    },
+    {
+      "id": 143,
+      "file_name": "imagenet_val_0143_label_176.jpg",
+      "ground_truth_id": 176,
+      "ground_truth_label": "Saluki, gazelle hound",
+      "width": 500,
+      "height": 442
+    },
+    {
+      "id": 144,
+      "file_name": "imagenet_val_0144_label_0.jpg",
+      "ground_truth_id": 0,
+      "ground_truth_label": "tench, Tinca tinca",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 145,
+      "file_name": "imagenet_val_0145_label_861.jpg",
+      "ground_truth_id": 861,
+      "ground_truth_label": "toilet seat",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 146,
+      "file_name": "imagenet_val_0146_label_825.jpg",
+      "ground_truth_id": 825,
+      "ground_truth_label": "stone wall",
+      "width": 500,
+      "height": 335
+    },
+    {
+      "id": 147,
+      "file_name": "imagenet_val_0147_label_281.jpg",
+      "ground_truth_id": 281,
+      "ground_truth_label": "tabby, tabby cat",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 148,
+      "file_name": "imagenet_val_0148_label_657.jpg",
+      "ground_truth_id": 657,
+      "ground_truth_label": "missile",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 149,
+      "file_name": "imagenet_val_0149_label_99.jpg",
+      "ground_truth_id": 99,
+      "ground_truth_label": "goose",
+      "width": 500,
+      "height": 396
+    },
+    {
+      "id": 150,
+      "file_name": "imagenet_val_0150_label_252.jpg",
+      "ground_truth_id": 252,
+      "ground_truth_label": "affenpinscher, monkey pinscher, monkey dog",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 151,
+      "file_name": "imagenet_val_0151_label_546.jpg",
+      "ground_truth_id": 546,
+      "ground_truth_label": "electric guitar",
+      "width": 337,
+      "height": 500
+    },
+    {
+      "id": 152,
+      "file_name": "imagenet_val_0152_label_389.jpg",
+      "ground_truth_id": 389,
+      "ground_truth_label": "barracouta, snoek",
+      "width": 600,
+      "height": 400
+    },
+    {
+      "id": 153,
+      "file_name": "imagenet_val_0153_label_78.jpg",
+      "ground_truth_id": 78,
+      "ground_truth_label": "tick",
+      "width": 250,
+      "height": 300
+    },
+    {
+      "id": 154,
+      "file_name": "imagenet_val_0154_label_226.jpg",
+      "ground_truth_id": 226,
+      "ground_truth_label": "briard",
+      "width": 432,
+      "height": 384
+    },
+    {
+      "id": 155,
+      "file_name": "imagenet_val_0155_label_473.jpg",
+      "ground_truth_id": 473,
+      "ground_truth_label": "can opener, tin opener",
+      "width": 599,
+      "height": 491
+    },
+    {
+      "id": 156,
+      "file_name": "imagenet_val_0156_label_270.jpg",
+      "ground_truth_id": 270,
+      "ground_truth_label": "white wolf, Arctic wolf, Canis lupus tundrarum",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 157,
+      "file_name": "imagenet_val_0157_label_813.jpg",
+      "ground_truth_id": 813,
+      "ground_truth_label": "spatula",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 158,
+      "file_name": "imagenet_val_0158_label_733.jpg",
+      "ground_truth_id": 733,
+      "ground_truth_label": "pole",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 159,
+      "file_name": "imagenet_val_0159_label_677.jpg",
+      "ground_truth_id": 677,
+      "ground_truth_label": "nail",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 160,
+      "file_name": "imagenet_val_0160_label_176.jpg",
+      "ground_truth_id": 176,
+      "ground_truth_label": "Saluki, gazelle hound",
+      "width": 500,
+      "height": 426
+    },
+    {
+      "id": 161,
+      "file_name": "imagenet_val_0161_label_835.jpg",
+      "ground_truth_id": 835,
+      "ground_truth_label": "sundial",
+      "width": 500,
+      "height": 382
+    },
+    {
+      "id": 162,
+      "file_name": "imagenet_val_0162_label_748.jpg",
+      "ground_truth_id": 748,
+      "ground_truth_label": "purse",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 163,
+      "file_name": "imagenet_val_0163_label_29.jpg",
+      "ground_truth_id": 29,
+      "ground_truth_label": "axolotl, mud puppy, Ambystoma mexicanum",
+      "width": 600,
+      "height": 450
+    },
+    {
+      "id": 164,
+      "file_name": "imagenet_val_0164_label_128.jpg",
+      "ground_truth_id": 128,
+      "ground_truth_label": "black stork, Ciconia nigra",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 165,
+      "file_name": "imagenet_val_0165_label_898.jpg",
+      "ground_truth_id": 898,
+      "ground_truth_label": "water bottle",
+      "width": 500,
+      "height": 452
+    },
+    {
+      "id": 166,
+      "file_name": "imagenet_val_0166_label_219.jpg",
+      "ground_truth_id": 219,
+      "ground_truth_label": "cocker spaniel, English cocker spaniel, cocker",
+      "width": 500,
+      "height": 332
+    },
+    {
+      "id": 167,
+      "file_name": "imagenet_val_0167_label_90.jpg",
+      "ground_truth_id": 90,
+      "ground_truth_label": "lorikeet",
+      "width": 500,
+      "height": 440
+    },
+    {
+      "id": 168,
+      "file_name": "imagenet_val_0168_label_780.jpg",
+      "ground_truth_id": 780,
+      "ground_truth_label": "schooner",
+      "width": 889,
+      "height": 591
+    },
+    {
+      "id": 169,
+      "file_name": "imagenet_val_0169_label_869.jpg",
+      "ground_truth_id": 869,
+      "ground_truth_label": "trench coat",
+      "width": 335,
+      "height": 500
+    },
+    {
+      "id": 170,
+      "file_name": "imagenet_val_0170_label_345.jpg",
+      "ground_truth_id": 345,
+      "ground_truth_label": "ox",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 171,
+      "file_name": "imagenet_val_0171_label_588.jpg",
+      "ground_truth_id": 588,
+      "ground_truth_label": "hamper",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 172,
+      "file_name": "imagenet_val_0172_label_812.jpg",
+      "ground_truth_id": 812,
+      "ground_truth_label": "space shuttle",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 173,
+      "file_name": "imagenet_val_0173_label_568.jpg",
+      "ground_truth_id": 568,
+      "ground_truth_label": "fur coat",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 174,
+      "file_name": "imagenet_val_0174_label_912.jpg",
+      "ground_truth_id": 912,
+      "ground_truth_label": "worm fence, snake fence, snake-rail fence, Virginia fence",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 175,
+      "file_name": "imagenet_val_0175_label_673.jpg",
+      "ground_truth_id": 673,
+      "ground_truth_label": "mouse, computer mouse",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 176,
+      "file_name": "imagenet_val_0176_label_489.jpg",
+      "ground_truth_id": 489,
+      "ground_truth_label": "chainlink fence",
+      "width": 500,
+      "height": 450
+    },
+    {
+      "id": 177,
+      "file_name": "imagenet_val_0177_label_322.jpg",
+      "ground_truth_id": 322,
+      "ground_truth_label": "ringlet, ringlet butterfly",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 178,
+      "file_name": "imagenet_val_0178_label_49.jpg",
+      "ground_truth_id": 49,
+      "ground_truth_label": "African crocodile, Nile crocodile, Crocodylus niloticus",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 179,
+      "file_name": "imagenet_val_0179_label_68.jpg",
+      "ground_truth_id": 68,
+      "ground_truth_label": "sidewinder, horned rattlesnake, Crotalus cerastes",
+      "width": 333,
+      "height": 500
+    },
+    {
+      "id": 180,
+      "file_name": "imagenet_val_0180_label_771.jpg",
+      "ground_truth_id": 771,
+      "ground_truth_label": "safe",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 181,
+      "file_name": "imagenet_val_0181_label_720.jpg",
+      "ground_truth_id": 720,
+      "ground_truth_label": "pill bottle",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 182,
+      "file_name": "imagenet_val_0182_label_960.jpg",
+      "ground_truth_id": 960,
+      "ground_truth_label": "chocolate sauce, chocolate syrup",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 183,
+      "file_name": "imagenet_val_0183_label_849.jpg",
+      "ground_truth_id": 849,
+      "ground_truth_label": "teapot",
+      "width": 500,
+      "height": 357
+    },
+    {
+      "id": 184,
+      "file_name": "imagenet_val_0184_label_80.jpg",
+      "ground_truth_id": 80,
+      "ground_truth_label": "black grouse",
+      "width": 500,
+      "height": 338
+    },
+    {
+      "id": 185,
+      "file_name": "imagenet_val_0185_label_163.jpg",
+      "ground_truth_id": 163,
+      "ground_truth_label": "bloodhound, sleuthhound",
+      "width": 600,
+      "height": 316
+    },
+    {
+      "id": 186,
+      "file_name": "imagenet_val_0186_label_353.jpg",
+      "ground_truth_id": 353,
+      "ground_truth_label": "gazelle",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 187,
+      "file_name": "imagenet_val_0187_label_138.jpg",
+      "ground_truth_id": 138,
+      "ground_truth_label": "bustard",
+      "width": 500,
+      "height": 388
+    },
+    {
+      "id": 188,
+      "file_name": "imagenet_val_0188_label_764.jpg",
+      "ground_truth_id": 764,
+      "ground_truth_label": "rifle",
+      "width": 500,
+      "height": 316
+    },
+    {
+      "id": 189,
+      "file_name": "imagenet_val_0189_label_24.jpg",
+      "ground_truth_id": 24,
+      "ground_truth_label": "great grey owl, great gray owl, Strix nebulosa",
+      "width": 462,
+      "height": 500
+    },
+    {
+      "id": 190,
+      "file_name": "imagenet_val_0190_label_89.jpg",
+      "ground_truth_id": 89,
+      "ground_truth_label": "sulphur-crested cockatoo, Kakatoe galerita, Cacatua galerita",
+      "width": 500,
+      "height": 500
+    },
+    {
+      "id": 191,
+      "file_name": "imagenet_val_0191_label_74.jpg",
+      "ground_truth_id": 74,
+      "ground_truth_label": "garden spider, Aranea diademata",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 192,
+      "file_name": "imagenet_val_0192_label_515.jpg",
+      "ground_truth_id": 515,
+      "ground_truth_label": "cowboy hat, ten-gallon hat",
+      "width": 500,
+      "height": 416
+    },
+    {
+      "id": 193,
+      "file_name": "imagenet_val_0193_label_835.jpg",
+      "ground_truth_id": 835,
+      "ground_truth_label": "sundial",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 194,
+      "file_name": "imagenet_val_0194_label_81.jpg",
+      "ground_truth_id": 81,
+      "ground_truth_label": "ptarmigan",
+      "width": 500,
+      "height": 500
+    },
+    {
+      "id": 195,
+      "file_name": "imagenet_val_0195_label_415.jpg",
+      "ground_truth_id": 415,
+      "ground_truth_label": "bakery, bakeshop, bakehouse",
+      "width": 500,
+      "height": 463
+    },
+    {
+      "id": 196,
+      "file_name": "imagenet_val_0196_label_102.jpg",
+      "ground_truth_id": 102,
+      "ground_truth_label": "echidna, spiny anteater, anteater",
+      "width": 335,
+      "height": 500
+    },
+    {
+      "id": 197,
+      "file_name": "imagenet_val_0197_label_271.jpg",
+      "ground_truth_id": 271,
+      "ground_truth_label": "red wolf, maned wolf, Canis rufus, Canis niger",
+      "width": 500,
+      "height": 336
+    },
+    {
+      "id": 198,
+      "file_name": "imagenet_val_0198_label_799.jpg",
+      "ground_truth_id": 799,
+      "ground_truth_label": "sliding door",
+      "width": 385,
+      "height": 500
+    },
+    {
+      "id": 199,
+      "file_name": "imagenet_val_0199_label_924.jpg",
+      "ground_truth_id": 924,
+      "ground_truth_label": "guacamole",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 200,
+      "file_name": "imagenet_val_0200_label_266.jpg",
+      "ground_truth_id": 266,
+      "ground_truth_label": "miniature poodle",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 201,
+      "file_name": "imagenet_val_0201_label_825.jpg",
+      "ground_truth_id": 825,
+      "ground_truth_label": "stone wall",
+      "width": 500,
+      "height": 334
+    },
+    {
+      "id": 202,
+      "file_name": "imagenet_val_0202_label_961.jpg",
+      "ground_truth_id": 961,
+      "ground_truth_label": "dough",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 203,
+      "file_name": "imagenet_val_0203_label_445.jpg",
+      "ground_truth_id": 445,
+      "ground_truth_label": "bikini, two-piece",
+      "width": 334,
+      "height": 500
+    },
+    {
+      "id": 204,
+      "file_name": "imagenet_val_0204_label_596.jpg",
+      "ground_truth_id": 596,
+      "ground_truth_label": "hatchet",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 205,
+      "file_name": "imagenet_val_0205_label_939.jpg",
+      "ground_truth_id": 939,
+      "ground_truth_label": "zucchini, courgette",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 206,
+      "file_name": "imagenet_val_0206_label_559.jpg",
+      "ground_truth_id": 559,
+      "ground_truth_label": "folding chair",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 207,
+      "file_name": "imagenet_val_0207_label_380.jpg",
+      "ground_truth_id": 380,
+      "ground_truth_label": "titi, titi monkey",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 208,
+      "file_name": "imagenet_val_0208_label_536.jpg",
+      "ground_truth_id": 536,
+      "ground_truth_label": "dock, dockage, docking facility",
+      "width": 500,
+      "height": 340
+    },
+    {
+      "id": 209,
+      "file_name": "imagenet_val_0209_label_659.jpg",
+      "ground_truth_id": 659,
+      "ground_truth_label": "mixing bowl",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 210,
+      "file_name": "imagenet_val_0210_label_961.jpg",
+      "ground_truth_id": 961,
+      "ground_truth_label": "dough",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 211,
+      "file_name": "imagenet_val_0211_label_980.jpg",
+      "ground_truth_id": 980,
+      "ground_truth_label": "volcano",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 212,
+      "file_name": "imagenet_val_0212_label_450.jpg",
+      "ground_truth_id": 450,
+      "ground_truth_label": "bobsled, bobsleigh, bob",
+      "width": 333,
+      "height": 500
+    },
+    {
+      "id": 213,
+      "file_name": "imagenet_val_0213_label_818.jpg",
+      "ground_truth_id": 818,
+      "ground_truth_label": "spotlight, spot",
+      "width": 450,
+      "height": 450
+    },
+    {
+      "id": 214,
+      "file_name": "imagenet_val_0214_label_596.jpg",
+      "ground_truth_id": 596,
+      "ground_truth_label": "hatchet",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 215,
+      "file_name": "imagenet_val_0215_label_550.jpg",
+      "ground_truth_id": 550,
+      "ground_truth_label": "espresso maker",
+      "width": 120,
+      "height": 126
+    },
+    {
+      "id": 216,
+      "file_name": "imagenet_val_0216_label_230.jpg",
+      "ground_truth_id": 230,
+      "ground_truth_label": "Shetland sheepdog, Shetland sheep dog, Shetland",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 217,
+      "file_name": "imagenet_val_0217_label_356.jpg",
+      "ground_truth_id": 356,
+      "ground_truth_label": "weasel",
+      "width": 600,
+      "height": 397
+    },
+    {
+      "id": 218,
+      "file_name": "imagenet_val_0218_label_544.jpg",
+      "ground_truth_id": 544,
+      "ground_truth_label": "Dutch oven",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 219,
+      "file_name": "imagenet_val_0219_label_408.jpg",
+      "ground_truth_id": 408,
+      "ground_truth_label": "amphibian, amphibious vehicle",
+      "width": 475,
+      "height": 281
+    },
+    {
+      "id": 220,
+      "file_name": "imagenet_val_0220_label_627.jpg",
+      "ground_truth_id": 627,
+      "ground_truth_label": "limousine, limo",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 221,
+      "file_name": "imagenet_val_0221_label_397.jpg",
+      "ground_truth_id": 397,
+      "ground_truth_label": "puffer, pufferfish, blowfish, globefish",
+      "width": 500,
+      "height": 400
+    },
+    {
+      "id": 222,
+      "file_name": "imagenet_val_0222_label_140.jpg",
+      "ground_truth_id": 140,
+      "ground_truth_label": "red-backed sandpiper, dunlin, Erolia alpina",
+      "width": 500,
+      "height": 500
+    },
+    {
+      "id": 223,
+      "file_name": "imagenet_val_0223_label_442.jpg",
+      "ground_truth_id": 442,
+      "ground_truth_label": "bell cote, bell cot",
+      "width": 1024,
+      "height": 685
+    },
+    {
+      "id": 224,
+      "file_name": "imagenet_val_0224_label_339.jpg",
+      "ground_truth_id": 339,
+      "ground_truth_label": "sorrel",
+      "width": 452,
+      "height": 500
+    },
+    {
+      "id": 225,
+      "file_name": "imagenet_val_0225_label_441.jpg",
+      "ground_truth_id": 441,
+      "ground_truth_label": "beer glass",
+      "width": 500,
+      "height": 498
+    },
+    {
+      "id": 226,
+      "file_name": "imagenet_val_0226_label_356.jpg",
+      "ground_truth_id": 356,
+      "ground_truth_label": "weasel",
+      "width": 726,
+      "height": 404
+    },
+    {
+      "id": 227,
+      "file_name": "imagenet_val_0227_label_868.jpg",
+      "ground_truth_id": 868,
+      "ground_truth_label": "tray",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 228,
+      "file_name": "imagenet_val_0228_label_317.jpg",
+      "ground_truth_id": 317,
+      "ground_truth_label": "leafhopper",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 229,
+      "file_name": "imagenet_val_0229_label_983.jpg",
+      "ground_truth_id": 983,
+      "ground_truth_label": "scuba diver",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 230,
+      "file_name": "imagenet_val_0230_label_479.jpg",
+      "ground_truth_id": 479,
+      "ground_truth_label": "car wheel",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 231,
+      "file_name": "imagenet_val_0231_label_451.jpg",
+      "ground_truth_id": 451,
+      "ground_truth_label": "bolo tie, bolo, bola tie, bola",
+      "width": 700,
+      "height": 547
+    },
+    {
+      "id": 232,
+      "file_name": "imagenet_val_0232_label_631.jpg",
+      "ground_truth_id": 631,
+      "ground_truth_label": "lotion",
+      "width": 505,
+      "height": 365
+    },
+    {
+      "id": 233,
+      "file_name": "imagenet_val_0233_label_971.jpg",
+      "ground_truth_id": 971,
+      "ground_truth_label": "bubble",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 234,
+      "file_name": "imagenet_val_0234_label_708.jpg",
+      "ground_truth_id": 708,
+      "ground_truth_label": "pedestal, plinth, footstall",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 235,
+      "file_name": "imagenet_val_0235_label_443.jpg",
+      "ground_truth_id": 443,
+      "ground_truth_label": "bib",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 236,
+      "file_name": "imagenet_val_0236_label_440.jpg",
+      "ground_truth_id": 440,
+      "ground_truth_label": "beer bottle",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 237,
+      "file_name": "imagenet_val_0237_label_614.jpg",
+      "ground_truth_id": 614,
+      "ground_truth_label": "kimono",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 238,
+      "file_name": "imagenet_val_0238_label_942.jpg",
+      "ground_truth_id": 942,
+      "ground_truth_label": "butternut squash",
+      "width": 500,
+      "height": 500
+    },
+    {
+      "id": 239,
+      "file_name": "imagenet_val_0239_label_186.jpg",
+      "ground_truth_id": 186,
+      "ground_truth_label": "Norwich terrier",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 240,
+      "file_name": "imagenet_val_0240_label_93.jpg",
+      "ground_truth_id": 93,
+      "ground_truth_label": "hornbill",
+      "width": 380,
+      "height": 500
+    },
+    {
+      "id": 241,
+      "file_name": "imagenet_val_0241_label_311.jpg",
+      "ground_truth_id": 311,
+      "ground_truth_label": "grasshopper, hopper",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 242,
+      "file_name": "imagenet_val_0242_label_373.jpg",
+      "ground_truth_id": 373,
+      "ground_truth_label": "macaque",
+      "width": 1898,
+      "height": 2657
+    },
+    {
+      "id": 243,
+      "file_name": "imagenet_val_0243_label_813.jpg",
+      "ground_truth_id": 813,
+      "ground_truth_label": "spatula",
+      "width": 424,
+      "height": 480
+    },
+    {
+      "id": 244,
+      "file_name": "imagenet_val_0244_label_607.jpg",
+      "ground_truth_id": 607,
+      "ground_truth_label": "jack-o'-lantern",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 245,
+      "file_name": "imagenet_val_0245_label_279.jpg",
+      "ground_truth_id": 279,
+      "ground_truth_label": "Arctic fox, white fox, Alopex lagopus",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 246,
+      "file_name": "imagenet_val_0246_label_236.jpg",
+      "ground_truth_id": 236,
+      "ground_truth_label": "Doberman, Doberman pinscher",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 247,
+      "file_name": "imagenet_val_0247_label_403.jpg",
+      "ground_truth_id": 403,
+      "ground_truth_label": "aircraft carrier, carrier, flattop, attack aircraft carrier",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 248,
+      "file_name": "imagenet_val_0248_label_918.jpg",
+      "ground_truth_id": 918,
+      "ground_truth_label": "crossword puzzle, crossword",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 249,
+      "file_name": "imagenet_val_0249_label_83.jpg",
+      "ground_truth_id": 83,
+      "ground_truth_label": "prairie chicken, prairie grouse, prairie fowl",
+      "width": 500,
+      "height": 403
+    },
+    {
+      "id": 250,
+      "file_name": "imagenet_val_0250_label_666.jpg",
+      "ground_truth_id": 666,
+      "ground_truth_label": "mortar",
+      "width": 891,
+      "height": 1200
+    },
+    {
+      "id": 251,
+      "file_name": "imagenet_val_0251_label_578.jpg",
+      "ground_truth_id": 578,
+      "ground_truth_label": "gown",
+      "width": 500,
+      "height": 339
+    },
+    {
+      "id": 252,
+      "file_name": "imagenet_val_0252_label_979.jpg",
+      "ground_truth_id": 979,
+      "ground_truth_label": "valley, vale",
+      "width": 500,
+      "height": 335
+    },
+    {
+      "id": 253,
+      "file_name": "imagenet_val_0253_label_843.jpg",
+      "ground_truth_id": 843,
+      "ground_truth_label": "swing",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 254,
+      "file_name": "imagenet_val_0254_label_991.jpg",
+      "ground_truth_id": 991,
+      "ground_truth_label": "coral fungus",
+      "width": 500,
+      "height": 378
+    },
+    {
+      "id": 255,
+      "file_name": "imagenet_val_0255_label_920.jpg",
+      "ground_truth_id": 920,
+      "ground_truth_label": "traffic light, traffic signal, stoplight",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 256,
+      "file_name": "imagenet_val_0256_label_267.jpg",
+      "ground_truth_id": 267,
+      "ground_truth_label": "standard poodle",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 257,
+      "file_name": "imagenet_val_0257_label_186.jpg",
+      "ground_truth_id": 186,
+      "ground_truth_label": "Norwich terrier",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 258,
+      "file_name": "imagenet_val_0258_label_901.jpg",
+      "ground_truth_id": 901,
+      "ground_truth_label": "whiskey jug",
+      "width": 500,
+      "height": 295
+    },
+    {
+      "id": 259,
+      "file_name": "imagenet_val_0259_label_2.jpg",
+      "ground_truth_id": 2,
+      "ground_truth_label": "great white shark, white shark, man-eater, man-eating shark, Carcharodon carcharias",
+      "width": 1730,
+      "height": 1170
+    },
+    {
+      "id": 260,
+      "file_name": "imagenet_val_0260_label_190.jpg",
+      "ground_truth_id": 190,
+      "ground_truth_label": "Sealyham terrier, Sealyham",
+      "width": 645,
+      "height": 380
+    },
+    {
+      "id": 261,
+      "file_name": "imagenet_val_0261_label_27.jpg",
+      "ground_truth_id": 27,
+      "ground_truth_label": "eft",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 262,
+      "file_name": "imagenet_val_0262_label_499.jpg",
+      "ground_truth_id": 499,
+      "ground_truth_label": "cleaver, meat cleaver, chopper",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 263,
+      "file_name": "imagenet_val_0263_label_31.jpg",
+      "ground_truth_id": 31,
+      "ground_truth_label": "tree frog, tree-frog",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 264,
+      "file_name": "imagenet_val_0264_label_93.jpg",
+      "ground_truth_id": 93,
+      "ground_truth_label": "hornbill",
+      "width": 500,
+      "height": 399
+    },
+    {
+      "id": 265,
+      "file_name": "imagenet_val_0265_label_948.jpg",
+      "ground_truth_id": 948,
+      "ground_truth_label": "Granny Smith",
+      "width": 500,
+      "height": 372
+    },
+    {
+      "id": 266,
+      "file_name": "imagenet_val_0266_label_221.jpg",
+      "ground_truth_id": 221,
+      "ground_truth_label": "Irish water spaniel",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 267,
+      "file_name": "imagenet_val_0267_label_200.jpg",
+      "ground_truth_id": 200,
+      "ground_truth_label": "Tibetan terrier, chrysanthemum dog",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 268,
+      "file_name": "imagenet_val_0268_label_757.jpg",
+      "ground_truth_id": 757,
+      "ground_truth_label": "recreational vehicle, RV, R.V.",
+      "width": 500,
+      "height": 403
+    },
+    {
+      "id": 269,
+      "file_name": "imagenet_val_0269_label_488.jpg",
+      "ground_truth_id": 488,
+      "ground_truth_label": "chain",
+      "width": 500,
+      "height": 391
+    },
+    {
+      "id": 270,
+      "file_name": "imagenet_val_0270_label_778.jpg",
+      "ground_truth_id": 778,
+      "ground_truth_label": "scale, weighing machine",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 271,
+      "file_name": "imagenet_val_0271_label_63.jpg",
+      "ground_truth_id": 63,
+      "ground_truth_label": "Indian cobra, Naja naja",
+      "width": 468,
+      "height": 507
+    },
+    {
+      "id": 272,
+      "file_name": "imagenet_val_0272_label_110.jpg",
+      "ground_truth_id": 110,
+      "ground_truth_label": "flatworm, platyhelminth",
+      "width": 500,
+      "height": 377
+    },
+    {
+      "id": 273,
+      "file_name": "imagenet_val_0273_label_245.jpg",
+      "ground_truth_id": 245,
+      "ground_truth_label": "French bulldog",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 274,
+      "file_name": "imagenet_val_0274_label_525.jpg",
+      "ground_truth_id": 525,
+      "ground_truth_label": "dam, dike, dyke",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 275,
+      "file_name": "imagenet_val_0275_label_17.jpg",
+      "ground_truth_id": 17,
+      "ground_truth_label": "jay",
+      "width": 400,
+      "height": 500
+    },
+    {
+      "id": 276,
+      "file_name": "imagenet_val_0276_label_755.jpg",
+      "ground_truth_id": 755,
+      "ground_truth_label": "radio telescope, radio reflector",
+      "width": 598,
+      "height": 506
+    },
+    {
+      "id": 277,
+      "file_name": "imagenet_val_0277_label_548.jpg",
+      "ground_truth_id": 548,
+      "ground_truth_label": "entertainment center",
+      "width": 166,
+      "height": 166
+    },
+    {
+      "id": 278,
+      "file_name": "imagenet_val_0278_label_431.jpg",
+      "ground_truth_id": 431,
+      "ground_truth_label": "bassinet",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 279,
+      "file_name": "imagenet_val_0279_label_50.jpg",
+      "ground_truth_id": 50,
+      "ground_truth_label": "American alligator, Alligator mississipiensis",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 280,
+      "file_name": "imagenet_val_0280_label_569.jpg",
+      "ground_truth_id": 569,
+      "ground_truth_label": "garbage truck, dustcart",
+      "width": 500,
+      "height": 335
+    },
+    {
+      "id": 281,
+      "file_name": "imagenet_val_0281_label_404.jpg",
+      "ground_truth_id": 404,
+      "ground_truth_label": "airliner",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 282,
+      "file_name": "imagenet_val_0282_label_554.jpg",
+      "ground_truth_id": 554,
+      "ground_truth_label": "fireboat",
+      "width": 500,
+      "height": 381
+    },
+    {
+      "id": 283,
+      "file_name": "imagenet_val_0283_label_549.jpg",
+      "ground_truth_id": 549,
+      "ground_truth_label": "envelope",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 284,
+      "file_name": "imagenet_val_0284_label_993.jpg",
+      "ground_truth_id": 993,
+      "ground_truth_label": "gyromitra",
+      "width": 500,
+      "height": 400
+    },
+    {
+      "id": 285,
+      "file_name": "imagenet_val_0285_label_950.jpg",
+      "ground_truth_id": 950,
+      "ground_truth_label": "orange",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 286,
+      "file_name": "imagenet_val_0286_label_653.jpg",
+      "ground_truth_id": 653,
+      "ground_truth_label": "milk can",
+      "width": 500,
+      "height": 334
+    },
+    {
+      "id": 287,
+      "file_name": "imagenet_val_0287_label_960.jpg",
+      "ground_truth_id": 960,
+      "ground_truth_label": "chocolate sauce, chocolate syrup",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 288,
+      "file_name": "imagenet_val_0288_label_543.jpg",
+      "ground_truth_id": 543,
+      "ground_truth_label": "dumbbell",
+      "width": 500,
+      "height": 359
+    },
+    {
+      "id": 289,
+      "file_name": "imagenet_val_0289_label_111.jpg",
+      "ground_truth_id": 111,
+      "ground_truth_label": "nematode, nematode worm, roundworm",
+      "width": 500,
+      "height": 274
+    },
+    {
+      "id": 290,
+      "file_name": "imagenet_val_0290_label_955.jpg",
+      "ground_truth_id": 955,
+      "ground_truth_label": "jackfruit, jak, jack",
+      "width": 500,
+      "height": 334
+    },
+    {
+      "id": 291,
+      "file_name": "imagenet_val_0291_label_360.jpg",
+      "ground_truth_id": 360,
+      "ground_truth_label": "otter",
+      "width": 224,
+      "height": 185
+    },
+    {
+      "id": 292,
+      "file_name": "imagenet_val_0292_label_574.jpg",
+      "ground_truth_id": 574,
+      "ground_truth_label": "golf ball",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 293,
+      "file_name": "imagenet_val_0293_label_756.jpg",
+      "ground_truth_id": 756,
+      "ground_truth_label": "rain barrel",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 294,
+      "file_name": "imagenet_val_0294_label_567.jpg",
+      "ground_truth_id": 567,
+      "ground_truth_label": "frying pan, frypan, skillet",
+      "width": 333,
+      "height": 500
+    },
+    {
+      "id": 295,
+      "file_name": "imagenet_val_0295_label_65.jpg",
+      "ground_truth_id": 65,
+      "ground_truth_label": "sea snake",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 296,
+      "file_name": "imagenet_val_0296_label_324.jpg",
+      "ground_truth_id": 324,
+      "ground_truth_label": "cabbage butterfly",
+      "width": 500,
+      "height": 411
+    },
+    {
+      "id": 297,
+      "file_name": "imagenet_val_0297_label_468.jpg",
+      "ground_truth_id": 468,
+      "ground_truth_label": "cab, hack, taxi, taxicab",
+      "width": 500,
+      "height": 379
+    },
+    {
+      "id": 298,
+      "file_name": "imagenet_val_0298_label_875.jpg",
+      "ground_truth_id": 875,
+      "ground_truth_label": "trombone",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 299,
+      "file_name": "imagenet_val_0299_label_190.jpg",
+      "ground_truth_id": 190,
+      "ground_truth_label": "Sealyham terrier, Sealyham",
+      "width": 1280,
+      "height": 960
+    },
+    {
+      "id": 300,
+      "file_name": "imagenet_val_0300_label_979.jpg",
+      "ground_truth_id": 979,
+      "ground_truth_label": "valley, vale",
+      "width": 334,
+      "height": 500
+    },
+    {
+      "id": 301,
+      "file_name": "imagenet_val_0301_label_673.jpg",
+      "ground_truth_id": 673,
+      "ground_truth_label": "mouse, computer mouse",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 302,
+      "file_name": "imagenet_val_0302_label_299.jpg",
+      "ground_truth_id": 299,
+      "ground_truth_label": "meerkat, mierkat",
+      "width": 800,
+      "height": 600
+    },
+    {
+      "id": 303,
+      "file_name": "imagenet_val_0303_label_833.jpg",
+      "ground_truth_id": 833,
+      "ground_truth_label": "submarine, pigboat, sub, U-boat",
+      "width": 333,
+      "height": 500
+    },
+    {
+      "id": 304,
+      "file_name": "imagenet_val_0304_label_829.jpg",
+      "ground_truth_id": 829,
+      "ground_truth_label": "streetcar, tram, tramcar, trolley, trolley car",
+      "width": 500,
+      "height": 338
+    },
+    {
+      "id": 305,
+      "file_name": "imagenet_val_0305_label_131.jpg",
+      "ground_truth_id": 131,
+      "ground_truth_label": "little blue heron, Egretta caerulea",
+      "width": 422,
+      "height": 500
+    },
+    {
+      "id": 306,
+      "file_name": "imagenet_val_0306_label_829.jpg",
+      "ground_truth_id": 829,
+      "ground_truth_label": "streetcar, tram, tramcar, trolley, trolley car",
+      "width": 333,
+      "height": 500
+    },
+    {
+      "id": 307,
+      "file_name": "imagenet_val_0307_label_477.jpg",
+      "ground_truth_id": 477,
+      "ground_truth_label": "carpenter's kit, tool kit",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 308,
+      "file_name": "imagenet_val_0308_label_289.jpg",
+      "ground_truth_id": 289,
+      "ground_truth_label": "snow leopard, ounce, Panthera uncia",
+      "width": 333,
+      "height": 500
+    },
+    {
+      "id": 309,
+      "file_name": "imagenet_val_0309_label_842.jpg",
+      "ground_truth_id": 842,
+      "ground_truth_label": "swimming trunks, bathing trunks",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 310,
+      "file_name": "imagenet_val_0310_label_49.jpg",
+      "ground_truth_id": 49,
+      "ground_truth_label": "African crocodile, Nile crocodile, Crocodylus niloticus",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 311,
+      "file_name": "imagenet_val_0311_label_498.jpg",
+      "ground_truth_id": 498,
+      "ground_truth_label": "cinema, movie theater, movie theatre, movie house, picture palace",
+      "width": 500,
+      "height": 336
+    },
+    {
+      "id": 312,
+      "file_name": "imagenet_val_0312_label_691.jpg",
+      "ground_truth_id": 691,
+      "ground_truth_label": "oxygen mask",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 313,
+      "file_name": "imagenet_val_0313_label_538.jpg",
+      "ground_truth_id": 538,
+      "ground_truth_label": "dome",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 314,
+      "file_name": "imagenet_val_0314_label_992.jpg",
+      "ground_truth_id": 992,
+      "ground_truth_label": "agaric",
+      "width": 500,
+      "height": 500
+    },
+    {
+      "id": 315,
+      "file_name": "imagenet_val_0315_label_99.jpg",
+      "ground_truth_id": 99,
+      "ground_truth_label": "goose",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 316,
+      "file_name": "imagenet_val_0316_label_871.jpg",
+      "ground_truth_id": 871,
+      "ground_truth_label": "trimaran",
+      "width": 300,
+      "height": 400
+    },
+    {
+      "id": 317,
+      "file_name": "imagenet_val_0317_label_472.jpg",
+      "ground_truth_id": 472,
+      "ground_truth_label": "canoe",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 318,
+      "file_name": "imagenet_val_0318_label_537.jpg",
+      "ground_truth_id": 537,
+      "ground_truth_label": "dogsled, dog sled, dog sleigh",
+      "width": 500,
+      "height": 351
+    },
+    {
+      "id": 319,
+      "file_name": "imagenet_val_0319_label_901.jpg",
+      "ground_truth_id": 901,
+      "ground_truth_label": "whiskey jug",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 320,
+      "file_name": "imagenet_val_0320_label_729.jpg",
+      "ground_truth_id": 729,
+      "ground_truth_label": "plate rack",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 321,
+      "file_name": "imagenet_val_0321_label_378.jpg",
+      "ground_truth_id": 378,
+      "ground_truth_label": "capuchin, ringtail, Cebus capucinus",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 322,
+      "file_name": "imagenet_val_0322_label_337.jpg",
+      "ground_truth_id": 337,
+      "ground_truth_label": "beaver",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 323,
+      "file_name": "imagenet_val_0323_label_295.jpg",
+      "ground_truth_id": 295,
+      "ground_truth_label": "American black bear, black bear, Ursus americanus, Euarctos americanus",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 324,
+      "file_name": "imagenet_val_0324_label_51.jpg",
+      "ground_truth_id": 51,
+      "ground_truth_label": "triceratops",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 325,
+      "file_name": "imagenet_val_0325_label_381.jpg",
+      "ground_truth_id": 381,
+      "ground_truth_label": "spider monkey, Ateles geoffroyi",
+      "width": 238,
+      "height": 200
+    },
+    {
+      "id": 326,
+      "file_name": "imagenet_val_0326_label_362.jpg",
+      "ground_truth_id": 362,
+      "ground_truth_label": "badger",
+      "width": 288,
+      "height": 332
+    },
+    {
+      "id": 327,
+      "file_name": "imagenet_val_0327_label_603.jpg",
+      "ground_truth_id": 603,
+      "ground_truth_label": "horse cart, horse-cart",
+      "width": 500,
+      "height": 332
+    },
+    {
+      "id": 328,
+      "file_name": "imagenet_val_0328_label_729.jpg",
+      "ground_truth_id": 729,
+      "ground_truth_label": "plate rack",
+      "width": 500,
+      "height": 354
+    },
+    {
+      "id": 329,
+      "file_name": "imagenet_val_0329_label_34.jpg",
+      "ground_truth_id": 34,
+      "ground_truth_label": "leatherback turtle, leatherback, leathery turtle, Dermochelys coriacea",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 330,
+      "file_name": "imagenet_val_0330_label_693.jpg",
+      "ground_truth_id": 693,
+      "ground_truth_label": "paddle, boat paddle",
+      "width": 500,
+      "height": 396
+    },
+    {
+      "id": 331,
+      "file_name": "imagenet_val_0331_label_666.jpg",
+      "ground_truth_id": 666,
+      "ground_truth_label": "mortar",
+      "width": 400,
+      "height": 400
+    },
+    {
+      "id": 332,
+      "file_name": "imagenet_val_0332_label_565.jpg",
+      "ground_truth_id": 565,
+      "ground_truth_label": "freight car",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 333,
+      "file_name": "imagenet_val_0333_label_541.jpg",
+      "ground_truth_id": 541,
+      "ground_truth_label": "drum, membranophone, tympan",
+      "width": 170,
+      "height": 226
+    },
+    {
+      "id": 334,
+      "file_name": "imagenet_val_0334_label_384.jpg",
+      "ground_truth_id": 384,
+      "ground_truth_label": "indri, indris, Indri indri, Indri brevicaudatus",
+      "width": 500,
+      "height": 334
+    },
+    {
+      "id": 335,
+      "file_name": "imagenet_val_0335_label_288.jpg",
+      "ground_truth_id": 288,
+      "ground_truth_label": "leopard, Panthera pardus",
+      "width": 500,
+      "height": 382
+    },
+    {
+      "id": 336,
+      "file_name": "imagenet_val_0336_label_802.jpg",
+      "ground_truth_id": 802,
+      "ground_truth_label": "snowmobile",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 337,
+      "file_name": "imagenet_val_0337_label_432.jpg",
+      "ground_truth_id": 432,
+      "ground_truth_label": "bassoon",
+      "width": 500,
+      "height": 383
+    },
+    {
+      "id": 338,
+      "file_name": "imagenet_val_0338_label_103.jpg",
+      "ground_truth_id": 103,
+      "ground_truth_label": "platypus, duckbill, duckbilled platypus, duck-billed platypus, Ornithorhynchus anatinus",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 339,
+      "file_name": "imagenet_val_0339_label_897.jpg",
+      "ground_truth_id": 897,
+      "ground_truth_label": "washer, automatic washer, washing machine",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 340,
+      "file_name": "imagenet_val_0340_label_135.jpg",
+      "ground_truth_id": 135,
+      "ground_truth_label": "limpkin, Aramus pictus",
+      "width": 418,
+      "height": 500
+    },
+    {
+      "id": 341,
+      "file_name": "imagenet_val_0341_label_26.jpg",
+      "ground_truth_id": 26,
+      "ground_truth_label": "common newt, Triturus vulgaris",
+      "width": 800,
+      "height": 505
+    },
+    {
+      "id": 342,
+      "file_name": "imagenet_val_0342_label_764.jpg",
+      "ground_truth_id": 764,
+      "ground_truth_label": "rifle",
+      "width": 500,
+      "height": 353
+    },
+    {
+      "id": 343,
+      "file_name": "imagenet_val_0343_label_441.jpg",
+      "ground_truth_id": 441,
+      "ground_truth_label": "beer glass",
+      "width": 500,
+      "height": 398
+    },
+    {
+      "id": 344,
+      "file_name": "imagenet_val_0344_label_547.jpg",
+      "ground_truth_id": 547,
+      "ground_truth_label": "electric locomotive",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 345,
+      "file_name": "imagenet_val_0345_label_888.jpg",
+      "ground_truth_id": 888,
+      "ground_truth_label": "viaduct",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 346,
+      "file_name": "imagenet_val_0346_label_320.jpg",
+      "ground_truth_id": 320,
+      "ground_truth_label": "damselfly",
+      "width": 500,
+      "height": 465
+    },
+    {
+      "id": 347,
+      "file_name": "imagenet_val_0347_label_29.jpg",
+      "ground_truth_id": 29,
+      "ground_truth_label": "axolotl, mud puppy, Ambystoma mexicanum",
+      "width": 600,
+      "height": 450
+    },
+    {
+      "id": 348,
+      "file_name": "imagenet_val_0348_label_635.jpg",
+      "ground_truth_id": 635,
+      "ground_truth_label": "magnetic compass",
+      "width": 1024,
+      "height": 825
+    },
+    {
+      "id": 349,
+      "file_name": "imagenet_val_0349_label_115.jpg",
+      "ground_truth_id": 115,
+      "ground_truth_label": "sea slug, nudibranch",
+      "width": 500,
+      "height": 439
+    },
+    {
+      "id": 350,
+      "file_name": "imagenet_val_0350_label_825.jpg",
+      "ground_truth_id": 825,
+      "ground_truth_label": "stone wall",
+      "width": 500,
+      "height": 342
+    },
+    {
+      "id": 351,
+      "file_name": "imagenet_val_0351_label_473.jpg",
+      "ground_truth_id": 473,
+      "ground_truth_label": "can opener, tin opener",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "id": 352,
+      "file_name": "imagenet_val_0352_label_748.jpg",
+      "ground_truth_id": 748,
+      "ground_truth_label": "purse",
+      "width": 500,
+      "height": 500
+    },
+    {
+      "id": 353,
+      "file_name": "imagenet_val_0353_label_966.jpg",
+      "ground_truth_id": 966,
+      "ground_truth_label": "red wine",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 354,
+      "file_name": "imagenet_val_0354_label_875.jpg",
+      "ground_truth_id": 875,
+      "ground_truth_label": "trombone",
+      "width": 500,
+      "height": 334
+    },
+    {
+      "id": 355,
+      "file_name": "imagenet_val_0355_label_421.jpg",
+      "ground_truth_id": 421,
+      "ground_truth_label": "bannister, banister, balustrade, balusters, handrail",
+      "width": 500,
+      "height": 357
+    },
+    {
+      "id": 356,
+      "file_name": "imagenet_val_0356_label_399.jpg",
+      "ground_truth_id": 399,
+      "ground_truth_label": "abaya",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": 357,
+      "file_name": "imagenet_val_0357_label_629.jpg",
+      "ground_truth_id": 629,
+      "ground_truth_label": "lipstick, lip rouge",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 358,
+      "file_name": "imagenet_val_0358_label_492.jpg",
+      "ground_truth_id": 492,
+      "ground_truth_label": "chest",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 359,
+      "file_name": "imagenet_val_0359_label_392.jpg",
+      "ground_truth_id": 392,
+      "ground_truth_label": "rock beauty, Holocanthus tricolor",
+      "width": 1200,
+      "height": 1600
+    },
+    {
+      "id": 360,
+      "file_name": "imagenet_val_0360_label_454.jpg",
+      "ground_truth_id": 454,
+      "ground_truth_label": "bookshop, bookstore, bookstall",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 361,
+      "file_name": "imagenet_val_0361_label_691.jpg",
+      "ground_truth_id": 691,
+      "ground_truth_label": "oxygen mask",
+      "width": 753,
+      "height": 403
+    },
+    {
+      "id": 362,
+      "file_name": "imagenet_val_0362_label_126.jpg",
+      "ground_truth_id": 126,
+      "ground_truth_label": "isopod",
+      "width": 357,
+      "height": 500
+    },
+    {
+      "id": 363,
+      "file_name": "imagenet_val_0363_label_590.jpg",
+      "ground_truth_id": 590,
+      "ground_truth_label": "hand-held computer, hand-held microcomputer",
+      "width": 1800,
+      "height": 1200
+    },
+    {
+      "id": 364,
+      "file_name": "imagenet_val_0364_label_419.jpg",
+      "ground_truth_id": 419,
+      "ground_truth_label": "Band Aid",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 365,
+      "file_name": "imagenet_val_0365_label_69.jpg",
+      "ground_truth_id": 69,
+      "ground_truth_label": "trilobite",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 366,
+      "file_name": "imagenet_val_0366_label_96.jpg",
+      "ground_truth_id": 96,
+      "ground_truth_label": "toucan",
+      "width": 500,
+      "height": 460
+    },
+    {
+      "id": 367,
+      "file_name": "imagenet_val_0367_label_792.jpg",
+      "ground_truth_id": 792,
+      "ground_truth_label": "shovel",
+      "width": 497,
+      "height": 500
+    },
+    {
+      "id": 368,
+      "file_name": "imagenet_val_0368_label_280.jpg",
+      "ground_truth_id": 280,
+      "ground_truth_label": "grey fox, gray fox, Urocyon cinereoargenteus",
+      "width": 360,
+      "height": 270
+    },
+    {
+      "id": 369,
+      "file_name": "imagenet_val_0369_label_980.jpg",
+      "ground_truth_id": 980,
+      "ground_truth_label": "volcano",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 370,
+      "file_name": "imagenet_val_0370_label_632.jpg",
+      "ground_truth_id": 632,
+      "ground_truth_label": "loudspeaker, speaker, speaker unit, loudspeaker system, speaker system",
+      "width": 333,
+      "height": 500
+    },
+    {
+      "id": 371,
+      "file_name": "imagenet_val_0371_label_842.jpg",
+      "ground_truth_id": 842,
+      "ground_truth_label": "swimming trunks, bathing trunks",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 372,
+      "file_name": "imagenet_val_0372_label_290.jpg",
+      "ground_truth_id": 290,
+      "ground_truth_label": "jaguar, panther, Panthera onca, Felis onca",
+      "width": 1024,
+      "height": 768
+    },
+    {
+      "id": 373,
+      "file_name": "imagenet_val_0373_label_503.jpg",
+      "ground_truth_id": 503,
+      "ground_truth_label": "cocktail shaker",
+      "width": 333,
+      "height": 500
+    },
+    {
+      "id": 374,
+      "file_name": "imagenet_val_0374_label_356.jpg",
+      "ground_truth_id": 356,
+      "ground_truth_label": "weasel",
+      "width": 364,
+      "height": 285
+    },
+    {
+      "id": 375,
+      "file_name": "imagenet_val_0375_label_300.jpg",
+      "ground_truth_id": 300,
+      "ground_truth_label": "tiger beetle",
+      "width": 500,
+      "height": 354
+    },
+    {
+      "id": 376,
+      "file_name": "imagenet_val_0376_label_996.jpg",
+      "ground_truth_id": 996,
+      "ground_truth_label": "hen-of-the-woods, hen of the woods, Polyporus frondosus, Grifola frondosa",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 377,
+      "file_name": "imagenet_val_0377_label_829.jpg",
+      "ground_truth_id": 829,
+      "ground_truth_label": "streetcar, tram, tramcar, trolley, trolley car",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 378,
+      "file_name": "imagenet_val_0378_label_775.jpg",
+      "ground_truth_id": 775,
+      "ground_truth_label": "sarong",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 379,
+      "file_name": "imagenet_val_0379_label_660.jpg",
+      "ground_truth_id": 660,
+      "ground_truth_label": "mobile home, manufactured home",
+      "width": 481,
+      "height": 500
+    },
+    {
+      "id": 380,
+      "file_name": "imagenet_val_0380_label_101.jpg",
+      "ground_truth_id": 101,
+      "ground_truth_label": "tusker",
+      "width": 500,
+      "height": 345
+    },
+    {
+      "id": 381,
+      "file_name": "imagenet_val_0381_label_517.jpg",
+      "ground_truth_id": 517,
+      "ground_truth_label": "crane2",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 382,
+      "file_name": "imagenet_val_0382_label_393.jpg",
+      "ground_truth_id": 393,
+      "ground_truth_label": "anemone fish",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 383,
+      "file_name": "imagenet_val_0383_label_314.jpg",
+      "ground_truth_id": 314,
+      "ground_truth_label": "cockroach, roach",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 384,
+      "file_name": "imagenet_val_0384_label_847.jpg",
+      "ground_truth_id": 847,
+      "ground_truth_label": "tank, army tank, armored combat vehicle, armoured combat vehicle",
+      "width": 500,
+      "height": 334
+    },
+    {
+      "id": 385,
+      "file_name": "imagenet_val_0385_label_426.jpg",
+      "ground_truth_id": 426,
+      "ground_truth_label": "barometer",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 386,
+      "file_name": "imagenet_val_0386_label_821.jpg",
+      "ground_truth_id": 821,
+      "ground_truth_label": "steel arch bridge",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 387,
+      "file_name": "imagenet_val_0387_label_264.jpg",
+      "ground_truth_id": 264,
+      "ground_truth_label": "Cardigan, Cardigan Welsh corgi",
+      "width": 500,
+      "height": 304
+    },
+    {
+      "id": 388,
+      "file_name": "imagenet_val_0388_label_656.jpg",
+      "ground_truth_id": 656,
+      "ground_truth_label": "minivan",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 389,
+      "file_name": "imagenet_val_0389_label_873.jpg",
+      "ground_truth_id": 873,
+      "ground_truth_label": "triumphal arch",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 390,
+      "file_name": "imagenet_val_0390_label_391.jpg",
+      "ground_truth_id": 391,
+      "ground_truth_label": "coho, cohoe, coho salmon, blue jack, silver salmon, Oncorhynchus kisutch",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 391,
+      "file_name": "imagenet_val_0391_label_417.jpg",
+      "ground_truth_id": 417,
+      "ground_truth_label": "balloon",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 392,
+      "file_name": "imagenet_val_0392_label_661.jpg",
+      "ground_truth_id": 661,
+      "ground_truth_label": "Model T",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 393,
+      "file_name": "imagenet_val_0393_label_19.jpg",
+      "ground_truth_id": 19,
+      "ground_truth_label": "chickadee",
+      "width": 500,
+      "height": 400
+    },
+    {
+      "id": 394,
+      "file_name": "imagenet_val_0394_label_832.jpg",
+      "ground_truth_id": 832,
+      "ground_truth_label": "stupa, tope",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 395,
+      "file_name": "imagenet_val_0395_label_482.jpg",
+      "ground_truth_id": 482,
+      "ground_truth_label": "cassette player",
+      "width": 305,
+      "height": 154
+    },
+    {
+      "id": 396,
+      "file_name": "imagenet_val_0396_label_988.jpg",
+      "ground_truth_id": 988,
+      "ground_truth_label": "acorn",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 397,
+      "file_name": "imagenet_val_0397_label_146.jpg",
+      "ground_truth_id": 146,
+      "ground_truth_label": "albatross, mollymawk",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 398,
+      "file_name": "imagenet_val_0398_label_157.jpg",
+      "ground_truth_id": 157,
+      "ground_truth_label": "papillon",
+      "width": 334,
+      "height": 500
+    },
+    {
+      "id": 399,
+      "file_name": "imagenet_val_0399_label_46.jpg",
+      "ground_truth_id": 46,
+      "ground_truth_label": "green lizard, Lacerta viridis",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 400,
+      "file_name": "imagenet_val_0400_label_327.jpg",
+      "ground_truth_id": 327,
+      "ground_truth_label": "starfish, sea star",
+      "width": 500,
+      "height": 373
+    },
+    {
+      "id": 401,
+      "file_name": "imagenet_val_0401_label_474.jpg",
+      "ground_truth_id": 474,
+      "ground_truth_label": "cardigan",
+      "width": 160,
+      "height": 160
+    },
+    {
+      "id": 402,
+      "file_name": "imagenet_val_0402_label_181.jpg",
+      "ground_truth_id": 181,
+      "ground_truth_label": "Bedlington terrier",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 403,
+      "file_name": "imagenet_val_0403_label_616.jpg",
+      "ground_truth_id": 616,
+      "ground_truth_label": "knot",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 404,
+      "file_name": "imagenet_val_0404_label_353.jpg",
+      "ground_truth_id": 353,
+      "ground_truth_label": "gazelle",
+      "width": 500,
+      "height": 335
+    },
+    {
+      "id": 405,
+      "file_name": "imagenet_val_0405_label_542.jpg",
+      "ground_truth_id": 542,
+      "ground_truth_label": "drumstick",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 406,
+      "file_name": "imagenet_val_0406_label_798.jpg",
+      "ground_truth_id": 798,
+      "ground_truth_label": "slide rule, slipstick",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 407,
+      "file_name": "imagenet_val_0407_label_731.jpg",
+      "ground_truth_id": 731,
+      "ground_truth_label": "plunger, plumber's helper",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 408,
+      "file_name": "imagenet_val_0408_label_789.jpg",
+      "ground_truth_id": 789,
+      "ground_truth_label": "shoji",
+      "width": 600,
+      "height": 800
+    },
+    {
+      "id": 409,
+      "file_name": "imagenet_val_0409_label_888.jpg",
+      "ground_truth_id": 888,
+      "ground_truth_label": "viaduct",
+      "width": 500,
+      "height": 388
+    },
+    {
+      "id": 410,
+      "file_name": "imagenet_val_0410_label_675.jpg",
+      "ground_truth_id": 675,
+      "ground_truth_label": "moving van",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 411,
+      "file_name": "imagenet_val_0411_label_941.jpg",
+      "ground_truth_id": 941,
+      "ground_truth_label": "acorn squash",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 412,
+      "file_name": "imagenet_val_0412_label_984.jpg",
+      "ground_truth_id": 984,
+      "ground_truth_label": "rapeseed",
+      "width": 339,
+      "height": 500
+    },
+    {
+      "id": 413,
+      "file_name": "imagenet_val_0413_label_177.jpg",
+      "ground_truth_id": 177,
+      "ground_truth_label": "Scottish deerhound, deerhound",
+      "width": 500,
+      "height": 430
+    },
+    {
+      "id": 414,
+      "file_name": "imagenet_val_0414_label_581.jpg",
+      "ground_truth_id": 581,
+      "ground_truth_label": "grille, radiator grille",
+      "width": 356,
+      "height": 500
+    },
+    {
+      "id": 415,
+      "file_name": "imagenet_val_0415_label_618.jpg",
+      "ground_truth_id": 618,
+      "ground_truth_label": "ladle",
+      "width": 378,
+      "height": 500
+    },
+    {
+      "id": 416,
+      "file_name": "imagenet_val_0416_label_704.jpg",
+      "ground_truth_id": 704,
+      "ground_truth_label": "parking meter",
+      "width": 432,
+      "height": 500
+    },
+    {
+      "id": 417,
+      "file_name": "imagenet_val_0417_label_269.jpg",
+      "ground_truth_id": 269,
+      "ground_truth_label": "timber wolf, grey wolf, gray wolf, Canis lupus",
+      "width": 300,
+      "height": 330
+    },
+    {
+      "id": 418,
+      "file_name": "imagenet_val_0418_label_340.jpg",
+      "ground_truth_id": 340,
+      "ground_truth_label": "zebra",
+      "width": 500,
+      "height": 460
+    },
+    {
+      "id": 419,
+      "file_name": "imagenet_val_0419_label_694.jpg",
+      "ground_truth_id": 694,
+      "ground_truth_label": "paddlewheel, paddle wheel",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 420,
+      "file_name": "imagenet_val_0420_label_843.jpg",
+      "ground_truth_id": 843,
+      "ground_truth_label": "swing",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 421,
+      "file_name": "imagenet_val_0421_label_16.jpg",
+      "ground_truth_id": 16,
+      "ground_truth_label": "bulbul",
+      "width": 500,
+      "height": 500
+    },
+    {
+      "id": 422,
+      "file_name": "imagenet_val_0422_label_641.jpg",
+      "ground_truth_id": 641,
+      "ground_truth_label": "maraca",
+      "width": 320,
+      "height": 270
+    },
+    {
+      "id": 423,
+      "file_name": "imagenet_val_0423_label_957.jpg",
+      "ground_truth_id": 957,
+      "ground_truth_label": "pomegranate",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 424,
+      "file_name": "imagenet_val_0424_label_936.jpg",
+      "ground_truth_id": 936,
+      "ground_truth_label": "head cabbage",
+      "width": 500,
+      "height": 493
+    },
+    {
+      "id": 425,
+      "file_name": "imagenet_val_0425_label_868.jpg",
+      "ground_truth_id": 868,
+      "ground_truth_label": "tray",
+      "width": 418,
+      "height": 500
+    },
+    {
+      "id": 426,
+      "file_name": "imagenet_val_0426_label_399.jpg",
+      "ground_truth_id": 399,
+      "ground_truth_label": "abaya",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 427,
+      "file_name": "imagenet_val_0427_label_647.jpg",
+      "ground_truth_id": 647,
+      "ground_truth_label": "measuring cup",
+      "width": 500,
+      "height": 377
+    },
+    {
+      "id": 428,
+      "file_name": "imagenet_val_0428_label_690.jpg",
+      "ground_truth_id": 690,
+      "ground_truth_label": "oxcart",
+      "width": 600,
+      "height": 450
+    },
+    {
+      "id": 429,
+      "file_name": "imagenet_val_0429_label_646.jpg",
+      "ground_truth_id": 646,
+      "ground_truth_label": "maze, labyrinth",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 430,
+      "file_name": "imagenet_val_0430_label_603.jpg",
+      "ground_truth_id": 603,
+      "ground_truth_label": "horse cart, horse-cart",
+      "width": 500,
+      "height": 343
+    },
+    {
+      "id": 431,
+      "file_name": "imagenet_val_0431_label_465.jpg",
+      "ground_truth_id": 465,
+      "ground_truth_label": "bulletproof vest",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 432,
+      "file_name": "imagenet_val_0432_label_228.jpg",
+      "ground_truth_id": 228,
+      "ground_truth_label": "komondor",
+      "width": 1600,
+      "height": 1200
+    },
+    {
+      "id": 433,
+      "file_name": "imagenet_val_0433_label_481.jpg",
+      "ground_truth_id": 481,
+      "ground_truth_label": "cassette",
+      "width": 500,
+      "height": 365
+    },
+    {
+      "id": 434,
+      "file_name": "imagenet_val_0434_label_269.jpg",
+      "ground_truth_id": 269,
+      "ground_truth_label": "timber wolf, grey wolf, gray wolf, Canis lupus",
+      "width": 800,
+      "height": 811
+    },
+    {
+      "id": 435,
+      "file_name": "imagenet_val_0435_label_174.jpg",
+      "ground_truth_id": 174,
+      "ground_truth_label": "Norwegian elkhound, elkhound",
+      "width": 500,
+      "height": 334
+    },
+    {
+      "id": 436,
+      "file_name": "imagenet_val_0436_label_994.jpg",
+      "ground_truth_id": 994,
+      "ground_truth_label": "stinkhorn, carrion fungus",
+      "width": 640,
+      "height": 481
+    },
+    {
+      "id": 437,
+      "file_name": "imagenet_val_0437_label_598.jpg",
+      "ground_truth_id": 598,
+      "ground_truth_label": "home theater, home theatre",
+      "width": 500,
+      "height": 337
+    },
+    {
+      "id": 438,
+      "file_name": "imagenet_val_0438_label_183.jpg",
+      "ground_truth_id": 183,
+      "ground_truth_label": "Kerry blue terrier",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 439,
+      "file_name": "imagenet_val_0439_label_544.jpg",
+      "ground_truth_id": 544,
+      "ground_truth_label": "Dutch oven",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 440,
+      "file_name": "imagenet_val_0440_label_753.jpg",
+      "ground_truth_id": 753,
+      "ground_truth_label": "radiator",
+      "width": 500,
+      "height": 500
+    },
+    {
+      "id": 441,
+      "file_name": "imagenet_val_0441_label_393.jpg",
+      "ground_truth_id": 393,
+      "ground_truth_label": "anemone fish",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 442,
+      "file_name": "imagenet_val_0442_label_618.jpg",
+      "ground_truth_id": 618,
+      "ground_truth_label": "ladle",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 443,
+      "file_name": "imagenet_val_0443_label_394.jpg",
+      "ground_truth_id": 394,
+      "ground_truth_label": "sturgeon",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 444,
+      "file_name": "imagenet_val_0444_label_536.jpg",
+      "ground_truth_id": 536,
+      "ground_truth_label": "dock, dockage, docking facility",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 445,
+      "file_name": "imagenet_val_0445_label_260.jpg",
+      "ground_truth_id": 260,
+      "ground_truth_label": "chow, chow chow",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 446,
+      "file_name": "imagenet_val_0446_label_790.jpg",
+      "ground_truth_id": 790,
+      "ground_truth_label": "shopping basket",
+      "width": 500,
+      "height": 380
+    },
+    {
+      "id": 447,
+      "file_name": "imagenet_val_0447_label_266.jpg",
+      "ground_truth_id": 266,
+      "ground_truth_label": "miniature poodle",
+      "width": 500,
+      "height": 500
+    },
+    {
+      "id": 448,
+      "file_name": "imagenet_val_0448_label_299.jpg",
+      "ground_truth_id": 299,
+      "ground_truth_label": "meerkat, mierkat",
+      "width": 1600,
+      "height": 1200
+    },
+    {
+      "id": 449,
+      "file_name": "imagenet_val_0449_label_879.jpg",
+      "ground_truth_id": 879,
+      "ground_truth_label": "umbrella",
+      "width": 500,
+      "height": 400
+    },
+    {
+      "id": 450,
+      "file_name": "imagenet_val_0450_label_740.jpg",
+      "ground_truth_id": 740,
+      "ground_truth_label": "power drill",
+      "width": 500,
+      "height": 389
+    },
+    {
+      "id": 451,
+      "file_name": "imagenet_val_0451_label_13.jpg",
+      "ground_truth_id": 13,
+      "ground_truth_label": "junco, snowbird",
+      "width": 500,
+      "height": 414
+    },
+    {
+      "id": 452,
+      "file_name": "imagenet_val_0452_label_60.jpg",
+      "ground_truth_id": 60,
+      "ground_truth_label": "night snake, Hypsiglena torquata",
+      "width": 500,
+      "height": 337
+    },
+    {
+      "id": 453,
+      "file_name": "imagenet_val_0453_label_773.jpg",
+      "ground_truth_id": 773,
+      "ground_truth_label": "saltshaker, salt shaker",
+      "width": 495,
+      "height": 371
+    },
+    {
+      "id": 454,
+      "file_name": "imagenet_val_0454_label_166.jpg",
+      "ground_truth_id": 166,
+      "ground_truth_label": "Walker hound, Walker foxhound",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 455,
+      "file_name": "imagenet_val_0455_label_422.jpg",
+      "ground_truth_id": 422,
+      "ground_truth_label": "barbell",
+      "width": 398,
+      "height": 375
+    },
+    {
+      "id": 456,
+      "file_name": "imagenet_val_0456_label_984.jpg",
+      "ground_truth_id": 984,
+      "ground_truth_label": "rapeseed",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 457,
+      "file_name": "imagenet_val_0457_label_74.jpg",
+      "ground_truth_id": 74,
+      "ground_truth_label": "garden spider, Aranea diademata",
+      "width": 482,
+      "height": 500
+    },
+    {
+      "id": 458,
+      "file_name": "imagenet_val_0458_label_781.jpg",
+      "ground_truth_id": 781,
+      "ground_truth_label": "scoreboard",
+      "width": 500,
+      "height": 500
+    },
+    {
+      "id": 459,
+      "file_name": "imagenet_val_0459_label_729.jpg",
+      "ground_truth_id": 729,
+      "ground_truth_label": "plate rack",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 460,
+      "file_name": "imagenet_val_0460_label_558.jpg",
+      "ground_truth_id": 558,
+      "ground_truth_label": "flute, transverse flute",
+      "width": 500,
+      "height": 332
+    },
+    {
+      "id": 461,
+      "file_name": "imagenet_val_0461_label_424.jpg",
+      "ground_truth_id": 424,
+      "ground_truth_label": "barbershop",
+      "width": 500,
+      "height": 500
+    },
+    {
+      "id": 462,
+      "file_name": "imagenet_val_0462_label_754.jpg",
+      "ground_truth_id": 754,
+      "ground_truth_label": "radio, wireless",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 463,
+      "file_name": "imagenet_val_0463_label_144.jpg",
+      "ground_truth_id": 144,
+      "ground_truth_label": "pelican",
+      "width": 500,
+      "height": 471
+    },
+    {
+      "id": 464,
+      "file_name": "imagenet_val_0464_label_562.jpg",
+      "ground_truth_id": 562,
+      "ground_truth_label": "fountain",
+      "width": 500,
+      "height": 341
+    },
+    {
+      "id": 465,
+      "file_name": "imagenet_val_0465_label_494.jpg",
+      "ground_truth_id": 494,
+      "ground_truth_label": "chime, bell, gong",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 466,
+      "file_name": "imagenet_val_0466_label_651.jpg",
+      "ground_truth_id": 651,
+      "ground_truth_label": "microwave, microwave oven",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 467,
+      "file_name": "imagenet_val_0467_label_780.jpg",
+      "ground_truth_id": 780,
+      "ground_truth_label": "schooner",
+      "width": 428,
+      "height": 252
+    },
+    {
+      "id": 468,
+      "file_name": "imagenet_val_0468_label_74.jpg",
+      "ground_truth_id": 74,
+      "ground_truth_label": "garden spider, Aranea diademata",
+      "width": 500,
+      "height": 413
+    },
+    {
+      "id": 469,
+      "file_name": "imagenet_val_0469_label_275.jpg",
+      "ground_truth_id": 275,
+      "ground_truth_label": "African hunting dog, hyena dog, Cape hunting dog, Lycaon pictus",
+      "width": 500,
+      "height": 351
+    },
+    {
+      "id": 470,
+      "file_name": "imagenet_val_0470_label_626.jpg",
+      "ground_truth_id": 626,
+      "ground_truth_label": "lighter, light, igniter, ignitor",
+      "width": 362,
+      "height": 500
+    },
+    {
+      "id": 471,
+      "file_name": "imagenet_val_0471_label_789.jpg",
+      "ground_truth_id": 789,
+      "ground_truth_label": "shoji",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 472,
+      "file_name": "imagenet_val_0472_label_443.jpg",
+      "ground_truth_id": 443,
+      "ground_truth_label": "bib",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 473,
+      "file_name": "imagenet_val_0473_label_303.jpg",
+      "ground_truth_id": 303,
+      "ground_truth_label": "long-horned beetle, longicorn, longicorn beetle",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 474,
+      "file_name": "imagenet_val_0474_label_540.jpg",
+      "ground_truth_id": 540,
+      "ground_truth_label": "drilling platform, offshore rig",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 475,
+      "file_name": "imagenet_val_0475_label_85.jpg",
+      "ground_truth_id": 85,
+      "ground_truth_label": "quail",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 476,
+      "file_name": "imagenet_val_0476_label_563.jpg",
+      "ground_truth_id": 563,
+      "ground_truth_label": "fountain pen",
+      "width": 333,
+      "height": 500
+    },
+    {
+      "id": 477,
+      "file_name": "imagenet_val_0477_label_421.jpg",
+      "ground_truth_id": 421,
+      "ground_truth_label": "bannister, banister, balustrade, balusters, handrail",
+      "width": 500,
+      "height": 500
+    },
+    {
+      "id": 478,
+      "file_name": "imagenet_val_0478_label_497.jpg",
+      "ground_truth_id": 497,
+      "ground_truth_label": "church, church building",
+      "width": 497,
+      "height": 500
+    },
+    {
+      "id": 479,
+      "file_name": "imagenet_val_0479_label_365.jpg",
+      "ground_truth_id": 365,
+      "ground_truth_label": "orangutan, orang, orangutang, Pongo pygmaeus",
+      "width": 200,
+      "height": 149
+    },
+    {
+      "id": 480,
+      "file_name": "imagenet_val_0480_label_400.jpg",
+      "ground_truth_id": 400,
+      "ground_truth_label": "academic gown, academic robe, judge's robe",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 481,
+      "file_name": "imagenet_val_0481_label_281.jpg",
+      "ground_truth_id": 281,
+      "ground_truth_label": "tabby, tabby cat",
+      "width": 550,
+      "height": 412
+    },
+    {
+      "id": 482,
+      "file_name": "imagenet_val_0482_label_474.jpg",
+      "ground_truth_id": 474,
+      "ground_truth_label": "cardigan",
+      "width": 332,
+      "height": 500
+    },
+    {
+      "id": 483,
+      "file_name": "imagenet_val_0483_label_115.jpg",
+      "ground_truth_id": 115,
+      "ground_truth_label": "sea slug, nudibranch",
+      "width": 500,
+      "height": 468
+    },
+    {
+      "id": 484,
+      "file_name": "imagenet_val_0484_label_684.jpg",
+      "ground_truth_id": 684,
+      "ground_truth_label": "ocarina, sweet potato",
+      "width": 500,
+      "height": 495
+    },
+    {
+      "id": 485,
+      "file_name": "imagenet_val_0485_label_500.jpg",
+      "ground_truth_id": 500,
+      "ground_truth_label": "cliff dwelling",
+      "width": 500,
+      "height": 484
+    },
+    {
+      "id": 486,
+      "file_name": "imagenet_val_0486_label_353.jpg",
+      "ground_truth_id": 353,
+      "ground_truth_label": "gazelle",
+      "width": 500,
+      "height": 473
+    },
+    {
+      "id": 487,
+      "file_name": "imagenet_val_0487_label_62.jpg",
+      "ground_truth_id": 62,
+      "ground_truth_label": "rock python, rock snake, Python sebae",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 488,
+      "file_name": "imagenet_val_0488_label_730.jpg",
+      "ground_truth_id": 730,
+      "ground_truth_label": "plow, plough",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 489,
+      "file_name": "imagenet_val_0489_label_405.jpg",
+      "ground_truth_id": 405,
+      "ground_truth_label": "airship, dirigible",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 490,
+      "file_name": "imagenet_val_0490_label_116.jpg",
+      "ground_truth_id": 116,
+      "ground_truth_label": "chiton, coat-of-mail shell, sea cradle, polyplacophore",
+      "width": 500,
+      "height": 263
+    },
+    {
+      "id": 491,
+      "file_name": "imagenet_val_0491_label_424.jpg",
+      "ground_truth_id": 424,
+      "ground_truth_label": "barbershop",
+      "width": 400,
+      "height": 500
+    },
+    {
+      "id": 492,
+      "file_name": "imagenet_val_0492_label_963.jpg",
+      "ground_truth_id": 963,
+      "ground_truth_label": "pizza, pizza pie",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 493,
+      "file_name": "imagenet_val_0493_label_865.jpg",
+      "ground_truth_id": 865,
+      "ground_truth_label": "toyshop",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 494,
+      "file_name": "imagenet_val_0494_label_528.jpg",
+      "ground_truth_id": 528,
+      "ground_truth_label": "dial telephone, dial phone",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 495,
+      "file_name": "imagenet_val_0495_label_240.jpg",
+      "ground_truth_id": 240,
+      "ground_truth_label": "Appenzeller",
+      "width": 500,
+      "height": 376
+    },
+    {
+      "id": 496,
+      "file_name": "imagenet_val_0496_label_157.jpg",
+      "ground_truth_id": 157,
+      "ground_truth_label": "papillon",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 497,
+      "file_name": "imagenet_val_0497_label_406.jpg",
+      "ground_truth_id": 406,
+      "ground_truth_label": "altar",
+      "width": 500,
+      "height": 366
+    },
+    {
+      "id": 498,
+      "file_name": "imagenet_val_0498_label_712.jpg",
+      "ground_truth_id": 712,
+      "ground_truth_label": "Petri dish",
+      "width": 333,
+      "height": 500
+    },
+    {
+      "id": 499,
+      "file_name": "imagenet_val_0499_label_390.jpg",
+      "ground_truth_id": 390,
+      "ground_truth_label": "eel",
+      "width": 500,
+      "height": 384
+    },
+    {
+      "id": 500,
+      "file_name": "imagenet_val_0500_label_365.jpg",
+      "ground_truth_id": 365,
+      "ground_truth_label": "orangutan, orang, orangutang, Pongo pygmaeus",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 501,
+      "file_name": "imagenet_val_0501_label_861.jpg",
+      "ground_truth_id": 861,
+      "ground_truth_label": "toilet seat",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 502,
+      "file_name": "imagenet_val_0502_label_104.jpg",
+      "ground_truth_id": 104,
+      "ground_truth_label": "wallaby, brush kangaroo",
+      "width": 500,
+      "height": 357
+    },
+    {
+      "id": 503,
+      "file_name": "imagenet_val_0503_label_424.jpg",
+      "ground_truth_id": 424,
+      "ground_truth_label": "barbershop",
+      "width": 500,
+      "height": 493
+    },
+    {
+      "id": 504,
+      "file_name": "imagenet_val_0504_label_403.jpg",
+      "ground_truth_id": 403,
+      "ground_truth_label": "aircraft carrier, carrier, flattop, attack aircraft carrier",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "id": 505,
+      "file_name": "imagenet_val_0505_label_806.jpg",
+      "ground_truth_id": 806,
+      "ground_truth_label": "sock",
+      "width": 430,
+      "height": 500
+    },
+    {
+      "id": 506,
+      "file_name": "imagenet_val_0506_label_343.jpg",
+      "ground_truth_id": 343,
+      "ground_truth_label": "warthog",
+      "width": 500,
+      "height": 334
+    },
+    {
+      "id": 507,
+      "file_name": "imagenet_val_0507_label_69.jpg",
+      "ground_truth_id": 69,
+      "ground_truth_label": "trilobite",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "id": 508,
+      "file_name": "imagenet_val_0508_label_741.jpg",
+      "ground_truth_id": 741,
+      "ground_truth_label": "prayer rug, prayer mat",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 509,
+      "file_name": "imagenet_val_0509_label_891.jpg",
+      "ground_truth_id": 891,
+      "ground_truth_label": "waffle iron",
+      "width": 362,
+      "height": 434
+    },
+    {
+      "id": 510,
+      "file_name": "imagenet_val_0510_label_185.jpg",
+      "ground_truth_id": 185,
+      "ground_truth_label": "Norfolk terrier",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "id": 511,
+      "file_name": "imagenet_val_0511_label_728.jpg",
+      "ground_truth_id": 728,
+      "ground_truth_label": "plastic bag",
+      "width": 500,
+      "height": 500
+    },
+    {
+      "id": 512,
+      "file_name": "imagenet_val_0512_label_816.jpg",
+      "ground_truth_id": 816,
+      "ground_truth_label": "spindle",
+      "width": 446,
+      "height": 500
+    }
+  ],
+  "download_summary": {
+    "downloaded": 512
+  }
+}

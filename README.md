@@ -1,4 +1,4 @@
-# SOL-vAccel integration and evaluation in 5TONIC - Publication
+# SOL-vAccel integration and evaluation in 5TONIC - IROS Publication
 
 ## Build docker images
 Build the container image according to the target device:

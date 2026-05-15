@@ -253,6 +253,9 @@ class DockerContainerMonitor:
         self._last_sample = None
 
         if self.csv_path:
+            parent = os.path.dirname(self.csv_path)
+            if parent:
+                os.makedirs(parent, exist_ok=True)
             is_new = not os.path.exists(self.csv_path) or os.path.getsize(self.csv_path) == 0
             self._csv_file = open(self.csv_path, "a", newline="")
             fieldnames = [

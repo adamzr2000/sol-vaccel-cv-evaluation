@@ -236,17 +236,50 @@ def monitor_loop(
             for i, h in enumerate(gpu_handles):
                 try:
                     pwr = pynvml.nvmlDeviceGetPowerUsage(h) / 1000.0
+                except Exception as e:
+                    pwr = None
+                    logger.warning(f"[GPU {i}] power usage unavailable: {e}")
+
+                try:
                     limit = pynvml.nvmlDeviceGetEnforcedPowerLimit(h) / 1000.0
+                except Exception as e:
+                    limit = None
+                    logger.warning(f"[GPU {i}] power limit unavailable: {e}")
+
+                try:
                     util = pynvml.nvmlDeviceGetUtilizationRates(h)
+                    util_gpu = util.gpu
+                    util_mem = util.memory
+                except Exception as e:
+                    util_gpu = None
+                    util_mem = None
+                    logger.warning(f"[GPU {i}] utilization unavailable: {e}")
+
+                try:
                     mem = pynvml.nvmlDeviceGetMemoryInfo(h)
+                    mem_used_mb = round(mem.used / 1024**2, 2)
+                except Exception as e:
+                    mem_used_mb = None
+                    logger.warning(f"[GPU {i}] memory info unavailable: {e}")
+
+                try:
                     temp = pynvml.nvmlDeviceGetTemperature(h, pynvml.NVML_TEMPERATURE_GPU)
-                    
-                    if w_gpu:
-                        w_gpu.writerow({"timestamp": ts, "timestamp_iso": ts_iso, "gpu_index": i, "gpu_name": gpu_names[i], "power_draw_w": round(pwr, 2), "power_limit_w": round(limit, 2), "util_gpu_percent": util.gpu, "util_mem_percent": util.memory, "mem_used_mb": round(mem.used / 1024**2, 2), "temp_c": temp})
-                    if stdout:
-                        logger.info(f"[GPU {i}] {pwr:.2f} W | Util {util.gpu}% | Temp {temp}C")
-                except Exception:
-                    pass
+                except Exception as e:
+                    temp = None
+                    logger.warning(f"[GPU {i}] temperature unavailable: {e}")
+
+                if w_gpu:
+                    w_gpu.writerow({"timestamp": ts, "timestamp_iso": ts_iso, "gpu_index": i, "gpu_name": gpu_names[i], "power_draw_w": round(pwr, 2) if pwr is not None else None, "power_limit_w": round(limit, 2) if limit is not None else None, "util_gpu_percent": util_gpu, "util_mem_percent": util_mem, "mem_used_mb": mem_used_mb, "temp_c": temp})
+                if stdout:
+                    parts = []
+                    if pwr is not None:
+                        parts.append(f"{pwr:.2f} W")
+                    if util_gpu is not None:
+                        parts.append(f"Util {util_gpu}%")
+                    if temp is not None:
+                        parts.append(f"Temp {temp}C")
+                    if parts:
+                        logger.info(f"[GPU {i}] " + " | ".join(parts))
 
         # NET BLOCK
         if "net" in mode and last_net_io:
@@ -315,8 +348,7 @@ def start(req: StartRequest):
 
     run_idx = 1
     if req.csv_dir:
-        if not os.path.exists(req.csv_dir):
-            raise HTTPException(status_code=400, detail="csv_dir does not exist")
+        os.makedirs(req.csv_dir, exist_ok=True)
         run_idx = get_next_run_index(req.csv_dir, req.tag)
 
     state.stop_event.clear()

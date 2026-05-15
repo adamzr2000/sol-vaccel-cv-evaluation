@@ -59,7 +59,7 @@ def get_benchmark_config():
     if is_video_model:
         model_type = "video_classification"
     elif core_model_name in ["resnet50", "mobilenet_v3_large", "swin_t", "swin_s", "swin_v2_b"]:
-        model_type = "image_classification"
+        model_type = "classification"
     elif core_model_name in detection_models:
         model_type = "object_detection"
     else:

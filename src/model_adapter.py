@@ -356,14 +356,13 @@ class PyTorchBaselineAdapter(BaseModelAdapter):
         # Fair timing vs SOL: SOL takes CPU (NumPy) buffers and returns CPU buffers,
         # so its "inference time" includes CPU↔GPU transfers. We do the same here by
         # moving input to GPU and bringing output back to CPU inside this function.
-        input_tensor = self._maybe_to_device(input_tensor)
-        
-        # 2. Compute
-        output = self.model_final(input_tensor)
-            
+        with torch.inference_mode():
+            input_tensor = self._maybe_to_device(input_tensor)
+            output = self.model_final(input_tensor)
+
         if isinstance(output, (tuple, list)):
             output = output[0]
-            
+
         # Bring results to CPU inside the timed region (matches SOL output buffers).
         return output.detach().cpu()
 

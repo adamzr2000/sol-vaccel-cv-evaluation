@@ -43,6 +43,7 @@ RUN python3 -m pip install --upgrade pip "setuptools>=70.0.0" && \
     python3 -m pip install \
       "numpy<2" \
       psutil \
+      opencv-python-headless \
       ultralytics itsdangerous python-dotenv requests \
       pandas tqdm seaborn gitpython
 

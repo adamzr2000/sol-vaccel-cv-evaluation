@@ -7,10 +7,24 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      ca-certificates curl wget
+
+# CUDA toolkit (nvcc + dev headers) — required for AOTInductor offline compilation
+RUN wget -q -O /tmp/cuda-keyring.deb \
+      https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb && \
+    dpkg -i /tmp/cuda-keyring.deb && rm /tmp/cuda-keyring.deb && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+      cuda-nvcc-12-8 cuda-cudart-dev-12-8 && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+ENV CUDA_HOME=/usr/local/cuda
+
 # System deps
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-      ca-certificates curl wget \
       cmake make git gcc g++ binutils build-essential pkg-config \
       libmpfr-dev libssl-dev libcurl4-openssl-dev libfftw3-dev \
       python3 python3-pip python3-dev python3-setuptools python3-venv \
@@ -43,7 +57,7 @@ RUN python3 -m pip install --upgrade pip "setuptools>=70.0.0" && \
     python3 -m pip install \
       "numpy<2" psutil opencv-python-headless \
       ultralytics itsdangerous python-dotenv requests \
-      pandas tqdm seaborn gitpython && \
+      pandas tqdm seaborn gitpython click && \
     python3 -m pip install --pre \
       torch==2.8.0 \
       torchvision==0.23.0 \

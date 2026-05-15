@@ -5,6 +5,7 @@ app/models/**/*
 !app/models/**/.gitignore
 
 sol-installers/
+vaccel-plugin-torch/
 
 __pycache__/
 .sol/
@@ -15,6 +16,8 @@ app/static/videos/uploads/
 
 dds
 .db3
+
+*.pt2
 
 # ignore media artifacts under src/data
 src/data/**/*.jpg

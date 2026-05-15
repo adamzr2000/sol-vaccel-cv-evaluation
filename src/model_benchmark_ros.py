@@ -224,11 +224,12 @@ def main():
 
     local_mode = "gpu" if (TORCH_DEVICE.type == "cuda") else "cpu"
     is_vaccel_remote_run = (HOST == "robot" and "remote" in BACKEND)
+    REMOTE_HOST = os.environ.get("REMOTE_HOST", "edge-asus")
 
     if is_vaccel_remote_run:
-        run_id = f"{prefix}_{CORE_MODEL_NAME}_{BACKEND}_{HOST}_{local_mode}_target-{TARGET_DEVICE}"
+        run_id = f"{prefix}_{CORE_MODEL_NAME}_{BACKEND}_{local_mode}_target-{REMOTE_HOST}-{TARGET_DEVICE}"
     else:
-        run_id = f"{prefix}_{CORE_MODEL_NAME}_{BACKEND}_{HOST}_{local_mode}"
+        run_id = f"{prefix}_{CORE_MODEL_NAME}_{BACKEND}_{local_mode}"
 
     run_dir = RESULTS_DIR / run_id
 
@@ -319,7 +320,7 @@ def main():
                 adapter=adapter,
                 sample_input=dummy_input,
                 torch_device=TORCH_DEVICE,
-                iters=int(os.environ.get("PTC_STABILIZE_ITERS", "10")),
+                iters=int(os.environ.get("PTC_STABILIZE_ITERS", "20")),
                 do_postprocess=False,
             )
 
@@ -327,6 +328,10 @@ def main():
     if cfg['monitor_resources']:
         docker_csv_dir = str(Path(cfg['docker_csv_base']) / cfg['host'])
         system_csv_dir = str(Path(cfg['system_csv_base']) / cfg['host'])
+
+        # Ensure local CSV directories exist before contacting collectors
+        Path(docker_csv_dir).mkdir(parents=True, exist_ok=True)
+        Path(system_csv_dir).mkdir(parents=True, exist_ok=True)
 
         # Define network interface mapping
         host_net_iface_map = {
@@ -342,12 +347,12 @@ def main():
         start_system_monitor(run_id, cfg['system_endpoint'], system_csv_dir, local_sys_mode, local_net_iface)
 
         if is_vaccel_remote_run:
-            vaccel_remote_run_id = f"{prefix}_{cfg['core_model_name']}_{cfg['backend']}_edge-asus_{cfg['target_device']}"
-            rem_docker_csv_dir = str(Path(cfg['docker_csv_base']) / "edge-asus")
-            rem_system_csv_dir = str(Path(cfg['system_csv_base']) / "edge-asus")
+            vaccel_remote_run_id = f"{prefix}_{cfg['core_model_name']}_{cfg['backend']}_{cfg['target_device']}"
+            rem_docker_csv_dir = str(Path(cfg['docker_csv_base']) / REMOTE_HOST)
+            rem_system_csv_dir = str(Path(cfg['system_csv_base']) / REMOTE_HOST)
 
             remote_sys_mode = [cfg['target_device'], "net"]
-            remote_net_iface = host_net_iface_map.get("edge-asus")
+            remote_net_iface = host_net_iface_map.get(REMOTE_HOST)
 
             start_docker_monitor(vaccel_remote_run_id, cfg['remote_docker_endpoint'], rem_docker_csv_dir, "torchvision-app-agent", "torchvision-app-agent_")
             start_system_monitor(vaccel_remote_run_id, cfg['remote_system_endpoint'], rem_system_csv_dir, remote_sys_mode, remote_net_iface)

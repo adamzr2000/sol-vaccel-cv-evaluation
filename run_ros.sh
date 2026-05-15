@@ -78,9 +78,10 @@ SOL_LIBS="/src/models/deeplabv3_resnet50_sol/${LIB_TYPE}:\
 # For GPU runs: prefer system CUDA, but add venv NVIDIA runtime libs (cudart + cudnn)
 if [[ "$MODE" == "gpu" ]]; then
   CUDA_HOME="/usr/local/cuda"
-  CUDA_LIBS="${CUDA_HOME}/lib64:/.venv/lib/python3.10/site-packages/nvidia/cuda_runtime/lib:/.venv/lib/python3.10/site-packages/nvidia/cudnn/lib"
-  # Optional if you ever see cublas missing:
-  # CUDA_LIBS="${CUDA_LIBS}:/.venv/lib/python3.10/site-packages/nvidia/cublas/lib"
+  CUDA_LIBS="${CUDA_HOME}/lib64:\
+/.venv/lib/python3.10/site-packages/nvidia/cuda_runtime/lib:\
+/.venv/lib/python3.10/site-packages/nvidia/cudnn/lib:\
+/.venv/lib/python3.10/site-packages/nvidia/cublas/lib"
 else
   CUDA_LIBS=""
 fi
@@ -123,14 +124,24 @@ cat > "$HOST_DDS_CFG_DIR/cyclonedds.xml" <<EOF
 </CycloneDDS>
 EOF
 
-EXTRA_VOL_ARGS=( --volume="${HOST_DDS_CFG_DIR}:${CONT_DDS_CFG_DIR}:ro" )
+EXTRA_VOL_ARGS=(
+  --volume="${HOST_DDS_CFG_DIR}:${CONT_DDS_CFG_DIR}:ro"
+)
 EXTRA_ENV_ARGS=(
   --env="RMW_IMPLEMENTATION=${RMW}"
   --env="CYCLONEDDS_URI=file://${CONT_DDS_CFG_DIR}/cyclonedds.xml"
+  --env="VACCEL_PLUGINS=libvaccel-exec.so:libvaccel-rpc.so"
 )
 
 if [[ "$MODE" == "gpu" ]]; then
+  # vaccel-torch plugin: required for vaccel-*-ptc backends (CUDA AOTI only)
+  VACCEL_TORCH_SO="$(pwd)/vaccel-plugin-torch/build-cont/src/libvaccel-torch.so"
+  EXTRA_VOL_ARGS+=( --volume="${VACCEL_TORCH_SO}:/usr/local/lib/libvaccel-torch.so:ro" )
+  EXTRA_ENV_ARGS+=( --env="VACCEL_PLUGINS=libvaccel-exec.so:libvaccel-rpc.so:libvaccel-torch.so" )
   EXTRA_ENV_ARGS+=( --env="CUDA_HOME=${CUDA_HOME}" )
+  # /usr/local/lib is not in the container's LD_LIBRARY_PATH by default;
+  # add it so dlopen can find libvaccel-torch.so at runtime.
+  LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib"
 fi
 
 docker run -it --rm \

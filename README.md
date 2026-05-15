@@ -1,325 +1,232 @@
-# SOL-vAccel integration and evaluation in 5TONIC - Publication
+# SOL-vAccel CV Evaluation
 
-## Build docker images
-Build the container image according to the target device:
+## Build
 
 ```bash
+# Non-ROS
 sudo docker build -f dockerfile-torchvision-cpu . -t torchvision-app:cpu
 sudo docker build -f dockerfile-torchvision-gpu . -t torchvision-app:gpu
 
-# vAccel agent on the GPU host
+# vAccel remote agent (GPU host)
 sudo docker build -f dockerfile-torchvision-gpu-agent . -t torchvision-app:agent
 
-# ROS integration
+# ROS
 sudo docker build -f dockerfile-torchvision-ros-cpu . -t torchvision-ros-app:cpu
 sudo docker build -f dockerfile-torchvision-ros-gpu . -t torchvision-ros-app:gpu
 ```
 
-## Download models
-
-Models are provided as `models.tar.gz`, which extracts into a `models/` directory.
-
-1. Download `models.tar.gz` from the link below.
-2. Copy `models.tar.gz` into `src/`.
-3. Replace `src/models/` with the extracted directory:
-   ```bash
-   cd src
-   rm -rf models
-   tar -xzf models.tar.gz
-   ```
-   
-- [Download link](https://drive.google.com/file/d/1pte0m_6HKMS40C-olHXxqNc0_EAQssZU/view?usp=sharing)
-- [Download link (rc4)](https://drive.google.com/file/d/1z1Av5hBn2I1S4mdNuMO88p3VpbLRTtrR/view?usp=sharing)
-
-### Generate vAccel wrappers
-
-To generate vAccel wrappers for the supported models from a directory of stock
-SOL models, launch the gpu container:
+### Generate vAccel SOL wrappers
 
 ```bash
 ./run.sh gpu
-```
-
-and run the provided script:
-
-```bash
 python3 /scripts/sol_vaccel_wrappers/gen_sol_vaccel_wrappers.py models
 ```
 
-## Run model benchmark
-
-### 1. Start the container
-
-Start the container in CPU or GPU mode:
-
-```bash
-./run.sh cpu
-# or
-./run.sh gpu
-```
-
-#### vAccel remote setup
-
-To use the vAccel remote backend, first start the agent container on the remote
-GPU host:
-
-```bash
-./run_agent.sh 9125
-# or
-./run_agent.sh 9125 --debug
-```
-
-where `9125` is the port to use. If the port is omitted, `9125` will be used by
-default.
-
-Consequently, specify the remote agent's address on the (local) host when
-starting the main container:
-
-```bash
-./run.sh cpu 10.5.1.20:9125
-# or
-./run.sh gpu 10.5.1.20:9125
-```
-
-### 2. Run model benchmark script
-
-Execute `model_benchmark.py` with the following environment variables.
-
-- **DEVICE**: execution device  
-  - `cpu` or `gpu`
-  - If using `cpu` on ASUS G815 laptop, set `OMP_NUM_THREADS=12`
-
-- **HOST**: execution host identifier  
-  - Default: `edge-asus`
-
-- **MODEL**: neural network model to benchmark  
-  - **Segmentation**:  
-    `deeplabv3_resnet50`, `deeplabv3_resnet101`, `fcn_resnet50`, `fcn_resnet101`,
-    `deeplabv3_mobilenet_v3_large`
-  - **Image classification**:  
-    `resnet50`, `swin_t`, `swin_s`, `swin_v2_b`, `swin_s`,
-    `mobilenet_v3_large`
-  - **Video classification**:  
-    `swin3d_t`, `swin3d_s`, `swin3d_b`, `mc3_18`, `r3d_18`, `r2dplus1d_18` 
-  - **Object detection**:  
-    `yolov5s`
-
-- **BACKEND**: inference backend  
-  - `stock` (default), `ptc`, `sol`, `vaccel-local-sol`, `vaccel-remote-sol`
-
-- **ENABLE_VACCEL_PROFILER**: enable vAccel execution profiling *(vAccel SOL models only)*  
-  - `true` or `false` (default: `false`)
-
-- **SOL_RUN_MODE**: SOL execution mode *(SOL models only)*  
-  - `2` → **Option 2 (default)**: explicit buffers per call  
-    - Uses `run(*args)` (explicit input/output buffers each iteration)  
-    - By default, no `set_IO` is required  
-    - *(GPU only)* may still apply `set_IO(...)` + `optimize(2)` for supported models to improve performance  
-  - `3` → **Option 3**: bound buffers + optimized run  
-    - Calls `set_IO(...)` once  
-    - Uses `run()` (no args) + `get_output()` / `sync()`  
-    - Enables GPU optimizations (`optimize(2)` on GPU)  
-  - Default: `2`
-
-- **NUM_IMAGES**: number of images to benchmark  
-  - Uses the first *N* images (sorted) from `data/images`  
-  - Default: `64`
-
-- **NUM_VIDEOS**: number of videos to benchmark (video classification models only)  
-  - Uses the first *N* videos (sorted) from `data/videos`  
-  - Default: `10`
-
-- **EXPORT_RESULTS**: save benchmark results  
-  - Outputs `benchmark_data.csv` and `benchmark_summary.json`  
-  - `true` or `false` (default: `false`)
-
-- **RUN_TAG**: experiment run prefix identifier *(optional)*  
-  - Used to tag the output directory under  
-    `/results/experiments/model-stats`  
-  - The final directory name is always auto-generated as:  
-    `<host>/<RUN_TAG>_<model>_<backend>_<host>_<device>`
-  - If not set, the current `<timestamp>` is used as the prefix.
-
-- **EXPORT_OUTPUT_IMAGES**: save output images  
-  - Requires `EXPORT_RESULTS=true`  
-  - `true` or `false` (default: `false`)
-
-Examples:
-
-```shell
-# Pytorch image classification (CPU)
-DEVICE=cpu BACKEND=stock MODEL=resnet50 OMP_NUM_THREADS=12 python3 model_benchmark.py
-# Pytorch image classification (GPU)
-DEVICE=gpu BACKEND=stock MODEL=resnet50 python3 model_benchmark.py
-# SOL image classification (GPU)
-DEVICE=gpu BACKEND=sol MODEL=resnet50 python3 model_benchmark.py
-# vAccel remote + SOL image classification (GPU)
-DEVICE=gpu BACKEND=vaccel-remote-sol MODEL=resnet50 python3 model_benchmark.py
-
-
-EXPERIMENT_DURATION_SEC=30 DEVICE=gpu BACKEND=stock MODEL=resnet50 python3 model_benchmark_ros.py
-```
-
-> Note: Results and images are not saved by default to avoid unnecessary disk usage. Set `EXPORT_RESULTS=1` to save benchmark metrics, and also set `EXPORT_OUTPUT_IMAGES=1` to store output images in the [results/experiments/model-stats](./results/experiments/model-stats/) directory.
-
 ---
 
-## Run model benchmark with resource consumption
+## ROS Benchmark
 
-### 1. Start the monitoring service
+All commands below run **inside the container** from `/src`. Start the container with `./run_ros.sh` before running experiments.
 
-See [monitoring](./monitoring)
+### Setup
 
-Start the `docker-stats-collector` and `system-stats-collector` containers:
+#### Monitoring services (on each host, before experiments that capture resource stats)
 
 ```bash
-./run_monitoring.sh edge
-# or
-./run_monitoring.sh robot
+./run_monitoring.sh edge    # docker-stats-collector + system-stats-collector on edge
+./run_monitoring.sh robot   # same on robot
 ```
 
-### 2. Start the container
+See [monitoring/](./monitoring) for details.
 
-Start the container in CPU or GPU mode:
-
-```bash
-./run.sh cpu
-# or
-./run.sh gpu
-```
+#### Benchmark container
 
 ```bash
-# robot
-./run_ros.sh cpu --iface enp2s0
-# edge
+# Edge
+./run_ros.sh cpu --iface enp130s0
 ./run_ros.sh gpu --iface enp130s0
+
+# Robot (always CPU)
+./run_ros.sh cpu --iface ue0
 ```
 
-### 2. Run benchmark script
-
-```shell
-./evaluate_models.sh --backend stock --host edge-asus --device cpu --run-tag run1 --sleep 10
-./evaluate_models.sh --backend vaccel-local-sol --host edge-asus --device cpu --run-tag run1 --sleep 10
-```
+For `vaccel-remote-*` backends, also start the vAccel agent on the edge host and point the robot container at it:
 
 ```bash
-./evaluate_models.sh --backend vaccel-local-sol --host edge-asus --device cpu --run-tag run1 --sleep 10
+# On edge host
+./run_agent.sh 9125
+
+# On robot (--remote defaults to 10.5.1.20:9125 = edge-asus)
+./run_ros.sh cpu --iface ue0                              # → edge-asus
+./run_ros.sh cpu --remote 10.5.1.21:9125 --iface ue0      # → edge-xtreme
 ```
 
-### GPU laptop specs
-```shell
-nextnet@asus-g815:~$ nvidia-smi
-Mon Feb 16 17:48:56 2026
-+-----------------------------------------------------------------------------------------+
-| NVIDIA-SMI 580.95.05              Driver Version: 580.95.05      CUDA Version: 13.0     |
-+-----------------------------------------+------------------------+----------------------+
-| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
-| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
-|                                         |                        |               MIG M. |
-|=========================================+========================+======================|
-|   0  NVIDIA GeForce RTX 5080 ...    Off |   00000000:02:00.0 Off |                  N/A |
-| N/A   41C    P8              9W /   80W |     181MiB /  16303MiB |      0%      Default |
-|                                         |                        |                  N/A |
-+-----------------------------------------+------------------------+----------------------+
+---
 
-+-----------------------------------------------------------------------------------------+
-| Processes:                                                                              |
-|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
-|        ID   ID                                                               Usage      |
-|=========================================================================================|
-|    0   N/A  N/A            2433      G   /usr/lib/xorg/Xorg                      145MiB |
-|    0   N/A  N/A            2765      G   /usr/bin/gnome-shell                     14MiB |
-+-----------------------------------------------------------------------------------------+
-nextnet@asus-g815:~$ uname -a
-Linux asus-g815 6.14.0-37-generic #37~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Nov 20 10:25:38 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+### Phase 1 — Edge isolation (run on each edge host)
+
+**Goal:** measure pure inference latency per backend on edge hardware, without RPC overhead. Monitoring is disabled; only `benchmark_summary.json` is saved for later latency breakdown analysis.
+
+Run on **edge-asus** (repeat with `--host edge-xtreme` on that machine):
+
+```bash
+./evaluate_models_ros.sh --host edge-asus --device cpu --backend vaccel-local-sol --run-tag iso --no-monitoring
+./evaluate_models_ros.sh --host edge-asus --device gpu --backend vaccel-local-sol --run-tag iso --no-monitoring
+./evaluate_models_ros.sh --host edge-asus --device cpu --backend vaccel-local-ptc --run-tag iso --no-monitoring
+./evaluate_models_ros.sh --host edge-asus --device gpu --backend vaccel-local-ptc --run-tag iso --no-monitoring
 ```
 
-### Model I/O quick reference
-
-Quick reminder of **input/output shapes and their sizes** (based on [model_adapter.py](./src/model_adapter.py), assuming **float32 = 4 B**, **uint8 = 1 B**).
-
-#### Object Detection — `yolov5s`
-
-* **Input to model**
-  Shape: `(1, 3, 640, 640)` (float32)
-  **Size:** **≈ 4.69 MiB**
-
-* **Raw model output (predictions)** 
-  Shape: `(1, 25200, 85)` (float32)
-  **Size:** **≈ 8.17 MiB**
-
-* **Postprocessed output (returned by app)**
-  Dictionary containing `N` detected objects: `boxes` (float32), `scores` (float32), and `classes` (int64).
-  **Size:** **≈ 28 B per detected object (negligible)**
-
 ---
 
-#### Segmentation (2D) — `deeplabv3_resnet50`, `fcn_resnet50`
+### Phase 2 — Robot local (run on robot)
 
-* **Input to model**
-  Shape: `(1, 3, 224, 224)` (float32)
-  **Size:** **≈ 588 KiB**
+**Goal:** measure robot-side inference latency for vaccel-local backends (CPU only). Captures robot resource usage.
 
-* **Raw model output (logits)**
-  Shape: `(1, 21, 224, 224)` (float32)
-  **Size:** **≈ 4.02 MiB**
-
-* **SOL extra buffer (aux output, segmentation only)**
-  Shape: `(1, 21, 224, 224)` (float32)
-  **Size:** **≈ 4.02 MiB**
-
-* **Postprocessed output (returned by app)**
-  Shape: `(224, 224)` class IDs (uint8)
-  **Size:** **≈ 49 KiB**
-
----
-
-#### Image classification — `resnet50`, `mobilenet_v3_large`, `swin_t`
-
-* **Input to model**
-  Shape: `(1, 3, 224, 224)` (float32)
-  **Size:** **≈ 602 KB**
-
-* **Raw model output (logits)**
-  Shape: `(1, 1000)` (float32)
-  **Size:** **≈ 4 KB**
-
-* **Postprocessed output (returned by app)**
-  `top_class` (int64) + `top_prob` (float32)
-  **Size:** **≈ 12 B (negligible)**
-
----
-
-#### Video classification — `mc3_18`, `r3d_18`
-
-* **Input to model**
-  Shape: `(1, 3, 16, 112, 112)` (float32)
-  **Size:** **≈ 2.40 MB**
-
-* **Raw model output (logits)**
-  Shape: `(1, 400)` (float32)
-  **Size:** **≈ 1.6 KB**
-
-* **Postprocessed output (returned by app)**
-  `top_class` (int64) + `top_prob` (float32)
-  **Size:** **≈ 12 B (negligible)**
-
----
-
-## Required fix for `sol_mobilenet_v3_large` (SOL rc4 + cuDNN Graph)
-
-The GPU deployment of **`sol_mobilenet_v3_large`** included in this repository
-(`libsol-dnn-cudnn-deployment-0.8.0rc4-9.1.so`) is built against **cuDNN Graph 9.1.x**.
-
-If the environment installs **PyTorch nightly / cu128**, it pulls **cuDNN 9.10.x** by default.
-This causes `sol_mobilenet_v3_large.py` to fail at runtime with:
-
-`CUDNN_STATUS_BAD_PARAM` (from `api_v9_graph.cpp`)
-
-To run `sol_mobilenet_v3_large` correctly, **cuDNN must be downgraded to 9.1.1.17**:
-
-```shell
-# On torchvision-app:gpu container
-python3 -m pip install --no-cache-dir --force-reinstall \
-  "nvidia-cudnn-cu12==9.1.1.17" --no-deps
+```bash
+./evaluate_models_ros.sh --host robot --device cpu --backend vaccel-local-sol --run-tag run1
+./evaluate_models_ros.sh --host robot --device cpu --backend vaccel-local-ptc --run-tag run1
 ```
+
+---
+
+### Phase 3 — Robot remote (run on robot)
+
+**Goal:** measure end-to-end latency (robot preprocessing + RPC transport + edge inference + return) with full resource monitoring on both robot and edge simultaneously.
+
+Requires: monitoring running on both hosts, agent running on edge, robot container started with correct `--remote` address.
+
+```bash
+# → edge-asus GPU
+./evaluate_models_ros.sh --host robot --device gpu --backend vaccel-remote-sol --run-tag run1 --remote-host edge-asus
+./evaluate_models_ros.sh --host robot --device gpu --backend vaccel-remote-ptc --run-tag run1 --remote-host edge-asus
+
+# → edge-xtreme GPU  (container started with --remote 10.5.1.21:9125)
+./evaluate_models_ros.sh --host robot --device gpu --backend vaccel-remote-sol --run-tag run1 --remote-host edge-xtreme
+./evaluate_models_ros.sh --host robot --device gpu --backend vaccel-remote-ptc --run-tag run1 --remote-host edge-xtreme
+```
+
+---
+
+### Results layout
+
+```
+results/experiments/
+  model-stats/{host}/{run_id}/benchmark_summary.json   ← latency + FPS stats
+  docker-stats/{host}/torchvision-app_{run_id}.csv     ← container CPU/mem
+  system-stats/{host}/{run_id}.csv                     ← host CPU or GPU stats
+  system-stats/{host}/{run_id}_net.csv                 ← network usage
+```
+
+For remote runs (Phase 3), edge-side stats are captured under `docker-stats/{remote-host}/` and `system-stats/{remote-host}/` simultaneously.
+
+`run_id` format:
+- Local: `{tag}_{model}_{backend}_{device}` — e.g. `iso_resnet50_vaccel-local-sol_gpu`
+- Remote (robot side): `{tag}_{model}_{backend}_{local-device}_target-{remote-host}-{device}` — e.g. `run1_resnet50_vaccel-remote-sol_cpu_target-edge-asus-gpu`
+- Remote (edge side): `{tag}_{model}_{backend}_{device}` — e.g. `run1_resnet50_vaccel-remote-sol_gpu`
+
+**Other options:**
+```bash
+--model resnet50,swin_t    # run a subset of models
+--no-export                # disable both export and monitoring (dry run)
+--sleep N                  # seconds between model runs (default: 20)
+```
+
+---
+
+## Backend reference
+
+| Backend | Adapter | Compilation | Inference path |
+|---|---|---|---|
+| `stock` | `PyTorchBaselineAdapter` | None — eager PyTorch | Direct Python call |
+| `ptc` | `PyTorchBaselineAdapter` | JIT at runtime via `torch.compile` (Inductor) | Direct Python call to compiled graph |
+| `sol` | `SolAdapter` | Offline (SOL compiler) | SOL C library via dlopen |
+| `vaccel-local-torch` | `VaccelPyTorchAdapter` | None — loads TorchScript `.torchscript` | vAccel TORCH plugin (local) |
+| `vaccel-local-ptc` | `VaccelPyTorchAdapter` | Offline AOTI — loads `.pt2` | vAccel TORCH plugin (local) |
+| `vaccel-remote-torch` | `VaccelPyTorchAdapter` | None — loads TorchScript `.torchscript` | vAccel TORCH + RPC → remote agent |
+| `vaccel-remote-ptc` | `VaccelPyTorchAdapter` | Offline AOTI — loads `.pt2` | vAccel TORCH + RPC → remote agent |
+| `vaccel-local-sol` | `VaccelSolAdapter` | Offline (SOL compiler) | vAccel EXEC plugin (local) |
+| `vaccel-remote-sol` | `VaccelSolAdapter` | Offline (SOL compiler) | vAccel EXEC + RPC → remote agent |
+
+**Notes:**
+- `ptc` and `vaccel-local/remote-ptc` both use Inductor under the hood, but differ in when compilation happens (JIT vs offline AOT) and the dispatch path. `ptc` sets `cudnn.benchmark=True` and `float32_matmul_precision=high`; `vaccel-ptc` does not (optimizations are baked into the `.pt2` at compile time). Each `vaccel-*` inference call also pays a `Tensor.from_torch` / `as_torch` conversion cost that bare `ptc` does not.
+- `stock` vs `ptc` isolates the cost of Inductor compilation/optimization.
+- `vaccel-local-*` vs `vaccel-remote-*` isolates RPC transport overhead.
+- `ptc` vs `vaccel-local-ptc` is **not a fair apples-to-apples comparison** due to the above differences; prefer comparing within the same dispatch family.
+
+---
+
+## Model I/O reference
+
+Input/output shapes and sizes (float32 = 4 B, uint8 = 1 B). See [model_adapter.py](./src/model_adapter.py).
+
+### Object Detection — `yolov5s`
+
+| | Shape | Size |
+|---|---|---|
+| Input | `(1, 3, 640, 640)` float32 | ≈ 4.69 MiB |
+| Raw output | `(1, 25200, 85)` float32 | ≈ 8.17 MiB |
+| Postprocessed | `N` objects: boxes + scores + classes | ≈ 28 B/object |
+
+### Segmentation — `deeplabv3_resnet50/101`, `fcn_resnet50/101`
+
+| | Shape | Size |
+|---|---|---|
+| Input | `(1, 3, 224, 224)` float32 | ≈ 588 KiB |
+| Raw output | `(1, 21, 224, 224)` float32 | ≈ 4.02 MiB |
+| SOL aux buffer | `(1, 21, 224, 224)` float32 | ≈ 4.02 MiB |
+| Postprocessed | `(224, 224)` uint8 class IDs | ≈ 49 KiB |
+
+### Image Classification — `resnet50`, `swin_t`, `swin_s`, `swin_v2_b`
+
+| | Shape | Size |
+|---|---|---|
+| Input | `(1, 3, 224, 224)` float32 | ≈ 602 KB |
+| Raw output | `(1, 1000)` float32 | ≈ 4 KB |
+| Postprocessed | top class (int64) + prob (float32) | ≈ 12 B |
+
+### Video Classification — `mc3_18`, `r3d_18`, `r2plus1d_18`, `swin3d_s/b`
+
+| | Shape | Size |
+|---|---|---|
+| Input | `(1, 3, 16, 112, 112)` float32 | ≈ 2.40 MB |
+| Raw output | `(1, 400)` float32 | ≈ 1.6 KB |
+| Postprocessed | top class (int64) + prob (float32) | ≈ 12 B |
+
+---
+
+## E2E inference workflow
+
+### `vaccel-local-*` (in-process)
+
+```
+Python benchmark (ROS node)
+  └─ model_adapter.py
+       ├─ load:  vaccel.Resource(model_path) → session.torch_model_load()
+       │          reads .pt2 / SOL .so from /src/models/ and loads into local plugin
+       └─ infer: session.torch_model_run([input_tensor])
+                  └─ libvaccel-exec.so → vaccel-torch / SOL plugin → result
+```
+
+Inference runs in the **same process** as the ROS node. OMP workers compete with ROS/DDS threads at parallel-region barriers → variance for AOTI (vaccel-local-ptc); use OMP=1 for stable latency.
+
+### `vaccel-remote-*` (RPC to agent)
+
+```
+Python benchmark (ROS node)              vAccel agent container
+  └─ model_adapter.py                       (harbor.nbfc.io/desire6g/torchvision-vaccel)
+       ├─ load:  session.torch_model_load()  ──► agent receives model bytes over RPC,
+       │          serialises .pt2 / SOL .so       loads into vaccel-torch / SOL plugin
+       │          and ships over TCP                (no volume mount needed)
+       └─ infer: session.torch_model_run()  ──► agent runs inference, returns output
+                  └─ libvaccel-rpc.so ──TCP──►  libvaccel-exec.so → plugin → result
+```
+
+Model bytes are transferred **once per session** at load time (`VACCEL_RPC_SEND_WRITE_ENABLED=0` uses the standard genop transfer path). Per-inference cost is input tensor serialisation + network RTT + output deserialisation. The agent process has no competing ROS threads → OMP workers run uncontended → stable latency at full thread count.
+
+**Loopback** (`--host edge-asus --backend vaccel-remote-*`): agent runs on the same machine; TCP loopback RTT is negligible but process isolation eliminates the OMP barrier-stall problem of the local variant.
+
+---
+
+## Known issue: `sol_mobilenet_v3_large` + cuDNN mismatch
+
+Segmentation models ship `libsol-dnn-cudnn-deployment-0.8.0rc6-9.10.2.so` (needs cuDNN **9.10.x**); classification models ship `rc5-9.1` (needs cuDNN **9.1.x**, but 9.10.x is backward-compatible). Use cuDNN 9.10.x (the default from `nvidia-cudnn-cu12` without a version pin) for both the GPU container and the agent image.

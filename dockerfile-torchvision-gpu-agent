@@ -35,10 +35,18 @@ ENV VENV=/.venv
 RUN python3 -m venv $VENV
 ENV PATH="$VENV/bin:$PATH"
 
-# Install required cuDNN and cuBLAS dependencies for SOL rc6 segmentation models
-RUN python3 -m pip install nvidia-cudnn-cu12
+# NVIDIA runtime libs aligned with dockerfile-torchvision-ros-gpu (torch 2.8.0/cu128).
+# cuDNN unpinned: segmentation models ship libsol-dnn-cudnn-deployment-0.8.0rc6-9.10.2.so
+# (needs 9.10.x); classification models ship rc5-9.1 which works on 9.10.x (backward-compat).
+RUN python3 -m pip install \
+      "nvidia-cuda-runtime-cu12" \
+      "nvidia-cudnn-cu12" \
+      "nvidia-cublas-cu12"
 
-ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:/.venv/lib/python3.10/site-packages/nvidia/cuda_runtime/lib:/.venv/lib/python3.10/site-packages/nvidia/cudnn/lib"
+ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:\
+/.venv/lib/python3.10/site-packages/nvidia/cuda_runtime/lib:\
+/.venv/lib/python3.10/site-packages/nvidia/cudnn/lib:\
+/.venv/lib/python3.10/site-packages/nvidia/cublas/lib"
 
 # vAccel
 RUN wget https://s3.nbfc.io/nbfc-assets/github/vaccel/rev/main/x86_64/release/vaccel_latest_amd64.deb && \

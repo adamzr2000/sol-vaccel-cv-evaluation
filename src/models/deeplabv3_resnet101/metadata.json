@@ -1,5 +1,6 @@
 {
   "model": "deeplabv3_resnet101",
+  "source": "torchvision",
   "weights_enum": "DeepLabV3_ResNet101_Weights.COCO_WITH_VOC_LABELS_V1",
   "num_params": 60996202,
   "files": {

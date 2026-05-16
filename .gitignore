@@ -5,7 +5,6 @@ app/models/**/*
 !app/models/**/.gitignore
 
 sol-installers/
-vaccel-plugin-torch/
 
 __pycache__/
 .sol/
@@ -18,6 +17,14 @@ dds
 .db3
 
 *.pt2
+
+# ignore generated artifacts inside _sol model dirs, keep vaccel subdir
+src/models/*_sol/**/*.so
+src/models/*_sol/**/*.c
+src/models/*_sol/**/*.h
+src/models/*_sol/**/*.py
+!src/models/*_sol/**/vaccel/
+!src/models/*_sol/**/vaccel/**
 
 # ignore media artifacts under src/data
 src/data/**/*.jpg

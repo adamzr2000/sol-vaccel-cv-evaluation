@@ -1,5 +1,6 @@
 {
   "model": "r2plus1d_18",
+  "source": "torchvision",
   "weights_enum": "R2Plus1D_18_Weights.KINETICS400_V1",
   "num_params": 31505325,
   "files": {

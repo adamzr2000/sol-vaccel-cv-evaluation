@@ -1,0 +1,102 @@
+{
+    "run_id": "iso_fcn_resnet101_ptc_gpu",
+    "backend": "ptc",
+    "host": "edge-xtreme",
+    "model": "fcn_resnet101",
+    "model_type": "semantic_segmentation",
+    "device": "gpu",
+    "num_samples": 1687,
+    "time_window": {
+        "start": "2026-05-16T09:41:05.495159+00:00",
+        "stop": "2026-05-16T09:43:05.519369+00:00",
+        "duration_sec": 120.02421
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 51.51,
+        "inference_std": 4.48,
+        "system": 28.19,
+        "system_std": 3.12,
+        "processed": 14.06,
+        "camera_observed": 14.27
+    },
+    "stream": {
+        "avoid_duplicates": true,
+        "received_frames": 1714,
+        "processed_frames": 1687,
+        "drop_ratio": 0.015753,
+        "duplicates_skipped_loops": 50517
+    },
+    "ros_data_age_ms": {
+        "mean": -1.0,
+        "std": 0.0,
+        "min": -1.0,
+        "max": -1.0,
+        "p25": -1.0,
+        "p50": -1.0,
+        "p75": -1.0,
+        "p90": -1.0,
+        "p95": -1.0,
+        "p99": -1.0
+    },
+    "preprocessing_ms": {
+        "mean": 7.0252,
+        "std": 2.5778,
+        "min": 2.9455,
+        "max": 16.5468,
+        "p25": 3.7168,
+        "p50": 8.5731,
+        "p75": 8.9545,
+        "p90": 9.6055,
+        "p95": 9.7993,
+        "p99": 10.4217
+    },
+    "inference_ms": {
+        "mean": 19.4146,
+        "std": 1.8655,
+        "min": 16.6509,
+        "max": 39.9124,
+        "p25": 18.1443,
+        "p50": 18.1746,
+        "p75": 21.5545,
+        "p90": 21.8973,
+        "p95": 21.9976,
+        "p99": 22.4312
+    },
+    "postprocessing_ms": {
+        "mean": 9.0367,
+        "std": 0.3943,
+        "min": 7.9026,
+        "max": 15.3342,
+        "p25": 8.7548,
+        "p50": 8.9651,
+        "p75": 9.2944,
+        "p90": 9.5603,
+        "p95": 9.6707,
+        "p99": 9.8705
+    },
+    "system_ms": {
+        "mean": 35.4791,
+        "std": 3.9316,
+        "min": 28.8043,
+        "max": 71.6133,
+        "p25": 31.1301,
+        "p50": 35.8538,
+        "p75": 39.1778,
+        "p90": 40.1903,
+        "p95": 40.7701,
+        "p99": 41.283
+    },
+    "confidence_score": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+    }
+}

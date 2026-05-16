@@ -76,6 +76,10 @@ Run on **edge-asus** (repeat with `--host edge-xtreme` on that machine):
 ./evaluate_models_ros.sh --host edge-asus --device gpu --backend vaccel-local-ptc --run-tag iso --no-monitoring
 ```
 
+```bash
+./evaluate_models_ros.sh --host edge-xtreme --device gpu --backend sol --run-tag iso --no-export --sleep 2 --duration 4 --model swin_t,swin_s,swin_v2_b,swin3d_s,swin3d_b,r3d_18,r2plus1d_18,fcn_resnet101,fcn_resnet50,deeplabv3_resnet101,deeplabv3_resnet50
+```
+
 ---
 
 ### Phase 2 — Robot local (run on robot)

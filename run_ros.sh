@@ -135,7 +135,7 @@ EXTRA_ENV_ARGS=(
 
 if [[ "$MODE" == "gpu" ]]; then
   # vaccel-torch plugin: required for vaccel-*-ptc backends (CUDA AOTI only)
-  VACCEL_TORCH_SO="$(pwd)/vaccel-plugin-torch/build-cont/src/libvaccel-torch.so"
+  VACCEL_TORCH_SO="$(pwd)/vaccel-plugin-torch/libvaccel-torch.so"
   EXTRA_VOL_ARGS+=( --volume="${VACCEL_TORCH_SO}:/usr/local/lib/libvaccel-torch.so:ro" )
   EXTRA_ENV_ARGS+=( --env="VACCEL_PLUGINS=libvaccel-exec.so:libvaccel-rpc.so:libvaccel-torch.so" )
   EXTRA_ENV_ARGS+=( --env="CUDA_HOME=${CUDA_HOME}" )

@@ -1,5 +1,6 @@
 {
   "model": "fcn_resnet101",
+  "source": "torchvision",
   "weights_enum": "FCN_ResNet101_Weights.COCO_WITH_VOC_LABELS_V1",
   "num_params": 54314346,
   "files": {

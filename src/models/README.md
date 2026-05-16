@@ -28,8 +28,8 @@ Requires `nvcc` (available in the GPU container; the Dockerfile installs `cuda-n
 ```bash
 # All models
 python3 convert_aoti_models.py --device cuda
+python3 convert_aoti_models.py --device cpu
 
 # Specific model(s)
-python3 convert_aoti_models.py --device cuda --model resnet50
 python3 convert_aoti_models.py --device cuda --model resnet50,swin_t
 ```

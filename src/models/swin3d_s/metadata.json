@@ -1,5 +1,6 @@
 {
   "model": "swin3d_s",
+  "source": "torchvision",
   "weights_enum": "Swin3D_S_Weights.KINETICS400_V1",
   "num_params": 49816678,
   "files": {

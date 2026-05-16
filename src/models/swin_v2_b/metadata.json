@@ -1,5 +1,6 @@
 {
   "model": "swin_v2_b",
+  "source": "torchvision",
   "weights_enum": "Swin_V2_B_Weights.IMAGENET1K_V1",
   "num_params": 87930848,
   "files": {

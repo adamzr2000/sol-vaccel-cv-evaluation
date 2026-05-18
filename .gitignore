@@ -1,5 +1,3 @@
-# ignore everything under app/models
-app/models/**/*
 # keep readmes and per-folder .gitignore files
 !app/models/**/README.md
 !app/models/**/.gitignore
@@ -25,6 +23,7 @@ src/models/*_sol/**/*.h
 src/models/*_sol/**/*.py
 !src/models/*_sol/**/vaccel/
 !src/models/*_sol/**/vaccel/**
+src/models/*_sol/**/vaccel/**/__pycache__/
 
 # ignore media artifacts under src/data
 src/data/**/*.jpg

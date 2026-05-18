@@ -132,6 +132,11 @@ run_one () {
     fi
     export OMP_NUM_THREADS="${_omp}"
     export MKL_NUM_THREADS="${_omp}"
+    # For edge loopback remote runs the agent is on the same host; export REMOTE_HOST so
+    # model_benchmark_ros.py can embed it in run_id and JSON without defaulting to edge-asus.
+    if [[ "${BACKEND}" == vaccel-remote-* ]]; then
+      export REMOTE_HOST="${HOST}"
+    fi
   elif [[ "${HOST}" == "robot" && "${BACKEND}" != vaccel-remote-* ]]; then
     : # N100: leave OMP unset for all backends (let PyTorch default to nproc)
   elif [[ "${HOST}" == "robot" && "${BACKEND}" == vaccel-remote-* ]]; then

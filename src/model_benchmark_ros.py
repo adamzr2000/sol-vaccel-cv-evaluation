@@ -223,11 +223,13 @@ def main():
     prefix = run_tag if run_tag else time.strftime("%d-%m-%Y_%H-%M-%S")
 
     local_mode = "gpu" if (TORCH_DEVICE.type == "cuda") else "cpu"
-    is_vaccel_remote_run = (HOST == "robot" and "remote" in BACKEND)
-    REMOTE_HOST = os.environ.get("REMOTE_HOST", "edge-asus")
+    is_remote_backend = "remote" in BACKEND
+    is_vaccel_remote_run = (HOST == "robot" and is_remote_backend)  # dual-monitoring (robot only)
+    REMOTE_HOST = os.environ.get("REMOTE_HOST", HOST if is_remote_backend else "")
 
-    if is_vaccel_remote_run:
-        run_id = f"{prefix}_{CORE_MODEL_NAME}_{BACKEND}_{local_mode}_target-{REMOTE_HOST}-{TARGET_DEVICE}"
+    if is_remote_backend:
+        # client=HOST (always cpu preprocessing), server=REMOTE_HOST running TARGET_DEVICE
+        run_id = f"{prefix}_{CORE_MODEL_NAME}_{BACKEND}_{REMOTE_HOST}-{TARGET_DEVICE}"
     else:
         run_id = f"{prefix}_{CORE_MODEL_NAME}_{BACKEND}_{local_mode}"
 
@@ -340,14 +342,19 @@ def main():
             "edge-xtreme": "br10"
         }
 
-        local_sys_mode = [local_mode, "net"]
+        # Edge loopback remote: agent uses TARGET_DEVICE on the same host → monitor it
+        # Robot remote: robot is CPU-only client; agent GPU is captured by is_vaccel_remote_run block
+        if is_remote_backend and not is_vaccel_remote_run:
+            local_sys_mode = [TARGET_DEVICE, "net"]
+        else:
+            local_sys_mode = [local_mode, "net"]
         local_net_iface = host_net_iface_map.get(HOST)
 
         start_docker_monitor(run_id, cfg['docker_endpoint'], docker_csv_dir, "torchvision-app", "torchvision-app_")
         start_system_monitor(run_id, cfg['system_endpoint'], system_csv_dir, local_sys_mode, local_net_iface)
 
         if is_vaccel_remote_run:
-            vaccel_remote_run_id = f"{prefix}_{cfg['core_model_name']}_{cfg['backend']}_{cfg['target_device']}"
+            vaccel_remote_run_id = run_id  # same ID; distinguished by host-named subfolder
             rem_docker_csv_dir = str(Path(cfg['docker_csv_base']) / REMOTE_HOST)
             rem_system_csv_dir = str(Path(cfg['system_csv_base']) / REMOTE_HOST)
 
@@ -721,6 +728,9 @@ def main():
             "system_ms": stats_sys,
             "confidence_score": stats_conf
         }
+        if is_remote_backend:
+            final_output_data["remote_host"] = REMOTE_HOST
+            final_output_data["local_device"] = local_mode
         if "sol" in BACKEND:
             final_output_data["sol_run_mode"] = int(os.environ.get("SOL_RUN_MODE", "2").strip())
 

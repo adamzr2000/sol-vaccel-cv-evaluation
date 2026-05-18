@@ -5,6 +5,7 @@ SCRIPT="model_benchmark_ros.py"
 SLEEP_SEC=30
 BACKEND="stock"
 REMOTE_HOST="edge-asus"   # remote inference target for robot + vaccel-remote-* backends
+VACCEL_RPC_PORT=9125      # vaccel agent RPC port (override with env var)
 SELECTED_MODELS=""        # Comma-separated; empty means run all
 
 # Cleanup on exit (Ctrl+C or error)
@@ -36,6 +37,7 @@ Optional:
   --no-export     disable both export and resource monitoring
   --remote-host   robot|edge-asus|edge-xtreme (default: ${REMOTE_HOST})
                   remote inference target for vaccel-remote-* backends (use --host value for loopback)
+                  also sets VACCEL_RPC_ADDRESS=tcp://<host-ip>:<VACCEL_RPC_PORT> (default port: ${VACCEL_RPC_PORT})
 
 Examples:
   $(basename "$0") --host robot --device cpu --run-tag run1
@@ -93,11 +95,12 @@ case "${HOST}" in
   *) echo "[err] Invalid host: ${HOST}"; exit 2 ;;
 esac
 
-# ---- Remote host endpoints (robot + vaccel-remote-* only) ----
+# ---- Remote host endpoints + RPC address (vaccel-remote-* only) ----
+VACCEL_RPC_PORT="${VACCEL_RPC_PORT:-9125}"
 case "${REMOTE_HOST}" in
-  robot)       DOCKER_STATS_REMOTE_ENDPOINT="http://192.168.2.2:6000"; SYSTEM_STATS_REMOTE_ENDPOINT="http://192.168.2.2:6001" ;;
-  edge-asus)   DOCKER_STATS_REMOTE_ENDPOINT="http://10.5.1.20:6000";   SYSTEM_STATS_REMOTE_ENDPOINT="http://10.5.1.20:6001" ;;
-  edge-xtreme) DOCKER_STATS_REMOTE_ENDPOINT="http://10.5.1.21:6000";   SYSTEM_STATS_REMOTE_ENDPOINT="http://10.5.1.21:6001" ;;
+  robot)       DOCKER_STATS_REMOTE_ENDPOINT="http://192.168.2.2:6000"; SYSTEM_STATS_REMOTE_ENDPOINT="http://192.168.2.2:6001"; VACCEL_RPC_ADDRESS="tcp://192.168.2.2:${VACCEL_RPC_PORT}" ;;
+  edge-asus)   DOCKER_STATS_REMOTE_ENDPOINT="http://10.5.1.20:6000";   SYSTEM_STATS_REMOTE_ENDPOINT="http://10.5.1.20:6001";   VACCEL_RPC_ADDRESS="tcp://10.5.1.20:${VACCEL_RPC_PORT}" ;;
+  edge-xtreme) DOCKER_STATS_REMOTE_ENDPOINT="http://10.5.1.21:6000";   SYSTEM_STATS_REMOTE_ENDPOINT="http://10.5.1.21:6001";   VACCEL_RPC_ADDRESS="tcp://10.5.1.21:${VACCEL_RPC_PORT}" ;;
   *) echo "[err] Invalid remote host: ${REMOTE_HOST}"; exit 2 ;;
 esac
 
@@ -144,6 +147,11 @@ run_one () {
     export REMOTE_HOST="${REMOTE_HOST}" \
            DOCKER_STATS_REMOTE_ENDPOINT="${DOCKER_STATS_REMOTE_ENDPOINT}" \
            SYSTEM_STATS_REMOTE_ENDPOINT="${SYSTEM_STATS_REMOTE_ENDPOINT}"
+  fi
+
+  # Point the vaccel plugin at the correct agent for any remote backend
+  if [[ "${BACKEND}" == vaccel-remote-* ]]; then
+    export VACCEL_RPC_ADDRESS="${VACCEL_RPC_ADDRESS}"
   fi
 
   # Force vaccel-torch plugin into CPU mode when device=cpu;

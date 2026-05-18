@@ -34,13 +34,18 @@ if [[ $SET_OMP -eq 1 ]]; then
   OMP_ARGS=(-e "OMP_NUM_THREADS=${OMP_THREADS}")
 fi
 
+GPU_ARGS=()
+if [[ "${MODE}" == "gpu" ]]; then
+  GPU_ARGS=(--gpus all)
+fi
+
 echo "Starting ${CONTAINER_NAME} (${MODE}) on port ${PORT}"
 if [[ $SET_OMP -eq 1 ]]; then echo "OMP_NUM_THREADS=${OMP_THREADS}"; else echo "OMP_NUM_THREADS=unset"; fi
 echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES_VAL}"
 
 docker run --rm -it \
   --name "${CONTAINER_NAME}" \
-  --gpus all \
+  "${GPU_ARGS[@]}" \
   "${OMP_ARGS[@]}" \
   -e "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES_VAL}" \
   -p "${PORT}:9125" \

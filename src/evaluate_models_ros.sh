@@ -34,8 +34,8 @@ Optional:
   --duration      experiment duration in seconds per model (default: ${EXPERIMENT_DURATION_SEC})
   --no-monitoring disable resource monitoring only (export still runs)
   --no-export     disable both export and resource monitoring
-  --remote-host   edge-asus|edge-xtreme (default: ${REMOTE_HOST})
-                  remote inference target for robot + vaccel-remote-* backends
+  --remote-host   robot|edge-asus|edge-xtreme (default: ${REMOTE_HOST})
+                  remote inference target for vaccel-remote-* backends (use --host value for loopback)
 
 Examples:
   $(basename "$0") --host robot --device cpu --run-tag run1
@@ -95,8 +95,9 @@ esac
 
 # ---- Remote host endpoints (robot + vaccel-remote-* only) ----
 case "${REMOTE_HOST}" in
-  edge-asus)   DOCKER_STATS_REMOTE_ENDPOINT="http://10.5.1.20:6000"; SYSTEM_STATS_REMOTE_ENDPOINT="http://10.5.1.20:6001" ;;
-  edge-xtreme) DOCKER_STATS_REMOTE_ENDPOINT="http://10.5.1.21:6000"; SYSTEM_STATS_REMOTE_ENDPOINT="http://10.5.1.21:6001" ;;
+  robot)       DOCKER_STATS_REMOTE_ENDPOINT="http://192.168.2.2:6000"; SYSTEM_STATS_REMOTE_ENDPOINT="http://192.168.2.2:6001" ;;
+  edge-asus)   DOCKER_STATS_REMOTE_ENDPOINT="http://10.5.1.20:6000";   SYSTEM_STATS_REMOTE_ENDPOINT="http://10.5.1.20:6001" ;;
+  edge-xtreme) DOCKER_STATS_REMOTE_ENDPOINT="http://10.5.1.21:6000";   SYSTEM_STATS_REMOTE_ENDPOINT="http://10.5.1.21:6001" ;;
   *) echo "[err] Invalid remote host: ${REMOTE_HOST}"; exit 2 ;;
 esac
 
@@ -166,7 +167,7 @@ run_one () {
     exit "${_rc}"
   fi
 
-  unset OMP_NUM_THREADS MKL_NUM_THREADS REMOTE_HOST DOCKER_STATS_REMOTE_ENDPOINT SYSTEM_STATS_REMOTE_ENDPOINT VACCEL_TORCH_CUDA_ENABLED CUDA_VISIBLE_DEVICES
+  unset OMP_NUM_THREADS MKL_NUM_THREADS VACCEL_TORCH_CUDA_ENABLED CUDA_VISIBLE_DEVICES
   echo "[bench] done: ${model} (sleep ${SLEEP_SEC}s)"
   sleep "${SLEEP_SEC}"
 }

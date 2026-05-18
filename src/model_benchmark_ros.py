@@ -224,8 +224,8 @@ def main():
 
     local_mode = "gpu" if (TORCH_DEVICE.type == "cuda") else "cpu"
     is_remote_backend = "remote" in BACKEND
-    is_vaccel_remote_run = (HOST == "robot" and is_remote_backend)  # dual-monitoring (robot only)
     REMOTE_HOST = os.environ.get("REMOTE_HOST", HOST if is_remote_backend else "")
+    is_vaccel_remote_run = is_remote_backend and (REMOTE_HOST != HOST)  # dual-monitoring when agent is on a different host
 
     if is_remote_backend:
         # client=HOST (always cpu preprocessing), server=REMOTE_HOST running TARGET_DEVICE

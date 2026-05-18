@@ -17,7 +17,7 @@ from matplotlib.ticker import MaxNLocator, FormatStrFormatter
 import seaborn as sns
 import matplotlib.colors as mcolors
 
-from results.plot.plot_config import (
+from plot_config import (
     get_path,
     load_config,
     get_model_type_order,
@@ -25,9 +25,11 @@ from results.plot.plot_config import (
 )
 
 # --- CONFIGURATION ---
+_HERE = Path(__file__).parent
 cfg = load_config()
 INPUT_FILE = str(get_path("model_summary"))
-REMOTE_INFERENCE_FILE = "../../experiments/model-stats/_summary/finalOverhead_benchmark_summary_wifi.json"
+# iso run: edge-asus vaccel-remote-{ptc,sol} inference_ms used as pure-inference baseline for remote breakdown
+REMOTE_INFERENCE_FILE = _HERE / "../experiments/model-stats/_summary/iso_benchmark_summary.json"
 OUTPUT_FILE = "frame-rate-latency.pdf"
 
 FONT_SCALE = 1.5
@@ -40,6 +42,9 @@ FIG_SIZE = (18, 12.0)  # Reduced height; no legend title saves space
 SHOW_VALUE_LABELS = False
 SHOW_ERROR_BARS = False
 HIGHLIGHT_SOL_SLOWER_THAN_PYTORCH = False
+METRIC = "median"           # "median" (p50) | "mean" — controls FPS derivation and latency bars
+LOCAL_ROBOT_MODE = "legacy" # "legacy"    → ptc/sol backends, iros2 run tag
+                            # "vaccel-rpc" → vaccel-remote-*/remote_host=robot (loopback), iso run tag
 
 MODEL_TYPE_ORDER = get_model_type_order()
 
@@ -56,13 +61,22 @@ CAT_SEG = ["deeplabv3_resnet50", "deeplabv3_resnet101", "fcn_resnet50", "fcn_res
 CATEGORIES = [CAT_IMAGE, CAT_VIDEO, CAT_SEG]
 
 # --- VARIANT CONFIGURATION ---
-VARIANT_DEFINITIONS = [
-    {"label": "Local CPU (vAccel + Torch)", "match": {"host": "robot", "backend": "ptc", "device": "cpu"}},
-    {"label": "Local CPU (vAccSOL)",           "match": {"host": "robot", "backend": "sol", "device": "cpu"}},
-    {"label": "Remote CPU (vAccel + Torch)",  "match": {"host": "robot"}, "backend_contains": "vaccel-remote-torch", "run_id_contains": ["target-cpu"]},
-    {"label": "Remote CPU (vAccSOL)",            "match": {"host": "robot"}, "backend_contains": "vaccel-remote-sol",   "run_id_contains": ["target-cpu"]},
-    {"label": "Remote GPU (vAccel + Torch)",  "match": {"host": "robot"}, "backend_contains": "vaccel-remote-torch", "run_id_contains": ["target-gpu"]},
-    {"label": "Remote GPU (vAccSOL)",            "match": {"host": "robot"}, "backend_contains": "vaccel-remote-sol",   "run_id_contains": ["target-gpu"]},
+if LOCAL_ROBOT_MODE == "legacy":
+    _local_defs = [
+        {"label": "Local CPU (vAccel + Torch)", "match": {"host": "robot", "backend": "ptc", "device": "cpu"}},
+        {"label": "Local CPU (vAccSOL)",        "match": {"host": "robot", "backend": "sol", "device": "cpu"}},
+    ]
+else:  # vaccel-rpc: robot loopback via RPC (iso run tag, remote_host=robot)
+    _local_defs = [
+        {"label": "Local CPU (vAccel + Torch)", "match": {"host": "robot", "backend": "vaccel-remote-ptc", "device": "cpu", "remote_host": "robot"}},
+        {"label": "Local CPU (vAccSOL)",        "match": {"host": "robot", "backend": "vaccel-remote-sol", "device": "cpu", "remote_host": "robot"}},
+    ]
+
+VARIANT_DEFINITIONS = _local_defs + [
+    {"label": "Remote CPU (vAccel + Torch)", "match": {"host": "robot", "backend": "vaccel-remote-ptc", "device": "cpu", "remote_host": "edge-asus"}},
+    {"label": "Remote CPU (vAccSOL)",        "match": {"host": "robot", "backend": "vaccel-remote-sol", "device": "cpu", "remote_host": "edge-asus"}},
+    {"label": "Remote GPU (vAccel + Torch)", "match": {"host": "robot", "backend": "vaccel-remote-ptc", "device": "gpu", "remote_host": "edge-asus"}},
+    {"label": "Remote GPU (vAccSOL)",        "match": {"host": "robot", "backend": "vaccel-remote-sol", "device": "gpu", "remote_host": "edge-asus"}},
 ]
 VARIANTS = [v["label"] for v in VARIANT_DEFINITIONS]
 
@@ -88,10 +102,11 @@ def base_model_name(model: str) -> str:
 
 
 def classify_variant(run: dict):
-    run_id = str(run.get("run_id", "")).strip()
-    backend = str(run.get("backend", "")).lower().strip()
-    host = str(run.get("host", "")).lower().strip()
-    device = str(run.get("device", "")).lower().strip()
+    run_id      = str(run.get("run_id",      "")).strip()
+    backend     = str(run.get("backend",     "")).lower().strip()
+    host        = str(run.get("host",        "")).lower().strip()
+    device      = str(run.get("device",      "")).lower().strip()
+    remote_host = str(run.get("remote_host", "")).lower().strip()
 
     for v_def in VARIANT_DEFINITIONS:
         match_criteria = v_def.get("match", {})
@@ -117,12 +132,15 @@ def classify_variant(run: dict):
 
 
 def get_remote_pure_inference(remote_data, model_name, variant_label):
+    """Return inference_ms[METRIC] from the iso edge-asus vaccel-remote-{ptc,sol} run
+    matching this variant's backend (ptc vs sol) and device (cpu vs gpu)."""
     is_gpu = "gpu" in variant_label.lower()
     is_sol = "sol" in variant_label.lower()
 
-    target_host = "edge-asus"
-    target_device = "gpu" if is_gpu else "cpu"
-    target_backends = ["sol"] if is_sol else ["stock", "ptc"]
+    target_host    = "edge-asus"
+    target_device  = "gpu" if is_gpu else "cpu"
+    target_backend = "vaccel-remote-sol" if is_sol else "vaccel-remote-ptc"
+    stat_key       = "p50" if METRIC == "median" else "mean"
 
     for r in remote_data:
         if base_model_name(r.get("model", "")) != model_name:
@@ -131,16 +149,16 @@ def get_remote_pure_inference(remote_data, model_name, variant_label):
             continue
         if r.get("device", "").lower() != target_device:
             continue
-        if r.get("backend", "").lower() not in target_backends:
+        if r.get("backend", "").lower() != target_backend:
             continue
-
         inf = r.get("inference_ms", {}) or {}
-        return float(inf.get("mean", 0.0))
+        return float(inf.get(stat_key, 0.0))
 
-    return 0.0 
+    return 0.0
 
 
 def extract_combined_rows(runs, remote_runs):
+    stat_key = "p50" if METRIC == "median" else "mean"
     rows = []
     for r in runs:
         variant = classify_variant(r)
@@ -149,28 +167,33 @@ def extract_combined_rows(runs, remote_runs):
 
         b_model = base_model_name(r.get("model", ""))
 
-        # FPS Data
-        fps_data = r.get("fps", {}) or {}
-        fps = fps_data.get("system", None)
-        fps_err = fps_data.get("system_std", np.nan)
-
-        # Latency Data
+        # Latency data (robot perspective = system_ms e2e)
         sys_data = r.get("system_ms", {}) or {}
-        sys_mean = sys_data.get("mean", None)
-        sys_std = sys_data.get("std", np.nan)
+        sys_metric = sys_data.get(stat_key, None)
+        if sys_metric is None:
+            continue
+
+        if METRIC == "median":
+            p25 = sys_data.get("p25", sys_metric)
+            p75 = sys_data.get("p75", sys_metric)
+            sys_err = (float(p75) - float(p25)) / 2.0
+        else:
+            sys_err = sys_data.get("std", np.nan)
 
         inf_data = r.get("inference_ms", {}) or {}
-        inf_mean = inf_data.get("mean", 0.0)
+        inf_metric = inf_data.get(stat_key, 0.0)
 
-        if fps is None or sys_mean is None:
+        # FPS derived from system latency (robot e2e) using the chosen metric
+        fps = 1000.0 / float(sys_metric) if float(sys_metric) > 0 else None
+        if fps is None:
             continue
 
         try:
             fps_f = float(fps)
-            fps_err_f = float(fps_err) if fps_err is not None else np.nan
-            total_f = float(sys_mean)
-            total_std_f = float(sys_std) if sys_std is not None else np.nan
-            inf_f = float(inf_mean)
+            fps_err_f = np.nan  # not propagated; latency error bars cover this
+            total_f = float(sys_metric)
+            total_std_f = float(sys_err) if sys_err is not None else np.nan
+            inf_f = float(inf_metric) if inf_metric else 0.0
         except Exception:
             continue
 
@@ -439,6 +462,15 @@ def plot_combined(rows):
                 ax_lat.tick_params(labelleft=False)
 
 
+    # ---- Title ----
+    metric_label = "Median" if METRIC == "median" else "Mean"
+    local_label  = "Runtime JIT (torch.compile) / SOL" if LOCAL_ROBOT_MODE == "legacy" \
+                   else "vAccel+Offline AOTI (.pt2) / vAccel+SOL"
+    title_artist = fig.suptitle(
+        f"{metric_label} — Local: {local_label}",
+        fontsize=FONT_SCALE * 9, fontweight="bold", y=1.02,
+    )
+
     # ---- Manual Layout ----
     CAPTION_OFFSET = 0.075
 
@@ -510,7 +542,7 @@ def plot_combined(rows):
         dpi=300,
         bbox_inches="tight",
         pad_inches=0.02,
-        bbox_extra_artists=(leg, *caption_artists), 
+        bbox_extra_artists=(leg, title_artist, *caption_artists),
     )
     print(f"[OK] Saved plot to: {OUTPUT_FILE}")
     plt.close(fig)
@@ -520,7 +552,7 @@ def main():
     if not path.exists():
         raise SystemExit(f"JSON not found: {path}")
 
-    remote_path = Path(REMOTE_INFERENCE_FILE).resolve()
+    remote_path = REMOTE_INFERENCE_FILE.resolve()
     remote_data = []
     if remote_path.exists():
         with remote_path.open("r") as f:
@@ -534,6 +566,15 @@ def main():
     runs = data.get("runs", [])
     if not isinstance(runs, list) or not runs:
         raise SystemExit("Input JSON does not contain a non-empty 'runs' list.")
+
+    # In vaccel-rpc local mode, robot loopback data lives in iso (not iros2)
+    if LOCAL_ROBOT_MODE == "vaccel-rpc":
+        iso_path = REMOTE_INFERENCE_FILE.resolve()
+        if iso_path.exists():
+            with iso_path.open() as f:
+                runs = runs + json.load(f).get("runs", [])
+        else:
+            print(f"[WARNING] iso file not found for vaccel-rpc local mode: {iso_path}")
 
     rows = extract_combined_rows(runs, remote_data)
     plt.rcParams.update({

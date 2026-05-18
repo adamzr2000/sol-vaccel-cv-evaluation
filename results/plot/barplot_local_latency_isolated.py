@@ -18,8 +18,12 @@ from matplotlib.ticker import MaxNLocator, FormatStrFormatter
 
 # ── paths ───────────────────────────────────────────────────────────────────
 _HERE = Path(__file__).parent
-INPUT_FILE = _HERE / "../experiments/model-stats/_summary/iso_benchmark_summary.json"
+INPUT_FILE_ISO   = _HERE / "../experiments/model-stats/_summary/iso_benchmark_summary.json"
+INPUT_FILE_IROS2 = _HERE / "../experiments/model-stats/_summary/iros2_benchmark_summary.json"
 OUTPUT_FILE = _HERE / "iso_local_latency.pdf"
+
+# robot ptc/sol data comes from iros2 run; all other entries from iso
+_ROBOT_IROS2_BACKENDS = {"ptc", "sol"}
 
 # ── backend rename ───────────────────────────────────────────────────────────
 BACKEND_MAP = {
@@ -35,8 +39,8 @@ ROWS = [
     ("robot",       "cpu", "Robot CPU"),
     ("edge-asus",   "cpu", "edge-asus CPU"),
     ("edge-asus",   "gpu", "edge-asus GPU"),
-    ("edge-xtreme", "cpu", "edge-xtreme CPU"),
-    ("edge-xtreme", "gpu", "edge-xtreme GPU"),
+    # ("edge-xtreme", "cpu", "edge-xtreme CPU"),  # no data yet
+    # ("edge-xtreme", "gpu", "edge-xtreme GPU"),  # no data yet
 ]
 
 # ── columns: model categories ────────────────────────────────────────────────
@@ -66,16 +70,16 @@ MODEL_DISPLAY = {
 }
 
 # ── style ────────────────────────────────────────────────────────────────────
-BAR_WIDTH   = 0.18
-SPINES_LW   = 0.8
-FONT_SCALE  = 1.1
+BAR_WIDTH       = 0.18
+SPINES_LW       = 0.8
+FONT_SCALE      = 1.5
+SHOW_BAR_VALUES  = False
+SHOW_ERROR_BARS  = True   # std dev for mean, IQR for median
+METRIC           = "median"   # "median" (p50) | "mean"
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
-def load_data(path: Path) -> dict:
-    """Returns {(host, device, backend_label, model): median_ms}."""
-    with path.open() as f:
-        raw = json.load(f)
+def _parse_runs(raw: dict, *, robot_only: bool = False, skip_robot: bool = False) -> dict:
     out = {}
     for run in raw.get("runs", []):
         host    = str(run.get("host",    "")).strip().lower()
@@ -85,11 +89,42 @@ def load_data(path: Path) -> dict:
         label   = BACKEND_MAP.get(backend)
         if label is None:
             continue
-        median = (run.get("inference_ms") or {}).get("p50")
-        if median is None:
+        if robot_only and not (host == "robot" and backend in _ROBOT_IROS2_BACKENDS):
             continue
-        out[(host, device, label, model)] = float(median)
+        if skip_robot and (host == "robot" and backend in _ROBOT_IROS2_BACKENDS):
+            continue
+        inf = run.get("inference_ms") or {}
+        stat_key = "p50" if METRIC == "median" else "mean"
+        value = inf.get(stat_key)
+        if value is None:
+            continue
+        value = float(value)
+        if METRIC == "median":
+            p25 = float(inf.get("p25", value))
+            p75 = float(inf.get("p75", value))
+            err_low, err_high = value - p25, p75 - value
+        else:
+            std = float(inf.get("std", 0.0))
+            err_low = err_high = std
+        out[(host, device, label, model)] = (value, err_low, err_high)
     return out
+
+
+def load_data(iso_path: Path, iros2_path: Path) -> dict:
+    """Returns {(host, device, backend_label, model): median_ms}.
+
+    Robot ptc/sol entries come from iros2; everything else from iso.
+    """
+    with iso_path.open() as f:
+        data = _parse_runs(json.load(f), skip_robot=True)
+
+    if iros2_path.exists():
+        with iros2_path.open() as f:
+            data.update(_parse_runs(json.load(f), robot_only=True))
+    else:
+        print(f"[warn] iros2 summary not found: {iros2_path} — robot ptc/sol will be blank")
+
+    return data
 
 
 def style_ax(ax):
@@ -104,11 +139,19 @@ def style_ax(ax):
 
 # ── main ─────────────────────────────────────────────────────────────────────
 def main():
-    path = INPUT_FILE.resolve()
+    path = INPUT_FILE_ISO.resolve()
     if not path.exists():
         raise SystemExit(f"Input not found: {path}")
 
-    data = load_data(path)
+    data = load_data(INPUT_FILE_ISO.resolve(), INPUT_FILE_IROS2.resolve())
+
+    # ── debug print ───────────────────────────────────────────────────────
+    stat_key = "p50" if METRIC == "median" else "mean"
+    print(f"\n{'host':<14} {'device':<6} {'backend':<36} {'model':<24} {stat_key:>8}  err_low  err_hi")
+    print("-" * 105)
+    for (host, device, backend, model), (val, el, eh) in sorted(data.items()):
+        print(f"{host:<14} {device:<6} {backend:<36} {model:<24} {val:>8.2f}  {el:>7.2f}  {eh:>6.2f}")
+    print()
 
     # Paired colormap: light/dark pairs — ptc=lighter, sol=darker
     paired = plt.cm.get_cmap("Paired")
@@ -144,17 +187,20 @@ def main():
         },
     )
 
+    _nan_entry = (np.nan, 0.0, 0.0)
+
     # per-row shared y-max (so categories in the same row are comparable)
+    # include bar + upper error so whiskers never overflow the axes
     row_ymaxes = []
     for host, device, _ in ROWS:
-        vals = [
-            data[(host, device, b, m)]
+        tops = [
+            data[(host, device, b, m)][0] + (data[(host, device, b, m)][2] if SHOW_ERROR_BARS else 0.0)
             for _, models in CATEGORIES
             for m in models
             for b in BACKENDS
             if (host, device, b, m) in data
         ]
-        row_ymaxes.append(max(vals) * 1.12 if vals else 1.0)
+        row_ymaxes.append(max(tops) * 1.12 if tops else 1.0)
 
     # ── draw ──────────────────────────────────────────────────────────────
     n_b = len(BACKENDS)
@@ -168,16 +214,16 @@ def main():
 
             any_data = False
             for b_idx, backend in enumerate(BACKENDS):
-                vals = np.array(
-                    [data.get((host, device, backend, m), np.nan) for m in models],
-                    dtype=float,
-                )
+                tuples = [data.get((host, device, backend, m), _nan_entry) for m in models]
+                vals    = np.array([t[0] for t in tuples], dtype=float)
+                err_low = np.array([t[1] for t in tuples], dtype=float)
+                err_hi  = np.array([t[2] for t in tuples], dtype=float)
                 valid = ~np.isnan(vals)
                 if not valid.any():
                     continue
                 any_data = True
                 xs = x[valid] + offsets[b_idx]
-                ax.bar(
+                bars = ax.bar(
                     xs, vals[valid],
                     width=BAR_WIDTH,
                     color=color_map[backend],
@@ -185,6 +231,24 @@ def main():
                     label=backend if (row_idx == 0 and col_idx == 0) else "",
                     zorder=3,
                 )
+                if SHOW_ERROR_BARS:
+                    ax.errorbar(
+                        xs, vals[valid],
+                        yerr=[err_low[valid], err_hi[valid]],
+                        fmt="none", color="black",
+                        capsize=2, linewidth=0.8, zorder=5,
+                    )
+                if SHOW_BAR_VALUES:
+                    for bar, v in zip(bars, vals[valid]):
+                        ax.text(
+                            bar.get_x() + bar.get_width() / 2,
+                            bar.get_height() / 2,
+                            f"{v:.0f}",
+                            ha="center", va="center",
+                            fontsize=7.5, color="black",
+                            fontweight="bold", rotation=90,
+                            zorder=4,
+                        )
 
             ax.set_ylim(0, row_ymaxes[row_idx])
             ax.yaxis.set_major_locator(MaxNLocator(nbins=4))
@@ -204,7 +268,7 @@ def main():
 
             # y-axis label on leftmost column only
             if col_idx == 0:
-                ax.set_ylabel(f"{row_label} (ms)")
+                ax.set_ylabel(row_label)
             else:
                 ax.tick_params(labelleft=False)
 
@@ -220,19 +284,26 @@ def main():
                         ha="center", va="center",
                         color="gray", fontstyle="italic")
 
+    metric_label = "Median" if METRIC == "median" else "Mean"
+    if SHOW_ERROR_BARS:
+        error_label = " ± IQR" if METRIC == "median" else " ± Std Dev"
+    else:
+        error_label = ""
+    fig.suptitle(f"Local Inference Latency ({metric_label}{error_label}, ms)", fontsize=10 * FONT_SCALE, fontweight="bold", y=1.02)
+
     # ── legend ────────────────────────────────────────────────────────────
     handles = [mpatches.Patch(color=color_map[b], label=b) for b in BACKENDS]
     fig.legend(
         handles, BACKENDS,
         loc="upper center",
-        bbox_to_anchor=(0.5, 1.02),
+        bbox_to_anchor=(0.5, 0.98),
         ncol=n_b,
         frameon=True, framealpha=0.92,
-        borderpad=0.5, handlelength=1.3,
+        borderpad=0.4, handlelength=1.3,
         columnspacing=1.0,
     )
 
-    fig.savefig(OUTPUT_FILE, dpi=300, bbox_inches="tight", pad_inches=0.05)
+    fig.savefig(OUTPUT_FILE, dpi=300, bbox_inches="tight", pad_inches=0.02)
     print(f"[OK] Saved: {OUTPUT_FILE}")
     plt.close(fig)
 

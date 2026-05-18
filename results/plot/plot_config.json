@@ -1,5 +1,5 @@
 {
-    "run_tag": "finalPerformance",
+    "run_tag": "iros2",
     "link": "wifi",
     "model_type_order": [
         "swin_v2_b",
@@ -19,8 +19,7 @@
         "docker_summary": "../experiments/docker-stats/_summary/{run_tag}_overall_resource_usage_per_container_{link}.csv",
         "system_cpu_summary": "../experiments/system-stats/_summary/{run_tag}_overall_cpu_stats_{link}.csv",
         "system_gpu_summary": "../experiments/system-stats/_summary/{run_tag}_overall_gpu_stats_{link}.csv",
-        "model_summary": "../experiments/model-stats/_summary/{run_tag}_benchmark_summary_{link}.json"
+        "model_summary": "../experiments/model-stats/_summary/{run_tag}_benchmark_summary.json"
     },
-    "remote_host": "edge-asus",
-    "palette": "tab10"
+    "remote_host": "edge-asus"
 }

@@ -1,0 +1,104 @@
+{
+    "run_id": "iso_swin_v2_b_vaccel-remote-ptc_robot-cpu",
+    "backend": "vaccel-remote-ptc",
+    "host": "robot",
+    "model": "swin_v2_b",
+    "model_type": "classification",
+    "device": "cpu",
+    "num_samples": 158,
+    "time_window": {
+        "start": "2026-05-18T18:11:20.755385+00:00",
+        "stop": "2026-05-18T18:13:21.109669+00:00",
+        "duration_sec": 120.354284
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 1.37,
+        "inference_std": 0.04,
+        "system": 1.35,
+        "system_std": 0.04,
+        "processed": 1.31,
+        "camera_observed": 14.27
+    },
+    "stream": {
+        "avoid_duplicates": true,
+        "received_frames": 1718,
+        "processed_frames": 158,
+        "drop_ratio": 0.908033,
+        "duplicates_skipped_loops": 3191
+    },
+    "ros_data_age_ms": {
+        "mean": -1.0,
+        "std": 0.0,
+        "min": -1.0,
+        "max": -1.0,
+        "p25": -1.0,
+        "p50": -1.0,
+        "p75": -1.0,
+        "p90": -1.0,
+        "p95": -1.0,
+        "p99": -1.0
+    },
+    "preprocessing_ms": {
+        "mean": 8.934,
+        "std": 5.9514,
+        "min": 5.0756,
+        "max": 31.7146,
+        "p25": 5.3771,
+        "p50": 6.0689,
+        "p75": 8.6953,
+        "p90": 18.8599,
+        "p95": 23.0704,
+        "p99": 29.4369
+    },
+    "inference_ms": {
+        "mean": 729.2512,
+        "std": 22.845,
+        "min": 655.4753,
+        "max": 844.2571,
+        "p25": 716.5356,
+        "p50": 726.9344,
+        "p75": 738.8048,
+        "p90": 751.5027,
+        "p95": 760.2519,
+        "p99": 821.6016
+    },
+    "postprocessing_ms": {
+        "mean": 0.101,
+        "std": 0.1123,
+        "min": 0.0793,
+        "max": 1.4965,
+        "p25": 0.0877,
+        "p50": 0.0891,
+        "p75": 0.091,
+        "p90": 0.1039,
+        "p95": 0.1116,
+        "p99": 0.1756
+    },
+    "system_ms": {
+        "mean": 738.353,
+        "std": 23.5301,
+        "min": 674.4865,
+        "max": 860.2836,
+        "p25": 725.1396,
+        "p50": 735.7787,
+        "p75": 749.2316,
+        "p90": 760.6022,
+        "p95": 768.3649,
+        "p99": 834.3181
+    },
+    "confidence_score": {
+        "mean": 29.3185,
+        "std": 18.0197,
+        "min": 6.6211,
+        "max": 83.386,
+        "p25": 15.3966,
+        "p50": 24.0782,
+        "p75": 37.2638,
+        "p90": 56.3926,
+        "p95": 70.0037,
+        "p99": 78.5643
+    },
+    "remote_host": "robot",
+    "local_device": "cpu"
+}

@@ -43,7 +43,7 @@ SHOW_VALUE_LABELS = False
 SHOW_ERROR_BARS = False
 HIGHLIGHT_SOL_SLOWER_THAN_PYTORCH = False
 METRIC = "median"           # "median" (p50) | "mean" — controls FPS derivation and latency bars
-LOCAL_ROBOT_MODE = "legacy" # "legacy"    → ptc/sol backends, iros2 run tag
+LOCAL_ROBOT_MODE = "vaccel-rpc" # "legacy"    → ptc/sol backends, iros2 run tag
                             # "vaccel-rpc" → vaccel-remote-*/remote_host=robot (loopback), iso run tag
 
 MODEL_TYPE_ORDER = get_model_type_order()
@@ -132,15 +132,25 @@ def classify_variant(run: dict):
 
 
 def get_remote_pure_inference(remote_data, model_name, variant_label):
-    """Return inference_ms[METRIC] from the iso edge-asus vaccel-remote-{ptc,sol} run
-    matching this variant's backend (ptc vs sol) and device (cpu vs gpu)."""
+    """Return inference_ms[METRIC] for pure edge inference (no network).
+
+    Aligned with LOCAL_ROBOT_MODE:
+      legacy     → ptc / sol backends (direct, no vAccel RPC layer)
+      vaccel-rpc → vaccel-remote-ptc / vaccel-remote-sol edge-asus loopback
+    """
     is_gpu = "gpu" in variant_label.lower()
     is_sol = "sol" in variant_label.lower()
 
-    target_host    = "edge-asus"
-    target_device  = "gpu" if is_gpu else "cpu"
-    target_backend = "vaccel-remote-sol" if is_sol else "vaccel-remote-ptc"
-    stat_key       = "p50" if METRIC == "median" else "mean"
+    target_host   = "edge-asus"
+    target_device = "gpu" if is_gpu else "cpu"
+    stat_key      = "p50" if METRIC == "median" else "mean"
+
+    if LOCAL_ROBOT_MODE == "legacy":
+        target_backend = "sol" if is_sol else "ptc"
+        match_remote_host = None          # legacy runs have no remote_host field
+    else:  # vaccel-rpc
+        target_backend    = "vaccel-remote-sol" if is_sol else "vaccel-remote-ptc"
+        match_remote_host = "edge-asus"   # loopback: remote_host == host
 
     for r in remote_data:
         if base_model_name(r.get("model", "")) != model_name:
@@ -151,6 +161,9 @@ def get_remote_pure_inference(remote_data, model_name, variant_label):
             continue
         if r.get("backend", "").lower() != target_backend:
             continue
+        if match_remote_host is not None:
+            if r.get("remote_host", "").lower() != match_remote_host:
+                continue
         inf = r.get("inference_ms", {}) or {}
         return float(inf.get(stat_key, 0.0))
 
@@ -208,7 +221,7 @@ def extract_combined_rows(runs, remote_runs):
             else:
                 inference_final = pure_inf_f
                 network_f = inf_f - pure_inf_f
-            pre_post_f = 0.0
+            # pre_post_f = total_f - inf_f (robot-side pre/post) is kept so bars sum to system_ms
         else:
             network_f = 0.0
             inference_final = inf_f
@@ -467,7 +480,7 @@ def plot_combined(rows):
     local_label  = "Runtime JIT (torch.compile) / SOL" if LOCAL_ROBOT_MODE == "legacy" \
                    else "vAccel+Offline AOTI (.pt2) / vAccel+SOL"
     title_artist = fig.suptitle(
-        f"{metric_label} — Local: {local_label}",
+        f"{metric_label} — Inference: {local_label}",
         fontsize=FONT_SCALE * 9, fontweight="bold", y=1.02,
     )
 

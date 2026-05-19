@@ -73,9 +73,9 @@ MODEL_DISPLAY = {
 BAR_WIDTH       = 0.18
 SPINES_LW       = 0.8
 FONT_SCALE      = 1.5
-SHOW_BAR_VALUES  = False
+SHOW_BAR_VALUES  = True
 SHOW_ERROR_BARS  = True   # std dev for mean, IQR for median
-METRIC           = "median"   # "median" (p50) | "mean"
+METRIC           = "mean"   # "median" (p50) | "mean"
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────

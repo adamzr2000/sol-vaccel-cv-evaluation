@@ -145,10 +145,14 @@ run_one () {
       export REMOTE_HOST="${HOST}"
     fi
   elif [[ "${HOST}" == "robot" && "${BACKEND}" != vaccel-remote-* ]]; then
-    # N100: cap OMP_THREAD_LIMIT to nproc so .pt2 kernels compiled on a 24-core
-    # edge machine (which bake num_threads(24) into OMP pragmas) don't oversubscribe.
+    # N100: cap both OMP vars so .pt2 kernels compiled on a many-core edge machine
+    # (which bake num_threads(N) into OMP pragmas) don't oversubscribe the 4-core N100.
+    export OMP_NUM_THREADS=$(nproc)
     export OMP_THREAD_LIMIT=$(nproc)
   elif [[ "${HOST}" == "robot" && "${BACKEND}" == vaccel-remote-* ]]; then
+    # Client preprocessing still runs on the N100 — cap OMP even for remote backends.
+    export OMP_NUM_THREADS=$(nproc)
+    export OMP_THREAD_LIMIT=$(nproc)
     export REMOTE_HOST="${REMOTE_HOST}" \
            DOCKER_STATS_REMOTE_ENDPOINT="${DOCKER_STATS_REMOTE_ENDPOINT}" \
            SYSTEM_STATS_REMOTE_ENDPOINT="${SYSTEM_STATS_REMOTE_ENDPOINT}"

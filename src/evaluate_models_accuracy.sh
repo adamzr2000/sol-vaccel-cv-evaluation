@@ -16,10 +16,10 @@ fi
 
 usage() {
   cat <<EOF
-Usage: $(basename "$0") --host <edge-asus|edge-xtreme|robot> --device <cpu|gpu> --run-tag <tag> [options]
+Usage: $(basename "$0") --host <edge-asus|edge-xtreme|edge-alienware|robot> --device <cpu|gpu> --run-tag <tag> [options]
 
 Required:
-  --host     edge-asus|edge-xtreme|robot
+  --host     edge-asus|edge-xtreme|edge-alienware|robot
   --device   cpu|gpu
   --run-tag  run identifier (e.g., run1)
 
@@ -66,8 +66,8 @@ if [[ -z "${HOST}" || -z "${DEVICE}" || -z "${RUN_TAG}" ]]; then
   usage; exit 2
 fi
 
-if [[ "${HOST}" != "edge-asus" && "${HOST}" != "edge-xtreme" && "${HOST}" != "robot" ]]; then
-  echo "[err] --host must be one of: edge-asus, edge-xtreme, robot (got: ${HOST})"; exit 2
+if [[ "${HOST}" != "edge-asus" && "${HOST}" != "edge-xtreme" && "${HOST}" != "edge-alienware" && "${HOST}" != "robot" ]]; then
+  echo "[err] --host must be one of: edge-asus, edge-xtreme, edge-alienware, robot (got: ${HOST})"; exit 2
 fi
 
 if [[ "${DEVICE}" != "cpu" && "${DEVICE}" != "gpu" ]]; then
@@ -85,8 +85,9 @@ esac
 # ---- Host defaults (IP assignment) ----
 case "${HOST}" in
   robot)       DOCKER_STATS_ENDPOINT="http://192.168.2.2:6000";  SYSTEM_STATS_ENDPOINT="http://192.168.2.2:6001" ;;
-  edge-asus)   DOCKER_STATS_ENDPOINT="http://10.5.1.20:6000"; SYSTEM_STATS_ENDPOINT="http://10.5.1.20:6001" ;;
-  edge-xtreme) DOCKER_STATS_ENDPOINT="http://10.5.1.21:6000"; SYSTEM_STATS_ENDPOINT="http://10.5.1.21:6001" ;;
+  edge-asus)       DOCKER_STATS_ENDPOINT="http://10.5.1.20:6000"; SYSTEM_STATS_ENDPOINT="http://10.5.1.20:6001" ;;
+  edge-xtreme)     DOCKER_STATS_ENDPOINT="http://10.5.1.21:6000"; SYSTEM_STATS_ENDPOINT="http://10.5.1.21:6001" ;;
+  edge-alienware)  DOCKER_STATS_ENDPOINT="http://10.5.1.22:6000"; SYSTEM_STATS_ENDPOINT="http://10.5.1.22:6001" ;;
 esac
 
 echo "[bench] host=${HOST}"

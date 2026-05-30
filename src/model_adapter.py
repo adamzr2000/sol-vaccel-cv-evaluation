@@ -418,6 +418,30 @@ class PyTorchBaselineAdapter(BaseModelAdapter):
             return {"boxes": final_boxes, "scores": final_conf, "classes": final_classes}
 
 
+# =========================================================
+# 1b. ADAPTER FOR DIRECT AOTI (.pt2, no vAccel)
+# =========================================================
+class AOTIAdapter(PyTorchBaselineAdapter):
+    """Loads a pre-compiled AOTInductor .pt2 package and runs it directly."""
+
+    def load_model(self, model_dir):
+        weights_path = Path(model_dir) / self.weights_filename
+        model_name = weights_path.stem.replace("_state_dict", "")
+        model_path = weights_path.with_name(f"{model_name}_{self.device}.pt2")
+        if not model_path.exists():
+            raise FileNotFoundError(f"AOTI model not found: {model_path.resolve()}")
+        print(f"   [AOTI] Loading {self.model_type} model from {model_path}")
+        self.model_final = torch._inductor.aoti_load_package(str(model_path))
+
+    def infer(self, input_tensor):
+        with torch.inference_mode():
+            input_tensor = self._maybe_to_device(input_tensor)
+            output = self.model_final(input_tensor)
+        if isinstance(output, (tuple, list)):
+            output = output[0]
+        return output.detach().cpu()
+
+
 class VaccelPyTorchAdapter(PyTorchBaselineAdapter):
     def __init__(
         self,
@@ -831,6 +855,15 @@ def get_model_adapter(model_name, backend, device):
             f"{core_name}.pt"
             if m_type == "object_detection" else f"{core_name}_state_dict.pt"
         )
+
+        if backend == "aoti":
+            return AOTIAdapter(
+                device,
+                builder,
+                w_filename,
+                model_type=m_type,
+                weights_enum=w_enum,
+            )
 
         if "vaccel" in backend:
             use_remote = ("remote" in backend)

@@ -7,6 +7,14 @@ import threading
 from collections import deque
 
 import torch
+
+# Cap interop thread pool to match OMP_THREAD_LIMIT before any parallel work.
+# torch.set_num_interop_threads() must be called before the pool is first used;
+# no env var is read by torch 2.8.0 for this — it must be set programmatically.
+_thread_limit = os.environ.get("OMP_THREAD_LIMIT") or os.environ.get("OMP_NUM_THREADS")
+if _thread_limit:
+    torch.set_num_interop_threads(int(_thread_limit))
+
 import numpy as np
 import cv2
 import logging
@@ -37,6 +45,13 @@ from model_adapter import get_model_adapter
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 warnings.filterwarnings("ignore", category=FutureWarning)
+
+# Honour OMP_NUM_THREADS for PyTorch's intra-op thread pool.
+# torch.compile / AOTInductor use at::parallel_for (TBB/pthreads), not OpenMP,
+# so OMP_NUM_THREADS alone does not control them — this call does.
+_num_threads = int(os.environ.get("OMP_NUM_THREADS", "0"))
+if _num_threads > 0:
+    torch.set_num_threads(_num_threads)
 
 # ==========================================
 # CENTRALIZED CONFIGURATION (via utils)
@@ -337,9 +352,10 @@ def main():
 
         # Define network interface mapping
         host_net_iface_map = {
-            "robot": "ue0",
-            "edge-asus": "enp130s0",
-            "edge-xtreme": "br10"
+            "robot":          "ue0",
+            "edge-asus":      "enp130s0",
+            "edge-xtreme":    "br10",
+            "edge-alienware": "enp8s0",
         }
 
         # Edge loopback remote: agent uses TARGET_DEVICE on the same host → monitor it

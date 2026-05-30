@@ -1,0 +1,105 @@
+{
+    "run_id": "iso_r2plus1d_18_vaccel-remote-sol_edge-asus-cpu",
+    "backend": "vaccel-remote-sol",
+    "host": "edge-asus",
+    "model": "r2plus1d_18",
+    "model_type": "video_classification",
+    "device": "cpu",
+    "num_samples": 1090,
+    "time_window": {
+        "start": "2026-05-18T10:33:27.741042+00:00",
+        "stop": "2026-05-18T10:35:27.752916+00:00",
+        "duration_sec": 120.011874
+    },
+    "frames_per_sample": 16,
+    "fps": {
+        "inference": 10.66,
+        "inference_std": 0.91,
+        "system": 9.55,
+        "system_std": 0.73,
+        "processed": 9.08,
+        "camera_observed": 14.27
+    },
+    "stream": {
+        "avoid_duplicates": true,
+        "received_frames": 1714,
+        "processed_frames": 1090,
+        "drop_ratio": 0.364061,
+        "duplicates_skipped_loops": 1045
+    },
+    "ros_data_age_ms": {
+        "mean": -1.0,
+        "std": 0.0,
+        "min": -1.0,
+        "max": -1.0,
+        "p25": -1.0,
+        "p50": -1.0,
+        "p75": -1.0,
+        "p90": -1.0,
+        "p95": -1.0,
+        "p99": -1.0
+    },
+    "preprocessing_ms": {
+        "mean": 10.6722,
+        "std": 1.3032,
+        "min": 8.6624,
+        "max": 20.5978,
+        "p25": 9.7973,
+        "p50": 10.4681,
+        "p75": 11.1419,
+        "p90": 12.4834,
+        "p95": 13.1974,
+        "p99": 14.9614
+    },
+    "inference_ms": {
+        "mean": 93.816,
+        "std": 7.8079,
+        "min": 78.6612,
+        "max": 115.9475,
+        "p25": 86.0066,
+        "p50": 95.4105,
+        "p75": 99.7489,
+        "p90": 103.0726,
+        "p95": 105.222,
+        "p99": 110.0976
+    },
+    "postprocessing_ms": {
+        "mean": 0.1342,
+        "std": 0.0819,
+        "min": 0.1097,
+        "max": 1.3694,
+        "p25": 0.1197,
+        "p50": 0.1289,
+        "p75": 0.1327,
+        "p90": 0.1375,
+        "p95": 0.1448,
+        "p99": 0.2128
+    },
+    "system_ms": {
+        "mean": 104.686,
+        "std": 7.8833,
+        "min": 89.6173,
+        "max": 126.2926,
+        "p25": 97.037,
+        "p50": 106.1913,
+        "p75": 110.7438,
+        "p90": 113.9599,
+        "p95": 116.371,
+        "p99": 121.5872
+    },
+    "confidence_score": {
+        "mean": 46.7573,
+        "std": 28.1602,
+        "min": 2.1901,
+        "max": 99.9836,
+        "p25": 22.8499,
+        "p50": 42.0608,
+        "p75": 68.8525,
+        "p90": 91.9981,
+        "p95": 98.0378,
+        "p99": 99.803
+    },
+    "remote_host": "edge-asus",
+    "local_device": "cpu",
+    "sol_run_mode": 2
+}

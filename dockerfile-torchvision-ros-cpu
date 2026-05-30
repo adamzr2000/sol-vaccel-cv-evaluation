@@ -61,6 +61,7 @@ RUN wget https://s3.nbfc.io/nbfc-assets/github/vaccel/rev/main/x86_64/release/va
     python3 -m pip install --force-reinstall git+https://github.com/nubificus/vaccel-python
 
 ENV VACCEL_PLUGINS=libvaccel-exec.so:libvaccel-rpc.so
+ENV VACCEL_EXEC_DLCLOSE_ENABLED=0
 ENV TTRPC_TCP_NODELAY_ENABLED=1
 ENV VACCEL_RPC_SEND_WRITE_ENABLED=0
 

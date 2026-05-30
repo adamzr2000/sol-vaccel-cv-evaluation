@@ -38,15 +38,23 @@ ENV PATH="$VENV/bin:$PATH"
 # NVIDIA runtime libs aligned with dockerfile-torchvision-ros-gpu (torch 2.8.0/cu128).
 # cuDNN unpinned: segmentation models ship libsol-dnn-cudnn-deployment-0.8.0rc6-9.10.2.so
 # (needs 9.10.x); classification models ship rc5-9.1 which works on 9.10.x (backward-compat).
+# Pinned to match torchvision-ros-app:gpu — SOL GPU artifacts are compiled against cuDNN 9.10.2.
 RUN python3 -m pip install \
-      "nvidia-cuda-runtime-cu12" \
-      "nvidia-cudnn-cu12" \
-      "nvidia-cublas-cu12"
+      "nvidia-cuda-runtime-cu12==12.8.90" \
+      "nvidia-cudnn-cu12==9.10.2.21" \
+      "nvidia-cublas-cu12==12.8.4.1"
 
 ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:\
 /.venv/lib/python3.10/site-packages/nvidia/cuda_runtime/lib:\
 /.venv/lib/python3.10/site-packages/nvidia/cudnn/lib:\
 /.venv/lib/python3.10/site-packages/nvidia/cublas/lib"
+
+# PyTorch runtime — only needed if serving vaccel-remote-ptc with a version-matched
+# libvaccel-torch.so. Currently vaccel-remote-ptc uses run_agent_ptc.sh (harbor image).
+# Uncomment if rebuilding this image as a unified agent for both sol and ptc.
+# RUN python3 -m pip install --pre \
+#       torch==2.8.0 \
+#       --index-url https://download.pytorch.org/whl/cu128
 
 # vAccel
 RUN wget https://s3.nbfc.io/nbfc-assets/github/vaccel/rev/main/x86_64/release/vaccel_latest_amd64.deb && \

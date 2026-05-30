@@ -9,7 +9,7 @@ PORT=9125
 PROFILING=0
 
 usage() {
-  echo "Usage: $0 <cpu|gpu> [--port PORT] [--no-omp] [--debug]"
+  echo "Usage: $0 <cpu|gpu> [--port PORT] [--no-omp] [--debug] [--robot]"
   exit 1
 }
 
@@ -26,13 +26,17 @@ while [[ $# -gt 0 ]]; do
     --port)   PORT="$2"; shift 2 ;;
     --no-omp) SET_OMP=0; shift ;;
     --debug)  PROFILING=1; shift ;;
+    --robot)  OMP_THREADS=4; shift ;;
     *) echo "Unknown argument: $1"; usage ;;
   esac
 done
 
 OMP_ARGS=()
 if [[ $SET_OMP -eq 1 ]]; then
-  OMP_ARGS=(-e "OMP_NUM_THREADS=${OMP_THREADS}")
+  OMP_ARGS=(
+    -e "OMP_NUM_THREADS=${OMP_THREADS}"
+    -e "OMP_THREAD_LIMIT=${OMP_THREADS}"
+  )
 fi
 
 GPU_ARGS=()
@@ -49,7 +53,7 @@ docker run --rm -it \
   "${GPU_ARGS[@]}" \
   "${OMP_ARGS[@]}" \
   -e "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES_VAL}" \
-  -e "VACCEL_LOG_LEVEL=3" \
+  -e "VACCEL_LOG_LEVEL=1" \
   -e "VACCEL_PROFILING_ENABLED=${PROFILING}" \
   -p "${PORT}:9125" \
   "${IMAGE}"

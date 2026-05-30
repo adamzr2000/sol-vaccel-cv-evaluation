@@ -42,7 +42,7 @@ done
 
 case "$MODE" in
   cpu)
-    IMAGE="torchvision-ros-app:cpu"
+    IMAGE="torchvision-ros-app:gpu"
     LIB_TYPE="lib_cpu"
     GPU_ARGS=()
     ;;
@@ -127,21 +127,27 @@ EOF
 EXTRA_VOL_ARGS=(
   --volume="${HOST_DDS_CFG_DIR}:${CONT_DDS_CFG_DIR}:ro"
 )
+# vaccel-torch plugin is always mounted and always included — both cpu and gpu modes now use
+# torchvision-ros-app:gpu which has libcudart available, so the torch plugin loads in both modes.
+VACCEL_TORCH_SO="$(pwd)/vaccel-plugin-torch/libvaccel-torch.so"
+EXTRA_VOL_ARGS+=( --volume="${VACCEL_TORCH_SO}:/usr/local/lib/libvaccel-torch.so:ro" )
+# /usr/local/lib is not in the container's LD_LIBRARY_PATH by default
+LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib"
+
 EXTRA_ENV_ARGS=(
   --env="RMW_IMPLEMENTATION=${RMW}"
   --env="CYCLONEDDS_URI=file://${CONT_DDS_CFG_DIR}/cyclonedds.xml"
-  --env="VACCEL_PLUGINS=libvaccel-exec.so:libvaccel-rpc.so"
+  --env="VACCEL_PLUGINS=libvaccel-exec.so:libvaccel-rpc.so:libvaccel-torch.so"
+  --env="VACCEL_EXEC_DLCLOSE_ENABLED=0"
 )
 
+# CPU mode: hide GPU devices to prevent CUDA init overhead from the GPU-capable PyTorch
+if [[ "$MODE" == "cpu" ]]; then
+  EXTRA_ENV_ARGS+=( --env="CUDA_VISIBLE_DEVICES=" )
+fi
+
 if [[ "$MODE" == "gpu" ]]; then
-  # vaccel-torch plugin: required for vaccel-*-ptc backends (CUDA AOTI only)
-  VACCEL_TORCH_SO="$(pwd)/vaccel-plugin-torch/libvaccel-torch.so"
-  EXTRA_VOL_ARGS+=( --volume="${VACCEL_TORCH_SO}:/usr/local/lib/libvaccel-torch.so:ro" )
-  EXTRA_ENV_ARGS+=( --env="VACCEL_PLUGINS=libvaccel-exec.so:libvaccel-rpc.so:libvaccel-torch.so" )
   EXTRA_ENV_ARGS+=( --env="CUDA_HOME=${CUDA_HOME}" )
-  # /usr/local/lib is not in the container's LD_LIBRARY_PATH by default;
-  # add it so dlopen can find libvaccel-torch.so at runtime.
-  LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib"
 fi
 
 docker run -it --rm \

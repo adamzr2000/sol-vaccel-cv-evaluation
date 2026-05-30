@@ -18,7 +18,7 @@ def get_benchmark_config():
     # 1. Backend
     backend = os.environ.get("BACKEND", "stock").strip().lower()
     valid_backends = [
-        "stock", "ptc",
+        "stock", "ptc", "aoti",
         "sol",
         "vaccel-local-torch", "vaccel-remote-torch",
         "vaccel-local-ptc", "vaccel-remote-ptc",

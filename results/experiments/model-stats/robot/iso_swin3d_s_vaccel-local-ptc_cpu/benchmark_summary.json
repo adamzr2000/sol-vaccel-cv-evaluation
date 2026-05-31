@@ -1,0 +1,102 @@
+{
+    "run_id": "iso_swin3d_s_vaccel-local-ptc_cpu",
+    "backend": "vaccel-local-ptc",
+    "host": "robot",
+    "model": "swin3d_s",
+    "model_type": "video_classification",
+    "device": "cpu",
+    "num_samples": 144,
+    "time_window": {
+        "start": "2026-05-30T23:22:13.699333+00:00",
+        "stop": "2026-05-30T23:24:13.727522+00:00",
+        "duration_sec": 120.028189
+    },
+    "frames_per_sample": 16,
+    "fps": {
+        "inference": 1.35,
+        "inference_std": 0.05,
+        "system": 1.24,
+        "system_std": 0.05,
+        "processed": 1.2,
+        "camera_observed": 14.27
+    },
+    "stream": {
+        "avoid_duplicates": true,
+        "received_frames": 1731,
+        "processed_frames": 144,
+        "drop_ratio": 0.916811,
+        "duplicates_skipped_loops": 2625
+    },
+    "ros_data_age_ms": {
+        "mean": -1.0,
+        "std": 0.0,
+        "min": -1.0,
+        "max": -1.0,
+        "p25": -1.0,
+        "p50": -1.0,
+        "p75": -1.0,
+        "p90": -1.0,
+        "p95": -1.0,
+        "p99": -1.0
+    },
+    "preprocessing_ms": {
+        "mean": 64.856,
+        "std": 11.9149,
+        "min": 53.2254,
+        "max": 144.0959,
+        "p25": 59.3343,
+        "p50": 61.4647,
+        "p75": 63.818,
+        "p90": 81.4288,
+        "p95": 89.0024,
+        "p99": 101.478
+    },
+    "inference_ms": {
+        "mean": 742.684,
+        "std": 31.2606,
+        "min": 651.5185,
+        "max": 935.6625,
+        "p25": 723.9057,
+        "p50": 741.9893,
+        "p75": 758.7409,
+        "p90": 777.6004,
+        "p95": 783.6119,
+        "p99": 812.8191
+    },
+    "postprocessing_ms": {
+        "mean": 0.1058,
+        "std": 0.0236,
+        "min": 0.0916,
+        "max": 0.2898,
+        "p25": 0.0982,
+        "p50": 0.0998,
+        "p75": 0.1024,
+        "p90": 0.1163,
+        "p95": 0.1281,
+        "p99": 0.2062
+    },
+    "system_ms": {
+        "mean": 807.7198,
+        "std": 33.7515,
+        "min": 707.8543,
+        "max": 998.4323,
+        "p25": 789.3099,
+        "p50": 807.8945,
+        "p75": 821.3056,
+        "p90": 840.3905,
+        "p95": 845.3605,
+        "p99": 923.0374
+    },
+    "confidence_score": {
+        "mean": 39.1192,
+        "std": 21.7249,
+        "min": 8.3013,
+        "max": 96.2793,
+        "p25": 19.8876,
+        "p50": 34.2642,
+        "p75": 56.3207,
+        "p90": 71.0545,
+        "p95": 78.8841,
+        "p99": 89.1346
+    }
+}

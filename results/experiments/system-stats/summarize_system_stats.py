@@ -85,21 +85,12 @@ def parse_stem_and_folder(path: Path, run_tag: str) -> Optional[Tuple[str, str, 
     remainder = stem[len(needle):]
     parts = remainder.split("_")
 
-    if len(parts) < 4:
+    if len(parts) < 3:
         return None
 
-    # vaccel-remote extended naming
-    # Pattern: ..._{BACKEND}_{OLD_HOST}_{LOCAL_MODE}_target-{TARGET}
-    if len(parts) >= 5 and parts[-1].startswith("target-"):
-        target = parts[-1]
-        local_mode = parts[-2]
-        backend = parts[-4]
-        model = "_".join(parts[:-4])
-        device = f"{local_mode}_{target}"
-    else:
-        device = parts[-1]
-        backend = parts[-3]
-        model = "_".join(parts[:-3])
+    device  = parts[-1]
+    backend = parts[-2]
+    model   = "_".join(parts[:-2])
 
     return model, backend, host, device
 

@@ -347,7 +347,7 @@ def plot_combined(rows):
         3, len(cat_models),  # Increased to 3 rows
         figsize=FIG_SIZE,
         sharey=False,
-        gridspec_kw={"width_ratios": widths, "wspace": 0.28, "hspace": 0.12},
+        gridspec_kw={"width_ratios": widths, "wspace": 0.14, "hspace": 0.12},
     )
 
     # Ensure axes is always 2D array [row, col]

@@ -17,16 +17,18 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.ticker import MaxNLocator, FormatStrFormatter
 import seaborn as sns
-from results.plot.plot_config import get_path, load_config, get_model_type_order, get_model_display_name
+from plot_config import get_path, load_config, get_model_type_order, get_model_display_name
 
 # --- CONFIGURATION ---
+_HERE = Path(__file__).parent
 cfg = load_config()
-CPU_FILE = str(get_path("system_cpu_summary"))
-GPU_FILE = str(get_path("system_gpu_summary"))
+CPU_FILE     = str(get_path("system_cpu_summary"))   # e2e: edge-asus + robot remote rows
+ISO_CPU_FILE = str(_HERE / "../experiments/system-stats/_summary/iso_overall_cpu_stats_wifi.csv")  # robot local rows
+GPU_FILE     = str(get_path("system_gpu_summary"))
 
 OUTPUT_FILE = "power-consumption.pdf"
 
-FONT_SCALE = 1.5
+FONT_SCALE = 1.7
 SPINES_WIDTH = 1.0
 STROKE_WIDTH = 0.8
 POWER_MAX_TICKS = 5
@@ -77,7 +79,8 @@ def ordered_models(models):
 
 def style_axes(ax):
     ax.set_axisbelow(True)
-    ax.grid(axis="both", linestyle="-", linewidth=1.0, alpha=0.8)
+    ax.grid(axis="y", linestyle="-", linewidth=0.6, alpha=0.35)
+    ax.grid(axis="x", visible=False)
     for side in ("top", "right", "bottom", "left"):
         ax.spines[side].set_color("black")
         ax.spines[side].set_linewidth(SPINES_WIDTH)
@@ -85,19 +88,23 @@ def style_axes(ax):
 
 def classify_robot_cpu_variant(row) -> str | None:
     backend = str(row.get("backend", "")).lower().strip()
-    device = str(row.get("device", "")).lower().strip()
+    device  = str(row.get("device",  "")).lower().strip()
 
-    if backend == "ptc" and device == "cpu":
+    # Local (iso data): robot runs inference directly
+    if backend == "vaccel-local-ptc" and device == "cpu":
         return VARIANTS[0]
-    if backend == "sol" and device == "cpu":
+    if backend == "vaccel-local-sol" and device == "cpu":
         return VARIANTS[1]
 
-    if "vaccel-remote-torch" in backend:
-        if "target-cpu" in device: return VARIANTS[2]
-        if "target-gpu" in device: return VARIANTS[4]
-    if "vaccel-remote-sol" in backend:
-        if "target-cpu" in device: return VARIANTS[3]
-        if "target-gpu" in device: return VARIANTS[5]
+    # Remote (e2e data): robot is the client, device encodes the remote target
+    if backend == "vaccel-remote-ptc" and "cpu" in device:
+        return VARIANTS[2]
+    if backend == "vaccel-remote-sol" and "cpu" in device:
+        return VARIANTS[3]
+    if backend == "vaccel-remote-ptc" and "gpu" in device:
+        return VARIANTS[4]
+    if backend == "vaccel-remote-sol" and "gpu" in device:
+        return VARIANTS[5]
 
     return None
 
@@ -120,13 +127,16 @@ def load_robot_cpu_rows(cpu_df: pd.DataFrame):
 def load_edge_cpu_remote_rows(cpu_df: pd.DataFrame):
     rows = []
     for _, r in cpu_df.iterrows():
-        host, backend, device = str(r.get("host", "")).lower(), str(r.get("backend", "")).lower(), str(r.get("device", "")).lower()
-        if "edge" not in host or device != "cpu": continue
+        host    = str(r.get("host",    "")).lower()
+        backend = str(r.get("backend", "")).lower()
+        device  = str(r.get("device",  "")).lower()
+        if "edge" not in host or "cpu" not in device:
+            continue
         model = str(r.get("model", "")).strip()
 
-        if "vaccel-remote-torch" in backend:
+        if backend == "vaccel-remote-ptc":
             rows.append({"base_model": model, "variant": VARIANTS[2], "mean": float(r["cpu_watts_mean"]), "std": float(r["cpu_watts_std"]) if pd.notna(r["cpu_watts_std"]) else np.nan})
-        elif "vaccel-remote-sol" in backend:
+        elif backend == "vaccel-remote-sol":
             rows.append({"base_model": model, "variant": VARIANTS[3], "mean": float(r["cpu_watts_mean"]), "std": float(r["cpu_watts_std"]) if pd.notna(r["cpu_watts_std"]) else np.nan})
     return rows
 
@@ -134,13 +144,16 @@ def load_edge_cpu_remote_rows(cpu_df: pd.DataFrame):
 def load_edge_gpu_remote_rows(gpu_df: pd.DataFrame):
     rows = []
     for _, r in gpu_df.iterrows():
-        host, backend, device = str(r.get("host", "")).lower(), str(r.get("backend", "")).lower(), str(r.get("device", "")).lower()
-        if "edge" not in host or device != "gpu": continue
+        host    = str(r.get("host",    "")).lower()
+        backend = str(r.get("backend", "")).lower()
+        device  = str(r.get("device",  "")).lower()
+        if "edge" not in host or "gpu" not in device:
+            continue
         model = str(r.get("model", "")).strip()
 
-        if "vaccel-remote-torch" in backend:
+        if backend == "vaccel-remote-ptc":
             rows.append({"base_model": model, "variant": VARIANTS[4], "mean": float(r["power_draw_w_mean"]), "std": float(r["power_draw_w_std"]) if pd.notna(r["power_draw_w_std"]) else np.nan})
-        elif "vaccel-remote-sol" in backend:
+        elif backend == "vaccel-remote-sol":
             rows.append({"base_model": model, "variant": VARIANTS[5], "mean": float(r["power_draw_w_mean"]), "std": float(r["power_draw_w_std"]) if pd.notna(r["power_draw_w_std"]) else np.nan})
     return rows
 
@@ -235,16 +248,16 @@ def plot_combined_power(robot_rows, edge_cpu_rows, edge_gpu_rows):
         3, len(cat_models),
         figsize=FIG_SIZE,
         sharey=False,  # Kept as False, but we manually sync them per row below
-        gridspec_kw={"width_ratios": widths, "wspace": 0.02, "hspace": 0.14},
+        gridspec_kw={"width_ratios": widths, "wspace": 0.14, "hspace": 0.14},
     )
 
     if len(cat_models) == 1:
         axes = np.array([[axes[0]], [axes[1]], [axes[2]]])
 
     panels = [
-        ("robot", "Robot CPU\npower consumption (W)", robot_rows, VARIANTS),
-        ("edge_cpu", "Edge CPU\npower consumption (W)", edge_cpu_rows, [VARIANTS[2], VARIANTS[3]]),
-        ("edge_gpu", "Edge GPU\npower consumption (W)", edge_gpu_rows, [VARIANTS[4], VARIANTS[5]]),
+        ("robot",    "Robot CPU power (W)", robot_rows,     VARIANTS),
+        ("edge_cpu", "Edge CPU power (W)",  edge_cpu_rows,  [VARIANTS[2], VARIANTS[3]]),
+        ("edge_gpu", "Edge GPU power (W)",  edge_gpu_rows,  [VARIANTS[4], VARIANTS[5]]),
     ]
 
     # --- PRINT TO CONSOLE BEFORE PLOTTING ---
@@ -305,18 +318,13 @@ def plot_combined_power(robot_rows, edge_cpu_rows, edge_gpu_rows):
                             elinewidth=STROKE_WIDTH, capsize=4, capthick=STROKE_WIDTH, zorder=10 
                         )
 
-            # --- IDLE POWER BASELINE LINE ---
-            idle_key = panel_key  # "robot", "edge_cpu", or "edge_gpu"
+            # --- IDLE POWER BASELINE (dashed line + right-edge label) ---
+            idle_key = panel_key
             if idle_key in IDLE_POWER:
-                idle_data = IDLE_POWER[idle_key]
-                idle_mean = idle_data["mean"]
-                idle_std = idle_data["std"]
-                
-                # Draw idle power line across entire plot width
-                x_min, x_max = x[0] - 0.5, x[-1] + 0.5
-                ax.hlines(y=idle_mean, xmin=x_min, xmax=x_max, 
-                         colors='black', linestyles=':', linewidth=STROKE_WIDTH, alpha=0.7, zorder=6,
-                         label="Idle" if (row_idx == 0 and col_idx == 0) else "")
+                idle_mean = IDLE_POWER[idle_key]["mean"]
+                ax.axhline(idle_mean, color="#555555", linewidth=1.0,
+                           linestyle="--", alpha=0.8, zorder=4,
+                           label="Idle power" if (row_idx == 0 and col_idx == 0) else "")
 
             # --- START: POWER SAVINGS INDICATOR (ROBOT ROW ONLY) ---
             for i, m in enumerate(current_models):
@@ -416,7 +424,7 @@ def plot_combined_power(robot_rows, edge_cpu_rows, edge_gpu_rows):
             
             # Only show model names on the bottom row
             if row_idx == 2:
-                ax.set_xticklabels([get_model_display_name(m) for m in current_models], rotation=25, ha="right")
+                ax.set_xticklabels([get_model_display_name(m) for m in current_models], rotation=15, ha="right")
             else:
                 ax.set_xticklabels([])
 
@@ -430,13 +438,13 @@ def plot_combined_power(robot_rows, edge_cpu_rows, edge_gpu_rows):
                 ax.tick_params(labelleft=False)
 
     # ---- Manual Layout ----
-    CAPTION_OFFSET = 0.13
+    CAPTION_OFFSET = 0.08
 
     fig.subplots_adjust(
         left=0.07,
         right=0.995,
         bottom=0.17,
-        top=0.91,  # Reduced top padding; no legend title
+        top=0.88,  # Reduced top padding; no legend title
     )
 
     # Global Legend (Built manually to strip out all hatching)
@@ -449,10 +457,10 @@ def plot_combined_power(robot_rows, edge_cpu_rows, edge_gpu_rows):
         for v in VARIANTS
     ]
     
-    # Add line style indicators for idle and savings reference
+    # Add legend entries for idle band and savings reference
     from matplotlib.lines import Line2D
     clean_handles.extend([
-        Line2D([0], [0], color='gray', linestyle=':', linewidth=STROKE_WIDTH, alpha=0.6),
+        Line2D([0], [0], color="#555555", linestyle="--", linewidth=1.0, alpha=0.8),
         Line2D([0], [0], color='darkgreen', linestyle='-.', linewidth=STROKE_WIDTH, alpha=0.75),
     ])
     variant_labels = list(VARIANTS) + ["Idle power", "Power savings"]
@@ -500,12 +508,17 @@ def main():
         "savefig.pad_inches": 0.02,
     })
 
-    cpu_path = Path(CPU_FILE).resolve()
-    gpu_path = Path(GPU_FILE).resolve()
+    cpu_path     = Path(CPU_FILE).resolve()
+    iso_cpu_path = Path(ISO_CPU_FILE).resolve()
+    gpu_path     = Path(GPU_FILE).resolve()
     if not cpu_path.exists(): raise SystemExit(f"CPU CSV not found: {cpu_path}")
     if not gpu_path.exists(): raise SystemExit(f"GPU CSV not found: {gpu_path}")
 
     cpu_df = pd.read_csv(cpu_path)
+    if iso_cpu_path.exists():
+        cpu_df = pd.concat([cpu_df, pd.read_csv(iso_cpu_path)], ignore_index=True)
+    else:
+        print(f"[WARNING] ISO CPU file not found, local robot rows will be missing: {iso_cpu_path}")
     gpu_df = pd.read_csv(gpu_path)
 
     for c in ("host", "model", "backend", "device"):

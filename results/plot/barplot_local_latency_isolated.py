@@ -51,9 +51,9 @@ ROWS = [
 ]
 
 # ── model categories ─────────────────────────────────────────────────────────
-CAT_IMAGE = ["resnet50", "swin_t", "swin_s", "swin_v2_b"]
+CAT_IMAGE = ["swin_v2_b", "swin_t", "swin_s", "resnet50"]
 CAT_VIDEO = ["swin3d_s", "swin3d_b", "r3d_18", "r2plus1d_18"]
-CAT_SEG   = ["deeplabv3_resnet50", "deeplabv3_resnet101", "fcn_resnet50", "fcn_resnet101"]
+CAT_SEG   = ["fcn_resnet101", "fcn_resnet50", "deeplabv3_resnet101", "deeplabv3_resnet50"]
 
 CATEGORIES = [
     ("(a) Image Classification",     CAT_IMAGE),
@@ -182,8 +182,8 @@ def main():
         figsize=(22, n_rows * 3.0 + 2.0),
         sharey=False,
         gridspec_kw={
-            "wspace":       0.18,
-            "hspace":       0.42,
+            "wspace":       0.14,
+            "hspace":       0.18,
             "top":          0.85,
             "width_ratios": [len(c[1]) for c in CATEGORIES],
         },

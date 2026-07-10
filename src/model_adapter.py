@@ -518,6 +518,16 @@ class VaccelPyTorchAdapter(PyTorchBaselineAdapter):
 # 2. ADAPTER FOR SOL COMPILER
 # =========================================================
 class SolAdapter(BaseModelAdapter):
+    # Segmentation models with an aux_classifier head are SOL-compiled with a
+    # fixed (in, out, aux, vdims) signature. The plain dlopen wrapper here
+    # still requires/returns the aux buffer as-is. VaccelSolAdapter overrides
+    # this to True: its vaccel wrapper (scripts/sol_vaccel_wrappers/templates)
+    # keeps aux server-side in a scratch buffer instead of a client-visible
+    # resource, so it's never shipped over vaccel-remote RPC, and its run()
+    # signature drops the aux param accordingly. Revert this flag (and the
+    # matching wrapper templates) if a future SOL export drops aux entirely.
+    TRANSPORT_DROPS_AUX = False
+
     def __init__(self, device, model_name, model_type="classification", weights_enum=None):
         super().__init__(device)
         self.model_name = model_name
@@ -627,8 +637,13 @@ class SolAdapter(BaseModelAdapter):
         else:  # Segmentation
             self.input_buffer = np.zeros((1, 3, 224, 224), dtype=np.float32)
             self.output_buffer = np.zeros((1, 21, 224, 224), dtype=np.float32)
-            self.aux_buffer = np.zeros((1, 21, 224, 224), dtype=np.float32)
-            self.execution_args = [self.input_buffer, self.output_buffer, self.aux_buffer, self.vdims]
+            if self.TRANSPORT_DROPS_AUX:
+                # vaccel wrapper keeps aux server-side; nothing to bind here.
+                self.aux_buffer = None
+                self.execution_args = [self.input_buffer, self.output_buffer, self.vdims]
+            else:
+                self.aux_buffer = np.zeros((1, 21, 224, 224), dtype=np.float32)
+                self.execution_args = [self.input_buffer, self.output_buffer, self.aux_buffer, self.vdims]
             # print( [type(x) for x in self.execution_args] )
 
             
@@ -778,6 +793,9 @@ class SolAdapter(BaseModelAdapter):
 
 
 class VaccelSolAdapter(SolAdapter):
+    # See SolAdapter.TRANSPORT_DROPS_AUX.
+    TRANSPORT_DROPS_AUX = True
+
     def __init__(self, device, model_name, model_type="classification", weights_enum=None, use_remote=False):
         self.use_remote = use_remote
         super().__init__(device, model_name, model_type, weights_enum)

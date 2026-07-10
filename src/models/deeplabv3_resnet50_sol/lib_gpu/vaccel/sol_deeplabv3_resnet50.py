@@ -112,7 +112,16 @@ class sol_deeplabv3_resnet50:
             [vaccel.Arg(level, vaccel.ArgType.INT32)],
         )
 
-    def _prepare_run_args(self, in__x, out__0_out=None, out__0_aux=None, vdims=None):
+    # NOTE: sol_predict()/sol_*_set_IO() are SOL-compiled with a fixed
+    # (in, out, aux, vdims) signature we cannot change, but the aux
+    # (auxiliary classifier) output is never consumed downstream. The
+    # matching C wrapper (sol_deeplabv3_resnet50_wrapper.c) now keeps aux
+    # in a local scratch buffer instead of a registered vaccel resource,
+    # so it's never shipped back over vaccel-remote RPC. This class is
+    # trimmed to match: no out__0_aux param/resource anywhere below. If a
+    # future SOL export drops the aux head entirely, this whole note (and
+    # the matching wrapper.c change) can just be reverted.
+    def _prepare_run_args(self, in__x, out__0_out=None, vdims=None):
         if vdims is None:
             vdims_0 = in__x.shape[0]
             vdims = np.array(
@@ -125,25 +134,21 @@ class sol_deeplabv3_resnet50:
             vdims_0 = vdims[0]
         if out__0_out is None:
             out__0_out = np.zeros((vdims_0, 21, 224, 224), dtype=np.float32)
-        if out__0_aux is None:
-            out__0_aux = np.zeros((vdims_0, 21, 224, 224), dtype=np.float32)
 
-        return (in__x, out__0_out, out__0_aux, vdims)
+        return (in__x, out__0_out, vdims)
 
     def set_IO(self, args):
-        (in__x, out__0_out, out__0_aux, vdims) = self._prepare_run_args(*args)
+        (in__x, out__0_out, vdims) = self._prepare_run_args(*args)
 
         with self.profiler("init resources"):
             session = self._session
             in_resource = vaccel.Resource.from_numpy(in__x)
             out_out_resource = vaccel.Resource.from_numpy(out__0_out)
-            out_aux_resource = vaccel.Resource.from_numpy(out__0_aux)
             vdims_resource = vaccel.Resource.from_numpy(vdims)
 
         with self.profiler("register resources"):
             in_resource.register(session)
             out_out_resource.register(session)
-            out_aux_resource.register(session)
             vdims_resource.register(session)
 
         with self.profiler("init args"):
@@ -154,9 +159,6 @@ class sol_deeplabv3_resnet50:
             out_out_resource_id = (
                 out_out_resource.remote_id if session.is_remote else out_out_resource.id
             )
-            out_aux_resource_id = (
-                out_aux_resource.remote_id if session.is_remote else out_aux_resource.id
-            )
             vdims_resource_id = (
                 vdims_resource.remote_id if session.is_remote else vdims_resource.id
             )
@@ -164,7 +166,6 @@ class sol_deeplabv3_resnet50:
                 vaccel.Arg(session_id, vaccel.ArgType.INT64),
                 vaccel.Arg(in_resource_id, vaccel.ArgType.INT64),
                 vaccel.Arg(out_out_resource_id, vaccel.ArgType.INT64),
-                vaccel.Arg(out_aux_resource_id, vaccel.ArgType.INT64),
                 vaccel.Arg(vdims_resource_id, vaccel.ArgType.INT64),
             ]
 
@@ -178,18 +179,16 @@ class sol_deeplabv3_resnet50:
         self._arg_resources = [
             in_resource,
             out_out_resource,
-            out_aux_resource,
             vdims_resource,
         ]
 
-    def predict(self, in__x=None, out__0_out=None, out__0_aux=None, vdims=None):
+    def predict(self, in__x=None, out__0_out=None, vdims=None):
         if self._resource is None:
             self.init()
 
-        (in__x, out__0_out, out__0_aux, vdims) = self._prepare_run_args(
+        (in__x, out__0_out, vdims) = self._prepare_run_args(
             in__x,
             out__0_out,
-            out__0_aux,
             vdims,
         )
 
@@ -200,7 +199,6 @@ class sol_deeplabv3_resnet50:
             ]
             out_args = [
                 vaccel.Arg(out__0_out, vaccel.ArgType.BUFFER),
-                vaccel.Arg(out__0_aux, vaccel.ArgType.BUFFER),
             ]
 
         with self.profiler("exec"):
@@ -210,11 +208,11 @@ class sol_deeplabv3_resnet50:
                 in_args,
                 out_args,
             )
-        return out[0], out[1]
+        return out[0]
 
-    def run(self, in__x=None, out__0_out=None, out__0_aux=None, vdims=None):
+    def run(self, in__x=None, out__0_out=None, vdims=None):
         if in__x is not None:
-            return self.predict(in__x, out__0_out, out__0_aux, vdims)
+            return self.predict(in__x, out__0_out, vdims)
 
         if self._resource is None:
             self.init()
@@ -227,8 +225,7 @@ class sol_deeplabv3_resnet50:
 
     def get_output(self):
         out_out_resource = self._arg_resources[1]
-        out_aux_resource = self._arg_resources[2]
-        if out_out_resource is not None and out_aux_resource is not None:
+        if out_out_resource is not None:
             with self.profiler("exec"):
                 self._session.exec_with_resource(
                     self._resource,
@@ -237,7 +234,6 @@ class sol_deeplabv3_resnet50:
 
             with self.profiler("sync resource"):
                 out_out_resource.sync(self._session)
-                out_aux_resource.sync(self._session)
 
 
 def run_example():
@@ -245,14 +241,11 @@ def run_example():
     vdims_0 = 1
     in__x = np.random.rand(vdims_0, 3, 224, 224).astype(np.float32)
     lib = sol_deeplabv3_resnet50()
-    out__0_out, out__0_aux = lib(
+    out__0_out = lib(
         in__x,
     )
     print(
         f"Max_V: {np.max(out__0_out, axis=1)}\nMax_I: {np.argmax(out__0_out, axis=1)}"
-    )
-    print(
-        f"Max_V: {np.max(out__0_aux, axis=1)}\nMax_I: {np.argmax(out__0_aux, axis=1)}"
     )
 
     vdims = np.array(
@@ -264,11 +257,9 @@ def run_example():
 
     in__x = np.random.rand(vdims_0, 3, 224, 224).astype(np.float32)
     out__0_out = np.zeros((vdims_0, 21, 224, 224), dtype=np.float32)
-    out__0_aux = np.zeros((vdims_0, 21, 224, 224), dtype=np.float32)
     dp_args = [
         in__x,
         out__0_out,
-        out__0_aux,
         vdims,
     ]  # Inputs, Outputs, VDims must be in this exact order!
 
@@ -282,9 +273,6 @@ def run_example():
     print(
         f"Max_V: {np.max(out__0_out, axis=1)}\nMax_I: {np.argmax(out__0_out, axis=1)}"
     )
-    print(
-        f"Max_V: {np.max(out__0_aux, axis=1)}\nMax_I: {np.argmax(out__0_aux, axis=1)}"
-    )
 
     ####### Option 3: Run after setting in- and outputs #######
     lib.set_IO(dp_args)
@@ -293,9 +281,6 @@ def run_example():
     lib.get_output()  # syncs
     print(
         f"Max_V: {np.max(out__0_out, axis=1)}\nMax_I: {np.argmax(out__0_out, axis=1)}"
-    )
-    print(
-        f"Max_V: {np.max(out__0_aux, axis=1)}\nMax_I: {np.argmax(out__0_aux, axis=1)}"
     )
     # Free used data and close lib---------------------------------------------
     lib.free()

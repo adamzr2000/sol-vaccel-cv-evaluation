@@ -47,7 +47,7 @@ See [monitoring/](./monitoring) for details.
 ./run_ros.sh gpu --iface enp130s0
 
 # Robot (always CPU)
-./run_ros.sh cpu --iface ue0
+./run_ros.sh cpu --iface enp2s0
 ```
 
 For `vaccel-remote-*` backends, also start the vAccel agent on the edge host and point the robot container at it:
@@ -57,8 +57,8 @@ For `vaccel-remote-*` backends, also start the vAccel agent on the edge host and
 ./run_agent.sh 9125
 
 # On robot (--remote defaults to 10.5.1.20:9125 = edge-asus)
-./run_ros.sh cpu --iface ue0                              # → edge-asus
-./run_ros.sh cpu --remote 10.5.1.21:9125 --iface ue0      # → edge-xtreme
+./run_ros.sh cpu --iface enp2s0                              # → edge-asus
+./run_ros.sh cpu --remote 10.5.1.21:9125 --iface enp2s0      # → edge-xtreme
 ```
 
 ---
@@ -171,14 +171,16 @@ Input/output shapes and sizes (float32 = 4 B, uint8 = 1 B). See [model_adapter.p
 | Raw output | `(1, 25200, 85)` float32 | ≈ 8.17 MiB |
 | Postprocessed | `N` objects: boxes + scores + classes | ≈ 28 B/object |
 
-### Segmentation — `deeplabv3_resnet50/101`, `fcn_resnet50/101`
+### Segmentation — `deeplabv3_resnet50/101`, `deeplabv3_mobilenet_v3_large`, `fcn_resnet50/101`
 
 | | Shape | Size |
 |---|---|---|
 | Input | `(1, 3, 224, 224)` float32 | ≈ 588 KiB |
 | Raw output | `(1, 21, 224, 224)` float32 | ≈ 4.02 MiB |
-| SOL aux buffer | `(1, 21, 224, 224)` float32 | ≈ 4.02 MiB |
+| SOL aux buffer (`sol` backend only) | `(1, 21, 224, 224)` float32 | ≈ 4.02 MiB |
 | Postprocessed | `(224, 224)` uint8 class IDs | ≈ 49 KiB |
+
+These models are SOL-compiled with a fixed `(in, out, aux, vdims)` signature (the aux/auxiliary-classifier head), which the plain `sol` backend's dlopen wrapper still allocates and returns as-is. The `vaccel-local-sol`/`vaccel-remote-sol` wrappers (`scripts/sol_vaccel_wrappers/templates/`) keep the aux buffer server-side in a scratch allocation instead of a client-registered resource, so it's computed but never transferred over vaccel RPC — `vaccel-remote-sol` for these models no longer pays the extra ≈4 MiB/call network cost that `vaccel-remote-torch`/`vaccel-remote-ptc` never had to begin with (the vaccel TORCH plugin only supports a single output tensor).
 
 ### Image Classification — `resnet50`, `swin_t`, `swin_s`, `swin_v2_b`
 

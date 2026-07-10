@@ -30,17 +30,17 @@ cfg = load_config()
 INPUT_FILE = str(get_path("model_summary"))
 # iso run: edge-asus vaccel-remote-{ptc,sol} inference_ms used as pure-inference baseline for remote breakdown
 REMOTE_INFERENCE_FILE = _HERE / "../experiments/model-stats/_summary/iso_benchmark_summary.json"
-OUTPUT_FILE = "frame-rate-latency.pdf"
+OUTPUT_FILE = "fps-latency-e2e.pdf"
 
 FONT_SCALE = 1.8
 SPINES_WIDTH = 1.0
 STROKE_WIDTH = 0.7
 LATENCY_MAX_TICKS = 5
 LATENCY_TICK_FMT = "%.0f"
-FIG_SIZE = (18, 12.0)  # Reduced height; no legend title saves space
+FIG_SIZE = (18, 15.0)  # 4-row layout
 
 SHOW_VALUE_LABELS = False
-SHOW_ERROR_BARS = False
+SHOW_ERROR_BARS = True
 HIGHLIGHT_SOL_SLOWER_THAN_PYTORCH = False
 METRIC = "median"           # "median" (p50) | "mean" — controls FPS derivation and latency bars
 LOCAL_ROBOT_MODE = "vaccel-rpc" # "legacy"    → ptc/sol backends, iros2 run tag
@@ -186,12 +186,15 @@ def extract_combined_rows(runs, remote_runs):
         if sys_metric is None:
             continue
 
+        p25 = float(sys_data.get("p25", sys_metric))
+        p75 = float(sys_data.get("p75", sys_metric))
         if METRIC == "median":
-            p25 = sys_data.get("p25", sys_metric)
-            p75 = sys_data.get("p75", sys_metric)
-            sys_err = (float(p75) - float(p25)) / 2.0
+            err_lower = float(sys_metric) - p25   # asymmetric lower
+            err_upper = p75 - float(sys_metric)   # asymmetric upper
         else:
-            sys_err = sys_data.get("std", np.nan)
+            std = float(sys_data.get("std", 0.0))
+            err_lower = std
+            err_upper = std
 
         inf_data = r.get("inference_ms", {}) or {}
         inf_metric = inf_data.get(stat_key, 0.0)
@@ -201,32 +204,29 @@ def extract_combined_rows(runs, remote_runs):
         if fps is None:
             continue
 
+        pre_data  = r.get("preprocessing_ms",  {}) or {}
+        post_data = r.get("postprocessing_ms", {}) or {}
+
         try:
-            fps_f = float(fps)
-            fps_err_f = np.nan  # not propagated; latency error bars cover this
-            total_f = float(sys_metric)
-            total_std_f = float(sys_err) if sys_err is not None else np.nan
-            inf_f = float(inf_metric) if inf_metric else 0.0
+            fps_f      = float(fps)
+            total_f    = float(sys_metric)
+            inf_f      = float(inf_metric) if inf_metric else 0.0
+            pre_post_f = float(pre_data.get(stat_key, 0.0)) + float(post_data.get(stat_key, 0.0))
         except Exception:
             continue
 
         is_remote = "remote" in variant.lower()
-        pre_post_f = max(0.0, total_f - inf_f)
 
         if is_remote:
             pure_inf_f = get_remote_pure_inference(remote_runs, b_model, variant)
-            if pure_inf_f > inf_f:
-                inference_final = inf_f
-                network_f = 0.0
-            else:
-                inference_final = pure_inf_f
-                network_f = inf_f - pure_inf_f
-            # pre_post_f = total_f - inf_f (robot-side pre/post) is kept so bars sum to system_ms
+            inference_final = pure_inf_f if pure_inf_f > 0 and pure_inf_f <= inf_f else inf_f
+            # Network = residual so stack sums exactly to system_ms.p50
+            network_f = max(0.0, total_f - inference_final - pre_post_f)
         else:
-            network_f = 0.0
+            network_f       = 0.0
             inference_final = inf_f
 
-        rows.append((b_model, variant, fps_f, fps_err_f, inference_final, network_f, pre_post_f, total_std_f))
+        rows.append((b_model, variant, fps_f, inference_final, network_f, pre_post_f, err_lower, err_upper))
 
     return rows
 
@@ -237,39 +237,44 @@ def compute_offsets(variants_present, row_idx: int):
     # Custom widths for visual balance across rows
     if row_idx == 0:
         width = 0.12  # Row 0: 6 variants (slim)
-    elif row_idx == 1:
-        width = 0.35  # Row 1: 2 variants (significantly wider to fill space)
     else:
-        width = 0.18  # Row 2: 4 variants (medium)
+        width = 0.35  # Rows 1-3: 2 variants each (wide)
         
     center = (n - 1) / 2.0
     offsets = {v: (i - center) * width for i, v in enumerate(variants_present)}
     return width, offsets
 
 
-def print_debug_info(base_models, variants, fps_val_map, inf_map, net_map, pre_map):
+def print_debug_info(base_models, variants, fps_val_map, inf_map, net_map, pre_map, lower_map, upper_map):
     """Prints a clean summary of the plotted data to the console."""
-    print("\n" + "=" * 90)
-    print(f"{'DEBUG: PLOTTED FPS AND LATENCY (ms)':^90}")
-    print("=" * 90)
-    header = f"{'Model':<22} | {'Variant':<28} | {'FPS':>8} | {'Inf(ms)':>8} | {'Net(ms)':>8} | {'Pre(ms)':>8}"
+    W = 118
+    print("\n" + "=" * W)
+    print(f"{'DEBUG: PLOTTED FPS AND LATENCY (ms)':^{W}}")
+    print("=" * W)
+    header = (f"{'Model':<22} | {'Variant':<28} | {'FPS':>8} | "
+              f"{'Inf(ms)':>8} | {'Pre/Post':>8} | {'Net(ms)':>8} | {'Total(ms)':>10} | {'ErrLo':>7} | {'ErrHi':>7}")
     print(header)
-    print("-" * 90)
+    print("-" * W)
     for m in base_models:
         for v in variants:
-            fps = fps_val_map.get((m, v), np.nan)
-            inf = inf_map.get((m, v), np.nan)
-            net = net_map.get((m, v), np.nan)
-            pre = pre_map.get((m, v), np.nan)
-            
-            # Only print if there is valid data
+            fps   = fps_val_map.get((m, v), np.nan)
+            inf   = inf_map.get((m, v), 0.0)
+            net   = net_map.get((m, v), 0.0)
+            pre   = pre_map.get((m, v), 0.0)
+            lo    = lower_map.get((m, v), np.nan)
+            hi    = upper_map.get((m, v), np.nan)
+            total = inf + pre + net
+
             if np.isfinite(fps) or inf > 0:
-                fps_str = f"{fps:8.2f}" if np.isfinite(fps) else "     N/A"
-                inf_str = f"{inf:8.2f}" if inf > 0 else "       -"
-                net_str = f"{net:8.2f}" if net > 0 else "       -"
-                pre_str = f"{pre:8.2f}" if pre > 0 else "       -"
-                print(f"{m:<22} | {v:<28} | {fps_str} | {inf_str} | {net_str} | {pre_str}")
-    print("\n" + "=" * 90 + "\n")
+                fps_str   = f"{fps:8.2f}"   if np.isfinite(fps) else "     N/A"
+                inf_str   = f"{inf:8.2f}"   if inf   > 0 else "       -"
+                pre_str   = f"{pre:8.2f}"   if pre   > 0 else "       -"
+                net_str   = f"{net:8.2f}"   if net   > 0 else "       -"
+                tot_str   = f"{total:10.2f}"
+                lo_str    = f"{lo:7.2f}"    if np.isfinite(lo) else "      -"
+                hi_str    = f"{hi:7.2f}"    if np.isfinite(hi) else "      -"
+                print(f"{m:<22} | {v:<28} | {fps_str} | {inf_str} | {pre_str} | {net_str} | {tot_str} | {lo_str} | {hi_str}")
+    print("\n" + "=" * W + "\n")
 
 
 def plot_combined(rows):
@@ -293,25 +298,25 @@ def plot_combined(rows):
 
     # Maps for FPS
     fps_val_map = {(m, v): np.nan for m in base_models for v in variants}
-    fps_err_map = {(m, v): np.nan for m in base_models for v in variants}
     
     # Maps for Latency
-    inf_map = {(m, v): 0.0 for m in base_models for v in variants}
-    net_map = {(m, v): 0.0 for m in base_models for v in variants}
-    pre_map = {(m, v): 0.0 for m in base_models for v in variants}
-    std_map = {(m, v): np.nan for m in base_models for v in variants}
+    inf_map   = {(m, v): 0.0    for m in base_models for v in variants}
+    net_map   = {(m, v): 0.0    for m in base_models for v in variants}
+    pre_map   = {(m, v): 0.0    for m in base_models for v in variants}
+    lower_map = {(m, v): np.nan for m in base_models for v in variants}
+    upper_map = {(m, v): np.nan for m in base_models for v in variants}
 
-    for m, v, fps, fps_err, inf, net, pre, lat_std in rows:
+    for m, v, fps, inf, net, pre, e_lower, e_upper in rows:
         if m in base_models and v in variants:
             fps_val_map[(m, v)] = fps
-            fps_err_map[(m, v)] = fps_err
-            inf_map[(m, v)] = inf
-            net_map[(m, v)] = net
-            pre_map[(m, v)] = pre
-            std_map[(m, v)] = lat_std
+            inf_map[(m, v)]     = inf
+            net_map[(m, v)]     = net
+            pre_map[(m, v)]     = pre
+            lower_map[(m, v)]   = e_lower
+            upper_map[(m, v)]   = e_upper
 
     # Print out all the statistics to the terminal
-    print_debug_info(base_models, variants, fps_val_map, inf_map, net_map, pre_map)
+    print_debug_info(base_models, variants, fps_val_map, inf_map, net_map, pre_map, lower_map, upper_map)
 
     sns.set_theme(
         context="paper",
@@ -344,7 +349,7 @@ def plot_combined(rows):
     widths = [len(cm) for cm in cat_models]
 
     fig, axes = plt.subplots(
-        3, len(cat_models),  # Increased to 3 rows
+        4, len(cat_models),
         figsize=FIG_SIZE,
         sharey=False,
         gridspec_kw={"width_ratios": widths, "wspace": 0.14, "hspace": 0.12},
@@ -352,7 +357,7 @@ def plot_combined(rows):
 
     # Ensure axes is always 2D array [row, col]
     if len(cat_models) == 1:
-        axes = np.array([[axes[0]], [axes[1]], [axes[2]]])
+        axes = np.array([[axes[0]], [axes[1]], [axes[2]], [axes[3]]])
 
     # --- PRE-CALCULATE PER-PANEL Y-LIMITS (each subplot scales independently) ---
     panel_fps_limits   = {}                    # col_idx -> ylim
@@ -366,15 +371,15 @@ def plot_combined(rows):
         ymax = np.nanmax(fps_vals) if np.any(np.isfinite(fps_vals)) else 1.0
         panel_fps_limits[col_idx] = (ymax * 1.12) if ymax > 0 else 1.0
 
-        # Rows 1 & 2: Latency — scale to tallest stacked bar in this column
-        for r_idx, v_present in [(1, variants[0:2]), (2, variants[2:6])]:
+        # Rows 1–3: Latency — scale to tallest stacked bar + upper error bar
+        for r_idx, v_present in [(1, variants[0:2]), (2, variants[2:4]), (3, variants[4:6])]:
             totals = np.asarray(
-                [inf_map[(m, v)] + net_map[(m, v)] + pre_map[(m, v)]
+                [inf_map[(m, v)] + net_map[(m, v)] + pre_map[(m, v)] + upper_map[(m, v)]
                  for m in current_models for v in v_present],
                 dtype=float,
             )
             ymax = np.nanmax(totals) if np.any(np.isfinite(totals)) else 1.0
-            panel_lat_limits[(r_idx, col_idx)] = (ymax * 1.12) if ymax > 0 else 1.0
+            panel_lat_limits[(r_idx, col_idx)] = (ymax * 1.08) if ymax > 0 else 1.0
 
     for col_idx, current_models in enumerate(cat_models):
         x = np.arange(len(current_models))
@@ -405,14 +410,15 @@ def plot_combined(rows):
 
         # Hide Y-axis labels for all but the leftmost plot
         if col_idx == 0:
-            ax_fps.set_ylabel("Frames per second (FPS)")
+            ax_fps.set_ylabel("Frames rate (FPS)")
 
         # ==========================================
-        # --- ROWS 1 & 2: LATENCY BREAKDOWN ---
+        # --- ROWS 1–3: LATENCY BREAKDOWN ---
         # ==========================================
         latency_rows = [
-            (1, axes[1, col_idx], variants[0:2], "Local Latency (ms)"),   # Row 1: Local only
-            (2, axes[2, col_idx], variants[2:6], "Remote Latency (ms)")   # Row 2: Remote only
+            (1, axes[1, col_idx], variants[0:2], "Local CPU\nE2E Latency (ms)"),
+            (2, axes[2, col_idx], variants[2:4], "Remote CPU\nE2E Latency (ms)"),
+            (3, axes[3, col_idx], variants[4:6], "Remote GPU\nE2E Latency (ms)"),
         ]
 
         for row_idx, ax_lat, vars_present, ylabel in latency_rows:
@@ -424,10 +430,13 @@ def plot_combined(rows):
 
             for v in vars_present:
                 xs = x + offsets_lat[v]
-                inf_vals = np.asarray([inf_map[(m, v)] for m in current_models], dtype=float)
-                net_vals = np.asarray([net_map[(m, v)] for m in current_models], dtype=float)
-                pre_vals = np.asarray([pre_map[(m, v)] for m in current_models], dtype=float)
-                yerr = np.asarray([std_map[(m, v)] for m in current_models], dtype=float)
+                inf_vals = np.asarray([inf_map[(m, v)]   for m in current_models], dtype=float)
+                net_vals = np.asarray([net_map[(m, v)]   for m in current_models], dtype=float)
+                pre_vals = np.asarray([pre_map[(m, v)]   for m in current_models], dtype=float)
+                yerr = np.array([
+                    [lower_map[(m, v)] for m in current_models],
+                    [upper_map[(m, v)] for m in current_models],
+                ], dtype=float)
 
                 tot_vals = inf_vals + net_vals + pre_vals
 
@@ -435,31 +444,30 @@ def plot_combined(rows):
                 # Create a lighter, semi-transparent version of the color for the overheads
                 light_color = mcolors.to_rgba(base_color, alpha=0.4)
 
-                # Base (Inference) - Solid, bold color. No hatch.
+                # Bottom: Inference — solid color
                 ax_lat.bar(
-                    xs, inf_vals, width=width_lat, facecolor=base_color, edgecolor="black", 
+                    xs, inf_vals, width=width_lat, facecolor=base_color, edgecolor="black",
                     linewidth=STROKE_WIDTH, zorder=3
                 )
-                # Middle (Network) - Lighter color, cleaner diagonal lines
+                # Middle: Pre/Post-processing — light, dotted hatch
                 ax_lat.bar(
-                    xs, net_vals, bottom=inf_vals, width=width_lat, facecolor=light_color, 
-                    edgecolor="black", linewidth=STROKE_WIDTH, hatch="//", zorder=3
-                )
-                # Top (Pre/Post) - Lighter color, clean dotted hatch
-                ax_lat.bar(
-                    xs, pre_vals, bottom=(inf_vals + net_vals), width=width_lat, facecolor=light_color, 
+                    xs, pre_vals, bottom=inf_vals, width=width_lat, facecolor=light_color,
                     edgecolor="black", linewidth=STROKE_WIDTH, hatch="..", zorder=3
+                )
+                # Top: Network + vAccel remoting layer — light, diagonal hatch
+                ax_lat.bar(
+                    xs, net_vals, bottom=(inf_vals + pre_vals), width=width_lat, facecolor=light_color,
+                    edgecolor="black", linewidth=STROKE_WIDTH, hatch="//", zorder=3
                 )
 
                 if SHOW_ERROR_BARS:
                     ax_lat.errorbar(
                         xs, tot_vals, yerr=yerr, fmt="none", ecolor="black",
-                        elinewidth=1.0, capsize=0, capthick=0.0, zorder=10,
+                        elinewidth=1.0, capsize=4, capthick=1.0, zorder=10,
                     )
             
             ax_lat.set_xticks(x)
-            if row_idx == 2:
-                # Only the very bottom row gets the model names
+            if row_idx == 3:
                 ax_lat.set_xticklabels([get_model_display_name(m) for m in current_models], rotation=15, ha="right")
             else:
                 ax_lat.set_xticklabels([])
@@ -479,7 +487,7 @@ def plot_combined(rows):
     fig.subplots_adjust(
         left=0.06,
         right=0.995,
-        bottom=0.12,
+        bottom=0.10,
         top=0.84,
     )
 
@@ -497,36 +505,38 @@ def plot_combined(rows):
     hatch_labels = ['Inference', 'Network + vAccel remoting layer', 'Pre/Post-processing']
 
     # 3 rows × 3 cols (filled left-to-right, top-to-bottom):
-    #   Row 1: Local CPU ptc/sol  |  Remote CPU ptc
-    #   Row 2: Remote CPU sol     |  Remote GPU ptc/sol
-    #   Row 3: Pre/Post-processing | Inference | Network + vAccel remoting layer
+    #   Row 1: Local CPU (Torch)   |  Remote CPU (Torch)  |  Remote GPU (Torch)
+    #   Row 2: Local CPU (SOL)     |  Remote CPU (SOL)    |  Remote GPU (SOL)
+    #   Row 3: Inference | Pre/Post-processing | Network + vAccel remoting layer
     combined_handles = [
-        color_handles[0], color_handles[1], color_handles[2],
-        color_handles[3], color_handles[4], color_handles[5],
-        hatch_handles[2], hatch_handles[0], hatch_handles[1],
+        color_handles[0], color_handles[2], color_handles[4],
+        color_handles[1], color_handles[3], color_handles[5],
+        hatch_handles[0], hatch_handles[2], hatch_handles[1],
     ]
     combined_labels = [
-        color_labels[0], color_labels[1], color_labels[2],
-        color_labels[3], color_labels[4], color_labels[5],
-        hatch_labels[2], hatch_labels[0], hatch_labels[1],
+        color_labels[0], color_labels[2], color_labels[4],
+        color_labels[1], color_labels[3], color_labels[5],
+        hatch_labels[0], hatch_labels[2], hatch_labels[1],
     ]
 
     leg = fig.legend(
         combined_handles, combined_labels,
         title=None,
         loc="upper center",
-        bbox_to_anchor=(0.5, 0.98),
+        bbox_to_anchor=(0.5, 0.93),
         ncol=3,
         frameon=True,
         framealpha=0.9,
         borderpad=0.4,
         handlelength=1.4,
+        fancybox=False,
+        edgecolor="black",
     )
 
     # Aligned (a)(b)(c) captions below the bottom row
     caption_artists = []
-    y_caption = min(ax.get_position().y0 for ax in axes[2, :]) - CAPTION_OFFSET
-    for ax, cap in zip(axes[2, :], cat_captions):
+    y_caption = min(ax.get_position().y0 for ax in axes[3, :]) - CAPTION_OFFSET
+    for ax, cap in zip(axes[3, :], cat_captions):
         if not cap:
             continue
         bbox = ax.get_position()

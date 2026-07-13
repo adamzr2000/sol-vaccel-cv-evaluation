@@ -806,15 +806,32 @@ class VaccelSolAdapter(SolAdapter):
     # See SolAdapter.TRANSPORT_DROPS_AUX.
     TRANSPORT_DROPS_AUX = True
 
-    # See SolAdapter.SYNC_FOLDED_MODELS. Only these 5 wrapper templates
-    # currently fold sol_*_sync() into predict_unpack; revert per-model by
-    # removing its name here (and the matching wrapper.c change) if needed.
+    # See SolAdapter.SYNC_FOLDED_MODELS. All 19 SOL vaccel wrapper templates
+    # fold sol_*_sync() into predict_unpack now; revert per-model by removing
+    # its name here (and the matching wrapper.c change) if ever needed. Every
+    # deployed lib_{cpu,gpu}/vaccel/*.so this runs against must be rebuilt
+    # from the folded template before this ships — a stale, unrebuilt .so
+    # still relies on the (now-skipped) explicit client-side sync() below.
     SYNC_FOLDED_MODELS = frozenset({
         "deeplabv3_resnet50",
         "deeplabv3_resnet101",
         "deeplabv3_mobilenet_v3_large",
         "fcn_resnet50",
         "fcn_resnet101",
+        "lraspp_mobilenet_v3_large",
+        "resnet50",
+        "mobilenet_v3_large",
+        "swin_t",
+        "swin_s",
+        "swin_v2_b",
+        "swin_v2_s",
+        "swin_v2_t",
+        "mc3_18",
+        "r3d_18",
+        "r2plus1d_18",
+        "swin3d_t",
+        "swin3d_s",
+        "swin3d_b",
     })
 
     def __init__(self, device, model_name, model_type="classification", weights_enum=None, use_remote=False):

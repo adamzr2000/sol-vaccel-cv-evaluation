@@ -115,6 +115,15 @@ int sol_predict_unpack(struct vaccel_arg *read, size_t nr_read,
 
 	vaccel_prof_region_start(&predict_stats);
 	sol_predict(in__input_0, out__0, vdims);
+	/*
+	 * sol_predict() queues GPU work asynchronously. Force completion here,
+	 * before this function returns and the RPC framework marshals the
+	 * output into the response, so the client always receives valid,
+	 * fully-written data. This also folds what used to be a second,
+	 * separate client-triggered sync RPC call (see model_adapter.py's
+	 * Mode-2 infer(), SYNC_FOLDED_MODELS) into this same round-trip.
+	 */
+	sol_swin_t_sync();
 	vaccel_prof_region_stop(&predict_stats);
 
 	vaccel_prof_region_print(&predict_unpack_stats);

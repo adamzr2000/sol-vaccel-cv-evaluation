@@ -366,7 +366,8 @@ def main():
             local_sys_mode = [local_mode, "net"]
         local_net_iface = host_net_iface_map.get(HOST)
 
-        start_docker_monitor(run_id, cfg['docker_endpoint'], docker_csv_dir, "torchvision-app", "torchvision-app_")
+        if cfg['monitor_docker']:
+            start_docker_monitor(run_id, cfg['docker_endpoint'], docker_csv_dir, "torchvision-app", "torchvision-app_")
         start_system_monitor(run_id, cfg['system_endpoint'], system_csv_dir, local_sys_mode, local_net_iface)
 
         if is_vaccel_remote_run:
@@ -377,7 +378,8 @@ def main():
             remote_sys_mode = [cfg['target_device'], "net"]
             remote_net_iface = host_net_iface_map.get(REMOTE_HOST)
 
-            start_docker_monitor(vaccel_remote_run_id, cfg['remote_docker_endpoint'], rem_docker_csv_dir, "torchvision-app-agent", "torchvision-app-agent_")
+            if cfg['monitor_docker']:
+                start_docker_monitor(vaccel_remote_run_id, cfg['remote_docker_endpoint'], rem_docker_csv_dir, "torchvision-app-agent", "torchvision-app-agent_")
             start_system_monitor(vaccel_remote_run_id, cfg['remote_system_endpoint'], rem_system_csv_dir, remote_sys_mode, remote_net_iface)
 
         time.sleep(1.2)  # Prime the monitors
@@ -637,11 +639,13 @@ def main():
             torch.cuda.synchronize()
         time.sleep(0.2)
 
-        stop_docker_monitor(cfg['docker_endpoint'])
+        if cfg['monitor_docker']:
+            stop_docker_monitor(cfg['docker_endpoint'])
         stop_system_monitor(cfg['system_endpoint'])
 
         if is_vaccel_remote_run:
-            stop_docker_monitor(cfg['remote_docker_endpoint'])
+            if cfg['monitor_docker']:
+                stop_docker_monitor(cfg['remote_docker_endpoint'])
             stop_system_monitor(cfg['remote_system_endpoint'])
 
     if not inference_latencies_ms:

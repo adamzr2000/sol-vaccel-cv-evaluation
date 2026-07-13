@@ -83,6 +83,7 @@ def get_benchmark_config():
         "base_results_dir": Path(os.environ.get("RESULTS_DIR", "/results/experiments/model-stats")),
         "run_tag": os.environ.get("RUN_TAG"),
         "monitor_resources": parse_boolean_env("RESOURCE_MONITORING", "false"),
+        "monitor_docker": parse_boolean_env("MONITOR_DOCKER", "true"),
         "docker_endpoint": os.environ.get("DOCKER_STATS_ENDPOINT", "http://10.5.1.20:6000"),
         "system_endpoint": os.environ.get("SYSTEM_STATS_ENDPOINT", "http://10.5.1.20:6001"),
         "docker_csv_base": os.environ.get("DOCKER_STATS_CSV_DIR", "/results/experiments/docker-stats"),

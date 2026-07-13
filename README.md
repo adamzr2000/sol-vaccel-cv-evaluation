@@ -135,6 +135,14 @@ For remote runs (Phase 3), edge-side stats are captured under `docker-stats/{rem
 --sleep N                  # seconds between model runs (default: 20)
 ```
 
+**Env vars (export before running, no flag needed):**
+```bash
+MONITOR_DOCKER=0   # keep system-stats + model-stats monitoring, skip docker-stats
+                    # (default: on; useful when the client container isn't on --host,
+                    # e.g. a vaccel-remote-* run where the agent's docker daemon has
+                    # no "torchvision-app" container to inspect)
+```
+
 ---
 
 ## Backend reference

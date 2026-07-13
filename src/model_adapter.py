@@ -528,6 +528,13 @@ class SolAdapter(BaseModelAdapter):
     # matching wrapper templates) if a future SOL export drops aux entirely.
     TRANSPORT_DROPS_AUX = False
 
+    # Models whose vaccel wrapper's predict_unpack folds sol_*_sync() into
+    # the same RPC call as sol_predict() (see scripts/sol_vaccel_wrappers
+    # templates), so the separate client-side self.model.sync() below is
+    # redundant for them. Empty for the base (dlopen) adapter, which isn't
+    # ours to patch this way. See VaccelSolAdapter.SYNC_FOLDED_MODELS.
+    SYNC_FOLDED_MODELS = frozenset()
+
     def __init__(self, device, model_name, model_type="classification", weights_enum=None):
         super().__init__(device)
         self.model_name = model_name
@@ -775,8 +782,11 @@ class SolAdapter(BaseModelAdapter):
             # Mode 2: Standard execution
             self.model.run(*self.execution_args)
 
-            # Force synchronization for vAccel remote timing results
-            if hasattr(self.model, "sync"):
+            # Force synchronization for vAccel remote timing results.
+            # Skipped for SYNC_FOLDED_MODELS, whose predict_unpack already
+            # syncs server-side before returning — calling it again here
+            # would just be a redundant RPC round-trip.
+            if self.model_name not in self.SYNC_FOLDED_MODELS and hasattr(self.model, "sync"):
                 self.model.sync()
                 
         return self.output_buffer
@@ -795,6 +805,17 @@ class SolAdapter(BaseModelAdapter):
 class VaccelSolAdapter(SolAdapter):
     # See SolAdapter.TRANSPORT_DROPS_AUX.
     TRANSPORT_DROPS_AUX = True
+
+    # See SolAdapter.SYNC_FOLDED_MODELS. Only these 5 wrapper templates
+    # currently fold sol_*_sync() into predict_unpack; revert per-model by
+    # removing its name here (and the matching wrapper.c change) if needed.
+    SYNC_FOLDED_MODELS = frozenset({
+        "deeplabv3_resnet50",
+        "deeplabv3_resnet101",
+        "deeplabv3_mobilenet_v3_large",
+        "fcn_resnet50",
+        "fcn_resnet101",
+    })
 
     def __init__(self, device, model_name, model_type="classification", weights_enum=None, use_remote=False):
         self.use_remote = use_remote

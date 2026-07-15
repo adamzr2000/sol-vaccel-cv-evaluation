@@ -26,7 +26,7 @@ from plot_config import get_path, load_config, get_model_type_order, get_model_d
 _HERE = Path(__file__).parent
 cfg = load_config()
 CPU_FILE     = str(get_path("system_cpu_summary"))   # e2e: edge-asus + robot remote rows
-ISO_CPU_FILE = str(_HERE / "../experiments/system-stats/_summary/iso_overall_cpu_stats_wifi.csv")
+ISO_CPU_FILE = str(_HERE / "../experiments/system-stats/vaccel/_summary/iso_overall_cpu_stats_wifi.csv")
 GPU_FILE     = str(get_path("system_gpu_summary"))
 
 OUTPUT_FILE = "energy-consumption.pdf"

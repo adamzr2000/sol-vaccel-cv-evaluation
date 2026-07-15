@@ -31,12 +31,12 @@ _HERE = Path(__file__).parent
 cfg = load_config()
 
 CPU_FILE     = str(get_path("system_cpu_summary"))   # e2e CPU (edge-asus + robot remote)
-ISO_CPU_FILE = str(_HERE / "../experiments/system-stats/_summary/iso_overall_cpu_stats_wifi.csv")
+ISO_CPU_FILE = str(_HERE / "../experiments/system-stats/vaccel/_summary/iso_overall_cpu_stats_wifi.csv")
 GPU_FILE     = str(get_path("system_gpu_summary"))   # e2e GPU
 
 # Benchmark JSONs supplying num_processed_frames per run
 E2E_PERF_FILE = str(get_path("model_summary"))       # e2e_benchmark_summary.json
-ISO_PERF_FILE = str(_HERE / "../experiments/model-stats/_summary/iso_benchmark_summary.json")
+ISO_PERF_FILE = str(_HERE / "../experiments/model-stats/vaccel/_summary/iso_benchmark_summary.json")
 
 OUTPUT_FILE = "energy-per-frame.pdf"
 

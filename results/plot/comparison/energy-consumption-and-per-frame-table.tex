@@ -1,0 +1,74 @@
+% Requires \usepackage{booktabs}, \usepackage{graphicx}, \usepackage{xcolor}.
+% Best value per model x scenario group is bold + colored (internal working table).
+% vAcc = vAccel.
+\begin{table*}[t]
+\centering
+\caption{Energy consumption (kJ) of CPU and GPU resources during end-to-end inference under local and edge execution settings (lower is better; robot as client). Energy was computed as mean package power over the execution period multiplied by the experiment duration. For reference, idle energy over the idle-measurement window was: Robot CPU 0.19 kJ (0.62 W over 308 s), Edge CPU 1.34 kJ (4.59 W over 291 s), Edge GPU 1.57 kJ (7.56 W over 208 s). Edge CPU/GPU columns apply only when that scenario actually offloads to that resource.}
+\label{tab:energy-kj}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrrrrrrrrrrrrrr}
+\toprule
+ & \multicolumn{4}{c}{\textbf{Robot CPU -- Local}} & \multicolumn{4}{c}{\textbf{Robot CPU -- Remote CPU}} & \multicolumn{4}{c}{\textbf{Robot CPU -- Remote GPU}} & \multicolumn{4}{c}{\textbf{Edge CPU -- Remote CPU}} & \multicolumn{4}{c}{\textbf{Edge GPU -- Remote GPU}} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(lr){10-13}\cmidrule(lr){14-17}\cmidrule(lr){18-21}
+\textbf{Model} & \textbf{ROS2+Torch} & \textbf{ROS2+SOL} & \textbf{vAcc+Torch} & \textbf{vAccSOL} & \textbf{ROS2+Torch} & \textbf{ROS2+SOL} & \textbf{vAcc+Torch} & \textbf{vAccSOL} & \textbf{ROS2+Torch} & \textbf{ROS2+SOL} & \textbf{vAcc+Torch} & \textbf{vAccSOL} & \textbf{ROS2+Torch} & \textbf{ROS2+SOL} & \textbf{vAcc+Torch} & \textbf{vAccSOL} & \textbf{ROS2+Torch} & \textbf{ROS2+SOL} & \textbf{vAcc+Torch} & \textbf{vAccSOL} \\
+\midrule
+\multicolumn{21}{l}{\textit{(a) Image Classification}} \\
+\midrule
+\textbf{SwinV2-B} & \textcolor{blue!70!black}{\textbf{1.18}} & 1.23 & 1.20 & 1.27 & \textcolor{blue!70!black}{\textbf{0.25}} & 0.26 & 0.27 & 0.27 & 0.26 & \textcolor{blue!70!black}{\textbf{0.25}} & 0.31 & 0.31 & 16.72 & 13.91 & \textcolor{blue!70!black}{\textbf{9.71}} & 10.86 & 5.51 & 5.34 & 5.33 & \textcolor{blue!70!black}{\textbf{5.09}} \\
+\textbf{Swin-T} & 1.23 & \textcolor{blue!70!black}{\textbf{1.21}} & 1.23 & 1.29 & 0.25 & \textcolor{blue!70!black}{\textbf{0.25}} & 0.31 & 0.30 & \textcolor{blue!70!black}{\textbf{0.26}} & 0.26 & 0.32 & 0.33 & 6.61 & 5.65 & \textcolor{blue!70!black}{\textbf{4.23}} & 4.35 & 3.80 & 3.80 & 3.74 & \textcolor{blue!70!black}{\textbf{3.67}} \\
+\textbf{Swin-S} & \textcolor{blue!70!black}{\textbf{1.17}} & 1.20 & 1.20 & 1.27 & 0.26 & \textcolor{blue!70!black}{\textbf{0.25}} & 0.30 & 0.30 & \textcolor{blue!70!black}{\textbf{0.26}} & 0.26 & 0.35 & 0.32 & 11.87 & 9.37 & 7.57 & \textcolor{blue!70!black}{\textbf{7.51}} & 4.57 & 4.52 & 4.46 & \textcolor{blue!70!black}{\textbf{4.34}} \\
+\textbf{ResNet-50} & \textcolor{blue!70!black}{\textbf{1.23}} & 1.24 & 1.30 & 1.31 & 0.25 & \textcolor{blue!70!black}{\textbf{0.25}} & 0.31 & 0.30 & \textcolor{blue!70!black}{\textbf{0.26}} & 0.26 & 0.31 & 0.33 & 5.29 & 5.45 & \textcolor{blue!70!black}{\textbf{3.27}} & 3.54 & 3.50 & 3.93 & \textcolor{blue!70!black}{\textbf{3.43}} & 3.80 \\
+\midrule
+\multicolumn{21}{l}{\textit{(b) Video Action Recognition}} \\
+\midrule
+\textbf{Swin3D-S} & 1.23 & \textcolor{blue!70!black}{\textbf{1.23}} & 1.26 & 1.29 & 0.25 & \textcolor{blue!70!black}{\textbf{0.25}} & 0.75 & 0.75 & 0.25 & \textcolor{blue!70!black}{\textbf{0.25}} & 0.93 & 0.94 & 17.25 & 16.84 & \textcolor{blue!70!black}{\textbf{6.77}} & 7.07 & 6.48 & 6.38 & 4.63 & \textcolor{blue!70!black}{\textbf{4.58}} \\
+\textbf{Swin3D-B} & 1.23 & \textcolor{blue!70!black}{\textbf{1.22}} & 1.25 & 1.25 & 0.25 & \textcolor{blue!70!black}{\textbf{0.24}} & 0.62 & 0.60 & 0.25 & \textcolor{blue!70!black}{\textbf{0.25}} & 0.91 & 0.93 & 16.82 & 17.31 & 9.06 & \textcolor{blue!70!black}{\textbf{8.52}} & 7.60 & 7.32 & 5.24 & \textcolor{blue!70!black}{\textbf{5.11}} \\
+\textbf{R3D-18} & \textcolor{blue!70!black}{\textbf{1.21}} & 1.22 & 1.26 & 1.25 & 0.25 & \textcolor{blue!70!black}{\textbf{0.25}} & 0.76 & 0.76 & 0.25 & \textcolor{blue!70!black}{\textbf{0.25}} & 0.98 & 0.96 & 17.28 & 16.81 & \textcolor{blue!70!black}{\textbf{6.96}} & 7.12 & 5.04 & 5.02 & 3.90 & \textcolor{blue!70!black}{\textbf{3.88}} \\
+\textbf{R(2+1)D-18} & 1.23 & \textcolor{blue!70!black}{\textbf{1.23}} & 1.25 & 1.26 & 0.25 & \textcolor{blue!70!black}{\textbf{0.25}} & 0.74 & 0.68 & 0.25 & \textcolor{blue!70!black}{\textbf{0.25}} & 0.93 & 0.95 & 16.81 & 16.78 & 7.48 & \textcolor{blue!70!black}{\textbf{7.46}} & 5.71 & 6.10 & \textcolor{blue!70!black}{\textbf{4.22}} & 4.44 \\
+\midrule
+\multicolumn{21}{l}{\textit{(c) Semantic Segmentation}} \\
+\midrule
+\textbf{FCN-R101} & 1.23 & 1.23 & \textcolor{blue!70!black}{\textbf{1.22}} & 1.26 & 0.33 & 0.33 & 0.33 & \textcolor{blue!70!black}{\textbf{0.32}} & 0.37 & \textcolor{blue!70!black}{\textbf{0.37}} & 0.42 & 0.40 & 14.65 & 15.09 & \textcolor{blue!70!black}{\textbf{8.53}} & 9.28 & 4.32 & 4.78 & \textcolor{blue!70!black}{\textbf{4.12}} & 4.51 \\
+\textbf{FCN-R50} & 1.23 & \textcolor{blue!70!black}{\textbf{1.21}} & 1.25 & 1.23 & \textcolor{blue!70!black}{\textbf{0.34}} & 0.35 & 0.36 & 0.35 & \textcolor{blue!70!black}{\textbf{0.35}} & 0.36 & 0.41 & 0.41 & 12.93 & 13.52 & \textcolor{blue!70!black}{\textbf{6.51}} & 7.02 & \textcolor{blue!70!black}{\textbf{3.62}} & 4.15 & 3.68 & 3.99 \\
+\textbf{DLv3-R101} & 1.23 & \textcolor{blue!70!black}{\textbf{1.21}} & 1.24 & 1.23 & \textcolor{blue!70!black}{\textbf{0.31}} & 0.34 & 0.33 & 0.33 & \textcolor{blue!70!black}{\textbf{0.34}} & 0.35 & 0.42 & 0.39 & 12.51 & 15.14 & \textcolor{blue!70!black}{\textbf{8.26}} & 8.81 & \textcolor{blue!70!black}{\textbf{4.17}} & 5.02 & 4.26 & 4.64 \\
+\textbf{DLv3-R50} & 1.23 & \textcolor{blue!70!black}{\textbf{1.20}} & 1.28 & 1.26 & \textcolor{blue!70!black}{\textbf{0.33}} & 0.36 & 0.36 & 0.36 & 0.36 & \textcolor{blue!70!black}{\textbf{0.34}} & 0.43 & 0.39 & 10.81 & 13.19 & \textcolor{blue!70!black}{\textbf{6.26}} & 6.91 & 4.05 & 4.00 & \textcolor{blue!70!black}{\textbf{3.80}} & 4.11 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\caption{Energy per processed frame (J/frame) of CPU and GPU resources during end-to-end inference under local and edge execution settings (lower is better; robot as client) --- normalizes Table~\ref{tab:energy-kj} by frame count, isolating per-inference efficiency from run duration.}
+\label{tab:energy-jpf}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrrrrrrrrrrrrrr}
+\toprule
+ & \multicolumn{4}{c}{\textbf{Robot CPU -- Local}} & \multicolumn{4}{c}{\textbf{Robot CPU -- Remote CPU}} & \multicolumn{4}{c}{\textbf{Robot CPU -- Remote GPU}} & \multicolumn{4}{c}{\textbf{Edge CPU -- Remote CPU}} & \multicolumn{4}{c}{\textbf{Edge GPU -- Remote GPU}} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(lr){10-13}\cmidrule(lr){14-17}\cmidrule(lr){18-21}
+\textbf{Model} & \textbf{ROS2+Torch} & \textbf{ROS2+SOL} & \textbf{vAcc+Torch} & \textbf{vAccSOL} & \textbf{ROS2+Torch} & \textbf{ROS2+SOL} & \textbf{vAcc+Torch} & \textbf{vAccSOL} & \textbf{ROS2+Torch} & \textbf{ROS2+SOL} & \textbf{vAcc+Torch} & \textbf{vAccSOL} & \textbf{ROS2+Torch} & \textbf{ROS2+SOL} & \textbf{vAcc+Torch} & \textbf{vAccSOL} & \textbf{ROS2+Torch} & \textbf{ROS2+SOL} & \textbf{vAcc+Torch} & \textbf{vAccSOL} \\
+\midrule
+\multicolumn{21}{l}{\textit{(a) Image Classification}} \\
+\midrule
+\textbf{SwinV2-B} & 8.34 & 6.22 & 7.44 & \textcolor{blue!70!black}{\textbf{5.40}} & \textcolor{blue!70!black}{\textbf{0.10}} & 0.10 & 0.16 & 0.14 & 0.10 & \textcolor{blue!70!black}{\textbf{0.10}} & 0.12 & 0.12 & 6.52 & \textcolor{blue!70!black}{\textbf{5.43}} & 5.79 & 5.46 & 2.14 & 2.08 & 2.12 & \textcolor{blue!70!black}{\textbf{2.05}} \\
+\textbf{Swin-T} & 2.21 & 1.76 & 1.96 & \textcolor{blue!70!black}{\textbf{1.46}} & 0.10 & \textcolor{blue!70!black}{\textbf{0.10}} & 0.12 & 0.12 & \textcolor{blue!70!black}{\textbf{0.10}} & 0.10 & 0.13 & 0.13 & 2.57 & 2.20 & \textcolor{blue!70!black}{\textbf{1.69}} & 1.75 & 1.48 & 1.48 & 1.47 & \textcolor{blue!70!black}{\textbf{1.44}} \\
+\textbf{Swin-S} & 4.15 & 2.97 & 3.77 & \textcolor{blue!70!black}{\textbf{2.56}} & 0.10 & \textcolor{blue!70!black}{\textbf{0.10}} & 0.12 & 0.12 & \textcolor{blue!70!black}{\textbf{0.10}} & 0.10 & 0.14 & 0.13 & 4.61 & 3.65 & 3.10 & \textcolor{blue!70!black}{\textbf{3.02}} & 1.78 & 1.76 & 1.77 & \textcolor{blue!70!black}{\textbf{1.71}} \\
+\textbf{ResNet-50} & 1.40 & 1.54 & \textcolor{blue!70!black}{\textbf{1.24}} & 1.35 & 0.10 & \textcolor{blue!70!black}{\textbf{0.10}} & 0.12 & 0.12 & \textcolor{blue!70!black}{\textbf{0.10}} & 0.10 & 0.12 & 0.13 & 2.05 & 2.12 & \textcolor{blue!70!black}{\textbf{1.31}} & 1.42 & 1.36 & 1.53 & \textcolor{blue!70!black}{\textbf{1.34}} & 1.50 \\
+\midrule
+\multicolumn{21}{l}{\textit{(b) Video Action Recognition}} \\
+\midrule
+\textbf{Swin3D-S} & 9.99 & 9.68 & 8.75 & \textcolor{blue!70!black}{\textbf{8.33}} & 0.16 & \textcolor{blue!70!black}{\textbf{0.15}} & 0.92 & 0.90 & 0.10 & \textcolor{blue!70!black}{\textbf{0.10}} & 0.75 & 0.75 & 10.71 & 10.46 & \textcolor{blue!70!black}{\textbf{8.34}} & 8.55 & 2.52 & \textcolor{blue!70!black}{\textbf{2.48}} & 3.73 & 3.66 \\
+\textbf{Swin3D-B} & 14.81 & 13.92 & 13.06 & \textcolor{blue!70!black}{\textbf{12.06}} & 0.25 & \textcolor{blue!70!black}{\textbf{0.24}} & 0.99 & 0.99 & 0.10 & \textcolor{blue!70!black}{\textbf{0.10}} & 0.74 & 0.75 & 16.38 & 17.18 & 14.37 & \textcolor{blue!70!black}{\textbf{14.08}} & 2.95 & \textcolor{blue!70!black}{\textbf{2.84}} & 4.24 & 4.13 \\
+\textbf{R3D-18} & 8.45 & 9.56 & \textcolor{blue!70!black}{\textbf{7.76}} & 8.79 & 0.14 & \textcolor{blue!70!black}{\textbf{0.14}} & 0.90 & 0.91 & 0.10 & \textcolor{blue!70!black}{\textbf{0.10}} & 0.78 & 0.77 & 9.43 & 9.16 & \textcolor{blue!70!black}{\textbf{8.19}} & 8.46 & 1.96 & \textcolor{blue!70!black}{\textbf{1.95}} & 3.07 & 3.10 \\
+\textbf{R(2+1)D-18} & 10.16 & 10.60 & \textcolor{blue!70!black}{\textbf{9.12}} & 9.43 & 0.18 & \textcolor{blue!70!black}{\textbf{0.18}} & 0.95 & 0.95 & 0.10 & \textcolor{blue!70!black}{\textbf{0.10}} & 0.75 & 0.77 & 12.08 & 12.03 & \textcolor{blue!70!black}{\textbf{9.57}} & 10.47 & \textcolor{blue!70!black}{\textbf{2.22}} & 2.37 & 3.41 & 3.58 \\
+\midrule
+\multicolumn{21}{l}{\textit{(c) Semantic Segmentation}} \\
+\midrule
+\textbf{FCN-R101} & 11.60 & 12.34 & \textcolor{blue!70!black}{\textbf{10.37}} & 11.32 & \textcolor{blue!70!black}{\textbf{0.26}} & 0.27 & 0.38 & 0.37 & 0.21 & \textcolor{blue!70!black}{\textbf{0.21}} & 0.27 & 0.26 & 11.46 & 12.22 & \textcolor{blue!70!black}{\textbf{9.65}} & 10.57 & \textcolor{blue!70!black}{\textbf{2.48}} & 2.74 & 2.66 & 2.91 \\
+\textbf{FCN-R50} & 7.98 & 8.72 & \textcolor{blue!70!black}{\textbf{7.72}} & 8.28 & \textcolor{blue!70!black}{\textbf{0.22}} & 0.22 & 0.34 & 0.34 & 0.23 & \textcolor{blue!70!black}{\textbf{0.20}} & 0.25 & 0.26 & 8.13 & 8.38 & \textcolor{blue!70!black}{\textbf{6.23}} & 6.74 & 2.42 & 2.32 & \textcolor{blue!70!black}{\textbf{2.28}} & 2.55 \\
+\textbf{DLv3-R101} & 9.45 & 10.20 & \textcolor{blue!70!black}{\textbf{8.29}} & 9.12 & 0.26 & \textcolor{blue!70!black}{\textbf{0.25}} & 0.36 & 0.36 & 0.23 & \textcolor{blue!70!black}{\textbf{0.20}} & 0.27 & 0.25 & 10.70 & 11.18 & \textcolor{blue!70!black}{\textbf{9.06}} & 9.65 & 2.79 & 2.81 & \textcolor{blue!70!black}{\textbf{2.74}} & 3.03 \\
+\textbf{DLv3-R50} & 6.02 & 6.63 & \textcolor{blue!70!black}{\textbf{5.36}} & 6.01 & 0.22 & \textcolor{blue!70!black}{\textbf{0.20}} & 0.33 & 0.32 & \textcolor{blue!70!black}{\textbf{0.20}} & 0.23 & 0.28 & 0.24 & 7.15 & 7.38 & \textcolor{blue!70!black}{\textbf{5.67}} & 6.20 & \textcolor{blue!70!black}{\textbf{2.27}} & 2.67 & 2.48 & 2.59 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}

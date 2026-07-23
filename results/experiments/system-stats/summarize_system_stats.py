@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -33,6 +34,7 @@ CPU_OUT_FIELDS = [
     "cpu_util_percent_mean", "cpu_util_percent_std",
     "cpu_temp_c_mean", "cpu_temp_c_std",
     "duration_sec", "num_samples",
+    "cpu_energy_j", "cpu_energy_j_total",
 ]
 
 GPU_OUT_FIELDS = [
@@ -44,7 +46,7 @@ GPU_OUT_FIELDS = [
     "mem_used_mb_mean", "mem_used_mb_std",
     "temp_c_mean", "temp_c_std",
     "duration_sec", "num_samples",
-    "gpu_energy_j",
+    "gpu_energy_j", "gpu_energy_j_total",
 ]
 
 NET_OUT_FIELDS = [
@@ -151,6 +153,22 @@ def read_duration_and_metrics(
     return values, duration_sec, n
 
 
+def load_energy_totals(csv_path: Path) -> Optional[dict]:
+    """
+    Exact hardware-counter energy totals from the system-stats-collector's
+    energy_totals_<stem>.json sidecar, written next to the CSV since the
+    container update. Older runs predating this sidecar simply don't have
+    one - callers should treat a None return as "not available", not an error.
+    """
+    totals_path = csv_path.parent / f"energy_totals_{csv_path.stem}.json"
+    if not totals_path.exists():
+        return None
+    try:
+        return json.loads(totals_path.read_text())
+    except Exception:
+        return None
+
+
 def read_gpu_id_info(csv_path: Path) -> Tuple[int, str]:
     gpu_ids = set()
     names = {}
@@ -186,9 +204,9 @@ def _print_summary_table(csv_path: Path, title: str) -> None:
         df = pd.read_csv(csv_path)
         cols = [
             "host", "model", "backend", "device",
-            "cpu_watts_mean", "cpu_util_percent_mean",
-            "power_draw_w_mean", "util_gpu_percent_mean", "gpu_energy_j",
-            "net_rx_mbps_mean", "net_tx_mbps_mean", 
+            "cpu_watts_mean", "cpu_util_percent_mean", "cpu_energy_j", "cpu_energy_j_total",
+            "power_draw_w_mean", "util_gpu_percent_mean", "gpu_energy_j", "gpu_energy_j_total",
+            "net_rx_mbps_mean", "net_tx_mbps_mean",
             "duration_sec"
         ]
         cols = [c for c in cols if c in df.columns]
@@ -301,6 +319,22 @@ def main() -> None:
                 row[f"{k}_std"] = fmt(sd, 6)
             row["duration_sec"] = fmt(duration_sec, 3)
             row["num_samples"] = str(n)
+
+            # Energy: mean(power) x duration approximation (parity with the
+            # existing gpu_energy_j below), plus the exact hardware-counter
+            # total when this run has an energy_totals sidecar.
+            cpu_watts_vals = metrics["cpu_watts"]
+            cpu_energy_j = (
+                float(np.mean(np.asarray(cpu_watts_vals, dtype=float))) * duration_sec
+                if cpu_watts_vals and duration_sec is not None else None
+            )
+            row["cpu_energy_j"] = fmt(cpu_energy_j, 3)
+
+            energy_totals = load_energy_totals(csv_path)
+            row["cpu_energy_j_total"] = fmt(
+                energy_totals.get("cpu_energy_j_total") if energy_totals else None, 3
+            )
+
             cpu_rows[(host, model, backend, device)] = row
 
         elif is_gpu:
@@ -328,6 +362,21 @@ def main() -> None:
 
             gpu_energy_j = p_mean * duration_sec if p_mean is not None and duration_sec is not None else None
             row["gpu_energy_j"] = fmt(gpu_energy_j, 3)
+
+            # Exact hardware-counter total (nvmlDeviceGetTotalEnergyConsumption
+            # diff), summed across GPUs, from the collector's energy_totals
+            # sidecar - independent of sampling cadence unlike gpu_energy_j above.
+            energy_totals = load_energy_totals(csv_path)
+            gpu_energy_j_total = None
+            if energy_totals and energy_totals.get("gpu"):
+                vals = [
+                    g.get("gpu_energy_j_total") for g in energy_totals["gpu"]
+                    if g.get("gpu_energy_j_total") is not None
+                ]
+                if vals:
+                    gpu_energy_j_total = sum(vals)
+            row["gpu_energy_j_total"] = fmt(gpu_energy_j_total, 3)
+
             gpu_rows[(host, model, backend, device)] = row
             
         elif is_net:

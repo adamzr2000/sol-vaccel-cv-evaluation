@@ -1,7 +1,36 @@
 import os
 import csv
+import json
+import re
 import statistics
 import glob
+
+
+def _candidate_totals_paths(stem):
+    """
+    Candidate energy_totals_*.json sidecar filenames for a "{host}-{cpu|gpu}-idle"
+    CSV stem, newest naming first:
+      1. mode-neutral shared name (current collector: strips the cpu/gpu token,
+         so both domains of the same run share one file, e.g. "{host}-idle.json")
+      2. the untouched stem (older collector versions, before that fix)
+    """
+    neutral = re.sub(r'-(cpu|gpu)-idle$', '-idle', stem)
+    candidates = [f"energy_totals_{neutral}.json"]
+    if neutral != stem:
+        candidates.append(f"energy_totals_{stem}.json")
+    return candidates
+
+
+def _load_energy_totals(stem):
+    for name in _candidate_totals_paths(stem):
+        if os.path.exists(name):
+            try:
+                with open(name, "r") as f:
+                    return json.load(f)
+            except Exception:
+                return None
+    return None
+
 
 def generate_summary():
     output_file = "summary.csv"
@@ -9,7 +38,7 @@ def generate_summary():
 
     # Find all CSV files in the current directory ending with 'idle.csv'
     csv_files = glob.glob("*-idle.csv")
-    
+
     if not csv_files:
         print("No '-idle.csv' files found in the current directory.")
         return
@@ -18,49 +47,98 @@ def generate_summary():
         filename = os.path.basename(filepath)
         # Use the filename (without extension) as the host identifier
         host = filename.replace(".csv", "")
-        
+
         power_values = []
-        
+        timestamps_ms = []
+        kind = None
+
         with open(filepath, 'r') as f:
             reader = csv.DictReader(f)
             for row in reader:
                 # Detect the correct column based on whether it's a CPU or GPU file
                 if 'cpu_watts' in row:
+                    kind = 'cpu'
                     val = row['cpu_watts']
                 elif 'power_draw_w' in row:
+                    kind = 'gpu'
                     val = row['power_draw_w']
                 else:
                     # If neither column exists, skip to the next row
-                    continue 
-                    
+                    continue
+
                 try:
                     power_values.append(float(val))
                 except ValueError:
                     # Skip rows with missing or malformed data
                     pass
-                    
-        # Calculate stats if we found valid data
-        if power_values:
-            mean_val = statistics.mean(power_values)
-            # stdev requires at least two data points
-            std_val = statistics.stdev(power_values) if len(power_values) > 1 else 0.0
-            results.append([host, round(mean_val, 3), round(std_val, 3)])
-        else:
+
+                ts = row.get('timestamp')
+                if ts:
+                    try:
+                        timestamps_ms.append(int(float(ts)))
+                    except ValueError:
+                        pass
+
+        if not power_values:
             print(f"Warning: No valid power data found in {filename}")
+            continue
+
+        power_w_mean = statistics.mean(power_values)
+        # stdev requires at least two data points
+        power_w_std = statistics.stdev(power_values) if len(power_values) > 1 else 0.0
+
+        totals = _load_energy_totals(host)
+
+        # Exact energy total from the collector's hardware counters (RAPL for
+        # cpu, NVML total-energy for gpu) - the authoritative figure.
+        energy_j_from_counters = None
+        if totals:
+            if kind == 'cpu':
+                energy_j_from_counters = totals.get('cpu_energy_j_total')
+            elif kind == 'gpu' and totals.get('gpu'):
+                vals = [g.get('gpu_energy_j_total') for g in totals['gpu'] if g.get('gpu_energy_j_total') is not None]
+                if vals:
+                    energy_j_from_counters = round(sum(vals), 3)
+
+        # Monitored window: prefer the collector's own exact duration (same
+        # window the counter total above covers); fall back to the CSV's own
+        # first/last timestamp span if the sidecar is missing.
+        duration_sec = None
+        if totals and totals.get('duration_sec') is not None:
+            duration_sec = totals['duration_sec']
+        elif len(timestamps_ms) >= 2:
+            duration_sec = round((max(timestamps_ms) - min(timestamps_ms)) / 1000.0, 3)
+
+        # For comparison/sanity-checking only (log output + summary.csv) -
+        # NOT used anywhere else in the project. Reconstructing energy this
+        # way is biased by sampling interval/cadence; energy_j_from_counters
+        # above is the one to actually use.
+        energy_j_from_power = round(power_w_mean * duration_sec, 3) if duration_sec else None
+
+        results.append([
+            host,
+            round(power_w_mean, 3),
+            round(power_w_std, 3),
+            duration_sec if duration_sec is not None else '',
+            energy_j_from_power if energy_j_from_power is not None else '',
+            energy_j_from_counters if energy_j_from_counters is not None else '',
+        ])
+
+    header = ['host', 'power_w_mean', 'power_w_std', 'duration_sec', 'energy_j_from_power', 'energy_j_from_counters']
 
     # Write out the results to summary.csv
     with open(output_file, 'w', newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(['host', 'mean', 'std dev'])
+        writer.writerow(header)
         writer.writerows(results)
 
     print(f"Success! Parsed {len(results)} files. Summary saved to {output_file}")
-    
+
     # Print it to the console as well for a quick preview
     print("\n--- PREVIEW ---")
-    print("host, mean, std dev")
+    print(",".join(header))
     for row in results:
-        print(f"{row[0]}, {row[1]}, {row[2]}")
+        print(",".join(str(v) for v in row))
 
 if __name__ == "__main__":
     generate_summary()

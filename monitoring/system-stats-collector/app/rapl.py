@@ -57,26 +57,28 @@ def read_energy_uj(packages: List[RaplPackage]) -> Optional[List[int]]:
         vals.append(v)
     return vals
 
-def compute_watts(
+def compute_energy_diff_uj(
     last_energy_uj: Optional[List[int]],
     curr_energy_uj: Optional[List[int]],
-    time_delta_s: float,
     packages: List[RaplPackage],
-) -> float:
+) -> Optional[int]:
     """
-    Compute watts from RAPL energy deltas.
-    Handles wrap if max_energy_range_uj exists.
-    Returns 0.0 if not computable.
+    Compute the total wrap-corrected energy delta (microjoules) across all
+    packages between two consecutive reads. Returns None if not computable.
+
+    Callers should poll frequently enough that at most one wrap can occur
+    between `last_energy_uj` and `curr_energy_uj` for a given package -
+    this is what makes summing these deltas over a run's lifetime an exact
+    total, rather than an approximation reconstructed from average power.
     """
     if (
         last_energy_uj is None
         or curr_energy_uj is None
-        or time_delta_s <= 0
         or not packages
         or len(last_energy_uj) != len(curr_energy_uj)
         or len(packages) != len(curr_energy_uj)
     ):
-        return 0.0
+        return None
 
     total_diff_uj = 0
     for i, p in enumerate(packages):
@@ -95,6 +97,4 @@ def compute_watts(
 
         total_diff_uj += diff
 
-    # microjoules -> joules
-    joules = total_diff_uj / 1_000_000.0
-    return joules / time_delta_s
+    return total_diff_uj

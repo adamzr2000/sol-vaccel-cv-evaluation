@@ -1,0 +1,47 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find ~/nbfc/vaccel-plugin-torch/build ~/nbfc/vaccel-plugin-torch/build3 ~/nbfc/vaccel-plugin-torch/build-cont -name \"libvaccel-torch.so*\" 2>/dev/null | sort)",
+      "Read(//home/nextnet/nbfc/vaccel-plugin-torch/build/**)",
+      "Bash(cp ~/nbfc/vaccel-plugin-torch/build-cont/src/libvaccel-torch.so.0.2.1 /home/nextnet/adam/sol-vaccel-cv-evaluation/vaccel-plugin-torch/ && ls -la /home/nextnet/adam/sol-vaccel-cv-evaluation/vaccel-plugin-torch/)",
+      "Bash(docker exec torchvision-app bash -c ' *)",
+      "Bash(docker run --rm torchvision-app:agent bash -c ' *)",
+      "Bash(docker run --rm --entrypoint bash torchvision-app:agent -c ' *)",
+      "Bash(docker run --rm --entrypoint bash torchvision-ros-app:cpu -c ' *)",
+      "Bash(ldd src/models/swin_t_sol/lib_cpu/vaccel/libsol_swin_t_wrapper.so)",
+      "Bash(readelf -d src/models/swin_t_sol/lib_cpu/vaccel/libsol_swin_t_wrapper.so)",
+      "Bash(ldd src/models/swin_s_sol/lib_cpu/libsol_swin_s.so)",
+      "Bash(readelf -d src/models/swin_s_sol/lib_cpu/libsol_swin_s.so)",
+      "Bash(xargs -I{} readelf -d {})",
+      "Bash(docker run *)",
+      "Bash(find /home/nextnet/nbfc -name 'vaccel*.deb' -o -name 'vaccel*.so' 2>/dev/null | sort)",
+      "Read(//home/nextnet/nbfc/**)",
+      "Bash(dpkg-deb -f /home/nextnet/nbfc/sol-vaccel-cv-evaluation/src/vaccel_latest_amd64.deb Package Version)",
+      "Bash(dpkg-deb -f /home/nextnet/nbfc/sol-vaccel-cv-evaluation/src/vaccel-rpc_latest_amd64.deb Package Version)",
+      "Read(//home/nextnet/**)",
+      "Bash(dpkg -L vaccel)",
+      "Bash(dpkg -x /home/nextnet/nbfc/sol-vaccel-cv-evaluation/src/vaccel_latest_amd64.deb /tmp/vaccel_extracted)",
+      "Read(//tmp/**)",
+      "Bash(ldd src/models/swin_t_sol/lib_gpu/libsol_swin_t.so)",
+      "Bash(ldd src/models/deeplabv3_resnet50_sol/lib_gpu/libsol_deeplabv3_resnet50.so)",
+      "Bash(readelf -d src/models/swin_t_sol/lib_gpu/libsol-dnn-cudnn*.so)",
+      "Bash(readelf -d src/models/deeplabv3_resnet50_sol/lib_gpu/libsol-dnn-cudnn*.so)",
+      "Bash(readelf -n vaccel-plugin-torch/libvaccel-torch.so)",
+      "Bash(readelf -n /home/nextnet/nbfc/vaccel-plugin-torch/build-cont/src/libvaccel-torch.so.0.2.1)",
+      "Bash(git -C /home/nextnet/adam/sol-vaccel-cv-evaluation status)",
+      "Bash(git -C /home/nextnet/adam/sol-vaccel-cv-evaluation status --short)",
+      "Bash(git -C /home/nextnet/adam/sol-vaccel-cv-evaluation log --oneline -3)",
+      "Bash(git restore *)",
+      "Bash(git -C /home/nextnet/adam/sol-vaccel-cv-evaluation commit -m ' *)",
+      "Bash(git commit -m ' *)",
+      "Bash(python3 -c ' *)",
+      "Bash(xargs -I{} head -160 {})",
+      "Bash(python3 summarize_system_stats.py --run-tag e2e --link wifi)",
+      "Bash(python3 summarize_system_stats.py --run-tag iso --link wifi)",
+      "Bash(python3 barplot_power_consumption.py)"
+    ],
+    "additionalDirectories": [
+      "/home/nextnet/nbfc/vaccel-plugin-torch/build-cont/src"
+    ]
+  }
+}

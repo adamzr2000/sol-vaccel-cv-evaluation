@@ -1,4 +1,3 @@
-host,mean,std dev
-edge-asus-gpu-idle,7.56,0.779
-robot-cpu-idle,0.616,0.096
-edge-asus-cpu-idle,4.591,0.049
+host,power_w_mean,power_w_std,duration_sec,energy_j_from_power,energy_j_from_counters
+edge-asus-gpu-idle,7.522,0.75,300.06,2256.933,2222.619
+edge-asus-cpu-idle,4.561,0.13,300.06,1368.665,1368.571

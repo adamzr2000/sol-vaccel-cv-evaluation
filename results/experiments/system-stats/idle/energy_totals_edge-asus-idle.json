@@ -1,0 +1,19 @@
+{
+  "tag": "idle-edge-asus",
+  "run_idx": 1,
+  "mode": [
+    "cpu",
+    "gpu"
+  ],
+  "run_started_iso": "2026-07-23T07:52:18.822414+00:00",
+  "run_stopped_iso": "2026-07-23T07:57:18.882526+00:00",
+  "duration_sec": 300.06,
+  "cpu_energy_j_total": 1368.571,
+  "gpu": [
+    {
+      "gpu_index": 0,
+      "gpu_name": "NVIDIA GeForce RTX 5080 Laptop GPU",
+      "gpu_energy_j_total": 2222.619
+    }
+  ]
+}

@@ -142,6 +142,12 @@ Each CPU sample corresponds to a measurement window ending at the reported times
   Representative CPU temperature (°C) measured at sampling time.  
   Package temperature is preferred; otherwise, the average of available core temperatures is used.
 
+- **cpu_energy_j_cumulative**  
+  Exact energy consumed (J) from the start of this run up to and including the current sample,  
+  accumulated from wrap-corrected Intel RAPL `energy_uj` deltas (see Energy Totals below).  
+  Monotonically non-decreasing; the last row's value is (almost) `energy_totals.cpu_energy_j_total`,  
+  save for the final partial tick captured only at stop.
+
 ## GPU Metrics Description
 
 Each GPU sample corresponds to the sampling instant ending at the reported timestamp and is reported per GPU device.
@@ -164,6 +170,12 @@ Each GPU sample corresponds to the sampling instant ending at the reported times
 - **temp_c**  
   GPU temperature (°C) measured at sampling time.
 
+- **gpu_energy_j_cumulative**  
+  Exact energy consumed (J) from the start of this run up to the current sample, per GPU,  
+  from `nvmlDeviceGetTotalEnergyConsumption()` diffed against its value at monitor start.  
+  Monotonically non-decreasing; `null` if the GPU/driver doesn't support the counter.  
+  The last row's value is the same figure as `energy_totals.gpu[i].gpu_energy_j_total`.
+
 ## Timestamp Semantics
 
 - **timestamp**  
@@ -175,11 +187,55 @@ Each GPU sample corresponds to the sampling instant ending at the reported times
 GPU metrics reflect instantaneous or short-window measurements provided by NVML,  
 whereas CPU power metrics are averaged over the sampling interval.
 
+## Energy Totals (exact)
+
+The per-tick `cpu_watts` / `power_draw_w` columns are a power time series only — for
+total energy consumed during a run, don't reconstruct it from them (sampling gaps and
+interval choice bias the result). Instead, the collector measures it directly from
+hardware energy counters, independent of sampling cadence, and reports it two ways:
+
+1. **Per-tick cumulative columns** — `cpu_energy_j_cumulative` / `gpu_energy_j_cumulative`
+   (see above), logged alongside the power columns in the same CSV rows. Lets you
+   reconstruct energy for any sub-window of the run (e.g. just the middle 30s) by
+   diffing two rows, not only the whole-run total.
+2. **Whole-run totals**, described below.
+
+- **cpu_energy_j_total** — sum of wrap-corrected Intel RAPL `energy_uj` deltas across
+  the whole run (package domain), captured tick-by-tick plus a final read at stop.
+- **gpu_energy_j_total** — `nvmlDeviceGetTotalEnergyConsumption()` diffed between
+  monitor start and stop, per GPU. `null` if the GPU/driver doesn't support the counter.
+
+These are returned in the `/monitor/stop` response as `energy_totals`, and — when
+`csv_dir` is set — written to a sidecar file next to the CSVs:
+```
+<csv_dir>/energy_totals_<run-identifier>.json
+```
+`<run-identifier>` is derived from whichever `csv_names` value was given (e.g.
+`run1_benchmark_cpu.csv` → `energy_totals_run1_benchmark.json`), so it stays
+correlated with that run's CSVs. Falls back to `<tag>-run<N>_energy_totals.json`
+if no `csv_names` were provided.
+
+## Requirements & Notes
+
+- **`csv_dir` must already exist.** Unlike the Docker Stats Collector, `/monitor/start`
+  returns `400` if `csv_dir` is set but the directory is missing — it is not created
+  automatically. Callers must create it beforehand.
+- **`/health`** additionally reports `gpu_count` (from NVML) and `cpu_rapl_available`
+  (whether Intel RAPL energy counters were discovered), useful for confirming hardware
+  support before starting a run.
+
 ## System Stats – Usage
 
 Health check:
 ```shell
 curl localhost:6001/health | jq
+```
+```json
+{
+  "status": "ok",
+  "gpu_count": 1,
+  "cpu_rapl_available": true
+}
 ```
 
 Check monitoring status:
@@ -217,7 +273,16 @@ curl -X POST localhost:6001/monitor/start \
   }' | jq
 ```
 
-Stop monitoring:
+Stop monitoring (response includes exact energy totals — see above):
 ```shell
-curl -X POST http://localhost:6001/monitor/stop
+curl -X POST http://localhost:6001/monitor/stop | jq
+```
+```json
+{
+  "success": true,
+  "energy_totals": {
+    "cpu_energy_j_total": 223.253,
+    "gpu": [{"gpu_index": 0, "gpu_name": "NVIDIA GeForce RTX 5080 Laptop GPU", "gpu_energy_j_total": 152.159}]
+  }
+}
 ```

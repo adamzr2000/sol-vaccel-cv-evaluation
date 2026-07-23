@@ -1,6 +1,7 @@
 # app/main.py
 import logging
 import csv
+import json
 import threading
 import time
 import os
@@ -15,7 +16,7 @@ from pydantic import BaseModel, Field
 import pynvml
 import psutil
 
-from rapl import discover_rapl_packages, read_energy_uj, compute_watts
+from rapl import discover_rapl_packages, read_energy_uj, compute_energy_diff_uj
 
 # ---------- Logging ----------
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -47,6 +48,7 @@ class SystemMonitorState:
     thread: Optional[threading.Thread] = None
     stop_event = threading.Event()
     current_mode: Optional[List[str]] = None
+    last_energy_totals: Optional[dict] = None
 
 state = SystemMonitorState()
 
@@ -83,6 +85,67 @@ def _resolve_csv_path(csv_dir: str, name: str) -> str:
             name += ".csv"
         path = os.path.join(csv_dir.rstrip("/"), name)
     return path
+
+def _strip_kind_token(stem: str, kind: str) -> str:
+    """
+    Remove a single 'kind' token ("cpu"/"gpu"/"net") from stem, wherever it
+    appears as a standalone '_'/'-'-delimited word (prefix, suffix, or in the
+    middle), collapsing the surrounding separator so no double/dangling
+    separator is left behind. Returns stem unchanged if the token isn't
+    present as a standalone word (e.g. "microcpu" is left alone).
+    """
+    m = re.search(rf'(?:^|(?<=[_-])){re.escape(kind)}(?:$|(?=[_-]))', stem)
+    if not m:
+        return stem
+    left, right = stem[:m.start()], stem[m.end():]
+    left_has_sep = left.endswith(("_", "-"))
+    right_has_sep = right.startswith(("_", "-"))
+    if left_has_sep and right_has_sep:
+        right = right[1:]   # sandwiched: collapse the pair to a single separator
+    elif left_has_sep:
+        left = left[:-1]    # token was a trailing suffix: drop that separator too
+    elif right_has_sep:
+        right = right[1:]   # token was a leading prefix: drop that separator too
+    return left + right
+
+
+def _derive_totals_path(base_path: str, cpu_path: str, gpu_path: str, net_path: str, mode: List[str]) -> str:
+    """
+    Name the energy-totals JSON after whatever descriptive CSV name(s) the
+    caller actually chose (via csv_names), so it stays correlated with the
+    run's CSVs even when tag/run_idx are left at their generic defaults (as
+    monitoring_node.py does - it always sends explicit csv_names and never a
+    custom tag).
+
+    When both "cpu" and "gpu" are monitored in the same run (e.g. an idle
+    baseline capturing both), naming the totals file after just one of them
+    would misleadingly look domain-specific even though the totals JSON
+    always contains every monitored domain. In that case, strip the cpu/gpu
+    token from each device CSV name and use the shared stem if both agree
+    (e.g. "{host}-cpu-idle.csv" / "{host}-gpu-idle.csv" -> "{host}-idle");
+    otherwise fall back to the generic tag/run_idx name below rather than
+    arbitrarily picking one device's name.
+    """
+    device_stems: Dict[str, str] = {}
+    for kind, path in (("cpu", cpu_path), ("gpu", gpu_path)):
+        if kind not in mode or not path:
+            continue
+        stem = os.path.basename(path)
+        if stem.lower().endswith(".csv"):
+            stem = stem[:-4]
+        device_stems[kind] = _strip_kind_token(stem, kind)
+
+    if "cpu" in device_stems and "gpu" in device_stems:
+        if device_stems["cpu"] == device_stems["gpu"]:
+            return os.path.join(os.path.dirname(cpu_path), f"energy_totals_{device_stems['cpu']}.json")
+        # Present device names disagree (unrelated custom names) - fall through
+        # to the generic fallback rather than arbitrarily picking one.
+    elif device_stems:
+        only_kind, only_stem = next(iter(device_stems.items()))
+        only_path = cpu_path if only_kind == "cpu" else gpu_path
+        return os.path.join(os.path.dirname(only_path), f"energy_totals_{only_stem}.json")
+
+    return f"{base_path}_energy_totals.json"
 
 def _open_csv_writer(path: str, fieldnames: list[str]):
     parent = os.path.dirname(path)
@@ -151,13 +214,15 @@ def monitor_loop(
         try:
             if "cpu" in mode:
                 f_cpu, w_cpu = _open_csv_writer(cpu_path, fieldnames=[
-                    "timestamp", "timestamp_iso", "cpu_watts", "cpu_util_percent", "cpu_temp_c"
+                    "timestamp", "timestamp_iso", "cpu_watts", "cpu_util_percent", "cpu_temp_c",
+                    "cpu_energy_j_cumulative"
                 ])
             if "gpu" in mode:
                 f_gpu, w_gpu = _open_csv_writer(gpu_path, fieldnames=[
                     "timestamp", "timestamp_iso", "gpu_index", "gpu_name",
                     "power_draw_w", "power_limit_w", "util_gpu_percent",
-                    "util_mem_percent", "mem_used_mb", "temp_c"
+                    "util_mem_percent", "mem_used_mb", "temp_c",
+                    "gpu_energy_j_cumulative"
                 ])
             if "net" in mode:
                 f_net, w_net = _open_csv_writer(net_path, fieldnames=[
@@ -174,11 +239,14 @@ def monitor_loop(
     # Init Hardware
     rapl_packages = discover_rapl_packages()
     last_cpu_energy = read_energy_uj(rapl_packages)
+    cpu_energy_uj_total = 0
+    cpu_read_failure_warned = False
     if "cpu" in mode:
         try: psutil.cpu_percent(interval=None)
         except Exception: pass
 
     gpu_ok, gpu_handles, gpu_names = False, [], []
+    gpu_energy_start_mj: List[Optional[int]] = []
     if "gpu" in mode:
         try:
             pynvml.nvmlInit()
@@ -188,6 +256,13 @@ def monitor_loop(
             gpu_ok = True
         except Exception as e:
             logger.error(f"NVML Init failed: {e}")
+
+        for i, h in enumerate(gpu_handles):
+            try:
+                gpu_energy_start_mj.append(pynvml.nvmlDeviceGetTotalEnergyConsumption(h))
+            except Exception as e:
+                gpu_energy_start_mj.append(None)
+                logger.warning(f"[GPU {i}] total energy counter unavailable, gpu_energy_j_total will be omitted: {e}")
 
     last_net_io = None
     if "net" in mode:
@@ -199,7 +274,9 @@ def monitor_loop(
         except Exception as e:
             logger.error(f"Failed to init network counters: {e}")
 
-    last_time = time.monotonic()
+    run_start_mono = time.monotonic()
+    run_start_iso = datetime.now(timezone.utc).isoformat()
+    last_time = run_start_mono
 
     # Main Loop
     while not state.stop_event.is_set():
@@ -220,14 +297,23 @@ def monitor_loop(
         # CPU BLOCK
         if "cpu" in mode:
             curr_energy = read_energy_uj(rapl_packages)
-            cpu_watts = compute_watts(last_cpu_energy, curr_energy, time_delta, rapl_packages)
+            diff_uj = compute_energy_diff_uj(last_cpu_energy, curr_energy, rapl_packages)
+            if diff_uj is not None:
+                cpu_watts = (diff_uj / 1_000_000.0) / time_delta
+                cpu_energy_uj_total += diff_uj
+            else:
+                cpu_watts = 0.0
+                if not cpu_read_failure_warned:
+                    logger.warning("RAPL energy read failed mid-run - cpu_watts/cpu_energy_j_total will undercount from this point.")
+                    cpu_read_failure_warned = True
             last_cpu_energy = curr_energy
             try: cpu_util = psutil.cpu_percent(interval=None)
             except Exception: cpu_util = 0.0
             cpu_temp = _get_cpu_temp_c()
+            cpu_energy_j_cumulative = round(cpu_energy_uj_total / 1_000_000.0, 3) if rapl_packages else None
 
             if w_cpu:
-                w_cpu.writerow({"timestamp": ts, "timestamp_iso": ts_iso, "cpu_watts": round(cpu_watts, 2), "cpu_util_percent": cpu_util, "cpu_temp_c": cpu_temp})
+                w_cpu.writerow({"timestamp": ts, "timestamp_iso": ts_iso, "cpu_watts": round(cpu_watts, 2), "cpu_util_percent": cpu_util, "cpu_temp_c": cpu_temp, "cpu_energy_j_cumulative": cpu_energy_j_cumulative})
             if stdout:
                 logger.info(f"[CPU] {cpu_watts:.2f} W | Util {cpu_util}% | Temp {cpu_temp:.1f}C")
 
@@ -268,8 +354,16 @@ def monitor_loop(
                     temp = None
                     logger.warning(f"[GPU {i}] temperature unavailable: {e}")
 
+                gpu_energy_j_cumulative = None
+                if gpu_energy_start_mj[i] is not None:
+                    try:
+                        curr_mj = pynvml.nvmlDeviceGetTotalEnergyConsumption(h)
+                        gpu_energy_j_cumulative = round((curr_mj - gpu_energy_start_mj[i]) / 1000.0, 3)
+                    except Exception as e:
+                        logger.warning(f"[GPU {i}] total energy counter read failed mid-run: {e}")
+
                 if w_gpu:
-                    w_gpu.writerow({"timestamp": ts, "timestamp_iso": ts_iso, "gpu_index": i, "gpu_name": gpu_names[i], "power_draw_w": round(pwr, 2) if pwr is not None else None, "power_limit_w": round(limit, 2) if limit is not None else None, "util_gpu_percent": util_gpu, "util_mem_percent": util_mem, "mem_used_mb": mem_used_mb, "temp_c": temp})
+                    w_gpu.writerow({"timestamp": ts, "timestamp_iso": ts_iso, "gpu_index": i, "gpu_name": gpu_names[i], "power_draw_w": round(pwr, 2) if pwr is not None else None, "power_limit_w": round(limit, 2) if limit is not None else None, "util_gpu_percent": util_gpu, "util_mem_percent": util_mem, "mem_used_mb": mem_used_mb, "temp_c": temp, "gpu_energy_j_cumulative": gpu_energy_j_cumulative})
                 if stdout:
                     parts = []
                     if pwr is not None:
@@ -309,6 +403,58 @@ def monitor_loop(
     if f_cpu: f_cpu.close()
     if f_gpu: f_gpu.close()
     if f_net: f_net.close()
+
+    # Capture any energy since the last completed tick up to this exact stop
+    # instant, so cpu_energy_j_total covers the same [start, stop] window as
+    # gpu_energy_j_total (which reads its counter fresh here too) rather than
+    # only the last completed sampling tick.
+    if "cpu" in mode:
+        final_energy = read_energy_uj(rapl_packages)
+        final_diff_uj = compute_energy_diff_uj(last_cpu_energy, final_energy, rapl_packages)
+        if final_diff_uj is not None:
+            cpu_energy_uj_total += final_diff_uj
+        elif not cpu_read_failure_warned:
+            logger.warning("RAPL energy read failed on final stop read - cpu_energy_j_total is missing the last partial interval.")
+
+    run_stop_mono = time.monotonic()
+    run_stop_iso = datetime.now(timezone.utc).isoformat()
+
+    # Exact run-total energy: CPU from the accumulated wrap-corrected RAPL
+    # deltas, GPU from the onboard energy counter (not from integrating the
+    # per-tick power samples), so neither figure depends on sampling cadence.
+    totals: dict = {
+        "tag": tag,
+        "run_idx": run_idx,
+        "mode": mode,
+        "run_started_iso": run_start_iso,
+        "run_stopped_iso": run_stop_iso,
+        "duration_sec": round(run_stop_mono - run_start_mono, 3),
+    }
+    if "cpu" in mode:
+        totals["cpu_energy_j_total"] = round(cpu_energy_uj_total / 1_000_000.0, 3) if rapl_packages else None
+
+    if "gpu" in mode and gpu_ok:
+        gpu_totals = []
+        for i, h in enumerate(gpu_handles):
+            entry = {"gpu_index": i, "gpu_name": gpu_names[i], "gpu_energy_j_total": None}
+            if gpu_energy_start_mj[i] is not None:
+                try:
+                    end_mj = pynvml.nvmlDeviceGetTotalEnergyConsumption(h)
+                    entry["gpu_energy_j_total"] = round((end_mj - gpu_energy_start_mj[i]) / 1000.0, 3)
+                except Exception as e:
+                    logger.warning(f"[GPU {i}] failed to read total energy at stop: {e}")
+            gpu_totals.append(entry)
+        totals["gpu"] = gpu_totals
+
+    state.last_energy_totals = totals
+    if csv_dir:
+        try:
+            totals_path = _derive_totals_path(base_path, cpu_path, gpu_path, net_path, mode)
+            with open(totals_path, "w") as tf:
+                json.dump(totals, tf, indent=2)
+        except Exception as e:
+            logger.error(f"Failed to write energy totals JSON: {e}")
+
     if "gpu" in mode and gpu_ok:
         try: pynvml.nvmlShutdown()
         except Exception: pass
@@ -348,11 +494,13 @@ def start(req: StartRequest):
 
     run_idx = 1
     if req.csv_dir:
-        os.makedirs(req.csv_dir, exist_ok=True)
+        if not os.path.exists(req.csv_dir):
+            raise HTTPException(status_code=400, detail="csv_dir does not exist")
         run_idx = get_next_run_index(req.csv_dir, req.tag)
 
     state.stop_event.clear()
     state.current_mode = req.mode
+    state.last_energy_totals = None
     state.thread = threading.Thread(
         target=monitor_loop,
         args=(req.interval, req.csv_dir, req.tag, run_idx, req.mode, req.stdout, req.net_interface, req.csv_names),
@@ -395,7 +543,7 @@ def stop():
         state.thread.join(timeout=5.0)
     state.running = False
     state.current_mode = None
-    return {"success": True}
+    return {"success": True, "energy_totals": state.last_energy_totals}
 
 @app.get("/monitor/status", response_model=StatusResponse)
 def status():

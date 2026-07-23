@@ -1,0 +1,241 @@
+% Requires \usepackage{booktabs} and \usepackage{multirow} in the paper preamble.
+% Best FPS (highest) and best Total latency (lowest) per model x scenario group are bolded.
+\begin{table*}[t]
+\centering
+\caption{End-to-end FPS and latency breakdown --- Local CPU}
+\label{tab:e2e-local-cpu}
+\small
+\begin{tabular}{llrrrrr}
+\toprule
+Model & Configuration & FPS & Inference (ms) & Pre/Post (ms) & Network (ms) & Total (ms) \\
+\midrule
+\multicolumn{7}{l}{\textit{(a) Image Classification}} \\
+\midrule
+\multirow{4}{*}{SwinV2-B} & ROS2 + Torch & 1.11 & 825.0 & 13.5 & 59.3 & 897.7 \\
+ & ROS2 + SOL & 1.57 & 596.3 & 6.4 & 32.9 & 635.6 \\
+ & vAccel + Torch & 1.36 & 727.4 & 8.4 & -- & 735.8 \\
+ & vAccSOL & \textbf{1.98} & 495.0 & 7.3 & -- & \textbf{502.3} \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{Swin-T} & ROS2 + Torch & 4.22 & 203.5 & 7.5 & 26.1 & 237.2 \\
+ & ROS2 + SOL & 4.87 & 160.1 & 7.0 & 38.2 & 205.3 \\
+ & vAccel + Torch & 5.53 & 172.2 & 8.3 & -- & 180.5 \\
+ & vAccSOL & \textbf{7.78} & 121.1 & 7.0 & -- & \textbf{128.1} \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{Swin-S} & ROS2 + Torch & 2.24 & 414.0 & 6.1 & 25.6 & 445.7 \\
+ & ROS2 + SOL & 3.12 & 284.2 & 6.8 & 29.5 & 320.5 \\
+ & vAccel + Torch & 2.78 & 350.2 & 8.4 & -- & 358.7 \\
+ & vAccSOL & \textbf{4.39} & 220.9 & 6.5 & -- & \textbf{227.4} \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{ResNet-50} & ROS2 + Torch & 6.02 & 128.8 & 6.4 & 31.0 & 166.1 \\
+ & ROS2 + SOL & 5.73 & 138.7 & 6.2 & 29.7 & 174.6 \\
+ & vAccel + Torch & \textbf{9.39} & 99.3 & 6.7 & -- & \textbf{106.0} \\
+ & vAccSOL & 8.53 & 110.1 & 6.3 & -- & 116.4 \\
+\cmidrule(lr){1-7}
+\midrule
+\multicolumn{7}{l}{\textit{(b) Video Action Recognition}} \\
+\midrule
+\multirow{4}{*}{Swin3D-S} & ROS2 + Torch & 1.00 & 888.2 & 71.8 & 38.3 & 998.4 \\
+ & ROS2 + SOL & 1.04 & 850.3 & 72.5 & 34.2 & 957.0 \\
+ & vAccel + Torch & 1.24 & 742.0 & 61.6 & -- & 803.6 \\
+ & vAccSOL & \textbf{1.31} & 693.5 & 62.8 & -- & \textbf{756.3} \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{Swin3D-B} & ROS2 + Torch & 0.69 & 1343.9 & 75.4 & 39.2 & 1458.5 \\
+ & ROS2 + SOL & 0.73 & 1264.2 & 72.2 & 32.6 & 1369.0 \\
+ & vAccel + Torch & 0.81 & 1170.1 & 60.3 & -- & 1230.4 \\
+ & vAccSOL & \textbf{0.89} & 1059.4 & 62.8 & -- & \textbf{1122.2} \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{R3D-18} & ROS2 + Torch & 1.15 & 754.9 & 71.7 & 44.5 & 871.1 \\
+ & ROS2 + SOL & 1.06 & 848.0 & 70.8 & 22.4 & 941.2 \\
+ & vAccel + Torch & \textbf{1.37} & 662.4 & 61.5 & -- & \textbf{723.9} \\
+ & vAccSOL & 1.22 & 753.7 & 61.2 & -- & 815.0 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{R(2+1)D-18} & ROS2 + Torch & 0.99 & 900.9 & 72.3 & 35.1 & 1008.3 \\
+ & ROS2 + SOL & 0.94 & 954.9 & 71.3 & 36.2 & 1062.4 \\
+ & vAccel + Torch & \textbf{1.17} & 787.2 & 62.4 & -- & \textbf{849.6} \\
+ & vAccSOL & 1.13 & 818.5 & 61.6 & -- & 880.0 \\
+\cmidrule(lr){1-7}
+\midrule
+\multicolumn{7}{l}{\textit{(c) Semantic Segmentation}} \\
+\midrule
+\multirow{4}{*}{FCN-R101} & ROS2 + Torch & 0.88 & 1091.6 & 15.4 & 28.6 & 1135.5 \\
+ & ROS2 + SOL & 0.82 & 1157.8 & 15.3 & 50.4 & 1223.5 \\
+ & vAccel + Torch & \textbf{1.00} & 988.4 & 14.0 & -- & \textbf{1002.3} \\
+ & vAccSOL & 0.93 & 1062.4 & 14.1 & -- & 1076.5 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{FCN-R50} & ROS2 + Torch & 1.27 & 756.0 & 12.6 & 15.9 & 784.5 \\
+ & ROS2 + SOL & 1.16 & 832.6 & 13.4 & 13.3 & 859.3 \\
+ & vAccel + Torch & \textbf{1.39} & 705.6 & 14.0 & -- & \textbf{719.7} \\
+ & vAccSOL & 1.27 & 773.4 & 12.7 & -- & 786.1 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{DLv3-R101} & ROS2 + Torch & 1.07 & 892.3 & 14.2 & 32.3 & 938.7 \\
+ & ROS2 + SOL & 0.97 & 980.1 & 13.0 & 36.9 & 1030.0 \\
+ & vAccel + Torch & \textbf{1.27} & 772.6 & 14.6 & -- & \textbf{787.1} \\
+ & vAccSOL & 1.16 & 848.0 & 13.4 & -- & 861.4 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{DLv3-R50} & ROS2 + Torch & 1.62 & 562.0 & 13.9 & 40.9 & 616.8 \\
+ & ROS2 + SOL & 1.46 & 636.4 & 12.5 & 35.2 & 684.1 \\
+ & vAccel + Torch & \textbf{2.04} & 471.9 & 14.2 & -- & \textbf{486.1} \\
+ & vAccSOL & 1.80 & 540.1 & 13.3 & -- & 553.4 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\caption{End-to-end FPS and latency breakdown --- Remote CPU}
+\label{tab:e2e-remote-cpu}
+\small
+\begin{tabular}{llrrrrr}
+\toprule
+Model & Configuration & FPS & Inference (ms) & Pre/Post (ms) & Network (ms) & Total (ms) \\
+\midrule
+\multicolumn{7}{l}{\textit{(a) Image Classification}} \\
+\midrule
+\multirow{4}{*}{SwinV2-B} & ROS2 + Torch & 9.75 & 55.7 & 3.0 & 43.9 & 102.6 \\
+ & ROS2 + SOL & 11.53 & 41.0 & 1.3 & 44.4 & 86.7 \\
+ & vAccel + Torch & 9.76 & 70.8 & 12.8 & 18.9 & 102.5 \\
+ & vAccSOL & \textbf{11.82} & 49.8 & 14.0 & 20.8 & \textbf{84.6} \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{Swin-T} & ROS2 + Torch & 15.24 & 20.1 & 2.1 & 43.4 & 65.6 \\
+ & ROS2 + SOL & 16.39 & 15.9 & 2.0 & 43.1 & 61.0 \\
+ & vAccel + Torch & 18.76 & 20.7 & 12.7 & 19.8 & 53.3 \\
+ & vAccSOL & \textbf{20.17} & 15.2 & 11.3 & 23.0 & \textbf{49.6} \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{Swin-S} & ROS2 + Torch & 11.62 & 39.9 & 1.4 & 44.8 & 86.0 \\
+ & ROS2 + SOL & 13.79 & 27.4 & 2.0 & 43.2 & 72.5 \\
+ & vAccel + Torch & 14.48 & 40.2 & 11.4 & 17.5 & 69.1 \\
+ & vAccSOL & \textbf{16.57} & 26.2 & 11.6 & 22.5 & \textbf{60.3} \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{ResNet-50} & ROS2 + Torch & 16.46 & 15.9 & 2.0 & 42.9 & 60.8 \\
+ & ROS2 + SOL & 16.23 & 15.7 & 2.6 & 43.4 & 61.6 \\
+ & vAccel + Torch & 21.40 & 14.5 & 11.3 & 21.0 & 46.7 \\
+ & vAccSOL & \textbf{21.44} & 14.9 & 11.4 & 20.3 & \textbf{46.6} \\
+\cmidrule(lr){1-7}
+\midrule
+\multicolumn{7}{l}{\textit{(b) Video Action Recognition}} \\
+\midrule
+\multirow{4}{*}{Swin3D-S} & ROS2 + Torch & \textbf{5.29} & 96.1 & 9.8 & 83.2 & \textbf{189.0} \\
+ & ROS2 + SOL & 5.28 & 96.0 & 9.8 & 83.5 & 189.3 \\
+ & vAccel + Torch & 4.93 & 94.9 & 59.6 & 48.4 & 203.0 \\
+ & vAccSOL & 4.94 & 94.9 & 60.6 & 47.1 & 202.6 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{Swin3D-B} & ROS2 + Torch & \textbf{3.96} & 158.5 & 9.9 & 84.1 & \textbf{252.5} \\
+ & ROS2 + SOL & 3.92 & 163.3 & 9.9 & 82.0 & 255.2 \\
+ & vAccel + Torch & 3.76 & 157.2 & 62.2 & 46.3 & 265.7 \\
+ & vAccSOL & 3.66 & 157.8 & 59.5 & 55.9 & 273.1 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{R3D-18} & ROS2 + Torch & \textbf{5.68} & 82.2 & 9.8 & 84.1 & \textbf{176.2} \\
+ & ROS2 + SOL & 5.67 & 82.7 & 9.8 & 83.9 & 176.5 \\
+ & vAccel + Torch & 5.23 & 80.4 & 63.0 & 47.7 & 191.1 \\
+ & vAccSOL & 5.25 & 83.2 & 61.9 & 45.3 & 190.4 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{R(2+1)D-18} & ROS2 + Torch & 4.83 & 114.7 & 9.8 & 82.4 & 206.9 \\
+ & ROS2 + SOL & \textbf{4.89} & 114.9 & 9.7 & 80.0 & \textbf{204.7} \\
+ & vAccel + Torch & 4.75 & 113.5 & 61.4 & 35.5 & 210.4 \\
+ & vAccSOL & 4.32 & 117.5 & 61.5 & 52.2 & 231.3 \\
+\cmidrule(lr){1-7}
+\midrule
+\multicolumn{7}{l}{\textit{(c) Semantic Segmentation}} \\
+\midrule
+\multirow{4}{*}{FCN-R101} & ROS2 + Torch & 3.31 & 96.6 & 5.7 & 199.6 & 301.9 \\
+ & ROS2 + SOL & 3.39 & 102.2 & 5.3 & 187.1 & 294.6 \\
+ & vAccel + Torch & \textbf{5.10} & 97.3 & 25.8 & 72.8 & \textbf{195.9} \\
+ & vAccSOL & 5.04 & 103.2 & 25.8 & 69.5 & 198.4 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{FCN-R50} & ROS2 + Torch & 3.89 & 67.6 & 6.8 & 182.4 & 256.8 \\
+ & ROS2 + SOL & 3.88 & 69.2 & 5.2 & 183.3 & 257.8 \\
+ & vAccel + Torch & \textbf{6.07} & 64.6 & 25.5 & 74.6 & \textbf{164.7} \\
+ & vAccSOL & 5.99 & 69.7 & 25.5 & 71.8 & 166.9 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{DLv3-R101} & ROS2 + Torch & 3.61 & 87.1 & 5.6 & 184.1 & 276.8 \\
+ & ROS2 + SOL & 3.53 & 91.2 & 5.1 & 186.9 & 283.3 \\
+ & vAccel + Torch & \textbf{5.32} & 87.6 & 25.2 & 75.0 & \textbf{187.9} \\
+ & vAccSOL & 5.28 & 90.1 & 25.5 & 73.9 & 189.4 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{DLv3-R50} & ROS2 + Torch & 4.03 & 56.9 & 5.9 & 185.2 & 248.0 \\
+ & ROS2 + SOL & 4.03 & 58.4 & 5.2 & 184.6 & 248.1 \\
+ & vAccel + Torch & 6.41 & 55.1 & 25.6 & 75.3 & 156.1 \\
+ & vAccSOL & \textbf{6.43} & 56.9 & 25.5 & 73.0 & \textbf{155.5} \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\caption{End-to-end FPS and latency breakdown --- Remote GPU}
+\label{tab:e2e-remote-gpu}
+\small
+\begin{tabular}{llrrrrr}
+\toprule
+Model & Configuration & FPS & Inference (ms) & Pre/Post (ms) & Network (ms) & Total (ms) \\
+\midrule
+\multicolumn{7}{l}{\textit{(a) Image Classification}} \\
+\midrule
+\multirow{4}{*}{SwinV2-B} & ROS2 + Torch & 18.76 & 6.5 & 2.8 & 44.0 & 53.3 \\
+ & ROS2 + SOL & 18.75 & 7.3 & 2.1 & 44.0 & 53.3 \\
+ & vAccel + Torch & \textbf{32.29} & 6.6 & 10.7 & 13.7 & \textbf{31.0} \\
+ & vAccSOL & 31.03 & 7.3 & 11.1 & 13.9 & 32.2 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{Swin-T} & ROS2 + Torch & 19.75 & 2.8 & 4.6 & 43.3 & 50.6 \\
+ & ROS2 + SOL & 20.05 & 2.7 & 3.8 & 43.3 & 49.9 \\
+ & vAccel + Torch & \textbf{36.61} & 2.8 & 10.9 & 13.6 & \textbf{27.3} \\
+ & vAccSOL & 35.13 & 2.7 & 12.6 & 13.2 & 28.5 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{Swin-S} & ROS2 + Torch & 19.55 & 4.8 & 3.3 & 43.1 & 51.2 \\
+ & ROS2 + SOL & 20.15 & 4.8 & 1.9 & 43.0 & 49.6 \\
+ & vAccel + Torch & 29.75 & 4.9 & 15.6 & 13.1 & 33.6 \\
+ & vAccSOL & \textbf{32.72} & 4.8 & 12.3 & 13.5 & \textbf{30.6} \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{ResNet-50} & ROS2 + Torch & 21.00 & 2.1 & 2.0 & 43.6 & 47.6 \\
+ & ROS2 + SOL & 20.12 & 3.5 & 3.3 & 43.0 & 49.7 \\
+ & vAccel + Torch & \textbf{38.19} & 2.1 & 10.7 & 13.4 & \textbf{26.2} \\
+ & vAccSOL & 33.74 & 3.4 & 12.7 & 13.5 & 29.6 \\
+\cmidrule(lr){1-7}
+\midrule
+\multicolumn{7}{l}{\textit{(b) Video Action Recognition}} \\
+\midrule
+\multirow{4}{*}{Swin3D-S} & ROS2 + Torch & 15.37 & 8.6 & 11.2 & 45.3 & 65.1 \\
+ & ROS2 + SOL & \textbf{15.44} & 8.0 & 11.3 & 45.5 & \textbf{64.8} \\
+ & vAccel + Torch & 7.66 & 8.8 & 83.3 & 38.5 & 130.6 \\
+ & vAccSOL & 7.70 & 8.0 & 83.6 & 38.2 & 129.9 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{Swin3D-B} & ROS2 + Torch & 14.60 & 10.5 & 11.4 & 46.5 & 68.5 \\
+ & ROS2 + SOL & \textbf{14.72} & 9.8 & 11.9 & 46.2 & \textbf{67.9} \\
+ & vAccel + Torch & 7.67 & 10.6 & 81.6 & 38.2 & 130.4 \\
+ & vAccSOL & 7.63 & 9.9 & 82.7 & 38.6 & 131.1 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{R3D-18} & ROS2 + Torch & \textbf{16.24} & 5.0 & 11.1 & 45.5 & \textbf{61.6} \\
+ & ROS2 + SOL & 16.11 & 5.1 & 11.5 & 45.5 & 62.1 \\
+ & vAccel + Torch & 7.83 & 5.1 & 84.3 & 38.4 & 127.8 \\
+ & vAccSOL & 7.85 & 5.0 & 83.5 & 38.8 & 127.4 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{R(2+1)D-18} & ROS2 + Torch & \textbf{15.80} & 7.0 & 10.9 & 45.4 & \textbf{63.3} \\
+ & ROS2 + SOL & 15.60 & 7.1 & 10.8 & 46.2 & 64.1 \\
+ & vAccel + Torch & 7.74 & 7.1 & 83.6 & 38.4 & 129.2 \\
+ & vAccSOL & 7.68 & 7.1 & 84.1 & 39.1 & 130.3 \\
+\cmidrule(lr){1-7}
+\midrule
+\multicolumn{7}{l}{\textit{(c) Semantic Segmentation}} \\
+\midrule
+\multirow{4}{*}{FCN-R101} & ROS2 + Torch & 6.19 & 5.6 & 5.7 & 150.1 & 161.4 \\
+ & ROS2 + SOL & 6.23 & 6.7 & 5.7 & 148.1 & 160.5 \\
+ & vAccel + Torch & \textbf{9.01} & 6.5 & 33.0 & 71.5 & \textbf{111.0} \\
+ & vAccSOL & 9.00 & 6.7 & 30.6 & 73.8 & 111.1 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{FCN-R50} & ROS2 + Torch & 6.37 & 3.9 & 6.0 & 147.1 & 157.0 \\
+ & ROS2 + SOL & 6.26 & 4.9 & 6.3 & 148.6 & 159.8 \\
+ & vAccel + Torch & \textbf{9.52} & 4.9 & 28.5 & 71.7 & \textbf{105.0} \\
+ & vAccSOL & 9.14 & 4.7 & 31.5 & 73.2 & 109.4 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{DLv3-R101} & ROS2 + Torch & 6.20 & 6.6 & 6.2 & 148.5 & 161.3 \\
+ & ROS2 + SOL & 6.14 & 7.4 & 7.7 & 147.9 & 163.0 \\
+ & vAccel + Torch & \textbf{9.12} & 7.5 & 30.8 & 71.3 & \textbf{109.6} \\
+ & vAccSOL & 9.06 & 7.3 & 29.6 & 73.5 & 110.4 \\
+\cmidrule(lr){1-7}
+\multirow{4}{*}{DLv3-R50} & ROS2 + Torch & 6.25 & 4.9 & 6.1 & 148.9 & 159.9 \\
+ & ROS2 + SOL & 6.31 & 5.3 & 7.8 & 145.4 & 158.5 \\
+ & vAccel + Torch & 8.97 & 6.1 & 32.2 & 73.3 & 111.5 \\
+ & vAccSOL & \textbf{9.28} & 5.4 & 28.9 & 73.5 & \textbf{107.8} \\
+\bottomrule
+\end{tabular}
+\end{table*}

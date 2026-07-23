@@ -244,3 +244,16 @@ Model bytes are transferred **once per session** at load time (`VACCEL_RPC_SEND_
 ## Known issue: `sol_mobilenet_v3_large` + cuDNN mismatch
 
 Segmentation models ship `libsol-dnn-cudnn-deployment-0.8.0rc6-9.10.2.so` (needs cuDNN **9.10.x**); classification models ship `rc5-9.1` (needs cuDNN **9.1.x**, but 9.10.x is backward-compatible). Use cuDNN 9.10.x (the default from `nvidia-cudnn-cu12` without a version pin) for both the GPU container and the agent image.
+
+---
+
+## Idle baseline stats
+
+Capture a no-workload power/util baseline for a host (requires `./run_monitoring.sh` already running there):
+
+```bash
+./collect_idle_stats.sh --host edge-asus --mode cpu,gpu --duration 120
+./collect_idle_stats.sh --host robot --mode cpu
+```
+
+Writes `results/experiments/system-stats/idle/{host}-{cpu|gpu}-idle.csv`.

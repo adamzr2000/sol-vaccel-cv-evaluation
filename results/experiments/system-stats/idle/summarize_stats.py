@@ -1,35 +1,26 @@
 import os
 import csv
 import json
-import re
 import statistics
 import glob
 
 
-def _candidate_totals_paths(stem):
-    """
-    Candidate energy_totals_*.json sidecar filenames for a "{host}-{cpu|gpu}-idle"
-    CSV stem, newest naming first:
-      1. mode-neutral shared name (current collector: strips the cpu/gpu token,
-         so both domains of the same run share one file, e.g. "{host}-idle.json")
-      2. the untouched stem (older collector versions, before that fix)
-    """
-    neutral = re.sub(r'-(cpu|gpu)-idle$', '-idle', stem)
-    candidates = [f"energy_totals_{neutral}.json"]
-    if neutral != stem:
-        candidates.append(f"energy_totals_{stem}.json")
-    return candidates
-
-
 def _load_energy_totals(stem):
-    for name in _candidate_totals_paths(stem):
-        if os.path.exists(name):
-            try:
-                with open(name, "r") as f:
-                    return json.load(f)
-            except Exception:
-                return None
-    return None
+    """
+    Load the energy_totals_<stem>.json sidecar the collector writes next to
+    the CSV, if present. cpu and gpu are always monitored in separate
+    sessions (see collect_idle_stats.sh), so each CSV has its own 1:1-named
+    totals file - no candidate/fallback naming needed. Returns None for
+    older runs predating this sidecar.
+    """
+    name = f"energy_totals_{stem}.json"
+    if not os.path.exists(name):
+        return None
+    try:
+        with open(name, "r") as f:
+            return json.load(f)
+    except Exception:
+        return None
 
 
 def generate_summary():

@@ -7,6 +7,11 @@ set -euo pipefail
 # results/experiments/system-stats/idle/, using the {host}-{cpu|gpu}-idle.csv
 # naming convention already expected by idle/summarize_stats.py.
 #
+# cpu and gpu are always monitored in separate, sequential sessions (never
+# together in one /monitor/start call) - mirrors how src/evaluate_models_ros.sh
+# always monitors a single domain per run, and keeps each session's
+# energy_totals_*.json 1:1 aligned with its own CSV.
+#
 # Requires the system-stats-collector container to already be running on
 # this host (./run_monitoring.sh edge|robot) and reachable at --endpoint
 # (default: http://localhost:6001).
@@ -29,22 +34,21 @@ Usage: $(basename "$0") --host <name> --mode cpu|gpu|cpu,gpu [options]
 
 Required:
   --host        identifier for this host (used in output filenames, e.g. edge-asus, robot)
-  --mode        cpu|gpu|cpu,gpu
+  --mode        cpu|gpu|cpu,gpu (cpu,gpu runs as two separate, sequential
+                sessions of --duration seconds each - never simultaneously)
 
 Optional:
-  --duration    seconds to sample idle stats (default: ${DURATION_SEC})
+  --duration    seconds to sample idle stats, per mode (default: ${DURATION_SEC})
   --endpoint    system-stats-collector base URL (default: ${ENDPOINT})
 
 Requires the system-stats-collector container to already be running on this
 host (./run_monitoring.sh edge|robot) and reachable at --endpoint.
 
-Output:
+Output (one CSV + one energy_totals JSON per requested mode):
   results/experiments/system-stats/idle/<host>-cpu-idle.csv
+  results/experiments/system-stats/idle/energy_totals_<host>-cpu-idle.json
   results/experiments/system-stats/idle/<host>-gpu-idle.csv
-  results/experiments/system-stats/idle/energy_totals_<host>-idle.json
-  (CSVs only for the requested --mode; the energy totals sidecar always
-  covers every monitored domain in one file, named mode-neutrally when
-  both cpu and gpu are requested together)
+  results/experiments/system-stats/idle/energy_totals_<host>-gpu-idle.json
 
 Examples:
   $(basename "$0") --host edge-asus --mode cpu,gpu --duration 120
@@ -69,30 +73,15 @@ if [[ -z "${HOST_NAME}" || -z "${MODE}" ]]; then
 fi
 
 IFS=',' read -ra MODE_PARTS <<< "${MODE}"
-MODE_JSON="["
-CSV_NAMES_JSON="{"
-first=1
 for raw_m in "${MODE_PARTS[@]}"; do
   m="${raw_m// /}"
   case "$m" in
     cpu|gpu) ;;
     *) echo "[err] invalid mode: '${raw_m}' (expected cpu, gpu, or cpu,gpu)" >&2; exit 2 ;;
   esac
-  if [[ $first -eq 0 ]]; then
-    MODE_JSON+=","
-    CSV_NAMES_JSON+=","
-  fi
-  MODE_JSON+="\"${m}\""
-  CSV_NAMES_JSON+="\"${m}\":\"${HOST_NAME}-${m}-idle\""
-  first=0
 done
-MODE_JSON+="]"
-CSV_NAMES_JSON+="}"
 
 mkdir -p "${HOST_OUT_DIR}"
-
-echo "[idle] host=${HOST_NAME} mode=${MODE} duration=${DURATION_SEC}s endpoint=${ENDPOINT}"
-echo "[idle] output dir: ${HOST_OUT_DIR}"
 
 if ! curl -sf "${ENDPOINT}/health" > /dev/null; then
   echo "[err] system-stats-collector not reachable at ${ENDPOINT} (is it running? see run_monitoring.sh)" >&2
@@ -108,47 +97,63 @@ cleanup() {
 }
 trap cleanup SIGINT SIGTERM
 
-START_PAYLOAD=$(cat <<EOF
+run_one_mode() {
+  local m="$1"
+  local csv_name="${HOST_NAME}-${m}-idle"
+
+  echo "[idle] host=${HOST_NAME} mode=${m} duration=${DURATION_SEC}s endpoint=${ENDPOINT}"
+
+  local start_payload
+  start_payload=$(cat <<EOF
 {
   "interval": 1.0,
   "csv_dir": "${OUT_DIR}",
-  "tag": "idle-${HOST_NAME}",
-  "mode": ${MODE_JSON},
-  "csv_names": ${CSV_NAMES_JSON},
+  "tag": "idle-${HOST_NAME}-${m}",
+  "mode": ["${m}"],
+  "csv_names": {"${m}": "${csv_name}"},
   "stdout": false
 }
 EOF
 )
 
-START_RESP=$(curl -s -w '\n%{http_code}' -X POST "${ENDPOINT}/monitor/start" \
-  -H 'Content-Type: application/json' -d "${START_PAYLOAD}")
-START_CODE="${START_RESP##*$'\n'}"
-START_BODY="${START_RESP%$'\n'*}"
+  local start_resp start_code start_body
+  start_resp=$(curl -s -w '\n%{http_code}' -X POST "${ENDPOINT}/monitor/start" \
+    -H 'Content-Type: application/json' -d "${start_payload}")
+  start_code="${start_resp##*$'\n'}"
+  start_body="${start_resp%$'\n'*}"
 
-if [[ "${START_CODE}" != "200" ]]; then
-  echo "[err] Failed to start monitor (HTTP ${START_CODE}): ${START_BODY}" >&2
-  exit 1
-fi
-MONITOR_STARTED=1
-echo "[idle] monitor started: ${START_BODY}"
+  if [[ "${start_code}" != "200" ]]; then
+    echo "[err] Failed to start monitor (HTTP ${start_code}): ${start_body}" >&2
+    exit 1
+  fi
+  MONITOR_STARTED=1
+  echo "[idle] monitor started: ${start_body}"
 
-echo "[idle] sampling idle stats for ${DURATION_SEC}s..."
-sleep "${DURATION_SEC}"
+  echo "[idle] sampling idle ${m} stats for ${DURATION_SEC}s..."
+  sleep "${DURATION_SEC}"
 
-STOP_RESP=$(curl -s -w '\n%{http_code}' -X POST "${ENDPOINT}/monitor/stop")
-STOP_CODE="${STOP_RESP##*$'\n'}"
-STOP_BODY="${STOP_RESP%$'\n'*}"
-MONITOR_STARTED=0
+  local stop_resp stop_code stop_body
+  stop_resp=$(curl -s -w '\n%{http_code}' -X POST "${ENDPOINT}/monitor/stop")
+  stop_code="${stop_resp##*$'\n'}"
+  stop_body="${stop_resp%$'\n'*}"
+  MONITOR_STARTED=0
 
-if [[ "${STOP_CODE}" != "200" ]]; then
-  echo "[err] Failed to stop monitor (HTTP ${STOP_CODE}): ${STOP_BODY}" >&2
-  exit 1
-fi
-echo "[idle] monitor stopped: ${STOP_BODY}"
+  if [[ "${stop_code}" != "200" ]]; then
+    echo "[err] Failed to stop monitor (HTTP ${stop_code}): ${stop_body}" >&2
+    exit 1
+  fi
+  echo "[idle] monitor stopped: ${stop_body}"
+  echo "[idle] done: ${HOST_OUT_DIR}/${csv_name}.csv"
+}
 
-echo "[idle] done. Files written:"
+for raw_m in "${MODE_PARTS[@]}"; do
+  m="${raw_m// /}"
+  run_one_mode "$m"
+done
+
+echo "[idle] all done. Files written:"
 for raw_m in "${MODE_PARTS[@]}"; do
   m="${raw_m// /}"
   echo "  ${HOST_OUT_DIR}/${HOST_NAME}-${m}-idle.csv"
+  echo "  ${HOST_OUT_DIR}/energy_totals_${HOST_NAME}-${m}-idle.json"
 done
-echo "  ${HOST_OUT_DIR}/energy_totals_*.json  (see [idle] monitor stopped output above for the exact name)"

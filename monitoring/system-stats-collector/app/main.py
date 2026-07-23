@@ -86,65 +86,25 @@ def _resolve_csv_path(csv_dir: str, name: str) -> str:
         path = os.path.join(csv_dir.rstrip("/"), name)
     return path
 
-def _strip_kind_token(stem: str, kind: str) -> str:
-    """
-    Remove a single 'kind' token ("cpu"/"gpu"/"net") from stem, wherever it
-    appears as a standalone '_'/'-'-delimited word (prefix, suffix, or in the
-    middle), collapsing the surrounding separator so no double/dangling
-    separator is left behind. Returns stem unchanged if the token isn't
-    present as a standalone word (e.g. "microcpu" is left alone).
-    """
-    m = re.search(rf'(?:^|(?<=[_-])){re.escape(kind)}(?:$|(?=[_-]))', stem)
-    if not m:
-        return stem
-    left, right = stem[:m.start()], stem[m.end():]
-    left_has_sep = left.endswith(("_", "-"))
-    right_has_sep = right.startswith(("_", "-"))
-    if left_has_sep and right_has_sep:
-        right = right[1:]   # sandwiched: collapse the pair to a single separator
-    elif left_has_sep:
-        left = left[:-1]    # token was a trailing suffix: drop that separator too
-    elif right_has_sep:
-        right = right[1:]   # token was a leading prefix: drop that separator too
-    return left + right
-
-
 def _derive_totals_path(base_path: str, cpu_path: str, gpu_path: str, net_path: str, mode: List[str]) -> str:
     """
-    Name the energy-totals JSON after whatever descriptive CSV name(s) the
-    caller actually chose (via csv_names), so it stays correlated with the
-    run's CSVs even when tag/run_idx are left at their generic defaults (as
-    monitoring_node.py does - it always sends explicit csv_names and never a
-    custom tag).
-
-    When both "cpu" and "gpu" are monitored in the same run (e.g. an idle
-    baseline capturing both), naming the totals file after just one of them
-    would misleadingly look domain-specific even though the totals JSON
-    always contains every monitored domain. In that case, strip the cpu/gpu
-    token from each device CSV name and use the shared stem if both agree
-    (e.g. "{host}-cpu-idle.csv" / "{host}-gpu-idle.csv" -> "{host}-idle");
-    otherwise fall back to the generic tag/run_idx name below rather than
-    arbitrarily picking one device's name.
+    Name the energy-totals JSON after whichever device CSV name the caller
+    actually chose (via csv_names), left unmodified - so it stays 1:1 aligned
+    with that CSV and never collides with a different run that only differs
+    by device (e.g. the same model/backend/tag run once on cpu and once on
+    gpu would otherwise derive the same totals filename if the device word
+    were stripped). cpu and gpu are never monitored in the same run in this
+    project, so no merging/agreement logic between them is needed here.
+    Falls back to the tag/run_idx based base_path only when neither cpu nor
+    gpu has a path (e.g. mode=["net"] alone).
     """
-    device_stems: Dict[str, str] = {}
-    for kind, path in (("cpu", cpu_path), ("gpu", gpu_path)):
+    for path, kind in ((cpu_path, "cpu"), (gpu_path, "gpu")):
         if kind not in mode or not path:
             continue
         stem = os.path.basename(path)
         if stem.lower().endswith(".csv"):
             stem = stem[:-4]
-        device_stems[kind] = _strip_kind_token(stem, kind)
-
-    if "cpu" in device_stems and "gpu" in device_stems:
-        if device_stems["cpu"] == device_stems["gpu"]:
-            return os.path.join(os.path.dirname(cpu_path), f"energy_totals_{device_stems['cpu']}.json")
-        # Present device names disagree (unrelated custom names) - fall through
-        # to the generic fallback rather than arbitrarily picking one.
-    elif device_stems:
-        only_kind, only_stem = next(iter(device_stems.items()))
-        only_path = cpu_path if only_kind == "cpu" else gpu_path
-        return os.path.join(os.path.dirname(only_path), f"energy_totals_{only_stem}.json")
-
+        return os.path.join(os.path.dirname(path), f"energy_totals_{stem}.json")
     return f"{base_path}_energy_totals.json"
 
 def _open_csv_writer(path: str, fieldnames: list[str]):

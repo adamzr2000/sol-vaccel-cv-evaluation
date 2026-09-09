@@ -34,6 +34,8 @@ Optional:
   --model         comma-separated model(s) to run (default: all)
                   e.g. --model resnet50 or --model resnet50,swin_t,fcn_resnet50
   --duration      experiment duration in seconds per model (default: ${EXPERIMENT_DURATION_SEC})
+  --samples       stop after N processed samples per model instead of by duration.
+                  Takes priority over --duration when set (default: unset — duration governs stop, unchanged).
   --no-monitoring  disable resource monitoring only (export still runs)
   --no-export      disable both export and resource monitoring
   --cpu-affinity   CPU core list for taskset (e.g. "0-7" pins to P-cores only for fair cross-backend comparison)
@@ -55,6 +57,7 @@ RUN_TAG=""
 EXPORT_RESULTS=1
 RESOURCE_MONITORING=1
 EXPERIMENT_DURATION_SEC=120
+MAX_SAMPLES=0   # 0 = disabled; --duration governs stop as today
 
 # ---- Parse args ----
 while [[ $# -gt 0 ]]; do
@@ -66,6 +69,7 @@ while [[ $# -gt 0 ]]; do
     --sleep)       SLEEP_SEC="$2"; shift 2 ;;
     --model)       SELECTED_MODELS="$2"; shift 2 ;;
     --duration)    EXPERIMENT_DURATION_SEC="$2"; shift 2 ;;
+    --samples)     MAX_SAMPLES="$2"; shift 2 ;;
     --remote-host) REMOTE_HOST="$2"; shift 2 ;;
     --no-monitoring)  RESOURCE_MONITORING=0; shift ;;
     --no-export)      EXPORT_RESULTS=0; RESOURCE_MONITORING=0; shift ;;
@@ -122,6 +126,7 @@ run_one () {
 
   export EXPORT_RESULTS="${EXPORT_RESULTS}" \
          EXPERIMENT_DURATION_SEC="${EXPERIMENT_DURATION_SEC}" \
+         MAX_SAMPLES="${MAX_SAMPLES}" \
          RESOURCE_MONITORING="${RESOURCE_MONITORING}" \
          HOST="${HOST}" \
          DOCKER_STATS_ENDPOINT="${DOCKER_STATS_ENDPOINT}" \

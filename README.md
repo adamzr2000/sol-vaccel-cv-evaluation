@@ -133,6 +133,8 @@ For remote runs (Phase 3), edge-side stats are captured under `docker-stats/{rem
 --model resnet50,swin_t    # run a subset of models
 --no-export                # disable both export and monitoring (dry run)
 --sleep N                  # seconds between model runs (default: 20)
+--samples N                # stop after N processed samples instead of by duration
+                            # (takes priority over --duration when set; default: unset)
 ```
 
 **Env vars (export before running, no flag needed):**

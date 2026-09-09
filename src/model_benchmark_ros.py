@@ -95,6 +95,11 @@ PUBLISH_CLASS = parse_boolean_env("PUBLISH_CLASS", "true")
 
 # Run control
 EXPERIMENT_DURATION_SEC = float(os.environ.get("EXPERIMENT_DURATION_SEC", "30"))
+# 0 = disabled (default): EXPERIMENT_DURATION_SEC governs stop, unchanged.
+# >0: takes priority over EXPERIMENT_DURATION_SEC — loop stops after this many
+# processed samples instead, so runs can be compared at a fixed sample count
+# rather than a fixed wall-clock window.
+MAX_SAMPLES = int(os.environ.get("MAX_SAMPLES", "0"))
 WARMUP_ITERS = int(os.environ.get("WARMUP_ITERS", "30"))
 MAX_FPS = float(os.environ.get("MAX_FPS", "0"))  # 0 = no throttle
 
@@ -212,6 +217,7 @@ def main():
     print(f"   Loading:   {CURRENT_MODEL_DIR}")
     print(f"   Input:     {INPUT_TOPIC}")
     print(f"   Duration:  {EXPERIMENT_DURATION_SEC}s")
+    print(f"   Samples:   {MAX_SAMPLES if MAX_SAMPLES > 0 else 'not set (duration governs stop)'}")
     print(f"   Warmup:    {WARMUP_ITERS} iters")
     print(f"   Publish:   class={PUBLISH_CLASS} mask={PUBLISH_MASK} overlay={PUBLISH_OVERLAY}")
     print(f"   Export:    EXPORT_RESULTS={EXPORT_RESULTS}")
@@ -415,7 +421,10 @@ def main():
 
     while rclpy.ok():
         now = time.time()
-        if now - start_wall >= EXPERIMENT_DURATION_SEC:
+        if MAX_SAMPLES > 0:
+            if processed_samples >= MAX_SAMPLES:
+                break
+        elif now - start_wall >= EXPERIMENT_DURATION_SEC:
             break
 
         # Optional throttle
@@ -751,6 +760,8 @@ def main():
         if is_remote_backend:
             final_output_data["remote_host"] = REMOTE_HOST
             final_output_data["local_device"] = local_mode
+        if MAX_SAMPLES > 0:
+            final_output_data["max_samples"] = MAX_SAMPLES
         if "sol" in BACKEND:
             final_output_data["sol_run_mode"] = int(os.environ.get("SOL_RUN_MODE", "2").strip())
 

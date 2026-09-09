@@ -3,11 +3,12 @@ set -euo pipefail
 
 MODE="cpu"
 REMOTE_ADDRESS="10.5.1.20:9125"
-DDS_INTERFACE="enp130s0"
+DDS_INTERFACE="lo"
+DOMAIN_ID=0
 RMW="${RMW:-rmw_cyclonedds_cpp}"
 
 usage() {
-  echo "Usage: $0 [cpu|gpu] [--remote HOST:PORT] [--iface IFNAME]"
+  echo "Usage: $0 [cpu|gpu] [--remote HOST:PORT] [--iface IFNAME] [--domain-id ID]"
   exit 1
 }
 
@@ -28,6 +29,11 @@ while [[ $# -gt 0 ]]; do
     --iface|--if|--interface)
       [[ $# -ge 2 ]] || usage
       DDS_INTERFACE="$2"
+      shift 2
+      ;;
+    --domain-id)
+      [[ $# -ge 2 ]] || usage
+      DOMAIN_ID="$2"
       shift 2
       ;;
     -h|--help)
@@ -136,6 +142,7 @@ LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib"
 
 EXTRA_ENV_ARGS=(
   --env="RMW_IMPLEMENTATION=${RMW}"
+  --env="ROS_DOMAIN_ID=${DOMAIN_ID}"
   --env="CYCLONEDDS_URI=file://${CONT_DDS_CFG_DIR}/cyclonedds.xml"
   --env="VACCEL_PLUGINS=libvaccel-exec.so:libvaccel-rpc.so:libvaccel-torch.so"
   --env="VACCEL_EXEC_DLCLOSE_ENABLED=0"

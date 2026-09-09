@@ -150,6 +150,7 @@ if [[ "$MODE" == "gpu" ]]; then
   EXTRA_ENV_ARGS+=( --env="CUDA_HOME=${CUDA_HOME}" )
 fi
 
+DOCKER_RC=0
 docker run -it --rm \
   --name torchvision-app \
   --net host \
@@ -162,4 +163,20 @@ docker run -it --rm \
   "${EXTRA_ENV_ARGS[@]}" \
   "${GPU_ARGS[@]}" \
   --entrypoint /bin/bash \
-  "$IMAGE"
+  "$IMAGE" || DOCKER_RC=$?
+
+# The container runs as root (unchanged — not touching this, since flipping
+# the runtime UID risks breaking things inside the container in ways we can't
+# verify here). It therefore writes results/experiments/ files as root, which
+# blocks non-root host users (e.g. `git pull` on another host) from later
+# reading/replacing them. Reclaim host-side ownership now that the session
+# has ended — this only touches file ownership on the host, never anything
+# inside the container, so it does not affect experiment behavior or data.
+RESULTS_DIR="$(pwd)/results/experiments"
+if [[ -d "$RESULTS_DIR" ]]; then
+  sudo chown -R "$(id -u):$(id -g)" "$RESULTS_DIR" || \
+    echo "[warn] Could not reclaim ownership of ${RESULTS_DIR}." \
+         "Run manually: sudo chown -R \$(id -u):\$(id -g) ${RESULTS_DIR}" >&2
+fi
+
+exit "$DOCKER_RC"

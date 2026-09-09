@@ -300,8 +300,13 @@ def main():
             break
         if time.time() - t_wait0 > 10:
             print("   ❌ No frames received within 10s. Check INPUT_TOPIC.")
-            node.destroy_node()
+            # Shut down the ROS context first — this signals rclpy.spin() to return.
+            # Then join the spin thread before destroying the node, avoiding the
+            # "terminate called without an active exception" C++ crash from tearing
+            # down the node while the spin thread is still calling into it.
             rclpy.shutdown()
+            spin_thread.join(timeout=2.0)
+            node.destroy_node()
             return
         time.sleep(0.05)
 
@@ -659,8 +664,10 @@ def main():
 
     if not inference_latencies_ms:
         print("❌ No successful inferences recorded.")
-        node.destroy_node()
+        # See teardown-order comment above (frame-wait timeout branch).
         rclpy.shutdown()
+        spin_thread.join(timeout=2.0)
+        node.destroy_node()
         return
 
     # Stats
@@ -781,8 +788,10 @@ def main():
 
     print("✅ Done.")
 
-    node.destroy_node()
+    # See teardown-order comment above (frame-wait timeout branch).
     rclpy.shutdown()
+    spin_thread.join(timeout=2.0)
+    node.destroy_node()
 
 
 if __name__ == "__main__":

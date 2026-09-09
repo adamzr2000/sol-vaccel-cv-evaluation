@@ -1,0 +1,9 @@
+# Ignore images anywhere under this folder
+**/*.png
+**/*.jpg
+**/*.jpeg
+
+**/*.PNG
+**/*.JPG
+**/*.JPEG
+

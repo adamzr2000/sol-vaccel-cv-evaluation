@@ -1,0 +1,11 @@
+{
+  "tag": "idle-robot-cpu",
+  "run_idx": 1,
+  "mode": [
+    "cpu"
+  ],
+  "run_started_iso": "2026-07-27T12:59:39.460726+00:00",
+  "run_stopped_iso": "2026-07-27T13:03:39.511787+00:00",
+  "duration_sec": 240.051,
+  "cpu_energy_j_total": 243.247
+}

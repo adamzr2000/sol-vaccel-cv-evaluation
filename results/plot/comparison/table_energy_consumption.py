@@ -91,13 +91,11 @@ def main():
         kj_cat_models, kj_cat_captions, kj_robot, kj_edge_cpu, kj_edge_gpu,
         energy_kj.GROUP_ORDER,
         caption=(
-            r"Energy consumption (kJ) of CPU and GPU resources during E2E "
-            r"inference under local and edge execution settings (lower is "
-            r"better; robot acts as client). Energy was measured using "
-            r"Intel Running Average Power Limit (RAPL) counters, which "
-            r"provide hardware-level estimates of energy usage for CPU "
-            r"package and memory domains, and computed from the difference "
-            r"between counter readings taken before and after execution."
+            r"Total energy consumed (kJ) on the robot and edge resources "
+            r"(lower is better). Green cells highlight the best "
+            r"configuration for each execution option. Energy is computed "
+            r"from the difference between counter readings at the start "
+            r"and end of each experiment."
         ),
         label="tab:energy-kj",
         decimals=2,
@@ -106,19 +104,45 @@ def main():
         jpf_cat_models, jpf_cat_captions, jpf_robot, jpf_edge_cpu, jpf_edge_gpu,
         energy_jpf.GROUP_ORDER,
         caption=(
-            r"Energy per processed frame (J/frame) of CPU and GPU resources "
-            r"during E2E inference under local and edge execution settings "
-            r"(lower is better; robot as client) --- normalizes "
-            r"Table~\ref{tab:energy-kj} by frame count. The number below "
-            r"each value shows the total energy (J) and frame count it was "
-            r"computed from."
+            r"Energy consumed per processed frame (J/frame) on the robot "
+            r"and edge resources (lower is better). Green cells highlight "
+            r"the best configuration for each execution option. Values are "
+            r"computed by normalizing total energy consumption by the "
+            r"number of processed frames."
         ),
         label="tab:energy-jpf",
         decimals=2,
         robot_debug=jpf_robot_debug, edge_cpu_debug=jpf_edge_cpu_debug, edge_gpu_debug=jpf_edge_gpu_debug,
     )
 
-    content = PREAMBLE_NOTE + kj_table + "\n\n" + jpf_table + "\n"
+    # Same total-energy (kJ) values as the first table, but annotated with
+    # how many frames were processed and how long that took -- lets a reader
+    # check whether a lower total tracks a genuinely shorter run (speed) or
+    # a genuinely lower power draw, rather than assuming the latter. Reuses
+    # the J/frame table's (energy_j, n_frames, duration_sec) debug maps for
+    # n_frames/duration_sec -- kj_* and jpf_* come from independent load
+    # paths (kJ never needed a frame count), so a handful of cells the kJ
+    # table fills in may show "--" here if that run's frame-count lookup
+    # failed on the J/frame side; the main kJ value itself is unaffected.
+    kj_speed_table = tstyle.build_energy_table(
+        kj_cat_models, kj_cat_captions, kj_robot, kj_edge_cpu, kj_edge_gpu,
+        energy_kj.GROUP_ORDER,
+        caption=(
+            r"Total energy consumed (kJ) on the robot and edge resources "
+            r"(lower is better), same values as Table~\ref{tab:energy-kj} "
+            r"-- repeated here with the number of processed frames and the "
+            r"wall-clock time taken to process them shown below each value, "
+            r"to make explicit how much of the difference between "
+            r"configurations tracks how long the run took rather than the "
+            r"power draw itself."
+        ),
+        label="tab:energy-kj-speed",
+        decimals=2,
+        robot_debug=jpf_robot_debug, edge_cpu_debug=jpf_edge_cpu_debug, edge_gpu_debug=jpf_edge_gpu_debug,
+        sub_line="frames_duration",
+    )
+
+    content = PREAMBLE_NOTE + kj_table + "\n\n" + jpf_table + "\n\n" + kj_speed_table + "\n"
 
     OUTPUT_FILE = "energy-consumption-and-per-frame-table.tex"
     with open(OUTPUT_FILE, "w") as f:

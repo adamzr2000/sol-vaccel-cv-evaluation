@@ -43,9 +43,14 @@ from plot_config import (
 
 # ── paths ──────────────────────────────────────────────────────────────────────
 PLOT_DIR    = Path(__file__).parent.parent
-STATS_DIR   = PLOT_DIR.parent / "experiments" / "system-stats" / "ros2" / "_summary"
-MODEL_DIR   = PLOT_DIR.parent / "experiments" / "model-stats" / "ros2" / "_summary"
+STATS_DIR   = PLOT_DIR.parent / "experiments" / "system-stats" / "summary-ros2"
+MODEL_DIR   = PLOT_DIR.parent / "experiments" / "model-stats" / "summary-ros2"
 OUTPUT_FILE = "./energy-per-frame.pdf"
+
+# Subtract each panel's idle baseline so bars show workload-only energy.
+# Set to True to enable idle-baseline subtraction; default is raw
+# cpu/gpu_energy_j_total totals (no correction).
+WORKLOAD_ONLY=False
 
 # ── plot settings ──────────────────────────────────────────────────────────────
 FONT_SCALE   = 2.2
@@ -84,7 +89,7 @@ MODEL_LABELS = {
 
 # ── variants ───────────────────────────────────────────────────────────────────
 VARIANT_DEFS = [
-    {"label": "Local CPU (ROS2 + Torch)",  "backend": "aoti", "run_tag": "local-cpu"},
+    {"label": "Local CPU (ROS2 + Torch)",  "backend": "ptc", "run_tag": "local-cpu"},
     {"label": "Local CPU (ROS2 + SOL)",    "backend": "sol", "run_tag": "local-cpu"},
     {"label": "Remote CPU (ROS2 + Torch)", "backend": "aoti", "run_tag": "remote-cpu"},
     {"label": "Remote CPU (ROS2 + SOL)",   "backend": "sol", "run_tag": "remote-cpu"},
@@ -190,13 +195,15 @@ def load_frame_counts() -> dict[tuple, int]:
     return counts
 
 
-def load_epf_map(frame_counts: dict[tuple, int]) -> tuple[dict[tuple, float], dict[tuple, tuple[float, int]]]:
+def load_epf_map(frame_counts: dict[tuple, int]) -> tuple[dict[tuple, float], dict[tuple, tuple[float, int, float]]]:
     """
     Returns:
       epf_map:   {(model, variant_label, host, kind): energy_per_frame_J}
-      debug_map: {(model, variant_label, host, kind): (workload_energy_J, n_frames)}
-                 -- the idle-corrected total and frame count behind each
-                 epf_map entry, for print_summary()'s console output only.
+      debug_map: {(model, variant_label, host, kind): (workload_energy_J, n_frames, duration_sec)}
+                 -- the idle-corrected total, frame count, and this run's
+                 wall-clock duration behind each epf_map entry, for
+                 print_summary()'s console output and the speed-annotated
+                 energy table.
 
     Uses the exact hardware-counter total (cpu_energy_j_total /
     gpu_energy_j_total) minus the corresponding idle baseline for that run's
@@ -205,7 +212,7 @@ def load_epf_map(frame_counts: dict[tuple, int]) -> tuple[dict[tuple, float], di
     EPF = (total_energy_J - idle_power_w * duration_sec) / n_frames_monitor
     """
     epf_map: dict[tuple, float] = {}
-    debug_map: dict[tuple, tuple[float, int]] = {}
+    debug_map: dict[tuple, tuple[float, int, float]] = {}
     idle_power = load_idle_power_map()
     seg_overrides = {"remote-cpu": SEG_REMOTE_CPU_TAG_OVERRIDE, "remote-gpu": SEG_REMOTE_GPU_TAG_OVERRIDE}
 
@@ -217,11 +224,11 @@ def load_epf_map(frame_counts: dict[tuple, int]) -> tuple[dict[tuple, float], di
             duration = host_data[kind].get("duration_sec")
             if ej is None or duration is None:
                 continue
-            idle_key = idle_host_for(host, kind)
+            idle_key = idle_host_for(host, kind) if WORKLOAD_ONLY else None
             idle_w = idle_power.get(idle_key) if idle_key else None
             ej = subtract_idle(float(ej), float(duration), idle_w)
             epf_map[(model, label, host, kind)] = ej / n
-            debug_map[(model, label, host, kind)] = (ej, n)
+            debug_map[(model, label, host, kind)] = (ej, n, float(duration))
 
     for tag in ("local-cpu", "remote-cpu", "remote-gpu"):
         path = STATS_DIR / f"{tag}_system_stats.json"
@@ -497,16 +504,17 @@ def plot(epf_map: dict[tuple, float]) -> None:
     plt.close(fig)
 
 
-def print_summary(epf_map: dict[tuple, float], debug_map: dict[tuple, tuple[float, int]]) -> None:
-    print(f"\n{'model':26} {'variant':36} {'host':12} {'kind':4} {'J/frame':>10} {'Energy(J)':>10} {'Frames':>7}")
-    print("-" * 115)
+def print_summary(epf_map: dict[tuple, float], debug_map: dict[tuple, tuple[float, int, float]]) -> None:
+    print(f"\n{'model':26} {'variant':36} {'host':12} {'kind':4} {'J/frame':>10} {'Energy(J)':>10} {'Frames':>7} {'Dur(s)':>8}")
+    print("-" * 125)
     for key, epf in sorted(
         epf_map.items(), key=lambda kv: (kv[0][1], kv[0][0])
     ):
         model, variant, host, kind = key
-        energy_j, n = debug_map.get(key, (float("nan"), None))
+        energy_j, n, dur = debug_map.get(key, (float("nan"), None, float("nan")))
         n_str = f"{n:7d}" if n else f"{'N/A':>7}"
-        print(f"{model:26} {variant:36} {host:12} {kind:4} {epf:10.4f} {energy_j:10.2f} {n_str}")
+        dur_str = f"{dur:8.1f}" if dur == dur else f"{'N/A':>8}"  # dur==dur is a NaN-safe check
+        print(f"{model:26} {variant:36} {host:12} {kind:4} {epf:10.4f} {energy_j:10.2f} {n_str} {dur_str}")
     print()
 
 
@@ -520,6 +528,11 @@ def main() -> None:
         "savefig.pad_inches": 0.02,
     })
     plt.rcParams["hatch.linewidth"] = STROKE_WIDTH
+
+    if WORKLOAD_ONLY:
+        print("WORKLOAD_ONLY=False - subtracting idle baseline from energy totals.")
+    else:
+        print("WORKLOAD_ONLY=False - plotting raw energy totals (no idle correction).")
 
     frame_counts       = load_frame_counts()
     epf_map, debug_map = load_epf_map(frame_counts)

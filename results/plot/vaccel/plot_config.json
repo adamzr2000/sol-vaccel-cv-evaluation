@@ -16,13 +16,13 @@
         "deeplabv3_resnet50"
     ],
     "paths": {
-        "docker_summary": "../../experiments/docker-stats/vaccel/_summary/{run_tag}_overall_resource_usage_per_container_{link}.csv",
-        "system_cpu_summary": "../../experiments/system-stats/vaccel/_summary/{run_tag}_overall_cpu_stats_{link}.csv",
-        "system_gpu_summary": "../../experiments/system-stats/vaccel/_summary/{run_tag}_overall_gpu_stats_{link}.csv",
-        "model_summary": "../../experiments/model-stats/vaccel/_summary/{run_tag}_benchmark_summary.json"
+        "docker_summary": "../../experiments/docker-stats/summary-vaccel/{run_tag}_overall_resource_usage_per_container_{link}.csv",
+        "system_cpu_summary": "../../experiments/system-stats/summary-vaccel/{run_tag}_overall_cpu_stats_{link}.csv",
+        "system_gpu_summary": "../../experiments/system-stats/summary-vaccel/{run_tag}_overall_gpu_stats_{link}.csv",
+        "model_summary": "../../experiments/model-stats/summary-vaccel/{run_tag}_benchmark_summary.json"
     },
     "remote_host": "edge-asus",
 
-    "seg_remote_run_tag": "e2efps12",
+    "seg_remote_run_tag": "e2e",
     "seg_models": ["fcn_resnet50", "fcn_resnet101", "deeplabv3_resnet50", "deeplabv3_resnet101"]
 }

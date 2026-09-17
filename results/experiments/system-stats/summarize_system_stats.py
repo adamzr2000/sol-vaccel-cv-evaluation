@@ -6,7 +6,7 @@ Summarize system-stats-collector CSVs for a given RUN_TAG.
 Recursively finds CSVs in subfolders (e.g., robot/, edge-asus/).
 Uses the PARENT DIRECTORY NAME as the 'host' identifier.
 
-Outputs (written under ./_summary):
+Outputs (written under ./summary-vaccel):
   - {run_tag}_overall_cpu_stats_{link}.csv
   - {run_tag}_overall_gpu_stats_{link}.csv
   - {run_tag}_overall_net_stats_{link}.csv
@@ -97,10 +97,20 @@ def parse_stem_and_folder(path: Path, run_tag: str) -> Optional[Tuple[str, str, 
     return model, backend, host, device
 
 
+def _is_summary_output_path(p: Path) -> bool:
+    """
+    True if any path component is a previously-aggregated output directory
+    (this script's own summary-vaccel/, the legacy _summary/, or a sibling
+    like summary-ros2/) — so those already-aggregated CSVs never get walked
+    back in as if they were raw per-run data on a later run.
+    """
+    return any(part == "_summary" or part.startswith("summary") for part in p.parts)
+
+
 def discover_run_tags(cwd: Path) -> List[str]:
     tags = set()
     for p in cwd.rglob("*.csv"):
-        if "_summary" in p.parts:
+        if _is_summary_output_path(p):
             continue
         parts = p.stem.split("_")
         if len(parts) >= 2:
@@ -242,7 +252,7 @@ def main() -> None:
 
     csv_files = sorted(
         p for p in cwd.rglob("*.csv")
-        if "failed" not in p.parts and "_summary" not in p.parts
+        if "failed" not in p.parts and not _is_summary_output_path(p)
     )
 
     if args.help:
@@ -266,12 +276,12 @@ def main() -> None:
 
     base_matched = [
         p for p in csv_files
-        if "_summary" not in p.parts and p.name.startswith(f"{run_tag}_")
+        if not _is_summary_output_path(p) and p.name.startswith(f"{run_tag}_")
     ]
 
     extra_matched = [
         p for p in csv_files
-        if "_summary" not in p.parts
+        if not _is_summary_output_path(p)
         and p.name.startswith(f"{run_tag}-{link}_")
         and "remote" in p.stem
     ]
@@ -287,7 +297,7 @@ def main() -> None:
         print(f"❌ No CSV files matched RUN_TAG='{run_tag}'")
         return
 
-    out_dir = cwd / "_summary"
+    out_dir = cwd / "summary-vaccel"
     out_dir.mkdir(exist_ok=True)
 
     cpu_out_path = out_dir / f"{run_tag}_overall_cpu_stats_{link}.csv"

@@ -40,8 +40,13 @@ from plot_config import (
 
 # -- paths --------------------------------------------------------------------
 PLOT_DIR    = Path(__file__).parent.parent
-STATS_DIR   = PLOT_DIR.parent / "experiments" / "system-stats" / "ros2" / "_summary"
+STATS_DIR   = PLOT_DIR.parent / "experiments" / "system-stats" / "summary-ros2"
 OUTPUT_FILE = "./energy-consumption.pdf"
+
+# Subtract each panel's idle baseline so bars show workload-only energy.
+# Set to True to enable idle-baseline subtraction; default is raw
+# cpu/gpu_energy_j_total totals (no correction).
+WORKLOAD_ONLY=False
 
 # -- plot settings --------------------------------------------------------------
 FONT_SCALE   = 2.2
@@ -80,7 +85,7 @@ MODEL_LABELS = {
 
 # -- variants -------------------------------------------------------------------
 VARIANT_DEFS = [
-    {"label": "Local CPU (ROS2 + Torch)",  "backend": "aoti", "run_tag": "local-cpu"},
+    {"label": "Local CPU (ROS2 + Torch)",  "backend": "ptc", "run_tag": "local-cpu"},
     {"label": "Local CPU (ROS2 + SOL)",    "backend": "sol", "run_tag": "local-cpu"},
     {"label": "Remote CPU (ROS2 + Torch)", "backend": "aoti", "run_tag": "remote-cpu"},
     {"label": "Remote CPU (ROS2 + SOL)",   "backend": "sol", "run_tag": "remote-cpu"},
@@ -152,7 +157,7 @@ def load_energy_map() -> dict[tuple, float]:
             duration = host_data[kind].get("duration_sec")
             if ej is None or duration is None:
                 continue
-            idle_key = idle_host_for(host, kind)
+            idle_key = idle_host_for(host, kind) if WORKLOAD_ONLY else None
             idle_w = idle_power.get(idle_key) if idle_key else None
             ej = subtract_idle(float(ej), float(duration), idle_w)
             energy_map[(model, label, host, kind)] = ej / 1000.0
@@ -440,6 +445,11 @@ def main() -> None:
         "savefig.pad_inches": 0.02,
     })
     plt.rcParams["hatch.linewidth"] = STROKE_WIDTH
+
+    if WORKLOAD_ONLY:
+        print("WORKLOAD_ONLY=False - subtracting idle baseline from energy totals.")
+    else:
+        print("WORKLOAD_ONLY=False - plotting raw energy totals (no idle correction).")
 
     energy_map = load_energy_map()
     print_summary(energy_map)

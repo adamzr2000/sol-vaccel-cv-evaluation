@@ -70,7 +70,7 @@ def main() -> None:
         except Exception as e:
             skipped.append(f"{summary_path} ({e})")
 
-    out_dir = cwd / "_summary"
+    out_dir = cwd / "summary-vaccel"
     out_dir.mkdir(exist_ok=True)
     out_path = out_dir / f"{run_tag}_benchmark_summary.json"
 

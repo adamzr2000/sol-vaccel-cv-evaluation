@@ -31,7 +31,7 @@ from plot_config import SEG_MODELS, SEG_REMOTE_CPU_TAG_OVERRIDE, SEG_REMOTE_GPU_
 
 
 # ── paths ──────────────────────────────────────────────────────────────────────
-SUMMARY_DIR = Path(__file__).parent.parent.parent / "experiments" / "model-stats" / "ros2" / "_summary"
+SUMMARY_DIR = Path(__file__).parent.parent.parent / "experiments" / "model-stats" / "summary-ros2"
 OUTPUT_FILE = Path(__file__).parent / "e2e-latency-and-fps.pdf"
 
 # ── plot settings ──────────────────────────────────────────────────────────────
@@ -73,7 +73,7 @@ MODEL_LABELS = {
 
 # ── variants ───────────────────────────────────────────────────────────────────
 VARIANT_DEFS = [
-    {"label": "Local CPU (ROS2 + Torch)",  "backend": "aoti", "run_tag": "local-cpu"},
+    {"label": "Local CPU (ROS2 + Torch)",  "backend": "ptc", "run_tag": "local-cpu"},
     {"label": "Local CPU (ROS2 + SOL)",    "backend": "sol", "run_tag": "local-cpu"},
     {"label": "Remote CPU (ROS2 + Torch)", "backend": "aoti", "run_tag": "remote-cpu"},
     {"label": "Remote CPU (ROS2 + SOL)",   "backend": "sol", "run_tag": "remote-cpu"},

@@ -39,18 +39,19 @@ _HERE = Path(__file__).parent
 cfg = load_config()
 
 CPU_FILE     = str(get_path("system_cpu_summary"))   # e2e CPU (edge-asus + robot remote)
-ISO_CPU_FILE = str(_HERE / "../../experiments/system-stats/vaccel/_summary/iso_overall_cpu_stats_wifi.csv")
+ISO_CPU_FILE = str(_HERE / "../../experiments/system-stats/summary-vaccel/iso_overall_cpu_stats_wifi.csv")
 GPU_FILE     = str(get_path("system_gpu_summary"))   # e2e GPU
 
 # Benchmark JSONs supplying num_processed_frames per run
 E2E_PERF_FILE = str(get_path("model_summary"))       # e2e_benchmark_summary.json
-ISO_PERF_FILE = str(_HERE / "../../experiments/model-stats/vaccel/_summary/iso_benchmark_summary.json")
+ISO_PERF_FILE = str(_HERE / "../../experiments/model-stats/summary-vaccel/iso_benchmark_summary.json")
 
 IDLE_SUMMARY_FILE = str(_HERE / "../../experiments/system-stats/idle/summary.csv")
 
 # Subtract each panel's idle baseline so bars show workload-only energy.
-# Set to False to plot raw cpu/gpu_energy_j_total instead (no correction).
-WORKLOAD_ONLY = True
+# Set to True to enable idle-baseline subtraction; default is raw
+# cpu/gpu_energy_j_total totals (no correction).
+WORKLOAD_ONLY=False
 
 # Which idle/summary.csv row backs out the always-on draw for each panel.
 IDLE_HOST_ROBOT    = "robot-cpu-idle"
@@ -194,40 +195,42 @@ def _subtract_idle(j: float, duration_sec: float, idle_power_w: float | None) ->
     return max(0.0, j - idle_power_w * duration_sec)
 
 
-def _epf_cpu(row, num_frames: int, idle_power_w: float | None = None) -> tuple[float, float, float]:
-    """(energy_per_frame_J, std_per_frame_J, workload_energy_J) using the exact
-    cpu_energy_j_total hardware-counter total, minus the idle baseline for
-    this run's duration, divided by processed frames. No std is available
-    for this figure (a single exact total, not a distribution). The third
-    value (workload_energy_J, i.e. the idle-corrected total before dividing
-    by frames) is returned purely for the debug table."""
+def _epf_cpu(row, num_frames: int, idle_power_w: float | None = None) -> tuple[float, float, float, float]:
+    """(energy_per_frame_J, std_per_frame_J, workload_energy_J, duration_sec)
+    using the exact cpu_energy_j_total hardware-counter total, minus the idle
+    baseline for this run's duration, divided by processed frames. No std is
+    available for this figure (a single exact total, not a distribution). The
+    third value (workload_energy_J, i.e. the idle-corrected total before
+    dividing by frames) and fourth value (this run's wall-clock duration) are
+    returned purely for the debug table / speed-annotated energy table."""
     try:
         j = float(row["cpu_energy_j_total"])
         d = float(row["duration_sec"])
     except (TypeError, ValueError, KeyError):
-        return np.nan, np.nan, np.nan
+        return np.nan, np.nan, np.nan, np.nan
     if not (np.isfinite(j) and num_frames > 0):
-        return np.nan, np.nan, np.nan
+        return np.nan, np.nan, np.nan, np.nan
     j = _subtract_idle(j, d, idle_power_w)
-    return j / num_frames, np.nan, j
+    return j / num_frames, np.nan, j, d
 
 
-def _epf_gpu(row, num_frames: int, idle_power_w: float | None = None) -> tuple[float, float, float]:
-    """(energy_per_frame_J, std_per_frame_J, workload_energy_J) using the exact
-    gpu_energy_j_total hardware-counter total, minus the idle baseline for
-    this run's duration, divided by processed frames. No std is available
-    for this figure (a single exact total, not a distribution). The third
-    value (workload_energy_J, i.e. the idle-corrected total before dividing
-    by frames) is returned purely for the debug table."""
+def _epf_gpu(row, num_frames: int, idle_power_w: float | None = None) -> tuple[float, float, float, float]:
+    """(energy_per_frame_J, std_per_frame_J, workload_energy_J, duration_sec)
+    using the exact gpu_energy_j_total hardware-counter total, minus the idle
+    baseline for this run's duration, divided by processed frames. No std is
+    available for this figure (a single exact total, not a distribution). The
+    third value (workload_energy_J, i.e. the idle-corrected total before
+    dividing by frames) and fourth value (this run's wall-clock duration) are
+    returned purely for the debug table / speed-annotated energy table."""
     try:
         j = float(row["gpu_energy_j_total"])
         d = float(row["duration_sec"])
     except (TypeError, ValueError, KeyError):
-        return np.nan, np.nan, np.nan
+        return np.nan, np.nan, np.nan, np.nan
     if not (np.isfinite(j) and num_frames > 0):
-        return np.nan, np.nan, np.nan
+        return np.nan, np.nan, np.nan, np.nan
     j = _subtract_idle(j, d, idle_power_w)
-    return j / num_frames, np.nan, j
+    return j / num_frames, np.nan, j, d
 
 
 # ---------------------------------------------------------------------------
@@ -278,10 +281,10 @@ def load_robot_cpu_rows(cpu_df: pd.DataFrame,
             print(f"[WARN] No perf entry for robot/{model}/{backend}/{device} — skipped")
             continue
 
-        epf, epf_std, energy_j = _epf_cpu(r, n, idle_power_w)
+        epf, epf_std, energy_j, duration_sec = _epf_cpu(r, n, idle_power_w)
         rows.append({"base_model": model, "variant": v,
                      "mean": epf, "std": epf_std,
-                     "energy_j": energy_j, "n_frames": n})
+                     "energy_j": energy_j, "n_frames": n, "duration_sec": duration_sec})
     return rows
 
 
@@ -303,15 +306,15 @@ def load_edge_cpu_remote_rows(cpu_df: pd.DataFrame, e2e_perf: dict,
             print(f"[WARN] No perf entry for robot/{model}/{backend}/cpu — skipped")
             continue
 
-        epf, epf_std, energy_j = _epf_cpu(r, n, idle_power_w)
+        epf, epf_std, energy_j, duration_sec = _epf_cpu(r, n, idle_power_w)
         if backend == "vaccel-remote-ptc":
             rows.append({"base_model": model, "variant": VARIANTS[2],
                          "mean": epf, "std": epf_std,
-                         "energy_j": energy_j, "n_frames": n})
+                         "energy_j": energy_j, "n_frames": n, "duration_sec": duration_sec})
         elif backend == "vaccel-remote-sol":
             rows.append({"base_model": model, "variant": VARIANTS[3],
                          "mean": epf, "std": epf_std,
-                         "energy_j": energy_j, "n_frames": n})
+                         "energy_j": energy_j, "n_frames": n, "duration_sec": duration_sec})
     return rows
 
 
@@ -333,15 +336,15 @@ def load_edge_gpu_remote_rows(gpu_df: pd.DataFrame, e2e_perf: dict,
             print(f"[WARN] No perf entry for robot/{model}/{backend}/gpu — skipped")
             continue
 
-        epf, epf_std, energy_j = _epf_gpu(r, n, idle_power_w)
+        epf, epf_std, energy_j, duration_sec = _epf_gpu(r, n, idle_power_w)
         if backend == "vaccel-remote-ptc":
             rows.append({"base_model": model, "variant": VARIANTS[4],
                          "mean": epf, "std": epf_std,
-                         "energy_j": energy_j, "n_frames": n})
+                         "energy_j": energy_j, "n_frames": n, "duration_sec": duration_sec})
         elif backend == "vaccel-remote-sol":
             rows.append({"base_model": model, "variant": VARIANTS[5],
                          "mean": epf, "std": epf_std,
-                         "energy_j": energy_j, "n_frames": n})
+                         "energy_j": energy_j, "n_frames": n, "duration_sec": duration_sec})
     return rows
 
 

@@ -32,13 +32,14 @@ from plot_config import get_path, load_config, get_model_type_order, get_model_d
 _HERE = Path(__file__).parent
 cfg = load_config()
 CPU_FILE     = str(get_path("system_cpu_summary"))   # e2e: edge-asus + robot remote rows
-ISO_CPU_FILE = str(_HERE / "../../experiments/system-stats/vaccel/_summary/iso_overall_cpu_stats_wifi.csv")
+ISO_CPU_FILE = str(_HERE / "../../experiments/system-stats/summary-vaccel/iso_overall_cpu_stats_wifi.csv")
 GPU_FILE     = str(get_path("system_gpu_summary"))
 IDLE_SUMMARY_FILE = str(_HERE / "../../experiments/system-stats/idle/summary.csv")
 
 # Subtract each panel's idle baseline so bars show workload-only energy.
-# Set to False to plot raw cpu/gpu_energy_j_total instead (no correction).
-WORKLOAD_ONLY = True
+# Set to True to enable idle-baseline subtraction; default is raw
+# cpu/gpu_energy_j_total totals (no correction).
+WORKLOAD_ONLY=False
 
 # Which idle/summary.csv row backs out the always-on draw for each panel.
 IDLE_HOST_ROBOT    = "robot-cpu-idle"

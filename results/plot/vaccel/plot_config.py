@@ -77,7 +77,7 @@ def get_seg_remote_model_summary_path() -> Path:
     apply_seg_remote_override()'s system-stats data (same run, same frame
     count)."""
     return (Path(__file__).parent
-            / f"../../experiments/model-stats/vaccel/_summary/{get_seg_remote_run_tag()}_benchmark_summary.json").resolve()
+            / f"../../experiments/model-stats/summary-vaccel/{get_seg_remote_run_tag()}_benchmark_summary.json").resolve()
 
 
 def apply_seg_remote_override(df, stats_kind: str, link: str | None = None):
@@ -104,7 +104,7 @@ def apply_seg_remote_override(df, stats_kind: str, link: str | None = None):
     cfg = load_config()
     link = link or str(cfg.get("link", "wifi")).strip()
     alt_path = (Path(__file__).parent
-                / f"../../experiments/system-stats/vaccel/_summary/{seg_tag}_overall_{stats_kind}_stats_{link}.csv").resolve()
+                / f"../../experiments/system-stats/summary-vaccel/{seg_tag}_overall_{stats_kind}_stats_{link}.csv").resolve()
     if not alt_path.exists():
         print(f"[WARNING] seg_remote_run_tag={seg_tag!r} file not found: {alt_path}")
         return df

@@ -23,7 +23,7 @@ from plot_config import (
 _HERE = Path(__file__).parent
 INPUT_FILE = str(get_path("model_summary"))
 # iso run: edge-asus vaccel-remote-{ptc,sol} inference_ms used as pure-inference baseline for remote breakdown
-REMOTE_INFERENCE_FILE = _HERE / "../../experiments/model-stats/vaccel/_summary/iso_benchmark_summary.json"
+REMOTE_INFERENCE_FILE = _HERE / "../../experiments/model-stats/summary-vaccel/iso_benchmark_summary.json"
 
 METRIC = "median"  # "median" (p50) | "mean" — controls FPS derivation and latency bars
 LOCAL_ROBOT_MODE = "vaccel-rpc"  # "legacy"     -> ptc/sol backends, iros2 run tag
@@ -233,7 +233,7 @@ def load_rows():
     if seg_override_enabled():
         runs = [r for r in runs if not is_seg_remote(r.get("model", ""), r.get("backend", ""))]
         seg_tag = get_seg_remote_run_tag()
-        seg_path = _HERE / f"../../experiments/model-stats/vaccel/_summary/{seg_tag}_benchmark_summary.json"
+        seg_path = _HERE / f"../../experiments/model-stats/summary-vaccel/{seg_tag}_benchmark_summary.json"
         if seg_path.exists():
             with seg_path.open() as f:
                 seg_runs = json.load(f).get("runs", [])

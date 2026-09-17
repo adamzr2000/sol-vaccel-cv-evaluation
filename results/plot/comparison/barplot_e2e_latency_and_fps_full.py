@@ -34,9 +34,7 @@ Produces: e2e-latency-and-fps-comparison-full.pdf
 """
 from __future__ import annotations
 
-import importlib.util
 import os
-import sys
 from pathlib import Path
 
 import numpy as np
@@ -55,21 +53,20 @@ _ROS2_DIR = _HERE.parent / "ros2"
 # so its "../../experiments/..." paths resolve the same from here.
 os.chdir(_HERE)
 
-sys.path.insert(0, str(_VACCEL_DIR))
-import plot_data_e2e as vaccel_data  # noqa: E402
-from plot_config import get_model_display_name  # noqa: E402
+from _dual_import import import_from  # noqa: E402
 
+# Loaded via import_from (not sys.path/plain import) since vaccel/ and ros2/
+# each have their own plot_config.py (and other same-named files) - a plain
+# import would cache whichever loads first under sys.modules["plot_config"]
+# and silently feed it to the other directory's same-named internal
+# imports, e.g. ros2/barplot_e2e_latency_and_fps.py's own top-level
+# `from plot_config import SEG_MODELS, ...` resolving to vaccel's
+# plot_config.py (no SEG_MODELS there) -> ImportError. See _dual_import.py.
+vaccel_plot_config = import_from(_VACCEL_DIR, "plot_config.py", "vaccel_plot_config")
+vaccel_data = import_from(_VACCEL_DIR, "plot_data_e2e.py", "vaccel_data")
+get_model_display_name = vaccel_plot_config.get_model_display_name
 
-def _load_module(path: Path, name: str):
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
-# loaded by explicit path (not sys.path) since both source dirs have a file
-# of this same name -- avoids import collisions with each other and with us.
-ros2_mod = _load_module(_ROS2_DIR / "barplot_e2e_latency_and_fps.py", "_ros2_e2e_source")
+ros2_mod = import_from(_ROS2_DIR, "barplot_e2e_latency_and_fps.py", "ros2_e2e")
 
 OUTPUT_FILE = "e2e-latency-and-fps-comparison-full.pdf"
 FIG_SIZE = (18, 21.0)  # 6-row layout

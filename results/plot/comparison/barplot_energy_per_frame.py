@@ -208,15 +208,16 @@ def load_vaccel_epf_rows():
 
 def load_merged_maps_with_debug():
     """Like load_merged_maps(), but also returns three companion dicts with
-    the (energy_j, n_frames) pair behind each J/frame value -- the same
-    numbers this script's own print_debug_info() prints to console, exposed
-    here so callers (e.g. the paper table) can show that breakdown under
-    each cell too, guaranteed consistent since it's the same load path.
+    the (energy_j, n_frames, duration_sec) triple behind each J/frame value
+    -- the same numbers this script's own print_debug_info() prints to
+    console, exposed here so callers (e.g. the paper table) can show that
+    breakdown under each cell too, guaranteed consistent since it's the same
+    load path.
 
     Returns (robot_cpu_map, edge_cpu_map, edge_gpu_map, robot_debug,
     edge_cpu_debug, edge_gpu_debug):
       *_map:   (model, [scenario,] fw, be) -> J/frame
-      *_debug: (model, [scenario,] fw, be) -> (energy_j, n_frames)
+      *_debug: (model, [scenario,] fw, be) -> (energy_j, n_frames, duration_sec)
     (robot keys include scenario; edge_cpu/edge_gpu keys don't -- Remote
     CPU/Remote GPU scenario only, respectively.)
     """
@@ -228,17 +229,17 @@ def load_merged_maps_with_debug():
         scenario, backend = scenario_backend_from_variant(r["variant"])
         k = (r["base_model"], scenario, "vAccel", backend)
         robot_cpu_map[k] = r["mean"]
-        robot_debug[k] = (r["energy_j"], r["n_frames"])
+        robot_debug[k] = (r["energy_j"], r["n_frames"], r["duration_sec"])
     for r in edge_cpu_rows:
         _scenario, backend = scenario_backend_from_variant(r["variant"])
         k = (r["base_model"], "vAccel", backend)
         edge_cpu_map[k] = r["mean"]
-        edge_cpu_debug[k] = (r["energy_j"], r["n_frames"])
+        edge_cpu_debug[k] = (r["energy_j"], r["n_frames"], r["duration_sec"])
     for r in edge_gpu_rows:
         _scenario, backend = scenario_backend_from_variant(r["variant"])
         k = (r["base_model"], "vAccel", backend)
         edge_gpu_map[k] = r["mean"]
-        edge_gpu_debug[k] = (r["energy_j"], r["n_frames"])
+        edge_gpu_debug[k] = (r["energy_j"], r["n_frames"], r["duration_sec"])
 
     frame_counts = ros2_epf.load_frame_counts()
     ros2_map, ros2_debug_map = ros2_epf.load_epf_map(frame_counts)
@@ -246,7 +247,7 @@ def load_merged_maps_with_debug():
         if model not in ALLOWED_MODELS:
             continue
         scenario, backend = scenario_backend_from_variant(variant)
-        debug_val = ros2_debug_map.get((model, variant, host, kind), (float("nan"), None))
+        debug_val = ros2_debug_map.get((model, variant, host, kind), (float("nan"), None, float("nan")))
         if host == "robot" and kind == "cpu":
             robot_cpu_map[(model, scenario, "ROS2", backend)] = epf
             robot_debug[(model, scenario, "ROS2", backend)] = debug_val

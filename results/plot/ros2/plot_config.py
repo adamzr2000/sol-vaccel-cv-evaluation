@@ -19,17 +19,14 @@ _HERE = Path(__file__).parent
 # (falls back to the base remote-{cpu,gpu} run for every model, including
 # segmentation).
 SEG_MODELS = {"fcn_resnet50", "fcn_resnet101", "deeplabv3_resnet50", "deeplabv3_resnet101"}
-SEG_REMOTE_CPU_TAG_OVERRIDE: str | None = "remote-cpu12fps"
-SEG_REMOTE_GPU_TAG_OVERRIDE: str | None = "remote-gpu12fps"
+# SEG_REMOTE_CPU_TAG_OVERRIDE: str | None = "remote-cpu12fps"
+# SEG_REMOTE_GPU_TAG_OVERRIDE: str | None = "remote-gpu12fps"
 
-# Idle baseline subtraction (energy plots only) - see
-# ../../experiments/system-stats/idle/summary.csv. The robot genuinely runs
-# the go2-ros-adapter + ROS2/DDS stack throughout every ros2 run (unlike the
-# vaccel experiments, which fed camera data from an external ROS bag replay
-# with no adapter on the robot), so its idle baseline is the ROS-idle
-# figure, not bare idle.
+SEG_REMOTE_CPU_TAG_OVERRIDE: str | None = "remote-cpu"
+SEG_REMOTE_GPU_TAG_OVERRIDE: str | None = "remote-gpu"
+
 IDLE_SUMMARY_FILE = _HERE / "../../experiments/system-stats/idle/summary.csv"
-IDLE_HOST_ROBOT    = "robot-cpu-idle-ros"
+IDLE_HOST_ROBOT    = "robot-cpu-idle"
 IDLE_HOST_EDGE_CPU = "edge-asus-cpu-idle"
 IDLE_HOST_EDGE_GPU = "edge-asus-gpu-idle"
 

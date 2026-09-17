@@ -38,11 +38,11 @@ def main():
     table = tstyle.build_breakdown_table(
         cat_models, cat_captions, inf_map, pre_map, net_map,
         caption=(
-            r"End-to-end (E2E) latency (ms) of the robot vision pipeline for a "
-            r"single-camera input, measured from image capture to result delivery "
-            r"(lower is better; robot as client, median values). The number below "
-            r"each latency value breaks it down (ms) into inference, "
-            r"pre-/post-processing, and network/framework overhead."
+            r"RTT latency (ms) from the robot's perspective for processing a "
+            r"single-camera frame (lower is better). Green cells highlight the "
+            r"best configuration for each execution option. Values below each "
+            r"latency show the breakdown into inference, pre-/post-processing, "
+            r"and network/framework overhead."
         ),
         label="tab:e2e-latency-breakdown",
         total_decimals=1, part_decimals=0,

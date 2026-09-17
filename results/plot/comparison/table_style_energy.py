@@ -61,7 +61,7 @@ def build_energy_table(
     cat_models, cat_captions, robot_map, edge_cpu_map, edge_gpu_map,
     group_order, *, caption: str, label: str, decimals: int = 2,
     robot_debug=None, edge_cpu_debug=None, edge_gpu_debug=None,
-    debug_energy_decimals: int = 1,
+    debug_energy_decimals: int = 1, sub_line: str = "energy_frames",
 ) -> str:
     """robot_map: dict[(model, scenario, fw, be)] -> float.
     edge_cpu_map / edge_gpu_map: dict[(model, fw, be)] -> float.
@@ -74,15 +74,24 @@ def build_energy_table(
 
     robot_debug / edge_cpu_debug / edge_gpu_debug: optional companion dicts,
     same keys as their non-debug counterparts, but valued (energy_j,
-    n_frames) -- when given (e.g. for the J/frame table), each cell gets a
-    small second line "energy_j/n_frames" underneath the main value (same
-    nested-tabular pattern as table_style_e2e.build_breakdown_table, no
-    extra LaTeX package needed), mirroring this repo's own console debug
-    tables (barplot_energy_per_frame.py's print_debug_info). Omit (leave
-    None) for a plain single-line table, e.g. the kJ table.
+    n_frames, duration_sec) -- when given, each cell gets a small second
+    line underneath the main value (same nested-tabular pattern as
+    table_style_e2e.build_breakdown_table, no extra LaTeX package needed),
+    mirroring this repo's own console debug tables (barplot_energy_per_frame
+    .py's print_debug_info). Omit (leave None) for a plain single-line
+    table, e.g. the kJ table.
+
+    sub_line: which pair from the (energy_j, n_frames, duration_sec) triple
+    the second line shows -- "energy_frames" (default) -> "energy_j/n_frames"
+    (the J/frame table's breakdown of the value above it); "frames_duration"
+    -> "n_framesf/duration_secs" (how many samples were processed and how
+    long that took, independent of the main column's own units -- e.g. for
+    a kJ table, to show whether a low/high total tracks a short/long run).
     """
     debug_maps = (robot_debug, edge_cpu_debug, edge_gpu_debug)
     show_debug = any(m is not None for m in debug_maps)
+    if sub_line not in ("energy_frames", "frames_duration"):
+        raise ValueError(f"sub_line must be 'energy_frames' or 'frames_duration', got {sub_line!r}")
 
     n_groups = len(COLUMN_GROUPS)
     n_configs = len(group_order)
@@ -145,13 +154,20 @@ def build_energy_table(
                     top = rf"\textbf{{{text}}}" if is_best else text
 
                     if show_debug:
-                        energy_j, n_frames = _lookup(
-                            group_key, scenario, model, fw, be, *debug_maps, default=(float("nan"), None)
+                        energy_j, n_frames, duration_sec = _lookup(
+                            group_key, scenario, model, fw, be, *debug_maps,
+                            default=(float("nan"), None, float("nan")),
                         )
-                        sub = (
-                            f"{energy_j:.{debug_energy_decimals}f}/{n_frames}"
-                            if np.isfinite(energy_j) and n_frames else "--"
-                        )
+                        if sub_line == "energy_frames":
+                            sub = (
+                                f"{energy_j:.{debug_energy_decimals}f}/{n_frames}"
+                                if np.isfinite(energy_j) and n_frames else "--"
+                            )
+                        else:  # "frames_duration"
+                            sub = (
+                                f"{n_frames}f/{duration_sec:.1f}s"
+                                if n_frames and np.isfinite(duration_sec) else "--"
+                            )
                         cell = (
                             rf"\begin{{tabular}}[c]{{@{{}}c@{{}}}}{top}\\"
                             rf"{{\scriptsize {sub}}}\end{{tabular}}"

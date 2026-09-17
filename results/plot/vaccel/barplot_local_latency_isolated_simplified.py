@@ -25,7 +25,7 @@ from matplotlib.ticker import MaxNLocator, FormatStrFormatter
 
 # ── paths ────────────────────────────────────────────────────────────────────
 _HERE       = Path(__file__).parent
-INPUT_FILE  = _HERE / "../../experiments/model-stats/_summary/iso_benchmark_summary.json"
+INPUT_FILE  = _HERE / "../../experiments/model-stats/summary-vaccel/iso_benchmark_summary.json"
 OUTPUT_FILE = _HERE / "iso_local_latency_simplified.pdf"
 
 # ── backend ordering and display names ───────────────────────────────────────

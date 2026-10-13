@@ -7,6 +7,12 @@ This repository provides two complementary monitoring services that can be used 
 
 Both services expose REST APIs and optionally export metrics to CSV files for offline analysis.
 
+A third, separate service — **`wifi-stats-collector`** (WiFi link retry rate/RSSI, for
+the small set of network-perturbation experiments) — lives in `wifi-stats-collector/`
+alongside these two, but has its own lifecycle (`start_wifi_monitoring.sh`/
+`stop_wifi_monitoring.sh` at the repo root, not `run_monitoring.sh`) and is documented
+in the main [README.md](../README.md) and [README_NETWORK_PERTURBATION.md](../README_NETWORK_PERTURBATION.md) instead of here.
+
 ---
 
 # Docker Stats Monitoring

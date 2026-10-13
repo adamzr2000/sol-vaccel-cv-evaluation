@@ -3,6 +3,8 @@
 ## Build
 
 ```bash
+sudo docker build -f dockerfile-torchvision-cpu . -t torchvision-app:cpu
+sudo docker build -f dockerfile-torchvision-gpu . -t torchvision-app:gpu
 
 sudo docker build -f dockerfile-torchvision-gpu-agent . -t torchvision-app:agent
 
@@ -48,8 +50,9 @@ See [monitoring/](./monitoring) for details.
 For `vaccel-remote-*` backends, also start the vAccel agent on the edge host and point the robot container at it:
 
 ```bash
-# On edge host
-./run_agent.sh 9125
+# On edge host (pick per backend under test; both default to port 9125)
+./run_agent_sol.sh gpu    # for vaccel-remote-sol
+./run_agent_ptc.sh gpu    # for vaccel-remote-ptc
 
 # On robot (--remote defaults to 10.5.1.20:9125 = edge-asus)
 ./run_ros.sh cpu --iface enp2s0                              # → edge-asus
@@ -116,12 +119,14 @@ results/experiments/
   system-stats/{host}/{run_id}_net.csv                 ← network usage
 ```
 
-For remote runs (Phase 3), edge-side stats are captured under `docker-stats/{remote-host}/` and `system-stats/{remote-host}/` simultaneously.
+For remote runs (Phase 3), edge-side stats are captured under `docker-stats/{remote-host}/` and `system-stats/{remote-host}/` simultaneously. The edge-side docker-stats file is named `torchvision-app-agent_{run_id}.csv` (the agent container), not `torchvision-app_...`.
 
 `run_id` format:
 - Local: `{tag}_{model}_{backend}_{device}` — e.g. `iso_resnet50_vaccel-local-sol_gpu`
-- Remote (robot side): `{tag}_{model}_{backend}_{local-device}_target-{remote-host}-{device}` — e.g. `run1_resnet50_vaccel-remote-sol_cpu_target-edge-asus-gpu`
-- Remote (edge side): `{tag}_{model}_{backend}_{device}` — e.g. `run1_resnet50_vaccel-remote-sol_gpu`
+- Remote (`vaccel-remote-*`, triggered from robot or from the edge host itself):
+  `{tag}_{model}_{backend}_{remote-host}-{device}` — e.g. `run1_resnet50_vaccel-remote-sol_edge-asus-gpu`
+  (same `run_id` on both sides of one run — robot-side and edge-side files differ only by which
+  `{host}` subfolder they're written under, not by the run_id itself)
 
 **Other options:** (`--export`/`--monitoring`/`--wifi-monitoring` are independent of each other —
 set only the ones you actually want to change)
@@ -131,7 +136,7 @@ set only the ones you actually want to change)
 --monitoring false         # skip docker/system resource monitoring (default: true)
 --wifi-monitoring true     # WiFi link stats from the miniPC's wifi-stats-collector
                            # (default: false; --host robot only, ignored elsewhere)
---sleep N                  # seconds between model runs (default: 20)
+--sleep N                  # seconds between model runs (default: 30)
 --samples N                # stop after N processed samples instead of by duration
                             # (takes priority over --duration when set; default: unset)
 ```
@@ -159,6 +164,7 @@ WIFI_IFACE=wlp1s0                 # miniPC's wireless interface
 |---|---|---|---|
 | `stock` | `PyTorchBaselineAdapter` | None — eager PyTorch | Direct Python call |
 | `ptc` | `PyTorchBaselineAdapter` | JIT at runtime via `torch.compile` (Inductor) | Direct Python call to compiled graph |
+| `aoti` | `PyTorchBaselineAdapter` | Offline AOTI — loads `.pt2` (no vAccel) | Direct Python call to pre-compiled native callable |
 | `sol` | `SolAdapter` | Offline (SOL compiler) | SOL C library via dlopen |
 | `vaccel-local-torch` | `VaccelPyTorchAdapter` | None — loads TorchScript `.torchscript` | vAccel TORCH plugin (local) |
 | `vaccel-local-ptc` | `VaccelPyTorchAdapter` | Offline AOTI — loads `.pt2` | vAccel TORCH plugin (local) |

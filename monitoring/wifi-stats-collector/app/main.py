@@ -263,6 +263,11 @@ def monitor_loop(
             "tx_failed_delta": d_failed,
             "retry_rate": round(d_retries / d_packets, 6) if d_packets > 0 and not reset_detected else None,
             "counter_reset_suspected": reset_detected,
+            # RSSI is instantaneous, not cumulative -- start/end snapshots are
+            # the only meaningful summary without the per-tick CSV (which
+            # needs csv_dir). Reused from the same reads already taken above.
+            "rssi_dbm_start": start_stats["rssi_dbm"],
+            "rssi_dbm_end": end_stats["rssi_dbm"],
         })
         if reset_detected:
             logger.warning(

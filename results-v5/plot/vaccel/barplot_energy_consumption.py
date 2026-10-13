@@ -38,7 +38,7 @@ IDLE_SUMMARY_FILE = str(_HERE / "../../experiments/system-stats/idle/summary.csv
 
 # Subtract each panel's idle baseline so bars show workload-only energy.
 # Set to False to plot raw cpu/gpu_energy_j_total instead (no correction).
-WORKLOAD_ONLY = True
+WORKLOAD_ONLY=False
 
 # Which idle/summary.csv row backs out the always-on draw for each panel.
 IDLE_HOST_ROBOT    = "robot-cpu-idle"

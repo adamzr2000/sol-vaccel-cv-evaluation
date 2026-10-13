@@ -195,11 +195,17 @@ def extract_rows(runs, remote_runs):
         if is_remote:
             pure_inf_f = get_remote_pure_inference(remote_runs, b_model, variant)
             inference_final = pure_inf_f if pure_inf_f > 0 and pure_inf_f <= inf_f else inf_f
-            # Network = residual so stack sums exactly to system_ms.p50
-            network_f = max(0.0, total_f - inference_final - pre_post_f)
         else:
-            network_f = 0.0
             inference_final = inf_f
+
+        # Network/framework overhead = residual so stack sums exactly to
+        # system_ms.p50, for local (untimed publish step + minor inter-stage
+        # overhead - typically 0-7ms, confirmed non-negligible in local
+        # vaccel-local-* runs) same as remote (RPC/serialization/network RTT
+        # + the same untimed publish step) - matches ros2/barplot_e2e_latency_
+        # and_fps.py's net_ms, which already computes this uniformly with no
+        # local special-case.
+        network_f = max(0.0, total_f - inference_final - pre_post_f)
 
         rows.append((b_model, variant, fps_f, inference_final, network_f, pre_post_f, err_lower, err_upper))
 

@@ -5,9 +5,24 @@ SCRIPT="model_benchmark_ros.py"
 SLEEP_SEC=30
 BACKEND="stock"
 REMOTE_HOST="edge-asus"   # remote inference target for robot + vaccel-remote-* backends
-VACCEL_RPC_PORT=9125      # vaccel agent RPC port (override with env var)
 SELECTED_MODELS=""        # Comma-separated; empty means run all
 CPU_AFFINITY=""           # CPU core mask for taskset (e.g. "0-7" for P-cores only); empty = no pinning
+
+# ---- Advanced env-var-only overrides (rarely needed; no CLI flag on purpose,
+# to keep the normal CLI surface small -- export these before invoking the
+# script if you ever need something other than the default) ----
+VACCEL_RPC_PORT="${VACCEL_RPC_PORT:-9125}"               # vaccel agent RPC port
+OMP_THREADS_OVERRIDE="${OMP_THREADS_OVERRIDE:-12}"       # OMP thread cap on edge hosts
+WIFI_STATS_ENDPOINT="${WIFI_STATS_ENDPOINT:-http://192.168.2.1:6002}"  # miniPC's wifi-stats-collector
+WIFI_IFACE="${WIFI_IFACE:-wlp1s0}"                       # miniPC's wireless interface
+
+parse_bool() {
+  case "$1" in
+    true|1|yes)  echo 1 ;;
+    false|0|no)  echo 0 ;;
+    *) echo "[err] invalid boolean value: '$1' (use true or false)" >&2; exit 2 ;;
+  esac
+}
 
 # Cleanup on exit (Ctrl+C or error)
 trap 'echo -e "\n[bench] Interrupted. Exiting..."; exit 1' SIGINT SIGTERM
@@ -27,27 +42,37 @@ Required:
   --run-tag     run identifier (e.g., run1)
 
 Optional:
-  --backend       stock|ptc|aoti|sol|vaccel-local-torch|vaccel-remote-torch\
-                  |vaccel-local-ptc|vaccel-remote-ptc\
-                  |vaccel-local-sol|vaccel-remote-sol (default: ${BACKEND})
-  --sleep         seconds to wait between runs (default: ${SLEEP_SEC})
-  --model         comma-separated model(s) to run (default: all)
-                  e.g. --model resnet50 or --model resnet50,swin_t,fcn_resnet50
-  --duration      experiment duration in seconds per model (default: ${EXPERIMENT_DURATION_SEC})
-  --samples       stop after N processed samples per model instead of by duration.
-                  Takes priority over --duration when set (default: unset — duration governs stop, unchanged).
-  --no-monitoring  disable resource monitoring only (export still runs)
-  --no-export      disable both export and resource monitoring
-  --cpu-affinity   CPU core list for taskset (e.g. "0-7" pins to P-cores only for fair cross-backend comparison)
-  --remote-host    robot|edge-asus|edge-xtreme|edge-alienware (default: ${REMOTE_HOST})
-                  remote inference target for vaccel-remote-* backends (use --host value for loopback)
-                  also sets VACCEL_RPC_ADDRESS=tcp://<host-ip>:<VACCEL_RPC_PORT> (default port: ${VACCEL_RPC_PORT})
+  --backend          stock|ptc|aoti|sol|vaccel-local-torch|vaccel-remote-torch\
+                     |vaccel-local-ptc|vaccel-remote-ptc\
+                     |vaccel-local-sol|vaccel-remote-sol (default: ${BACKEND})
+  --sleep            seconds to wait between runs (default: ${SLEEP_SEC})
+  --model            comma-separated model(s) to run (default: all)
+                     e.g. --model resnet50 or --model resnet50,swin_t,fcn_resnet50
+  --duration         experiment duration in seconds per model (default: ${EXPERIMENT_DURATION_SEC})
+  --samples          stop after N processed samples per model instead of by duration.
+                     Takes priority over --duration when set (default: unset — duration governs stop).
+  --export           true|false — export JSON/CSV results (default: true)
+  --monitoring       true|false — docker/system resource monitoring (default: true)
+  --wifi-monitoring  true|false — WiFi link stats (retries/RSSI) from the miniPC's
+                     wifi-stats-collector (default: false). Only takes effect with --host robot,
+                     ignored (with a warning) otherwise. Endpoint/interface fixed at
+                     ${WIFI_STATS_ENDPOINT} / ${WIFI_IFACE}; override via the
+                     WIFI_STATS_ENDPOINT / WIFI_IFACE env vars if ever needed.
+  --cpu-affinity     CPU core list for taskset (e.g. "0-7" pins to P-cores only for fair cross-backend comparison)
+  --remote-host      robot|edge-asus|edge-xtreme|edge-alienware (default: ${REMOTE_HOST})
+                     remote inference target for vaccel-remote-* backends (use --host value for loopback)
+                     also sets VACCEL_RPC_ADDRESS=tcp://<host-ip>:<VACCEL_RPC_PORT> (default port: ${VACCEL_RPC_PORT})
+
+Every --<flag> true|false option defaults to the value shown above and is
+fully independent of the others -- e.g. --export false --monitoring true
+skips result export for a run while still recording resource monitoring.
 
 Examples:
   $(basename "$0") --host robot --device cpu --run-tag run1
-  $(basename "$0") --host edge-asus --device gpu --backend vaccel-local-sol --run-tag iso --no-monitoring
+  $(basename "$0") --host edge-asus --device gpu --backend vaccel-local-sol --run-tag iso --monitoring false
   $(basename "$0") --host robot --device cpu --run-tag run1 --model resnet50,swin_t
-  $(basename "$0") --host robot --device cpu --run-tag run1 --no-export
+  $(basename "$0") --host robot --device cpu --run-tag run1 --export false
+  $(basename "$0") --host robot --device cpu --backend vaccel-remote-sol --run-tag wifi1 --wifi-monitoring true
 EOF
 }
 
@@ -56,25 +81,27 @@ DEVICE=""
 RUN_TAG=""
 EXPORT_RESULTS=1
 RESOURCE_MONITORING=1
+WIFI_MONITORING=0
 EXPERIMENT_DURATION_SEC=120
 MAX_SAMPLES=0   # 0 = disabled; --duration governs stop as today
 
 # ---- Parse args ----
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --host)        HOST="$2"; shift 2 ;;
-    --device)      DEVICE="$2"; shift 2 ;;
-    --run-tag)     RUN_TAG="$2"; shift 2 ;;
-    --backend)     BACKEND="$2"; shift 2 ;;
-    --sleep)       SLEEP_SEC="$2"; shift 2 ;;
-    --model)       SELECTED_MODELS="$2"; shift 2 ;;
-    --duration)    EXPERIMENT_DURATION_SEC="$2"; shift 2 ;;
-    --samples)     MAX_SAMPLES="$2"; shift 2 ;;
-    --remote-host) REMOTE_HOST="$2"; shift 2 ;;
-    --no-monitoring)  RESOURCE_MONITORING=0; shift ;;
-    --no-export)      EXPORT_RESULTS=0; RESOURCE_MONITORING=0; shift ;;
-    --cpu-affinity)   CPU_AFFINITY="$2"; shift 2 ;;
-    -h|--help)     usage; exit 0 ;;
+    --host)             HOST="$2"; shift 2 ;;
+    --device)           DEVICE="$2"; shift 2 ;;
+    --run-tag)          RUN_TAG="$2"; shift 2 ;;
+    --backend)          BACKEND="$2"; shift 2 ;;
+    --sleep)            SLEEP_SEC="$2"; shift 2 ;;
+    --model)            SELECTED_MODELS="$2"; shift 2 ;;
+    --duration)         EXPERIMENT_DURATION_SEC="$2"; shift 2 ;;
+    --samples)          MAX_SAMPLES="$2"; shift 2 ;;
+    --remote-host)      REMOTE_HOST="$2"; shift 2 ;;
+    --export)           EXPORT_RESULTS="$(parse_bool "$2")"; shift 2 ;;
+    --monitoring)        RESOURCE_MONITORING="$(parse_bool "$2")"; shift 2 ;;
+    --wifi-monitoring)   WIFI_MONITORING="$(parse_bool "$2")"; shift 2 ;;
+    --cpu-affinity)      CPU_AFFINITY="$2"; shift 2 ;;
+    -h|--help)          usage; exit 0 ;;
     *) echo "[err] Unknown argument: $1"; usage; exit 2 ;;
   esac
 done
@@ -103,8 +130,12 @@ case "${HOST}" in
   *) echo "[err] Invalid host: ${HOST}"; exit 2 ;;
 esac
 
+if [[ "${WIFI_MONITORING}" -eq 1 && "${HOST}" != "robot" ]]; then
+  echo "[warn] --wifi-monitoring only applies with --host robot; ignoring for --host ${HOST}."
+  WIFI_MONITORING=0
+fi
+
 # ---- Remote host endpoints + RPC address (vaccel-remote-* only) ----
-VACCEL_RPC_PORT="${VACCEL_RPC_PORT:-9125}"
 case "${REMOTE_HOST}" in
   robot)       DOCKER_STATS_REMOTE_ENDPOINT="http://192.168.2.2:6000"; SYSTEM_STATS_REMOTE_ENDPOINT="http://192.168.2.2:6001"; VACCEL_RPC_ADDRESS="tcp://192.168.2.2:${VACCEL_RPC_PORT}" ;;
   edge-asus)       DOCKER_STATS_REMOTE_ENDPOINT="http://10.5.1.20:6000";  SYSTEM_STATS_REMOTE_ENDPOINT="http://10.5.1.20:6001";  VACCEL_RPC_ADDRESS="tcp://10.5.1.20:${VACCEL_RPC_PORT}" ;;
@@ -137,13 +168,12 @@ run_one () {
          RUN_TAG="${RUN_TAG}"
 
   if [[ "${HOST}" == edge* ]]; then
-    local _omp="${OMP_THREADS_OVERRIDE:-12}"
-    export OMP_NUM_THREADS="${_omp}"
+    export OMP_NUM_THREADS="${OMP_THREADS_OVERRIDE}"
     # OMP_THREAD_LIMIT is the hard ceiling that num_threads(n) clauses cannot exceed.
     # AOTInductor compiles #pragma omp parallel num_threads(nproc) at compile time,
     # hardcoding nproc=24 when OMP_NUM_THREADS was unset. OMP_NUM_THREADS alone
     # cannot override a num_threads() clause; OMP_THREAD_LIMIT can.
-    export OMP_THREAD_LIMIT="${_omp}"
+    export OMP_THREAD_LIMIT="${OMP_THREADS_OVERRIDE}"
     # For edge loopback remote runs the agent is on the same host; export REMOTE_HOST so
     # model_benchmark_ros.py can embed it in run_id and JSON without defaulting to edge-asus.
     if [[ "${BACKEND}" == vaccel-remote-* ]]; then
@@ -182,6 +212,17 @@ run_one () {
     export CUDA_VISIBLE_DEVICES=""
   fi
 
+  # WiFi link stats (miniPC's wifi-stats-collector) bracket the python call
+  # directly from here, not threaded through model_benchmark_ros.py -- kept
+  # separate on purpose (small/special-case feature, different host).
+  local _wifi_tag="${RUN_TAG}_${model}_${BACKEND}"
+  if [[ "${WIFI_MONITORING}" -eq 1 ]]; then
+    curl -s --max-time 5 -X POST "${WIFI_STATS_ENDPOINT}/start" \
+      -H "Content-Type: application/json" \
+      -d "{\"wifi_interface\": \"${WIFI_IFACE}\", \"tag\": \"${_wifi_tag}\"}" \
+      > /dev/null || echo "[warn] wifi-stats /start failed (continuing without it)"
+  fi
+
   # Exit code 134 (SIGABRT) at shutdown is emitted by AOTInductor's CUDA event
   # cleanup after all results are already saved — safe to ignore.
   # 139 (SIGSEGV) is a real crash and must NOT be silently swallowed.
@@ -192,6 +233,18 @@ run_one () {
   else
     ( ulimit -c 0; python3 -u "${SCRIPT}" ) || _rc=$?
   fi
+
+  # Always stop wifi monitoring, even if the python run above failed/crashed --
+  # this must run before the error-triggered `exit` below, or a crash would
+  # leave the miniPC's monitor running forever with nothing left to stop it.
+  if [[ "${WIFI_MONITORING}" -eq 1 ]]; then
+    mkdir -p "/results/experiments/wifi-stats/${HOST}" 2>/dev/null \
+      || echo "[warn] could not create wifi-stats results dir (continuing without it)"
+    curl -s --max-time 5 -X POST "${WIFI_STATS_ENDPOINT}/stop" \
+      -o "/results/experiments/wifi-stats/${HOST}/${_wifi_tag}_totals.json" \
+      || echo "[warn] wifi-stats /stop failed"
+  fi
+
   if [[ $_rc -ne 0 && $_rc -ne 134 ]]; then
     echo "[bench] error: ${SCRIPT} exited with code ${_rc}"
     exit "${_rc}"

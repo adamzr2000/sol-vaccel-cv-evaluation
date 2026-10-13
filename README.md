@@ -3,14 +3,9 @@
 ## Build
 
 ```bash
-# Non-ROS
-sudo docker build -f dockerfile-torchvision-cpu . -t torchvision-app:cpu
-sudo docker build -f dockerfile-torchvision-gpu . -t torchvision-app:gpu
 
-# vAccel remote agent (GPU host)
 sudo docker build -f dockerfile-torchvision-gpu-agent . -t torchvision-app:agent
 
-# ROS
 sudo docker build -f dockerfile-torchvision-ros-cpu . -t torchvision-ros-app:cpu
 sudo docker build -f dockerfile-torchvision-ros-gpu . -t torchvision-ros-app:gpu
 ```
@@ -70,14 +65,14 @@ For `vaccel-remote-*` backends, also start the vAccel agent on the edge host and
 Run on **edge-asus** (repeat with `--host edge-xtreme` on that machine):
 
 ```bash
-./evaluate_models_ros.sh --host edge-asus --device cpu --backend vaccel-local-sol --run-tag iso --no-monitoring
-./evaluate_models_ros.sh --host edge-asus --device gpu --backend vaccel-local-sol --run-tag iso --no-monitoring
-./evaluate_models_ros.sh --host edge-asus --device cpu --backend vaccel-local-ptc --run-tag iso --no-monitoring
-./evaluate_models_ros.sh --host edge-asus --device gpu --backend vaccel-local-ptc --run-tag iso --no-monitoring
+./evaluate_models_ros.sh --host edge-asus --device cpu --backend vaccel-local-sol --run-tag iso --monitoring false
+./evaluate_models_ros.sh --host edge-asus --device gpu --backend vaccel-local-sol --run-tag iso --monitoring false
+./evaluate_models_ros.sh --host edge-asus --device cpu --backend vaccel-local-ptc --run-tag iso --monitoring false
+./evaluate_models_ros.sh --host edge-asus --device gpu --backend vaccel-local-ptc --run-tag iso --monitoring false
 ```
 
 ```bash
-./evaluate_models_ros.sh --host edge-xtreme --device gpu --backend sol --run-tag iso --no-export --sleep 2 --duration 4 --model resnet50,swin_t,swin_s,swin_v2_b,swin3d_s,swin3d_b,r3d_18,r2plus1d_18,fcn_resnet101,fcn_resnet50,deeplabv3_resnet101,deeplabv3_resnet50
+./evaluate_models_ros.sh --host edge-xtreme --device gpu --backend sol --run-tag iso --export false --monitoring false --sleep 2 --duration 4 --model resnet50,swin_t,swin_s,swin_v2_b,swin3d_s,swin3d_b,r3d_18,r2plus1d_18,fcn_resnet101,fcn_resnet50,deeplabv3_resnet101,deeplabv3_resnet50
 ```
 
 ---
@@ -128,10 +123,14 @@ For remote runs (Phase 3), edge-side stats are captured under `docker-stats/{rem
 - Remote (robot side): `{tag}_{model}_{backend}_{local-device}_target-{remote-host}-{device}` — e.g. `run1_resnet50_vaccel-remote-sol_cpu_target-edge-asus-gpu`
 - Remote (edge side): `{tag}_{model}_{backend}_{device}` — e.g. `run1_resnet50_vaccel-remote-sol_gpu`
 
-**Other options:**
+**Other options:** (`--export`/`--monitoring`/`--wifi-monitoring` are independent of each other —
+set only the ones you actually want to change)
 ```bash
 --model resnet50,swin_t    # run a subset of models
---no-export                # disable both export and monitoring (dry run)
+--export false             # skip JSON/CSV export (default: true)
+--monitoring false         # skip docker/system resource monitoring (default: true)
+--wifi-monitoring true     # WiFi link stats from the miniPC's wifi-stats-collector
+                           # (default: false; --host robot only, ignored elsewhere)
 --sleep N                  # seconds between model runs (default: 20)
 --samples N                # stop after N processed samples instead of by duration
                             # (takes priority over --duration when set; default: unset)
@@ -143,6 +142,13 @@ MONITOR_DOCKER=0   # keep system-stats + model-stats monitoring, skip docker-sta
                     # (default: on; useful when the client container isn't on --host,
                     # e.g. a vaccel-remote-* run where the agent's docker daemon has
                     # no "torchvision-app" container to inspect)
+
+# Advanced, rarely needed -- see evaluate_models_ros.sh's own top-of-file
+# defaults for the exact values these override:
+VACCEL_RPC_PORT=9125              # vaccel agent RPC port
+OMP_THREADS_OVERRIDE=12           # OMP thread cap on edge hosts
+WIFI_STATS_ENDPOINT=http://192.168.2.1:6002   # miniPC's wifi-stats-collector
+WIFI_IFACE=wlp1s0                 # miniPC's wireless interface
 ```
 
 ---

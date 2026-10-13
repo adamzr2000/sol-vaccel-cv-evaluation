@@ -124,37 +124,7 @@ def _cleanup_caches(outdir: Path, source: str) -> None:
                     pass
 
 
-def main():
-    example_text = """examples:
-  python3 download_baseline_model.py --model deeplabv3_resnet50
-  python3 download_baseline_model.py --model resnet50 --outdir ./my_resnet_models
-  python3 download_baseline_model.py --model yolov5s
-  python3 download_baseline_model.py -h"""
-
-    ap = argparse.ArgumentParser(
-        description="Download and serialize PyTorch Baseline Models",
-        epilog=example_text,
-        formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-
-    ap.add_argument("--model", required=True, choices=MODEL_REGISTRY.keys(),
-                    help="The specific model architecture to download.")
-
-    ap.add_argument("--outdir", default=None,
-                    help="Custom output directory. Defaults to '<model_name>'.")
-
-    ap.add_argument("--force-reload", action="store_true",
-                    help="Force torch.hub to re-download and reload the repo (useful if cache is stale).")
-
-    ap.add_argument(
-        "--keep-cache",
-        action="store_true",
-        help="Keep cache folders (hub/, _torchhub_cache/). Default: caches are removed after successful download."
-    )
-
-    args = ap.parse_args()
-
-    model_name = args.model
+def download_one(model_name, args) -> bool:
     entry = MODEL_REGISTRY[model_name]
     source = entry.get("source", "torchvision")
 
@@ -212,7 +182,7 @@ def main():
 
     except Exception as e:
         print(f"❌ Error downloading model: {e}")
-        return
+        return False
 
     # ------------------------------------------------------------------
     # B) Save State Dict
@@ -222,7 +192,7 @@ def main():
         torch.save(target.state_dict(), sd_path)
     except Exception as e:
         print(f"❌ Error saving state_dict: {e}")
-        return
+        return False
 
     # ------------------------------------------------------------------
     # C) TorchScript (Option A: skip for torchhub models)
@@ -276,6 +246,67 @@ def main():
     print(f" - State Dict:  {sd_path}")
     print(f" - TorchScript: {ts_path} ({ts_status})")
     print(f" - Metadata:    {outdir / 'metadata.json'}")
+    return True
+
+
+def main():
+    example_text = """examples:
+  python3 download_models.py --model deeplabv3_resnet50
+  python3 download_models.py --model resnet50,swin_t,fcn_resnet50
+  python3 download_models.py                              # all registered models
+  python3 download_models.py --model resnet50 --outdir ./my_resnet_models
+  python3 download_models.py -h"""
+
+    ap = argparse.ArgumentParser(
+        description="Download and serialize PyTorch Baseline Models",
+        epilog=example_text,
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+
+    ap.add_argument("--model", default=None,
+                    help="Comma-separated model name(s). Defaults to all models in the registry.")
+
+    ap.add_argument("--outdir", default=None,
+                    help="Custom output directory. Defaults to '<model_name>'. "
+                         "Only valid with a single --model (each model needs its own directory).")
+
+    ap.add_argument("--force-reload", action="store_true",
+                    help="Force torch.hub to re-download and reload the repo (useful if cache is stale).")
+
+    ap.add_argument(
+        "--keep-cache",
+        action="store_true",
+        help="Keep cache folders (hub/, _torchhub_cache/). Default: caches are removed after successful download."
+    )
+
+    args = ap.parse_args()
+
+    if args.model:
+        names = [m.strip() for m in args.model.split(",")]
+        unknown = [n for n in names if n not in MODEL_REGISTRY]
+        if unknown:
+            print(f"❌ Unknown model(s): {unknown}")
+            print(f"   Available: {list(MODEL_REGISTRY)}")
+            return
+    else:
+        names = list(MODEL_REGISTRY)
+
+    if args.outdir and len(names) > 1:
+        print("❌ --outdir can only be used with a single --model (each model needs its own directory).")
+        return
+
+    print(f"Downloading {len(names)} model(s)\n")
+
+    ok, fail = 0, 0
+    for name in names:
+        print(f"[{name}]")
+        if download_one(name, args):
+            ok += 1
+        else:
+            fail += 1
+        print()
+
+    print(f"Done: {ok} succeeded, {fail} failed.")
 
 
 if __name__ == "__main__":

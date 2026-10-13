@@ -9,6 +9,7 @@ Deletes ONLY result artifacts for the given run-tag:
   - docker-stats/**: matching *.csv (recursive)
   - system-stats/**: matching *.csv (recursive)
   - model-stats/**: matching run directories (recursive) + matching summary *.json/*.csv
+  - wifi-stats/**: matching *.json (recursive)
 Does NOT touch:
   - logs/
   - any .py/.sh/README/.gitkeep/.gitignore/etc.
@@ -103,8 +104,19 @@ rm_model_stats() {
     do_rm >/dev/null
 }
 
+rm_wifi_stats() {
+  local dir="wifi-stats"
+  [[ -d "$dir" ]] || { echo "[clean] skip (missing): $dir"; return 0; }
+  echo "[clean] wifi-stats (recursive): $dir"
+
+  find "$dir" -type f -name "*.json" "${NAME_EXPR[@]}" -print0 |
+    tee >(tr '\0' '\n' >&2) |
+    do_rm >/dev/null
+}
+
 rm_csv_recursive "docker-stats"
 rm_csv_recursive "system-stats"
 rm_model_stats
+rm_wifi_stats
 
 echo "[clean] done ✅ (logs untouched)"

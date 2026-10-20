@@ -6,6 +6,11 @@ echo "Optimizing network buffers for ROS 2/DDS..."
 # 2 GiB, default is 208 KiB
 sudo sysctl -w net.core.rmem_max=2147483647
 
+# Increase the maximum send buffer size for network packets (send-side analog
+# of rmem_max above -- only the receive side was tuned previously)
+# 2 GiB, default is 208 KiB
+sudo sysctl -w net.core.wmem_max=2147483647
+
 # IP fragmentation settings
 # in seconds, default is 30 s
 sudo sysctl -w net.ipv4.ipfrag_time=3

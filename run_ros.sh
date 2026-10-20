@@ -118,10 +118,16 @@ cat > "$HOST_DDS_CFG_DIR/cyclonedds.xml" <<EOF
         <NetworkInterface autodetermine="false" name="${DDS_INTERFACE}" priority="default" multicast="default"/>
       </Interfaces>
       <AllowMulticast>default</AllowMulticast>
-      <MaxMessageSize>65500B</MaxMessageSize>
+      <!-- Kept at/below the ~1500B WiFi MTU on purpose, not raised: avoids
+           IP fragmentation on this lossy hop. FragmentSize (default 1344B)
+           handles large samples independently of this setting. -->
+      <MaxMessageSize>1472B</MaxMessageSize>
     </General>
     <Internal>
       <SocketReceiveBufferSize min="10MB"/>
+      <SocketSendBufferSize min="10MB"/>
+      <!-- WhcHigh is CycloneDDS's own default (no-op); only raise if
+           PUBLISH_MASK/PUBLISH_OVERLAY are enabled for larger payloads. -->
       <Watermarks>
         <WhcHigh>500kB</WhcHigh>
       </Watermarks>

@@ -28,16 +28,16 @@ within one comparison set.
 ## 1. Start the congestion receiver on 10.5.99.12
 
 ```bash
-./network-perturbation/iperf3_congestion.sh server
+iperf3 -s
 ```
 
 ## 2. Baseline (no perturbation)
 
 On the robot (inside the benchmark container, from `/src`):
 ```bash
-./evaluate_models_ros.sh --host robot --device gpu --backend vaccel-remote-sol \
-  --model resnet50 --duration 120 --run-tag net-baseline \
-  --monitoring false --wifi-monitoring true --remote-host edge-asus
+MONITOR_DOCKER=0 ./evaluate_models_ros.sh --host robot --device gpu --backend vaccel-remote-sol \
+  --model resnet50 --samples 1000 --run-tag net-baseline \
+  --monitoring true --wifi-monitoring true --remote-host edge-asus
 ```
 
 ## 3. Increasing system load via background traffic
@@ -49,39 +49,19 @@ manual cleanup needed. Kept simple on purpose: plain UDP, single stream (the
 script's defaults — no `--proto`/`--parallel` needed).
 
 ```bash
-# wireless test PC — light load
-./network-perturbation/iperf3_congestion.sh client --target 10.5.99.12 --rate 150M --duration 150
+# wireless test PC
+iperf3 -c 10.5.99.12 -p 5201 -b 100M -t 300 -P 1 -u
 
 # robot — while the above runs
-./evaluate_models_ros.sh --host robot --device gpu --backend vaccel-remote-sol \
-  --model resnet50 --duration 120 --run-tag net-load-150 \
-  --monitoring false --wifi-monitoring true --remote-host edge-asus
+MONITOR_DOCKER=0 ./evaluate_models_ros.sh --host robot --device gpu --backend vaccel-remote-sol \
+  --model resnet50 --samples 1000 --run-tag net-load-100M \
+  --monitoring true --wifi-monitoring true --remote-host edge-asus
 ```
-
-```bash
-# wireless test PC — moderate load
-./network-perturbation/iperf3_congestion.sh client --target 10.5.99.12 --rate 300M --duration 150
-./evaluate_models_ros.sh --host robot --device gpu --backend vaccel-remote-sol \
-  --model resnet50 --duration 120 --run-tag net-load-300 \
-  --monitoring false --wifi-monitoring true --remote-host edge-asus
-```
-
-```bash
-# wireless test PC — heavy load
-./network-perturbation/iperf3_congestion.sh client --target 10.5.99.12 --rate 450M --duration 150
-./evaluate_models_ros.sh --host robot --device gpu --backend vaccel-remote-sol \
-  --model resnet50 --duration 120 --run-tag net-load-450 \
-  --monitoring false --wifi-monitoring true --remote-host edge-asus
-```
-
-Check `./network-perturbation/iperf3_congestion.sh status` on the wireless test PC
-if a run needs to be confirmed still active; `stop client` to cut it early.
 
 ## 4. Stop monitoring
 
 ```bash
 ./stop_wifi_monitoring.sh                                # on the miniPC
-./network-perturbation/iperf3_congestion.sh stop server   # on 10.5.99.12
 ```
 
 ## Results

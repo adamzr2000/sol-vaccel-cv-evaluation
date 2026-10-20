@@ -4,6 +4,7 @@ import time
 import csv
 import json
 import threading
+import urllib.request
 from collections import deque
 
 import torch
@@ -82,6 +83,11 @@ frames_per_sample = 16 if IS_VIDEO_MODEL else 1
 # ROS-SPECIFIC CONFIGURATION
 # ==========================================
 INPUT_TOPIC = os.environ.get("INPUT_TOPIC", "go2/sensor/camera")
+
+# go2_camerapublisher's frame-count stats endpoint (see ros-vision-service's
+# go2_camerapublisher). Only reachable when this script is co-located with the
+# camera driver, i.e. HOST=="robot" -- same-host loopback, no DDS discovery involved.
+CAMERA_STATS_ENDPOINT = os.environ.get("CAMERA_STATS_ENDPOINT", "http://127.0.0.1:6003")
 
 # Publish topics (you can disable any by setting it to empty string)
 OUTPUT_MASK_TOPIC = os.environ.get("OUTPUT_MASK_TOPIC", "/benchmark/mask")
@@ -202,6 +208,16 @@ class RosFrameBuffer:
     def reset_counters(self):
         with self.lock:
             self.total_received = 0
+
+
+def _http_get_json(url: str, timeout: float = 5.0):
+    """GET a JSON body; returns the parsed dict, or None on any failure."""
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as resp:
+            return json.loads(resp.read())
+    except Exception as e:
+        print(f"[camera-stats] GET {url} failed: {e}")
+        return None
 
 
 def main():
@@ -410,13 +426,16 @@ def main():
     # Counters/rates (camera hz, processed fps, duplicates)
     processed_samples = 0
     duplicates_skipped = 0
+    inference_failed = 0
     camera_hz_samples = []
 
     print("   ⏱️  Running Inference...")
 
     # RESET COUNTERS HERE so we don't count warmup/compile dropped frames!
     frame_buf.reset_counters()
-    
+
+    camera_stats_start = _http_get_json(f"{CAMERA_STATS_ENDPOINT}/stats") if HOST == "robot" else None
+
     start_wall = time.time()
     sample_idx = 0
     last_tick = 0.0
@@ -506,6 +525,7 @@ def main():
                 raw_output = adapter.infer(input_tensor)
         except Exception as e:
             print(f"Infer failed: {e}")
+            inference_failed += 1
             continue
 
         if TORCH_DEVICE.type == "cuda":
@@ -647,6 +667,13 @@ def main():
     t_stop_dt, t_stop_iso = get_utc_timestamps()
     wall_duration_sec = max(1e-9, (time.time() - start_wall))
 
+    camera_stats_stop = _http_get_json(f"{CAMERA_STATS_ENDPOINT}/stats") if HOST == "robot" else None
+    camera_frames_published = None
+    if camera_stats_start is not None and camera_stats_stop is not None:
+        camera_frames_published = (
+            camera_stats_stop["frames_published"] - camera_stats_start["frames_published"]
+        )
+
     # --- STOP RESOURCE MONITORING ---
     if cfg["monitor_resources"]:
         if TORCH_DEVICE.type == "cuda":
@@ -721,6 +748,9 @@ def main():
         print(f"   Drop ratio (est):   {drop_ratio*100.0:.2f}%")
     else:
         print(f"   Note: AVOID_DUPLICATES=false → processed FPS may include repeated frames.")
+    print(f"   Inference/RPC failed: {inference_failed}")
+    if camera_frames_published is not None:
+        print(f"   Camera published:   {camera_frames_published}")
     print(f"   ---------------------------------------------")
 
     # Export only if EXPORT_RESULTS=true
@@ -755,7 +785,8 @@ def main():
                 "received_frames": int(received_total),
                 "processed_frames": int(processed_samples),
                 "drop_ratio": round(drop_ratio, 6),
-                "duplicates_skipped_loops": int(duplicates_skipped)
+                "duplicates_skipped_loops": int(duplicates_skipped),
+                "inference_failed": int(inference_failed)
             },
             "ros_data_age_ms": stats_ros_data_age,
             "preprocessing_ms": stats_pre,
@@ -767,6 +798,8 @@ def main():
         if is_remote_backend:
             final_output_data["remote_host"] = REMOTE_HOST
             final_output_data["local_device"] = local_mode
+        if camera_frames_published is not None:
+            final_output_data["stream"]["camera_frames_published"] = camera_frames_published
         if MAX_SAMPLES > 0:
             final_output_data["max_samples"] = MAX_SAMPLES
         if "sol" in BACKEND:

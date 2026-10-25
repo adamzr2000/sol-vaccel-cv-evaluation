@@ -30,34 +30,11 @@ All commands below run **inside the container** from `/src`. Start the container
 #### Monitoring services (on each host, before experiments that capture resource stats)
 
 ```bash
-./run_monitoring.sh edge    # docker-stats-collector + system-stats-collector on edge
-./run_monitoring.sh robot   # same on robot
+./start_monitoring.sh edge    # docker-stats-collector + system-stats-collector on edge
+./start_monitoring.sh robot   # same on robot
 ```
 
 See [monitoring/](./monitoring) for details.
-
-#### Benchmark container
-
-```bash
-# Edge
-./run_ros.sh cpu --iface enp130s0
-./run_ros.sh gpu --iface enp130s0
-
-# Robot (always CPU)
-./run_ros.sh cpu --iface enp2s0
-```
-
-For `vaccel-remote-*` backends, also start the vAccel agent on the edge host and point the robot container at it:
-
-```bash
-# On edge host (pick per backend under test; both default to port 9125)
-./run_agent_sol.sh gpu    # for vaccel-remote-sol
-./run_agent_ptc.sh gpu    # for vaccel-remote-ptc
-
-# On robot (--remote defaults to 10.5.1.20:9125 = edge-asus)
-./run_ros.sh cpu --iface enp2s0                              # → edge-asus
-./run_ros.sh cpu --remote 10.5.1.21:9125 --iface enp2s0      # → edge-xtreme
-```
 
 ---
 
@@ -65,17 +42,11 @@ For `vaccel-remote-*` backends, also start the vAccel agent on the edge host and
 
 **Goal:** measure pure inference latency per backend on edge hardware, without RPC overhead. Monitoring is disabled; only `benchmark_summary.json` is saved for later latency breakdown analysis.
 
-Run on **edge-asus** (repeat with `--host edge-xtreme` on that machine):
-
+1. Run benchmark on **edge-asus** (example with sol gpu backend):
 ```bash
-./evaluate_models_ros.sh --host edge-asus --device cpu --backend vaccel-local-sol --run-tag iso --monitoring false
-./evaluate_models_ros.sh --host edge-asus --device gpu --backend vaccel-local-sol --run-tag iso --monitoring false
-./evaluate_models_ros.sh --host edge-asus --device cpu --backend vaccel-local-ptc --run-tag iso --monitoring false
-./evaluate_models_ros.sh --host edge-asus --device gpu --backend vaccel-local-ptc --run-tag iso --monitoring false
-```
+./run_ros.sh gpu --domain-id 10
 
-```bash
-./evaluate_models_ros.sh --host edge-xtreme --device gpu --backend sol --run-tag iso --export false --monitoring false --sleep 2 --duration 4 --model resnet50,swin_t,swin_s,swin_v2_b,swin3d_s,swin3d_b,r3d_18,r2plus1d_18,fcn_resnet101,fcn_resnet50,deeplabv3_resnet101,deeplabv3_resnet50
+./evaluate_models_ros.sh --host edge-asus --device gpu --backend vaccel-local-sol --run-tag iso --monitoring false --sleep 30 --samples 1000 --model resnet50,swin_t,swin_s,swin_v2_b,swin3d_s,swin3d_b,r3d_18,r2plus1d_18,fcn_resnet101,fcn_resnet50,deeplabv3_resnet101,deeplabv3_resnet50
 ```
 
 ---
@@ -84,9 +55,18 @@ Run on **edge-asus** (repeat with `--host edge-xtreme` on that machine):
 
 **Goal:** measure robot-side inference latency for vaccel-local backends (CPU only). Captures robot resource usage.
 
+Requires: monitoring running on the robot host
+
+1. Start ROS 2 robot drivers on **robot** (see [ros-vision-service](https://github.com/adamzr2000/ros-vision-service#setup) project):
 ```bash
-./evaluate_models_ros.sh --host robot --device cpu --backend vaccel-local-sol --run-tag run1
-./evaluate_models_ros.sh --host robot --device cpu --backend vaccel-local-ptc --run-tag run1
+./start_go2.sh
+```
+
+2. Run benchmark on **robot** (example with sol cpu backend):
+```bash
+./run_ros.sh cpu --domain-id 10
+
+MONITOR_DOCKER=0 ./evaluate_models_ros.sh --host robot --device cpu --backend vaccel-local-sol --run-tag iso --sleep 30 --samples 1000 --model resnet50,swin_t,swin_s,swin_v2_b,swin3d_s,swin3d_b,r3d_18,r2plus1d_18,fcn_resnet101,fcn_resnet50,deeplabv3_resnet101,deeplabv3_resnet50
 ```
 
 ---
@@ -95,16 +75,23 @@ Run on **edge-asus** (repeat with `--host edge-xtreme` on that machine):
 
 **Goal:** measure end-to-end latency (robot preprocessing + RPC transport + edge inference + return) with full resource monitoring on both robot and edge simultaneously.
 
-Requires: monitoring running on both hosts, agent running on edge, robot container started with correct `--remote` address.
+Requires: monitoring running on both hosts
 
+1. Start ROS 2 robot drivers on **robot** (see [ros-vision-service](https://github.com/adamzr2000/ros-vision-service#setup) project):
 ```bash
-# → edge-asus GPU
-./evaluate_models_ros.sh --host robot --device gpu --backend vaccel-remote-sol --run-tag run1 --remote-host edge-asus
-./evaluate_models_ros.sh --host robot --device gpu --backend vaccel-remote-ptc --run-tag run1 --remote-host edge-asus
+./start_go2.sh
+```
 
-# → edge-xtreme GPU  (container started with --remote 10.5.1.21:9125)
-./evaluate_models_ros.sh --host robot --device gpu --backend vaccel-remote-sol --run-tag run1 --remote-host edge-xtreme
-./evaluate_models_ros.sh --host robot --device gpu --backend vaccel-remote-ptc --run-tag run1 --remote-host edge-xtreme
+2. Start vaccel agent on **edge-asus** (example with sol gpu backend):
+```bash
+./run_agent_sol.sh gpu
+```
+
+3. Run benchmark on **robot** (example with sol gpu backend):
+```bash
+./run_ros.sh cpu --domain-id 10
+
+MONITOR_DOCKER=0 ./evaluate_models_ros.sh --host robot --device gpu --backend vaccel-remote-sol --run-tag e2e --remote-host edge-asus --samples 1000 --model resnet50
 ```
 
 ---
@@ -263,7 +250,7 @@ Segmentation models ship `libsol-dnn-cudnn-deployment-0.8.0rc6-9.10.2.so` (needs
 
 ## Idle baseline stats
 
-Capture a no-workload power/util baseline for a host (requires `./run_monitoring.sh` already running there):
+Capture a no-workload power/util baseline for a host (requires `./start_monitoring.sh` already running there):
 
 ```bash
 ./collect_idle_stats.sh --host edge-asus --mode cpu,gpu --duration 120

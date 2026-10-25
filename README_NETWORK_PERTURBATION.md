@@ -11,8 +11,8 @@ example model (`resnet50`) — keep it the same across baseline and load levels
 within one comparison set.
 
 ## Prerequisites
-
-- Benchmark container running on the robot (`./run_ros.sh cpu --iface enp2s0 --remote <edge-ip>:9125`)
+- ROS 2 robot drivers running on the robot (`./start_go2.sh`) — see main [ros-vision-service](https://github.com/adamzr2000/ros-vision-service#setup).
+- Benchmark container running on the robot (`./run_ros.sh cpu --domain-id 10`)
   and the vAccel agent running on edge-asus (`./run_agent_sol.sh gpu`, matching the
   `vaccel-remote-sol` backend used below) — see main
   [README.md](README.md#phase-3--robot-remote-run-on-robot).

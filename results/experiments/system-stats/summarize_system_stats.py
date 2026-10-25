@@ -73,11 +73,18 @@ def parse_stem_and_folder(path: Path, run_tag: str) -> Optional[Tuple[str, str, 
     Parse metadata from filename, BUT take 'host' from the parent folder name.
     """
     stem = path.stem
-    
-    # NEW: Strip trailing "_net" so parsing logic correctly finds the device/backend
-    if stem.endswith("_net"):
-        stem = stem[:-4]
-        
+
+    # Strip a trailing mode suffix so parsing logic correctly finds the
+    # device/backend. "_cpu"/"_gpu" are new as of start_system_monitor's
+    # per-mode CSV naming fix (previously cpu/gpu shared the bare, unsuffixed
+    # stem); "_net" was already handled. cpu/gpu classification itself is
+    # content-based (see is_cpu/is_gpu below), so this only affects filename
+    # parsing, not which metric set gets applied to a given CSV.
+    for suffix in ("_net", "_cpu", "_gpu"):
+        if stem.endswith(suffix):
+            stem = stem[: -len(suffix)]
+            break
+
     needle = f"{run_tag}_"
     if not stem.startswith(needle):
         return None

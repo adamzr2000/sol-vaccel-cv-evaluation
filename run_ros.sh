@@ -110,6 +110,19 @@ CONT_DDS_CFG_DIR="/etc/dds"
 
 mkdir -p "$HOST_DDS_CFG_DIR"
 
+# go2_camerapublisher and this script always run on the same host (the only
+# real network hop here is the vaccel RPC call, via VACCEL_RPC_ADDRESS above)
+# -- so on the default "lo" interface there's no lossy WiFi hop to protect
+# against, and a small MaxMessageSize just forces needless IP fragmentation
+# of the raw camera frame (e.g. ~1900 fragments/frame at 1280x720). Only keep
+# the small, fragmentation-avoiding value if --iface ever points at a real
+# (potentially lossy) interface instead.
+if [[ "$DDS_INTERFACE" == "lo" ]]; then
+  MAX_MESSAGE_SIZE="65500B"
+else
+  MAX_MESSAGE_SIZE="1472B"
+fi
+
 cat > "$HOST_DDS_CFG_DIR/cyclonedds.xml" <<EOF
 <CycloneDDS>
   <Domain>
@@ -118,10 +131,7 @@ cat > "$HOST_DDS_CFG_DIR/cyclonedds.xml" <<EOF
         <NetworkInterface autodetermine="false" name="${DDS_INTERFACE}" priority="default" multicast="default"/>
       </Interfaces>
       <AllowMulticast>default</AllowMulticast>
-      <!-- Kept at/below the ~1500B WiFi MTU on purpose, not raised: avoids
-           IP fragmentation on this lossy hop. FragmentSize (default 1344B)
-           handles large samples independently of this setting. -->
-      <MaxMessageSize>1472B</MaxMessageSize>
+      <MaxMessageSize>${MAX_MESSAGE_SIZE}</MaxMessageSize>
     </General>
     <Internal>
       <SocketReceiveBufferSize min="10MB"/>
@@ -172,6 +182,7 @@ docker run -it --rm \
   -v "$(pwd)"/results/experiments:/results/experiments \
   -e LD_LIBRARY_PATH="$LD_LIBRARY_PATH" \
   -e VACCEL_RPC_ADDRESS="tcp://${REMOTE_ADDRESS}" \
+  -e TTRPC_TCP_NODELAY_ENABLED=1 \
   "${EXTRA_VOL_ARGS[@]}" \
   "${EXTRA_ENV_ARGS[@]}" \
   "${GPU_ARGS[@]}" \

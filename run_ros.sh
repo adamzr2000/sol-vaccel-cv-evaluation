@@ -6,6 +6,13 @@ REMOTE_ADDRESS="10.5.1.20:9125"
 DDS_INTERFACE="lo"
 DOMAIN_ID=0
 RMW="${RMW:-rmw_cyclonedds_cpp}"
+# model_benchmark_ros_v2.py only (reads the GO2 camera directly via GStreamer,
+# no go2_camerapublisher) -- same GO2_LAN_PORT/IMAGE_WIDTH/IMAGE_HEIGHT names
+# and defaults go2_camerapublisher itself uses. Override via env var before
+# invoking this script if your deployment differs; unused by the v1 script.
+GO2_LAN_PORT="${GO2_LAN_PORT:-enp2s0}"
+IMAGE_WIDTH="${IMAGE_WIDTH:-}"
+IMAGE_HEIGHT="${IMAGE_HEIGHT:-}"
 
 usage() {
   echo "Usage: $0 [cpu|gpu] [--remote HOST:PORT] [--iface IFNAME] [--domain-id ID]"
@@ -162,7 +169,10 @@ EXTRA_ENV_ARGS=(
   --env="CYCLONEDDS_URI=file://${CONT_DDS_CFG_DIR}/cyclonedds.xml"
   --env="VACCEL_PLUGINS=libvaccel-exec.so:libvaccel-rpc.so:libvaccel-torch.so"
   --env="VACCEL_EXEC_DLCLOSE_ENABLED=0"
+  --env="GO2_LAN_PORT=${GO2_LAN_PORT}"
 )
+[[ -n "$IMAGE_WIDTH" ]]  && EXTRA_ENV_ARGS+=( --env="IMAGE_WIDTH=${IMAGE_WIDTH}" )
+[[ -n "$IMAGE_HEIGHT" ]] && EXTRA_ENV_ARGS+=( --env="IMAGE_HEIGHT=${IMAGE_HEIGHT}" )
 
 # CPU mode: hide GPU devices to prevent CUDA init overhead from the GPU-capable PyTorch
 if [[ "$MODE" == "cpu" ]]; then

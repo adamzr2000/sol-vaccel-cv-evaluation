@@ -1,0 +1,235 @@
+#!/usr/bin/env python3
+"""
+Per-input latency breakdown (inference / pre+post / network+framework overhead)
+for a single remote-GPU Fast-DDS-TCP condition, comparing ros-vision-service
+(plain ROS2/DDS, sol backend) against vaccel-remote-sol.
+
+Condition: --dds fast (TCP) + --backend sol + --samples 1000, --run-tag remote-gpu-tcp.
+Both sides now do uplink/downlink payload-size parity + pre/postprocessing on the
+client (robot) -- see each project's own recent history for why. Network variation
+and other backends are deliberately out of scope here (see network_perturbation_test.py
+in this same directory for the WiFi-load sweep across backends/conditions).
+
+HOW "inference" IS SOURCED, AND WHY -- this is the part most likely to be misread:
+
+- ros2: inference_node.py's edge-side t_inference_ms (pipeline_*.json) is PURE GPU
+  forward-pass time, nothing else -- it's a local in-process call, no RPC involved at
+  any point in this architecture.
+
+- vaccel: the REMOTE run's own inference_ms (benchmark_summary.json, robot-side) wraps
+  adapter.infer() for the WHOLE RPC call -- network transport and remote GPU compute
+  are inseparably bundled in that one field by construction (ttrpc request/response).
+  Using it directly would silently fold real network time into "inference" and make
+  net/fw look artificially tiny. So instead we use the matching ISOLATED LOCAL run
+  (iso_{model}_sol_gpu/benchmark_summary.json, edge-asus, host-local SOL -- no vaccel
+  plugin layer, no RPC at all) for vaccel's "inference" column here, exactly like
+  network_perturbation_test.py already does for its 3 models. That isolates pure
+  edge-asus GPU time, stripped of both RPC and vaccel-plugin dispatch overhead.
+
+With that substitution, "net/fw" now means the same kind of thing on both rows:
+total - inference(isolated/local) - [the part of pre/post actually on the critical
+path -- see VIDEO MODELS note below] = whatever full round-trip cost isn't accounted
+for by pure local GPU compute or by pre/post. For ros2 that's dominated by real DDS
+network transport (upload+download) + edge buffer-wait. For vaccel that's dominated
+by the real RPC round-trip (network + ttrpc/vaccel framework overhead) that the
+remote run's own system_ms/inference_ms don't separate out.
+
+VIDEO MODELS -- no longer need special-casing here. go2_camerapublisher now ships
+one full 16-frame clip per publish, redoing the real torchvision transform over all
+16 frames fresh on every single publish (no caching of previously-transformed
+frames) -- deliberately matching vaccel's own preprocess_frames(), which also redoes
+its transform over the whole clip, synchronously, every sample. So on BOTH sides,
+the recorded preprocessing cost genuinely IS the full clip's cost, and it's genuinely
+all on the critical path -- no x16 scaling, and no "undo the scaling for total/net_fw
+but not for pre/post" split, needed anywhere. pre/post and total/net_fw now use the
+exact same pre value, same as classification/segmentation.
+
+Run from results/plot/comparison/:
+  python3 vaccel_comparison_test.py
+"""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+RESULTS_DIR = Path(__file__).resolve().parents[2] / "experiments" / "model-stats"
+VACCEL_ROBOT_DIR = RESULTS_DIR / "robot"
+VACCEL_EDGE_DIR = RESULTS_DIR / "edge-asus"
+
+ROS_VISION_SERVICE_DIR = Path(__file__).resolve().parents[4] / "ros-vision-service"
+ROS_MONITOR_DIR = ROS_VISION_SERVICE_DIR / "results" / "experiments" / "model-stats" / "robot"
+ROS_PIPELINE_DIR = ROS_VISION_SERVICE_DIR / "results" / "experiments" / "model-stats" / "edge-asus"
+
+RUN_TAG = "remote-gpu-tcp"
+VACCEL_RUN_SUFFIX = "vaccel-remote-sol_edge-asus-gpu"
+
+# model -> category, same classification inference_node.py itself uses. No longer
+# changes how pre/post or total/net_fw are computed (see module docstring) -- kept
+# only for the per-category console section headers.
+MODELS = [
+    ("resnet50", "image_classification"),
+    ("swin_t", "image_classification"),
+    ("swin_s", "image_classification"),
+    ("swin_v2_b", "image_classification"),
+    ("swin3d_s", "video_classification"),
+    ("swin3d_b", "video_classification"),
+    ("r3d_18", "video_classification"),
+    ("r2plus1d_18", "video_classification"),
+    ("deeplabv3_resnet50", "semantic_segmentation"),
+    ("deeplabv3_resnet101", "semantic_segmentation"),
+    ("fcn_resnet50", "semantic_segmentation"),
+    ("fcn_resnet101", "semantic_segmentation"),
+]
+
+
+def load_json(path: Path) -> dict:
+    return json.loads(path.read_text())
+
+
+def find_one(base_dir: Path, pattern: str) -> Path:
+    """Glob for the file matching model+tag, ignoring the timestamp suffix --
+    picks the most recent if more than one matches (e.g. a rerun)."""
+    matches = sorted(base_dir.glob(pattern))
+    if not matches:
+        raise FileNotFoundError(f"No file matching {pattern!r} in {base_dir}")
+    if len(matches) > 1:
+        print(f"[warn] {len(matches)} files match {pattern!r} in {base_dir}, using the most recent: {matches[-1].name}")
+    return matches[-1]
+
+
+def ros_contrib(model: str, category: str) -> dict:
+    monitor = load_json(find_one(ROS_MONITOR_DIR, f"monitor_{model}_sol_{RUN_TAG}_*.json"))
+    pipeline = load_json(find_one(ROS_PIPELINE_DIR, f"pipeline_{model}_sol_{RUN_TAG}_*.json"))
+
+    m_sum = monitor["summary"]
+    p_sum = pipeline["summary"]
+
+    # inference: edge-side, pure GPU forward pass (pipeline_*.json) -- never the
+    # robot-side e2e, which also includes network + pre/post.
+    inference_p50 = p_sum["t_inference_ms"]["p50"]
+    # pre/post: robot-side (monitor_*.json), since both run client-side here.
+    # pipeline_*.json's own t_preprocess_ms/t_postprocess_ms are NOT used -- the
+    # former is near-zero by design (PREPROCESSED_INPUT skips real work on edge),
+    # the latter doesn't exist at all (SKIP_POSTPROCESS). For video models this is
+    # now a genuine, un-scaled full-clip cost (go2_camerapublisher redoes the whole
+    # clip's transform fresh on every publish, matching vaccel) -- no scaling
+    # needed, same as classification/segmentation.
+    pre = m_sum["t_preprocess_ms"]
+    post = m_sum["t_postprocess_ms"]
+    prepost_p50 = pre["p50"] + post["p50"]
+
+    e2e = m_sum["t_e2e_ms"]
+    # t_e2e_ms's clock starts when go2_camerapublisher sets header.stamp, which is
+    # AFTER its own preprocessing already ran (see _preprocess_for_category/
+    # _preprocess_video_clip call order), and stops when monitoring_node.py
+    # captures t_result_received, which is AFTER on_classification/on_seg_result's
+    # own postprocess block already ran (see _on_result call order). So t_e2e_ms
+    # already includes postprocess but is MISSING preprocess entirely -- add it
+    # back so "total" means the same thing vaccel's system_ms does (that one
+    # starts timing before its own preprocessing too).
+    total_p50 = e2e["p50"] + pre["p50"]
+    p25 = e2e["p25"] + pre["p25"]
+    p75 = e2e["p75"] + pre["p75"]
+
+    # Reduces algebraically to e2e - inference - post (the pre terms cancel) --
+    # the honest "unaccounted-for" residual either way.
+    net_fw_p50 = max(0.0, total_p50 - inference_p50 - pre["p50"] - post["p50"])
+
+    return {
+        "inference_p50": inference_p50,
+        "prepost_p50": prepost_p50,
+        "net_fw_p50": net_fw_p50,
+        "total_p50": total_p50,
+        "p25": p25,
+        "p75": p75,
+        "n_matched": monitor["metadata"]["n_matched"],
+        "camera_published": monitor["metadata"].get("camera_frames_published"),
+        "edge_received": pipeline["metadata"]["n_frames_received"],
+        "edge_processed": pipeline["metadata"]["n_frames"],
+    }
+
+
+def vaccel_contrib(model: str) -> dict:
+    run_id = f"e2e_{model}_{VACCEL_RUN_SUFFIX}"
+    d = load_json(VACCEL_ROBOT_DIR / run_id / "benchmark_summary.json")
+
+    # inference: NOT this file's own inference_ms (that's RPC-inclusive, see module
+    # docstring) -- the matching isolated local-GPU run instead, same as
+    # network_perturbation_test.py's iso_{model}_sol_gpu convention. Plain "sol"
+    # backend (not "vaccel-local-sol"), matching that script's own precedent, since
+    # the intent is pure GPU time stripped of both RPC AND the vaccel plugin layer.
+    iso = load_json(VACCEL_EDGE_DIR / f"iso_{model}_sol_gpu" / "benchmark_summary.json")
+    inference_p50 = iso["inference_ms"]["p50"]
+
+    # pre/post and total still come from the REMOTE run (robot-side) -- these were
+    # never RPC-ambiguous, they're genuinely this run's own client-side cost/total,
+    # and (unlike ros2) ALL of pre/post is genuinely on vaccel's critical path every
+    # time (see module docstring, VIDEO MODELS section) -- no scaling needed here.
+    prepost_p50 = d["preprocessing_ms"]["p50"] + d["postprocessing_ms"]["p50"]
+    total = d["system_ms"]
+    net_fw_p50 = max(0.0, total["p50"] - inference_p50 - prepost_p50)
+
+    return {
+        "inference_p50": inference_p50,
+        "prepost_p50": prepost_p50,
+        "net_fw_p50": net_fw_p50,
+        "total_p50": total["p50"],
+        "p25": total["p25"],
+        "p75": total["p75"],
+        "num_samples": d["num_samples"],
+        "received_frames": d["stream"]["received_frames"],
+        "processed_frames": d["stream"]["processed_frames"],
+        "drop_ratio": d["stream"]["drop_ratio"],
+    }
+
+
+def print_header() -> None:
+    header = f"{'framework':<12} {'inference':>10} {'pre/post':>10} {'net/fw':>10} {'total':>10} {'IQR':>10}"
+    print(header)
+    print("-" * len(header))
+
+
+def print_row(label: str, c: dict) -> None:
+    iqr = c["p75"] - c["p25"]
+    print(
+        f"{label:<12} {c['inference_p50']:>10.3f} {c['prepost_p50']:>10.3f} "
+        f"{c['net_fw_p50']:>10.3f} {c['total_p50']:>10.3f} {iqr:>10.3f}"
+    )
+
+
+def main() -> None:
+    print(f"Condition: --dds fast (TCP) --backend sol --run-tag {RUN_TAG}, --samples 1000")
+    print("All values in ms, p50 unless noted. See module docstring for what 'net/fw' means per framework.\n")
+
+    for model, category in MODELS:
+        print(f"\n=== {model} ({category}) ===")
+        print_header()
+
+        try:
+            ros = ros_contrib(model, category)
+            print_row("ros2", ros)
+        except FileNotFoundError as e:
+            print(f"ros2         [missing] {e}")
+            ros = None
+
+        try:
+            vaccel = vaccel_contrib(model)
+            print_row("vaccel-rpc", vaccel)
+        except FileNotFoundError as e:
+            print(f"vaccel-rpc   [missing] {e}")
+            vaccel = None
+
+        if ros is not None:
+            print(
+                f"  ros2:   n_matched={ros['n_matched']}  camera_published={ros['camera_published']}  "
+                f"edge_received={ros['edge_received']}  edge_processed={ros['edge_processed']}"
+            )
+        if vaccel is not None:
+            print(
+                f"  vaccel: num_samples={vaccel['num_samples']}  received={vaccel['received_frames']}  "
+                f"processed={vaccel['processed_frames']}  drop_ratio={vaccel['drop_ratio']:.4f}"
+            )
+
+
+if __name__ == "__main__":
+    main()

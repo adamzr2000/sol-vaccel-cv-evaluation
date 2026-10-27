@@ -387,10 +387,13 @@ def main():
 
         # Edge loopback remote: agent uses TARGET_DEVICE on the same host → monitor it
         # Robot remote: robot is CPU-only client; agent GPU is captured by is_vaccel_remote_run block
+        # "cpu" always included (dict.fromkeys dedupes in case TARGET_DEVICE/local_mode
+        # is itself "cpu") -- matches ros-vision-service, which monitors edge CPU
+        # alongside GPU by default rather than GPU-only.
         if is_remote_backend and not is_vaccel_remote_run:
-            local_sys_mode = [TARGET_DEVICE, "net"]
+            local_sys_mode = list(dict.fromkeys(["cpu", TARGET_DEVICE, "net"]))
         else:
-            local_sys_mode = [local_mode, "net"]
+            local_sys_mode = list(dict.fromkeys([local_mode, "net"]))
         local_net_iface = host_net_iface_map.get(HOST)
 
         if cfg['monitor_docker']:
@@ -402,7 +405,7 @@ def main():
             rem_docker_csv_dir = str(Path(cfg['docker_csv_base']) / REMOTE_HOST)
             rem_system_csv_dir = str(Path(cfg['system_csv_base']) / REMOTE_HOST)
 
-            remote_sys_mode = [cfg['target_device'], "net"]
+            remote_sys_mode = list(dict.fromkeys(["cpu", cfg['target_device'], "net"]))
             remote_net_iface = host_net_iface_map.get(REMOTE_HOST)
 
             if cfg['monitor_docker']:

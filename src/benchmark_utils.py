@@ -357,13 +357,18 @@ def start_system_monitor(run_id, endpoint, csv_dir, mode, net_interface=None):
 
     url = f"{endpoint}/monitor/start"
     
-    # 1. Keep exact run_id for cpu/gpu, but append "_net" strictly for the network file
-    csv_names_dict = {}
-    for m in mode:
-        if m == "net":
-            csv_names_dict[m] = f"{run_id}_net.csv"
-        else:
-            csv_names_dict[m] = f"{run_id}.csv"
+    # run_id already ends in the target device word (e.g. "...-gpu" or "...-cpu",
+    # from TARGET_DEVICE). A mode matching that trailing word keeps the original
+    # bare "{run_id}.csv" name -- unchanged from before, no "_gpu_gpu"/"_cpu_cpu"
+    # redundancy. Any other mode requested alongside it (e.g. "cpu" captured for
+    # an otherwise GPU-target run) gets its own "_<mode>" suffix instead, since
+    # without one it would collide with the bare name above -- that collision
+    # (one mode's CSV silently overwriting another's) was the original bug.
+    last_token = run_id.rsplit("-", 1)[-1]
+    csv_names_dict = {
+        m: (f"{run_id}.csv" if m == last_token else f"{run_id}_{m}.csv")
+        for m in mode
+    }
     
     payload = {
         "interval": 1.0,

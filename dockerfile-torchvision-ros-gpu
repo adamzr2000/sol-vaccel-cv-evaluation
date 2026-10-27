@@ -34,6 +34,20 @@ RUN apt-get update && \
       ros-${ROS_DISTRO}-cv-bridge && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
+# GStreamer -- needed for model_benchmark_ros_v2.py's GstFrameBuffer, which reads
+# the GO2 camera's H264/UDP multicast stream directly (same pipeline
+# go2_camerapublisher uses) instead of depending on that separate process.
+# Same package set as ros-vision-service's go2-driver Dockerfile, for an
+# identical, already-proven decode pipeline.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+      gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
+      gstreamer1.0-libav gstreamer1.0-tools \
+      libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+      python3-gi python3-gst-1.0 gir1.2-gstreamer-1.0 && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
 # SLEEF build
 RUN set -eux; \
     rm -rf /tmp/sleef* /tmp/sleef.tar.gz; \
@@ -49,7 +63,12 @@ RUN set -eux; \
 
 # Virtual env setup
 ENV VENV=/.venv
-RUN python3 -m venv $VENV
+# --system-site-packages: lets the venv see the apt-installed python3-gi
+# (PyGObject) above -- it's a system package, not pip-installable reliably,
+# and venvs otherwise isolate from system site-packages entirely. Packages
+# pip-installed into the venv below (numpy, opencv-python-headless, etc.)
+# still take precedence over any same-named system package.
+RUN python3 -m venv --system-site-packages $VENV
 ENV PATH="$VENV/bin:$PATH"
 
 # Python deps

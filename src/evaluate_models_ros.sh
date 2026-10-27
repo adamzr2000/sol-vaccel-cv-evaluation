@@ -215,7 +215,16 @@ run_one () {
   # WiFi link stats (miniPC's wifi-stats-collector) bracket the python call
   # directly from here, not threaded through model_benchmark_ros.py -- kept
   # separate on purpose (small/special-case feature, different host).
+  # Device/remote-host suffix mirrors model_benchmark_ros.py's own run_id
+  # branching exactly (REMOTE_HOST-DEVICE for a remote backend, DEVICE alone
+  # otherwise) -- without it, runs that differ only by --device or
+  # --remote-host silently overwrote each other's wifi-stats file.
   local _wifi_tag="${RUN_TAG}_${model}_${BACKEND}"
+  if [[ "${BACKEND}" == vaccel-remote-* ]]; then
+    _wifi_tag="${_wifi_tag}_${REMOTE_HOST}-${DEVICE}"
+  else
+    _wifi_tag="${_wifi_tag}_${DEVICE}"
+  fi
   if [[ "${WIFI_MONITORING}" -eq 1 ]]; then
     curl -s --max-time 5 -X POST "${WIFI_STATS_ENDPOINT}/start" \
       -H "Content-Type: application/json" \

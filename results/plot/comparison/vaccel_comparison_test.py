@@ -150,7 +150,7 @@ def ros_contrib(model: str, category: str) -> dict:
 
 
 def vaccel_contrib(model: str) -> dict:
-    run_id = f"e2e_{model}_{VACCEL_RUN_SUFFIX}"
+    run_id = f"e2eGSt_{model}_{VACCEL_RUN_SUFFIX}"
     d = load_json(VACCEL_ROBOT_DIR / run_id / "benchmark_summary.json")
 
     # inference: NOT this file's own inference_ms (that's RPC-inclusive, see module

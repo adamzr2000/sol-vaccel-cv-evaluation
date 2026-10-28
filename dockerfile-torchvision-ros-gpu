@@ -78,9 +78,9 @@ RUN python3 -m pip install --upgrade pip "setuptools>=70.0.0" && \
       ultralytics itsdangerous python-dotenv requests \
       pandas tqdm seaborn gitpython click && \
     python3 -m pip install --pre \
-      torch==2.8.0 \
-      torchvision==0.23.0 \
-      torchaudio==2.8.0 \
+      torch==2.9.1 \
+      torchvision==0.24.1 \
+      torchaudio==2.9.1 \
       --index-url https://download.pytorch.org/whl/cu128
 
 # vAccel

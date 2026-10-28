@@ -1,0 +1,23 @@
+netcom@robot:~/sol-vaccel-cv-evaluation/src$ docker run --rm -i --entrypoint python3 go2-driver:latest - < preproc_microbench.py
+torch=2.9.1+cpu torchvision=0.24.1+cpu torch_threads=4 interop=4 cpu_count=4 OMP_NUM_THREADS=None
+video clip (16x112)  p50=  51.37ms  p90=  51.59ms  min=  51.00ms
+image frame (224)    p50=   7.63ms  p90=   7.71ms  min=   7.53ms
+netcom@robot:~/sol-vaccel-cv-evaluation/src$ docker run --rm -i -e CUDA_VISIBLE_DEVICES= --entrypoint python3 torchvision-ros-app:gpu - < preproc_microbench.py
+torch=2.9.1+cu128 torchvision=0.24.1+cu128 torch_threads=4 interop=4 cpu_count=4 OMP_NUM_THREADS=None
+video clip (16x112)  p50=  55.27ms  p90=  58.82ms  min=  52.07ms
+image frame (224)    p50=   7.43ms  p90=   7.49ms  min=   7.30ms
+
+
+netcom@robot:~/sol-vaccel-cv-evaluation/src$ cd ~/ros-vision-service && ./start_go2.sh
+[warn] failed to set net.ipv4.ipfrag_time (continuing without it)
+[warn] failed to set net.ipv4.ipfrag_high_thresh (continuing without it)
+Using DDS interface: lo
+[+] Running 1/1
+ ✔ Container go2-driver  Started                                                                                                                   0.2s
+Done. Use 'docker compose -f docker-compose-go2.yml logs -f' to follow logs.
+netcom@robot:~/ros-vision-service$ cd ~/sol-vaccel-cv-evaluation/src
+netcom@robot:~/sol-vaccel-cv-evaluation/src$ docker run --rm -i -e CUDA_VISIBLE_DEVICES= --entrypoint python3 torchvision-ros-app:gpu - < preproc_microbench.py
+torch=2.9.1+cu128 torchvision=0.24.1+cu128 torch_threads=4 interop=4 cpu_count=4 OMP_NUM_THREADS=None
+video clip (16x112)  p50=  66.08ms  p90=  70.71ms  min=  52.39ms
+image frame (224)    p50=   7.10ms  p90=  13.46ms  min=   5.06ms
+netcom@robot:~/sol-vaccel-cv-evaluation/src$

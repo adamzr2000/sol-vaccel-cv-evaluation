@@ -104,6 +104,13 @@ GO2_LAN_PORT = os.environ.get("GO2_LAN_PORT", "enp2s0")
 IMAGE_WIDTH = int(os.environ.get("IMAGE_WIDTH", "1280"))
 IMAGE_HEIGHT = int(os.environ.get("IMAGE_HEIGHT", "720"))
 
+# Opt-in (default off): hold the GStreamer streaming thread while the timed
+# preprocessing section runs, so camera decode/convert never overlaps it --
+# the same serialization go2_camerapublisher gets by design, since its
+# preprocessing runs inside its own appsink callback. Isolates CPU contention
+# from concurrent decode on the robot's 4 cores (see preproc_microbench.py).
+SERIALIZE_CAPTURE = parse_boolean_env("SERIALIZE_CAPTURE", "false")
+
 # Publish topics (you can disable any by setting it to empty string)
 OUTPUT_MASK_TOPIC = os.environ.get("OUTPUT_MASK_TOPIC", "/benchmark/mask")
 OUTPUT_OVERLAY_TOPIC = os.environ.get("OUTPUT_OVERLAY_TOPIC", "/benchmark/overlay")
@@ -183,6 +190,13 @@ class GstFrameBuffer:
         self.latest_stamp_ns = None              # robot clock, nanoseconds
         self.stamp_history_ns = deque(maxlen=200)  # for observed Hz (cheap, not timed)
 
+        # Held by _on_new_sample for its entire run, and by the main loop (via
+        # hold_capture(), SERIALIZE_CAPTURE only) for the timed preprocessing
+        # section -- acquiring it waits out any in-flight frame, then blocks new
+        # ones. Uncontended (cheap no-op) when SERIALIZE_CAPTURE is off.
+        self._capture_gate = threading.Lock()
+        self._capture_held = False
+
         Gst.init(None)
         gstreamer_str = (
             f"udpsrc address=230.1.1.1 port=1720 multicast-iface={lan_port} "
@@ -199,6 +213,13 @@ class GstFrameBuffer:
         self.pipeline.set_state(Gst.State.PLAYING)
 
     def _on_new_sample(self, sink):
+        # Blocking on the gate (taken before pull-sample) stalls the whole
+        # single-streaming-thread pipeline, decode included. The main loop
+        # never holds self.lock while holding the gate, so no deadlock.
+        with self._capture_gate:
+            return self._handle_sample(sink)
+
+    def _handle_sample(self, sink):
         sample = sink.emit("pull-sample")
         buf = sample.get_buffer()
         success, map_info = buf.map(Gst.MapFlags.READ)
@@ -271,7 +292,19 @@ class GstFrameBuffer:
         with self.lock:
             self.total_received = 0
 
+    def hold_capture(self):
+        self._capture_gate.acquire()
+        self._capture_held = True
+
+    def release_capture(self):
+        if self._capture_held:
+            self._capture_held = False
+            self._capture_gate.release()
+
     def stop(self):
+        # Release first: a callback blocked on the gate would otherwise block
+        # the streaming thread that set_state(NULL) has to join.
+        self.release_capture()
         try:
             self.pipeline.set_state(Gst.State.NULL)
         except Exception as e:
@@ -296,7 +329,7 @@ def main():
     print(f"   Publish:   class={PUBLISH_CLASS} mask={PUBLISH_MASK} overlay={PUBLISH_OVERLAY}")
     print(f"   Export:    EXPORT_RESULTS={EXPORT_RESULTS}")
     print(f"   Monitors:  RESOURCE_MONITORING={cfg['monitor_resources']}")
-    print(f"   Control:   AVOID_DUPLICATES={AVOID_DUPLICATES} MAX_FPS={MAX_FPS}")
+    print(f"   Control:   AVOID_DUPLICATES={AVOID_DUPLICATES} MAX_FPS={MAX_FPS} SERIALIZE_CAPTURE={SERIALIZE_CAPTURE}")
     print(f"   Data Age:  TRACK_ROS_DATA_AGE={TRACK_ROS_DATA_AGE}")
 
     if TORCH_DEVICE.type == "cuda" and not torch.cuda.is_available():
@@ -557,19 +590,26 @@ def main():
         system_start_time_ns = time.perf_counter_ns()
 
         # --- PREPROCESS ---
-        preprocessing_start_time_ns = time.perf_counter_ns()
+        # Gate taken before the timer starts so waiting out an in-flight
+        # frame isn't counted as preprocessing.
+        if SERIALIZE_CAPTURE:
+            frame_buf.hold_capture()
         try:
-            if IS_VIDEO_MODEL:
-                input_tensor = adapter.preprocess_frames(clip)
-            else:
-                input_tensor = adapter.preprocess_frame(fr)
-        except Exception as e:
-            print(f"Preprocess failed: {e}")
-            continue
+            preprocessing_start_time_ns = time.perf_counter_ns()
+            try:
+                if IS_VIDEO_MODEL:
+                    input_tensor = adapter.preprocess_frames(clip)
+                else:
+                    input_tensor = adapter.preprocess_frame(fr)
+            except Exception as e:
+                print(f"Preprocess failed: {e}")
+                continue
 
-        if TORCH_DEVICE.type == "cuda":
-            torch.cuda.synchronize()
-        preprocessing_end_time_ns = time.perf_counter_ns()
+            if TORCH_DEVICE.type == "cuda":
+                torch.cuda.synchronize()
+            preprocessing_end_time_ns = time.perf_counter_ns()
+        finally:
+            frame_buf.release_capture()
 
         # --- INFERENCE ---
         inference_start_time_ns = time.perf_counter_ns()
@@ -829,7 +869,9 @@ def main():
                 "processed_frames": int(processed_samples),
                 "drop_ratio": round(drop_ratio, 6),
                 "duplicates_skipped_loops": int(duplicates_skipped),
-                "inference_failed": int(inference_failed)
+                "inference_failed": int(inference_failed),
+                "frame_source": "gstreamer_direct",
+                "serialize_capture": bool(SERIALIZE_CAPTURE)
             },
             "ros_data_age_ms": stats_ros_data_age,
             "preprocessing_ms": stats_pre,

@@ -75,6 +75,11 @@ Optional:
   --remote-host      robot|edge-asus|edge-xtreme|edge-alienware (default: ${REMOTE_HOST})
                      remote inference target for vaccel-remote-* backends (use --host value for loopback)
                      also sets VACCEL_RPC_ADDRESS=tcp://<host-ip>:<VACCEL_RPC_PORT> (default port: ${VACCEL_RPC_PORT})
+  --omp-wait-policy  active|passive — OMP_WAIT_POLICY for this robot-side process (torch
+                     pre/postprocessing). Default: unset (libgomp default: workers sleep after a
+                     short spin, so each burst after the idle RPC wait pays a wake-up cost).
+                     active keeps workers spinning between bursts -- must match ros-vision-service's
+                     start_go2.sh --omp-wait-policy for a matched comparison. Inflates CPU-usage metrics.
 
 Every --<flag> true|false option defaults to the value shown above and is
 fully independent of the others -- e.g. --export false --monitoring true
@@ -97,6 +102,7 @@ RESOURCE_MONITORING=1
 WIFI_MONITORING=0
 EXPERIMENT_DURATION_SEC=120
 MAX_SAMPLES=0   # 0 = disabled; --duration governs stop as today
+OMP_WAIT_POLICY_OPT=""   # empty = libgomp default (OMP_WAIT_POLICY unset)
 
 # ---- Parse args ----
 while [[ $# -gt 0 ]]; do
@@ -110,6 +116,7 @@ while [[ $# -gt 0 ]]; do
     --duration)         EXPERIMENT_DURATION_SEC="$2"; shift 2 ;;
     --samples)          MAX_SAMPLES="$2"; shift 2 ;;
     --remote-host)      REMOTE_HOST="$2"; shift 2 ;;
+    --omp-wait-policy)  OMP_WAIT_POLICY_OPT="${2,,}"; shift 2 ;;
     --export)           EXPORT_RESULTS="$(parse_bool "$2")"; shift 2 ;;
     --monitoring)        RESOURCE_MONITORING="$(parse_bool "$2")"; shift 2 ;;
     --wifi-monitoring)   WIFI_MONITORING="$(parse_bool "$2")"; shift 2 ;;
@@ -141,6 +148,17 @@ if [[ "${HOST}" != "robot" ]]; then
   echo "      Use evaluate_models_ros.sh for --host ${HOST}." >&2
   exit 2
 fi
+
+# ---- OpenMP wait policy (robot-side torch pre/postprocessing) ----
+# Set once for every model in this invocation. Without the flag, unset any
+# stray value from the calling shell so "default" really is libgomp's default
+# -- model_benchmark_ros_v2.py records whichever value it actually ran with.
+case "${OMP_WAIT_POLICY_OPT}" in
+  "")             unset OMP_WAIT_POLICY ;;
+  active|passive) export OMP_WAIT_POLICY="${OMP_WAIT_POLICY_OPT^^}" ;;
+  *) echo "[err] --omp-wait-policy must be 'active' or 'passive'" >&2; exit 2 ;;
+esac
+echo "[bench] OMP_WAIT_POLICY=${OMP_WAIT_POLICY:-default (unset)}"
 
 # ---- Validate backend ----
 case "${BACKEND}" in

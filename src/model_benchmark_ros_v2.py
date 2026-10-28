@@ -110,6 +110,10 @@ IMAGE_HEIGHT = int(os.environ.get("IMAGE_HEIGHT", "720"))
 # preprocessing runs inside its own appsink callback. Isolates CPU contention
 # from concurrent decode on the robot's 4 cores (see preproc_microbench.py).
 SERIALIZE_CAPTURE = parse_boolean_env("SERIALIZE_CAPTURE", "false")
+# Recorded as-run (evaluate_models_ros_v2.sh --omp-wait-policy); "default" =
+# unset, libgomp's spin-then-sleep. Must match go2_camerapublisher's
+# OMP_WAIT_POLICY (ros-vision-service) for a matched pre/post comparison.
+OMP_WAIT_POLICY = os.environ.get("OMP_WAIT_POLICY") or "default"
 
 # Publish topics (you can disable any by setting it to empty string)
 OUTPUT_MASK_TOPIC = os.environ.get("OUTPUT_MASK_TOPIC", "/benchmark/mask")
@@ -330,6 +334,7 @@ def main():
     print(f"   Export:    EXPORT_RESULTS={EXPORT_RESULTS}")
     print(f"   Monitors:  RESOURCE_MONITORING={cfg['monitor_resources']}")
     print(f"   Control:   AVOID_DUPLICATES={AVOID_DUPLICATES} MAX_FPS={MAX_FPS} SERIALIZE_CAPTURE={SERIALIZE_CAPTURE}")
+    print(f"   OpenMP:    OMP_WAIT_POLICY={OMP_WAIT_POLICY} threads={torch.get_num_threads()}")
     print(f"   Data Age:  TRACK_ROS_DATA_AGE={TRACK_ROS_DATA_AGE}")
 
     if TORCH_DEVICE.type == "cuda" and not torch.cuda.is_available():
@@ -871,7 +876,8 @@ def main():
                 "duplicates_skipped_loops": int(duplicates_skipped),
                 "inference_failed": int(inference_failed),
                 "frame_source": "gstreamer_direct",
-                "serialize_capture": bool(SERIALIZE_CAPTURE)
+                "serialize_capture": bool(SERIALIZE_CAPTURE),
+                "omp_wait_policy": OMP_WAIT_POLICY
             },
             "ros_data_age_ms": stats_ros_data_age,
             "preprocessing_ms": stats_pre,

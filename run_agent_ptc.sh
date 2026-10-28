@@ -59,6 +59,7 @@ docker run --rm -it \
   "${CUDA_LD_ARGS[@]}" \
   -e "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES_VAL}" \
   -e "VACCEL_LOG_LEVEL=1" \
+  -e "TTRPC_TCP_NODELAY_ENABLED=1" \
   -p "${PORT}:9125" \
   "${IMAGE}" \
   bash -lc "vaccel-rpc-agent -a ${ADDR}"

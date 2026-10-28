@@ -146,6 +146,8 @@ def ros_contrib(model: str, category: str) -> dict:
         "camera_published": monitor["metadata"].get("camera_frames_published"),
         "edge_received": pipeline["metadata"]["n_frames_received"],
         "edge_processed": pipeline["metadata"]["n_frames"],
+        # None = run predates the field (not recorded), not "default".
+        "omp_wait_policy": monitor["metadata"].get("camera_omp_wait_policy"),
     }
 
 
@@ -180,6 +182,7 @@ def vaccel_contrib(model: str) -> dict:
         "received_frames": d["stream"]["received_frames"],
         "processed_frames": d["stream"]["processed_frames"],
         "drop_ratio": d["stream"]["drop_ratio"],
+        "omp_wait_policy": d["stream"].get("omp_wait_policy"),
     }
 
 
@@ -222,13 +225,25 @@ def main() -> None:
         if ros is not None:
             print(
                 f"  ros2:   n_matched={ros['n_matched']}  camera_published={ros['camera_published']}  "
-                f"edge_received={ros['edge_received']}  edge_processed={ros['edge_processed']}"
+                f"edge_received={ros['edge_received']}  edge_processed={ros['edge_processed']}  "
+                f"omp_wait_policy={ros['omp_wait_policy'] or 'unrecorded'}"
             )
         if vaccel is not None:
             print(
                 f"  vaccel: num_samples={vaccel['num_samples']}  received={vaccel['received_frames']}  "
-                f"processed={vaccel['processed_frames']}  drop_ratio={vaccel['drop_ratio']:.4f}"
+                f"processed={vaccel['processed_frames']}  drop_ratio={vaccel['drop_ratio']:.4f}  "
+                f"omp_wait_policy={vaccel['omp_wait_policy'] or 'unrecorded'}"
             )
+        # pre/post is only comparable when both robot-side torch processes ran
+        # with the same OpenMP wait policy (see evaluate_models_ros_v2.sh /
+        # start_go2.sh --omp-wait-policy).
+        if ros is not None and vaccel is not None:
+            policies = {ros["omp_wait_policy"], vaccel["omp_wait_policy"]}
+            if None in policies:
+                print("  [warn] omp_wait_policy unrecorded on at least one side -- pre/post match not verifiable")
+            elif len(policies) > 1:
+                print(f"  [warn] omp_wait_policy MISMATCH (ros2={ros['omp_wait_policy']}, "
+                      f"vaccel={vaccel['omp_wait_policy']}) -- pre/post not comparable")
 
 
 if __name__ == "__main__":

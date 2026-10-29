@@ -60,6 +60,12 @@ ROS_VISION_SERVICE_DIR = Path(__file__).resolve().parents[4] / "ros-vision-servi
 ROS_MONITOR_DIR = ROS_VISION_SERVICE_DIR / "results" / "experiments" / "model-stats" / "robot"
 ROS_PIPELINE_DIR = ROS_VISION_SERVICE_DIR / "results" / "experiments" / "model-stats" / "edge-asus"
 
+# energy_totals_*.json, same sources/convention as network_perturbation_test.py.
+SV_SYSTEM_ROBOT = RESULTS_DIR.parent / "system-stats" / "robot"
+SV_SYSTEM_EDGE = RESULTS_DIR.parent / "system-stats" / "edge-asus"
+ROS_SYSTEM_ROBOT = ROS_VISION_SERVICE_DIR / "results" / "experiments" / "system-stats" / "robot"
+ROS_SYSTEM_EDGE = ROS_VISION_SERVICE_DIR / "results" / "experiments" / "system-stats" / "edge-asus"
+
 RUN_TAG = "remote-gpu-tcp"
 VACCEL_RUN_SUFFIX = "vaccel-remote-sol_edge-asus-gpu"
 
@@ -97,8 +103,28 @@ def find_one(base_dir: Path, pattern: str) -> Path:
     return matches[-1]
 
 
+def load_energy_totals(path: Path) -> dict | None:
+    return json.loads(path.read_text()) if path.exists() else None
+
+
+def energy_row(robot: dict | None, edge: dict | None, samples: int) -> tuple:
+    """(samples, duration_s, robot_cpu_J, edge_cpu_J, edge_gpu_J) -- totals over
+    the run's window, same fields network_perturbation_test.py reads. duration_s
+    is that same window's duration_sec (robot's, edge's as fallback), so it
+    always matches the energy totals it sits next to."""
+    window = robot or edge
+    return (
+        samples,
+        window.get("duration_sec") if window else None,
+        robot.get("cpu_energy_j_total") if robot else None,
+        edge.get("cpu_energy_j_total") if edge else None,
+        (edge.get("gpu") or [{}])[0].get("gpu_energy_j_total") if edge else None,
+    )
+
+
 def ros_contrib(model: str, category: str) -> dict:
-    monitor = load_json(find_one(ROS_MONITOR_DIR, f"monitor_{model}_sol_{RUN_TAG}_*.json"))
+    monitor_path = find_one(ROS_MONITOR_DIR, f"monitor_{model}_sol_{RUN_TAG}_*.json")
+    monitor = load_json(monitor_path)
     pipeline = load_json(find_one(ROS_PIPELINE_DIR, f"pipeline_{model}_sol_{RUN_TAG}_*.json"))
 
     m_sum = monitor["summary"]
@@ -148,6 +174,14 @@ def ros_contrib(model: str, category: str) -> dict:
         "edge_processed": pipeline["metadata"]["n_frames"],
         # None = run predates the field (not recorded), not "default".
         "omp_wait_policy": monitor["metadata"].get("camera_omp_wait_policy"),
+        # Same timestamp suffix as the monitor file for this run, since
+        # energy_totals_*.json is written by the same bracketed window.
+        # monitor's n_frames (matched-result count), as network_perturbation_test.py.
+        "energy": energy_row(
+            load_energy_totals(ROS_SYSTEM_ROBOT / f"energy_totals_{monitor_path.stem[len('monitor_'):]}.json"),
+            load_energy_totals(ROS_SYSTEM_EDGE / f"energy_totals_{monitor_path.stem[len('monitor_'):]}.json"),
+            monitor["metadata"]["n_frames"],
+        ),
     }
 
 
@@ -183,6 +217,11 @@ def vaccel_contrib(model: str) -> dict:
         "processed_frames": d["stream"]["processed_frames"],
         "drop_ratio": d["stream"]["drop_ratio"],
         "omp_wait_policy": d["stream"].get("omp_wait_policy"),
+        "energy": energy_row(
+            load_energy_totals(SV_SYSTEM_ROBOT / f"energy_totals_{run_id}.json"),
+            load_energy_totals(SV_SYSTEM_EDGE / f"energy_totals_{run_id}.json"),
+            d["num_samples"],
+        ),
     }
 
 
@@ -198,6 +237,22 @@ def print_row(label: str, c: dict) -> None:
         f"{label:<12} {c['inference_p50']:>10.3f} {c['prepost_p50']:>10.3f} "
         f"{c['net_fw_p50']:>10.3f} {c['total_p50']:>10.3f} {iqr:>10.3f}"
     )
+
+
+def print_energy_header() -> None:
+    header = (f"{'framework':<12} {'samples':>8} {'duration_s':>11} {'robot_cpu_J':>12} "
+              f"{'edge_cpu_J':>11} {'edge_gpu_J':>11} {'total_J':>10}")
+    print(header)
+    print("-" * len(header))
+
+
+def print_energy_row(label: str, samples: int, duration_s, robot_cpu_j, edge_cpu_j, edge_gpu_j) -> None:
+    def fmt(v):
+        return "n/a" if v is None else f"{v:.1f}"
+    parts = (robot_cpu_j, edge_cpu_j, edge_gpu_j)
+    total = None if None in parts else sum(parts)
+    print(f"{label:<12} {samples:>8} {fmt(duration_s):>11} {fmt(robot_cpu_j):>12} "
+          f"{fmt(edge_cpu_j):>11} {fmt(edge_gpu_j):>11} {fmt(total):>10}")
 
 
 def main() -> None:
@@ -234,6 +289,15 @@ def main() -> None:
                 f"processed={vaccel['processed_frames']}  drop_ratio={vaccel['drop_ratio']:.4f}  "
                 f"omp_wait_policy={vaccel['omp_wait_policy'] or 'unrecorded'}"
             )
+        # Total energy over each run's window (not per-frame -- samples shown
+        # alongside; every run is --samples 1000, so totals compare directly).
+        print(f"--- {model} energy ---")
+        print_energy_header()
+        if ros is not None:
+            print_energy_row("ros2", *ros["energy"])
+        if vaccel is not None:
+            print_energy_row("vaccel-rpc", *vaccel["energy"])
+
         # pre/post is only comparable when both robot-side torch processes ran
         # with the same OpenMP wait policy (see evaluate_models_ros_v2.sh /
         # start_go2.sh --omp-wait-policy).

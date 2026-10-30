@@ -114,6 +114,33 @@ SERIALIZE_CAPTURE = parse_boolean_env("SERIALIZE_CAPTURE", "false")
 # unset, libgomp's spin-then-sleep. Must match go2_camerapublisher's
 # OMP_WAIT_POLICY (ros-vision-service) for a matched pre/post comparison.
 OMP_WAIT_POLICY = os.environ.get("OMP_WAIT_POLICY") or "default"
+# Opt-in (default off; evaluate_models_ros_v2.sh --fresh-frame): after each
+# RPC returns, wait for a frame decoded AFTER that point and preprocess it
+# right away -- the order go2_camerapublisher gets by design (preprocessing in
+# its appsink callback, right after each decode). Without it, whenever
+# pre + RPC + post exceeds the ~70 ms frame interval (video, segmentation),
+# preprocessing starts at a random phase of the camera cycle and overlaps the
+# next frame's H264 decode on the robot's 4 cores, which slows it (measured
+# with pre_contention_probe.py: video 65 ms -> 54 ms, = the ros2-like
+# order). The wait is before the timer, so it changes which frame is used and
+# the achieved rate (it aligns the loop to the frame grid: ~7.1/s for video
+# and segmentation, unchanged for classification), not what is timed.
+FRESH_FRAME = parse_boolean_env("FRESH_FRAME", "false")
+# Opt-in (default off; evaluate_models_ros_v2.sh --low-priority-decode):
+# decode on the GStreamer streaming thread only (avdec_h264 max-threads=1 --
+# libav's own decode threads would keep the default priority) and drop that
+# thread to nice 19, so when camera decode and preprocessing compete for the
+# robot's 4 cores, preprocessing wins; decode catches up during the RPC wait.
+# Unlike FRESH_FRAME it keeps the loop's rate (no wait for a new frame), so
+# run length/energy are unchanged. Measured with pre_contention_probe.py
+# (NICE_DECODE): video 65 -> 56 ms vs 54 ms for the ros2-like order.
+LOW_PRIORITY_DECODE = parse_boolean_env("LOW_PRIORITY_DECODE", "false")
+# Recorded as-run (evaluate_models_ros_v2.sh --malloc-tunables): glibc malloc
+# settings that keep freed memory in the process instead of returning it to
+# the OS between samples -- otherwise, depending on the heap layout of a given
+# launch, every preprocessing re-faults ~1-5k pages (+0.5-2 ms, measured with
+# pre_contention_probe.py). "default" = unset.
+GLIBC_TUNABLES = os.environ.get("GLIBC_TUNABLES") or "default"
 
 # Publish topics (you can disable any by setting it to empty string)
 OUTPUT_MASK_TOPIC = os.environ.get("OUTPUT_MASK_TOPIC", "/benchmark/mask")
@@ -201,11 +228,21 @@ class GstFrameBuffer:
         self._capture_gate = threading.Lock()
         self._capture_held = False
 
+        # Diagnostic only (never on the timed path): capture-work intervals,
+        # perf_counter_ns, two per frame -- decode + videoconvert (buffer
+        # entering avdec_h264 -> new-sample fired) and the Python callback
+        # (_handle_sample), all on the one streaming thread (no queue elements
+        # in the pipeline); gate waits fall between the two and are excluded.
+        # The main loop intersects these with each sample's preprocessing
+        # window after the sample is done -- see capture_overlap().
+        self._capture_busy = deque(maxlen=128)
+        self._decode_start_ns = None
+
         Gst.init(None)
         gstreamer_str = (
             f"udpsrc address=230.1.1.1 port=1720 multicast-iface={lan_port} "
             f"! application/x-rtp, media=video, encoding-name=H264 "
-            f"! rtph264depay ! h264parse ! avdec_h264 ! videoconvert "
+            f"! rtph264depay ! h264parse ! avdec_h264 name=dec ! videoconvert "
             f"! video/x-raw,width={self.width},height={self.height},format=BGR "
             f"! appsink drop=1"
         )
@@ -214,16 +251,57 @@ class GstFrameBuffer:
         self.appsink.set_property("emit-signals", True)
         self.appsink.set_property("max-buffers", 1)
         self.appsink.connect("new-sample", self._on_new_sample)
+        self.pipeline.get_by_name("dec").get_static_pad("sink").add_probe(
+            Gst.PadProbeType.BUFFER, self._on_decode_input)
+        self._decode_niced = False
+        if LOW_PRIORITY_DECODE:
+            self.pipeline.get_by_name("dec").set_property("max-threads", 1)
         self.pipeline.set_state(Gst.State.PLAYING)
+
+    def _on_decode_input(self, pad, info):
+        # h264parse outputs one access unit (= one frame) per buffer, so this
+        # marks the start of that frame's decode. Keeps the earliest start if a
+        # frame ever spans several buffers before its callback fires.
+        if LOW_PRIORITY_DECODE and not self._decode_niced:
+            # Runs on the streaming thread itself (no queue elements), which
+            # does depay/parse/decode/convert/callback -- Linux nice is per thread.
+            os.setpriority(os.PRIO_PROCESS, threading.get_native_id(), 19)
+            self._decode_niced = True
+        if self._decode_start_ns is None:
+            self._decode_start_ns = time.perf_counter_ns()
+        return Gst.PadProbeReturn.OK
+
+    def capture_overlap(self, t0_ns: int, t1_ns: int) -> tuple[int, float]:
+        """(number of capture-work intervals -- decode or callback -- that
+        overlapped [t0, t1], total overlapping ms). Call once the window is
+        long past, so every interval that started during it has finished and
+        been recorded."""
+        with self.lock:
+            intervals = list(self._capture_busy)
+        n, ns = 0, 0
+        for s, e in intervals:
+            ov = min(e, t1_ns) - max(s, t0_ns)
+            if ov > 0:
+                n += 1
+                ns += ov
+        return n, ns / 1e6
 
     def _on_new_sample(self, sink):
         # Blocking on the gate (taken before pull-sample) stalls the whole
         # single-streaming-thread pipeline, decode included. The main loop
         # never holds self.lock while holding the gate, so no deadlock.
+        # Decode + convert ends here: record it as its own interval, so time
+        # spent waiting on the gate (SERIALIZE_CAPTURE) never counts as
+        # capture work in capture_overlap().
+        entry_ns = time.perf_counter_ns()
+        with self.lock:
+            self._capture_busy.append((self._decode_start_ns or entry_ns, entry_ns))
+        self._decode_start_ns = None
         with self._capture_gate:
             return self._handle_sample(sink)
 
     def _handle_sample(self, sink):
+        cb_start_ns = time.perf_counter_ns()
         sample = sink.emit("pull-sample")
         buf = sample.get_buffer()
         success, map_info = buf.map(Gst.MapFlags.READ)
@@ -247,6 +325,9 @@ class GstFrameBuffer:
                 self.stamp_history_ns.append(stamp_ns)
         finally:
             buf.unmap(map_info)
+            end_ns = time.perf_counter_ns()
+            with self.lock:
+                self._capture_busy.append((cb_start_ns, end_ns))
         return Gst.FlowReturn.OK
 
     def get_latest(self):
@@ -335,6 +416,8 @@ def main():
     print(f"   Monitors:  RESOURCE_MONITORING={cfg['monitor_resources']}")
     print(f"   Control:   AVOID_DUPLICATES={AVOID_DUPLICATES} MAX_FPS={MAX_FPS} SERIALIZE_CAPTURE={SERIALIZE_CAPTURE}")
     print(f"   OpenMP:    OMP_WAIT_POLICY={OMP_WAIT_POLICY} threads={torch.get_num_threads()}")
+    print(f"   Capture:   FRESH_FRAME={FRESH_FRAME} LOW_PRIORITY_DECODE={LOW_PRIORITY_DECODE} "
+          f"GLIBC_TUNABLES={GLIBC_TUNABLES}")
     print(f"   Data Age:  TRACK_ROS_DATA_AGE={TRACK_ROS_DATA_AGE}")
 
     if TORCH_DEVICE.type == "cuda" and not torch.cuda.is_available():
@@ -533,6 +616,8 @@ def main():
 
     # Gate by capture stamp
     last_seen_stamp_ns = frame_buf.get_latest_stamp_ns()
+    # FRESH_FRAME: received-frame count when the previous RPC returned.
+    fresh_after_count = None
 
     while rclpy.ok():
         now = time.time()
@@ -548,6 +633,14 @@ def main():
             if dt < (1.0 / MAX_FPS):
                 time.sleep((1.0 / MAX_FPS) - dt)
             last_tick = time.time()
+
+        # FRESH_FRAME: wait (here, not via `continue`, so the MAX_FPS
+        # throttle above isn't re-applied per poll) for a frame decoded after
+        # the previous RPC returned. 2 s guard against a stalled camera.
+        if FRESH_FRAME and fresh_after_count is not None:
+            wait_start = time.time()
+            while frame_buf.get_received_count() <= fresh_after_count and time.time() - wait_start < 2.0:
+                time.sleep(0.0005)
 
         # Avoid duplicates
         if AVOID_DUPLICATES:
@@ -629,6 +722,8 @@ def main():
         if TORCH_DEVICE.type == "cuda":
             torch.cuda.synchronize()
         inference_end_time_ns = time.perf_counter_ns()
+        if FRESH_FRAME:
+            fresh_after_count = frame_buf.get_received_count()
 
         # --- POSTPROCESS ---
         postprocessing_start_time_ns = time.perf_counter_ns()
@@ -747,10 +842,19 @@ def main():
             f"{detected_info}"
         )
 
+        # Diagnostic: did camera capture work (decode + convert + callback, on
+        # the GStreamer thread) run concurrently with this sample's
+        # preprocessing? Computed now -- after inference/postprocess -- so any
+        # frame that started during preprocessing has finished. Not timed.
+        capture_overlap_n, capture_overlap_ms = frame_buf.capture_overlap(
+            preprocessing_start_time_ns, preprocessing_end_time_ns)
+
         detailed_sample_records.append({
             "filename": input_src,
             "ros_data_age_ms": round(current_ros_data_age_ms, 4),
             "preprocessing_ms": round(current_pre_ms, 4),
+            "capture_overlap_n": capture_overlap_n,
+            "capture_overlap_ms": round(capture_overlap_ms, 4),
             "inference_ms": round(current_inf_ms, 4),
             "postprocessing_ms": round(current_post_ms, 4),
             "e2e_ms": round(current_sys_ms, 4),
@@ -877,7 +981,10 @@ def main():
                 "inference_failed": int(inference_failed),
                 "frame_source": "gstreamer_direct",
                 "serialize_capture": bool(SERIALIZE_CAPTURE),
-                "omp_wait_policy": OMP_WAIT_POLICY
+                "omp_wait_policy": OMP_WAIT_POLICY,
+                "fresh_frame": bool(FRESH_FRAME),
+                "low_priority_decode": bool(LOW_PRIORITY_DECODE),
+                "glibc_tunables": GLIBC_TUNABLES
             },
             "ros_data_age_ms": stats_ros_data_age,
             "preprocessing_ms": stats_pre,

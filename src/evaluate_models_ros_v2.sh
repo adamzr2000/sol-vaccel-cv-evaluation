@@ -80,6 +80,17 @@ Optional:
                      short spin, so each burst after the idle RPC wait pays a wake-up cost).
                      active keeps workers spinning between bursts -- must match ros-vision-service's
                      start_go2.sh --omp-wait-policy for a matched comparison. Inflates CPU-usage metrics.
+  --fresh-frame      true|false — after each RPC, wait for a frame decoded after it returned and
+                     preprocess it right away (default: false). Stops camera H264 decode from
+                     overlapping preprocessing whenever pre+RPC+post exceeds the ~70 ms frame
+                     interval (video, segmentation) -- the order go2_camerapublisher has by design.
+                     Aligns the loop to the frame grid (~7.1/s video/segmentation; no MAX_FPS needed).
+  --low-priority-decode true|false — decode the camera on one thread at nice 19, so preprocessing
+                     wins the CPU when they overlap (default: false). Keeps the loop's rate,
+                     unlike --fresh-frame -- use it where --fresh-frame would cut throughput (video).
+  --malloc-tunables  true|false — GLIBC_TUNABLES keeping freed memory in the process (mmap threshold
+                     32 MiB, trim threshold 256 MiB) instead of re-faulting it each preprocessing
+                     (default: false). Use the same value as start_go2.sh --malloc-tunables.
 
 Every --<flag> true|false option defaults to the value shown above and is
 fully independent of the others -- e.g. --export false --monitoring true
@@ -103,6 +114,11 @@ WIFI_MONITORING=0
 EXPERIMENT_DURATION_SEC=120
 MAX_SAMPLES=0   # 0 = disabled; --duration governs stop as today
 OMP_WAIT_POLICY_OPT=""   # empty = libgomp default (OMP_WAIT_POLICY unset)
+FRESH_FRAME_OPT=0
+LOW_PRIORITY_DECODE_OPT=0
+MALLOC_TUNABLES_OPT=0
+# Same value as ros-vision-service's start_go2.sh --malloc-tunables.
+MALLOC_TUNABLES_VALUE="glibc.malloc.mmap_threshold=33554432:glibc.malloc.trim_threshold=268435456"
 
 # ---- Parse args ----
 while [[ $# -gt 0 ]]; do
@@ -117,6 +133,9 @@ while [[ $# -gt 0 ]]; do
     --samples)          MAX_SAMPLES="$2"; shift 2 ;;
     --remote-host)      REMOTE_HOST="$2"; shift 2 ;;
     --omp-wait-policy)  OMP_WAIT_POLICY_OPT="${2,,}"; shift 2 ;;
+    --fresh-frame)      FRESH_FRAME_OPT="$(parse_bool "$2")"; shift 2 ;;
+    --low-priority-decode) LOW_PRIORITY_DECODE_OPT="$(parse_bool "$2")"; shift 2 ;;
+    --malloc-tunables)  MALLOC_TUNABLES_OPT="$(parse_bool "$2")"; shift 2 ;;
     --export)           EXPORT_RESULTS="$(parse_bool "$2")"; shift 2 ;;
     --monitoring)        RESOURCE_MONITORING="$(parse_bool "$2")"; shift 2 ;;
     --wifi-monitoring)   WIFI_MONITORING="$(parse_bool "$2")"; shift 2 ;;
@@ -159,6 +178,12 @@ case "${OMP_WAIT_POLICY_OPT}" in
   *) echo "[err] --omp-wait-policy must be 'active' or 'passive'" >&2; exit 2 ;;
 esac
 echo "[bench] OMP_WAIT_POLICY=${OMP_WAIT_POLICY:-default (unset)}"
+# Exported (or unset) explicitly either way, so a stray value in the calling
+# shell can't leak in -- model_benchmark_ros_v2.py records what it ran with.
+if [[ "${FRESH_FRAME_OPT}" -eq 1 ]]; then export FRESH_FRAME=true; else export FRESH_FRAME=false; fi
+if [[ "${LOW_PRIORITY_DECODE_OPT}" -eq 1 ]]; then export LOW_PRIORITY_DECODE=true; else export LOW_PRIORITY_DECODE=false; fi
+if [[ "${MALLOC_TUNABLES_OPT}" -eq 1 ]]; then export GLIBC_TUNABLES="${MALLOC_TUNABLES_VALUE}"; else unset GLIBC_TUNABLES; fi
+echo "[bench] FRESH_FRAME=${FRESH_FRAME} LOW_PRIORITY_DECODE=${LOW_PRIORITY_DECODE} GLIBC_TUNABLES=${GLIBC_TUNABLES:-default (unset)}"
 
 # ---- Validate backend ----
 case "${BACKEND}" in

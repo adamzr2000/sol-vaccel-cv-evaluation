@@ -68,6 +68,12 @@ ROS_SYSTEM_EDGE = ROS_VISION_SERVICE_DIR / "results" / "experiments" / "system-s
 
 RUN_TAG = "remote-gpu-tcp"
 VACCEL_RUN_SUFFIX = "vaccel-remote-sol_edge-asus-gpu"
+# vaccel run tag per category. Segmentation uses MAX_FPS=7 so vaccel runs at
+# the same achieved rate as ros2's --publish-max-fps 12 (7.1/s: native ~14.2fps
+# halved by the skip-based throttle) -- same link load and same window length,
+# so energy totals compare directly. Unthrottled vaccel seg runs ~9.5/s.
+VACCEL_RUN_TAG = {"semantic_segmentation": "e2eGSt-7fps"}
+VACCEL_RUN_TAG_DEFAULT = "e2eGSt"
 
 # model -> category, same classification inference_node.py itself uses. No longer
 # changes how pre/post or total/net_fw are computed (see module docstring) -- kept
@@ -174,6 +180,7 @@ def ros_contrib(model: str, category: str) -> dict:
         "edge_processed": pipeline["metadata"]["n_frames"],
         # None = run predates the field (not recorded), not "default".
         "omp_wait_policy": monitor["metadata"].get("camera_omp_wait_policy"),
+        "glibc_tunables": monitor["metadata"].get("camera_glibc_tunables"),
         # Same timestamp suffix as the monitor file for this run, since
         # energy_totals_*.json is written by the same bracketed window.
         # monitor's n_frames (matched-result count), as network_perturbation_test.py.
@@ -185,8 +192,9 @@ def ros_contrib(model: str, category: str) -> dict:
     }
 
 
-def vaccel_contrib(model: str) -> dict:
-    run_id = f"e2eGSt_{model}_{VACCEL_RUN_SUFFIX}"
+def vaccel_contrib(model: str, category: str) -> dict:
+    tag = VACCEL_RUN_TAG.get(category, VACCEL_RUN_TAG_DEFAULT)
+    run_id = f"{tag}_{model}_{VACCEL_RUN_SUFFIX}"
     d = load_json(VACCEL_ROBOT_DIR / run_id / "benchmark_summary.json")
 
     # inference: NOT this file's own inference_ms (that's RPC-inclusive, see module
@@ -217,12 +225,20 @@ def vaccel_contrib(model: str) -> dict:
         "processed_frames": d["stream"]["processed_frames"],
         "drop_ratio": d["stream"]["drop_ratio"],
         "omp_wait_policy": d["stream"].get("omp_wait_policy"),
+        "glibc_tunables": d["stream"].get("glibc_tunables"),
+        "fresh_frame": d["stream"].get("fresh_frame"),
+        "low_priority_decode": d["stream"].get("low_priority_decode"),
         "energy": energy_row(
             load_energy_totals(SV_SYSTEM_ROBOT / f"energy_totals_{run_id}.json"),
             load_energy_totals(SV_SYSTEM_EDGE / f"energy_totals_{run_id}.json"),
             d["num_samples"],
         ),
     }
+
+
+def _tun(v) -> str:
+    """GLIBC_TUNABLES as recorded -> short label (None = run predates the field)."""
+    return "unrecorded" if v is None else ("default" if v == "default" else "on")
 
 
 def print_header() -> None:
@@ -271,7 +287,7 @@ def main() -> None:
             ros = None
 
         try:
-            vaccel = vaccel_contrib(model)
+            vaccel = vaccel_contrib(model, category)
             print_row("vaccel-rpc", vaccel)
         except FileNotFoundError as e:
             print(f"vaccel-rpc   [missing] {e}")
@@ -281,13 +297,17 @@ def main() -> None:
             print(
                 f"  ros2:   n_matched={ros['n_matched']}  camera_published={ros['camera_published']}  "
                 f"edge_received={ros['edge_received']}  edge_processed={ros['edge_processed']}  "
-                f"omp_wait_policy={ros['omp_wait_policy'] or 'unrecorded'}"
+                f"omp_wait_policy={ros['omp_wait_policy'] or 'unrecorded'}  "
+                f"malloc_tunables={_tun(ros['glibc_tunables'])}"
             )
         if vaccel is not None:
             print(
                 f"  vaccel: num_samples={vaccel['num_samples']}  received={vaccel['received_frames']}  "
                 f"processed={vaccel['processed_frames']}  drop_ratio={vaccel['drop_ratio']:.4f}  "
-                f"omp_wait_policy={vaccel['omp_wait_policy'] or 'unrecorded'}"
+                f"omp_wait_policy={vaccel['omp_wait_policy'] or 'unrecorded'}  "
+                f"malloc_tunables={_tun(vaccel['glibc_tunables'])}  "
+                f"fresh_frame={'unrecorded' if vaccel['fresh_frame'] is None else vaccel['fresh_frame']}  "
+                f"low_priority_decode={'unrecorded' if vaccel['low_priority_decode'] is None else vaccel['low_priority_decode']}"
             )
         # Total energy over each run's window (not per-frame -- samples shown
         # alongside; every run is --samples 1000, so totals compare directly).
@@ -308,6 +328,10 @@ def main() -> None:
             elif len(policies) > 1:
                 print(f"  [warn] omp_wait_policy MISMATCH (ros2={ros['omp_wait_policy']}, "
                       f"vaccel={vaccel['omp_wait_policy']}) -- pre/post not comparable")
+            tunables = {ros["glibc_tunables"], vaccel["glibc_tunables"]}
+            if None not in tunables and len(tunables) > 1:
+                print(f"  [warn] malloc_tunables MISMATCH (ros2={_tun(ros['glibc_tunables'])}, "
+                      f"vaccel={_tun(vaccel['glibc_tunables'])}) -- pre not comparable")
 
 
 if __name__ == "__main__":

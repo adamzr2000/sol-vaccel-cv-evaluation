@@ -68,12 +68,13 @@ ROS_SYSTEM_EDGE = ROS_VISION_SERVICE_DIR / "results" / "experiments" / "system-s
 
 RUN_TAG = "remote-gpu-tcp"
 VACCEL_RUN_SUFFIX = "vaccel-remote-sol_edge-asus-gpu"
-# vaccel run tag per category. Segmentation uses MAX_FPS=7 so vaccel runs at
-# the same achieved rate as ros2's --publish-max-fps 12 (7.1/s: native ~14.2fps
-# halved by the skip-based throttle) -- same link load and same window length,
-# so energy totals compare directly. Unthrottled vaccel seg runs ~9.5/s.
-VACCEL_RUN_TAG = {"semantic_segmentation": "e2eGSt-7fps"}
-VACCEL_RUN_TAG_DEFAULT = "e2eGSt"
+# vaccel run tag per category. e2eGSt-opt = evaluate_models_ros_v2.sh with
+# --omp-wait-policy active --malloc-tunables true, plus --low-priority-decode
+# true (video) / --fresh-frame true (segmentation, no MAX_FPS: aligns to every
+# 2nd camera frame = 7.1/s, ros2's --publish-max-fps 12 rate). Earlier runs:
+# e2eGSt (classification/video) and e2eGSt-7fps (segmentation, MAX_FPS=7).
+VACCEL_RUN_TAG = {}
+VACCEL_RUN_TAG_DEFAULT = "e2eGSt-opt"
 
 # model -> category, same classification inference_node.py itself uses. No longer
 # changes how pre/post or total/net_fw are computed (see module docstring) -- kept

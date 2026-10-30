@@ -1,0 +1,20 @@
+{
+  "tag": "system-stats",
+  "run_idx": 1,
+  "mode": [
+    "cpu",
+    "gpu",
+    "net"
+  ],
+  "run_started_iso": "2026-10-30T07:52:18.717237+00:00",
+  "run_stopped_iso": "2026-10-30T07:53:30.162710+00:00",
+  "duration_sec": 71.445,
+  "cpu_energy_j_total": 278.365,
+  "gpu": [
+    {
+      "gpu_index": 0,
+      "gpu_name": "NVIDIA GeForce RTX 5080 Laptop GPU",
+      "gpu_energy_j_total": 1707.427
+    }
+  ]
+}

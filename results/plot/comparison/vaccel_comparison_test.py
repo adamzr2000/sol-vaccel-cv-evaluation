@@ -68,11 +68,12 @@ ROS_SYSTEM_EDGE = ROS_VISION_SERVICE_DIR / "results" / "experiments" / "system-s
 
 RUN_TAG = "remote-gpu-tcp"
 VACCEL_RUN_SUFFIX = "vaccel-remote-sol_edge-asus-gpu"
-# vaccel run tag per category. e2eGSt-opt = evaluate_models_ros_v2.sh with
-# --omp-wait-policy active --malloc-tunables true, plus --low-priority-decode
-# true (video) / --fresh-frame true (segmentation, no MAX_FPS: aligns to every
-# 2nd camera frame = 7.1/s, ros2's --publish-max-fps 12 rate). Earlier runs:
-# e2eGSt (classification/video) and e2eGSt-7fps (segmentation, MAX_FPS=7).
+# vaccel run tag per category -- e2eGSt-opt for all 12 models (no per-category
+# overrides). e2eGSt-opt = evaluate_models_ros_v2.sh with --omp-wait-policy
+# active --malloc-tunables true, plus --low-priority-decode true for video and
+# segmentation; segmentation also MAX_FPS=7 (= ros2's --publish-max-fps 12
+# rate, 7.1/s, so run length/energy compare directly). Earlier runs: e2eGSt
+# (classification/video) and e2eGSt-7fps (segmentation, MAX_FPS=7 only).
 VACCEL_RUN_TAG = {}
 VACCEL_RUN_TAG_DEFAULT = "e2eGSt-opt"
 

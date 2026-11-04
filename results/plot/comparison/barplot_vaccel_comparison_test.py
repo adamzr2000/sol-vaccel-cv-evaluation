@@ -60,9 +60,9 @@ ENERGY_COMPONENTS = [
     (4, "Edge GPU", 1.0, ".."),
 ]
 
-FONT_SCALE = 2.9
-VALUE_FONTSIZE = 19     # totals above bars (absolute -- 8 bars/panel, see _label_tops)
-LEGEND_FONTSIZE = 24
+FONT_SCALE = 3.5
+VALUE_FONTSIZE = 23     # totals above bars (absolute -- 8 bars/panel, see _label_tops)
+LEGEND_FONTSIZE = 29
 
 CATEGORY_PANELS = [
     ("image_classification", "Image classification"),
@@ -70,19 +70,21 @@ CATEGORY_PANELS = [
     ("semantic_segmentation", "Semantic segmentation"),
 ]
 
+# Family on line 1, variant on line 2 -- single-line names collide at this
+# font size with 4 model groups per panel.
 MODEL_LABEL = {
-    "resnet50": "ResNet-50",
-    "swin_t": "Swin-T",
-    "swin_s": "Swin-S",
-    "swin_v2_b": "Swin-V2-B",
-    "swin3d_s": "Swin3D-S",
-    "swin3d_b": "Swin3D-B",
-    "r3d_18": "R3D-18",
-    "r2plus1d_18": "R(2+1)D-18",
-    "deeplabv3_resnet50": "DLV3-R50",
-    "deeplabv3_resnet101": "DLV3-R101",
-    "fcn_resnet50": "FCN-R50",
-    "fcn_resnet101": "FCN-R101",
+    "resnet50": "ResNet\n50",
+    "swin_t": "Swin\nT",
+    "swin_s": "Swin\nS",
+    "swin_v2_b": "Swin-V2\nB",
+    "swin3d_s": "Swin3D\nS",
+    "swin3d_b": "Swin3D\nB",
+    "r3d_18": "R3D\n18",
+    "r2plus1d_18": "R(2+1)D\n18",
+    "deeplabv3_resnet50": "DLV3\nR50",
+    "deeplabv3_resnet101": "DLV3\nR101",
+    "fcn_resnet50": "FCN\nR50",
+    "fcn_resnet101": "FCN\nR101",
 }
 
 def load_results() -> dict:
@@ -202,7 +204,7 @@ def main() -> None:
     })
 
     results = load_results()
-    fig, axes = plt.subplots(2, 3, figsize=(30, 15))
+    fig, axes = plt.subplots(2, 3, figsize=(32, 17))
 
     for col, (category, title) in enumerate(CATEGORY_PANELS):
         models = [m for m, cat in MODELS if cat == category]

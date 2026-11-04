@@ -1,0 +1,110 @@
+{
+    "run_id": "isoGSt-opt_fcn_resnet50_vaccel-local-ptc_cpu",
+    "backend": "vaccel-local-ptc",
+    "host": "robot",
+    "model": "fcn_resnet50",
+    "model_type": "semantic_segmentation",
+    "device": "cpu",
+    "num_samples": 1000,
+    "time_window": {
+        "start": "2026-11-04T19:59:19.375974+00:00",
+        "stop": "2026-11-04T20:10:57.772568+00:00",
+        "duration_sec": 698.396594
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 1.46,
+        "inference_std": 0.02,
+        "system": 1.43,
+        "system_std": 0.02,
+        "processed": 1.43,
+        "camera_observed": 14.23
+    },
+    "stream": {
+        "avoid_duplicates": true,
+        "received_frames": 9944,
+        "processed_frames": 1000,
+        "drop_ratio": 0.899437,
+        "duplicates_skipped_loops": 4,
+        "inference_failed": 0,
+        "frame_source": "gstreamer_direct",
+        "serialize_capture": false,
+        "omp_wait_policy": "ACTIVE",
+        "fresh_frame": false,
+        "low_priority_decode": false,
+        "glibc_tunables": "glibc.malloc.mmap_threshold=33554432:glibc.malloc.trim_threshold=268435456"
+    },
+    "ros_data_age_ms": {
+        "mean": -1.0,
+        "std": 0.0,
+        "min": -1.0,
+        "max": -1.0,
+        "p25": -1.0,
+        "p50": -1.0,
+        "p75": -1.0,
+        "p90": -1.0,
+        "p95": -1.0,
+        "p99": -1.0
+    },
+    "preprocessing_ms": {
+        "mean": 6.0427,
+        "std": 1.2697,
+        "min": 5.2506,
+        "max": 14.2345,
+        "p25": 5.4972,
+        "p50": 5.5586,
+        "p75": 5.6655,
+        "p90": 8.0468,
+        "p95": 9.3231,
+        "p99": 10.5484
+    },
+    "inference_ms": {
+        "mean": 684.6301,
+        "std": 7.4996,
+        "min": 643.0037,
+        "max": 703.0601,
+        "p25": 681.8663,
+        "p50": 685.5779,
+        "p75": 689.2623,
+        "p90": 692.0117,
+        "p95": 693.8895,
+        "p99": 696.8706
+    },
+    "postprocessing_ms": {
+        "mean": 6.9324,
+        "std": 0.6126,
+        "min": 6.2848,
+        "max": 11.6082,
+        "p25": 6.6199,
+        "p50": 6.6833,
+        "p75": 7.054,
+        "p90": 7.323,
+        "p95": 8.0366,
+        "p99": 9.7432
+    },
+    "system_ms": {
+        "mean": 697.6107,
+        "std": 7.4556,
+        "min": 655.4079,
+        "max": 717.9214,
+        "p25": 695.2058,
+        "p50": 698.6565,
+        "p75": 701.944,
+        "p90": 704.701,
+        "p95": 706.543,
+        "p99": 710.0307
+    },
+    "confidence_score": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+    },
+    "max_samples": 1000
+}

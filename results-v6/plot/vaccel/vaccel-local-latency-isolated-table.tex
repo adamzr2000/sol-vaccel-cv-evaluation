@@ -1,0 +1,37 @@
+% Requires \usepackage{booktabs}, \usepackage{graphicx}, \usepackage[table]{xcolor}.
+% Fastest backend per model x deployment-target is bold + light-green cell fill.
+\begin{table*}[t]
+\centering
+\caption{Local inference latency (ms) across deployment targets and backends (median (p50); lower is better). Green cells indicate the fastest backend for each model and deployment target.}
+\label{tab:vaccel-local-latency-isolated}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrrrrrrrrr}
+\toprule
+ & \multicolumn{5}{c}{\textbf{Robot CPU}} & \multicolumn{5}{c}{\textbf{Edge CPU}} & \multicolumn{5}{c}{\textbf{Edge GPU}} \\
+\cmidrule(lr){2-6}\cmidrule(lr){7-11}\cmidrule(lr){12-16}
+\textbf{Model} & \textbf{JIT} & \textbf{AOTI} & \textbf{vAcc-AOTI} & \textbf{SOL} & \textbf{vAcc-SOL} & \textbf{JIT} & \textbf{AOTI} & \textbf{vAcc-AOTI} & \textbf{SOL} & \textbf{vAcc-SOL} & \textbf{JIT} & \textbf{AOTI} & \textbf{vAcc-AOTI} & \textbf{SOL} & \textbf{vAcc-SOL} \\
+\midrule
+\multicolumn{16}{l}{\textit{(a) Image Classification}} \\
+\midrule
+\textbf{SwinV2-B} & 712.73 & 698.07 & 722.71 & 484.62 & \cellcolor{green!15}\textbf{482.59} & 70.95 & 71.55 & 70.39 & 49.43 & \cellcolor{green!15}\textbf{48.92} & 7.15 & \cellcolor{green!15}\textbf{6.47} & 6.65 & 7.26 & 7.30 \\
+\textbf{Swin-T} & 173.66 & 172.50 & 175.83 & 123.31 & \cellcolor{green!15}\textbf{123.11} & 19.25 & 20.75 & 20.85 & \cellcolor{green!15}\textbf{15.01} & 15.27 & 3.38 & \cellcolor{green!15}\textbf{2.66} & 2.81 & 2.77 & 2.77 \\
+\textbf{Swin-S} & 346.33 & 343.07 & 350.46 & \cellcolor{green!15}\textbf{221.06} & 224.48 & 35.69 & 39.94 & 39.87 & \cellcolor{green!15}\textbf{26.07} & 26.38 & 5.02 & 4.79 & 4.91 & \cellcolor{green!15}\textbf{4.73} & 4.80 \\
+\textbf{ResNet-50} & 102.60 & \cellcolor{green!15}\textbf{99.18} & 114.46 & 112.73 & 115.83 & 15.15 & 14.47 & 14.94 & \cellcolor{green!15}\textbf{14.32} & 14.53 & 2.37 & \cellcolor{green!15}\textbf{1.95} & 2.07 & 3.43 & 3.49 \\
+\midrule
+\multicolumn{16}{l}{\textit{(b) Video Action Recognition}} \\
+\midrule
+\textbf{Swin3D-S} & 746.03 & 717.29 & 734.68 & 700.46 & \cellcolor{green!15}\textbf{682.21} & 98.23 & 96.31 & 95.39 & \cellcolor{green!15}\textbf{94.59} & 95.43 & \cellcolor{green!15}\textbf{5.58} & 8.54 & 8.70 & 7.95 & 7.96 \\
+\textbf{Swin3D-B} & 1155.51 & 1122.24 & 1150.15 & 1055.93 & \cellcolor{green!15}\textbf{1038.55} & 162.78 & 157.88 & \cellcolor{green!15}\textbf{157.15} & 164.54 & 167.21 & \cellcolor{green!15}\textbf{6.77} & 10.51 & 10.60 & 9.84 & 9.83 \\
+\textbf{R3D-18} & 649.46 & \cellcolor{green!15}\textbf{631.10} & 653.55 & 741.59 & 734.64 & \cellcolor{green!15}\textbf{80.20} & 80.82 & 81.87 & 83.41 & 83.20 & \cellcolor{green!15}\textbf{4.93} & 4.94 & 5.14 & 5.04 & 5.11 \\
+\textbf{R(2+1)D-18} & 770.86 & \cellcolor{green!15}\textbf{745.65} & 763.96 & 819.68 & 808.29 & \cellcolor{green!15}\textbf{112.59} & 113.67 & 113.37 & 117.19 & 120.77 & \cellcolor{green!15}\textbf{6.50} & 6.96 & 7.11 & 7.06 & 7.08 \\
+\midrule
+\multicolumn{16}{l}{\textit{(c) Semantic Segmentation}} \\
+\midrule
+\textbf{FCN-R101} & 995.70 & \cellcolor{green!15}\textbf{953.57} & 991.32 & 1048.18 & 1041.04 & 98.18 & 97.78 & \cellcolor{green!15}\textbf{97.56} & 102.70 & 103.48 & 6.73 & 6.50 & \cellcolor{green!15}\textbf{6.45} & 6.51 & 6.59 \\
+\textbf{FCN-R50} & 698.00 & \cellcolor{green!15}\textbf{691.11} & 696.49 & 760.84 & 751.69 & 66.26 & \cellcolor{green!15}\textbf{65.35} & 66.88 & 69.26 & 69.13 & \cellcolor{green!15}\textbf{4.24} & 4.57 & 4.56 & 4.72 & 4.78 \\
+\textbf{DLv3-R101} & 756.11 & \cellcolor{green!15}\textbf{721.34} & 746.47 & 812.00 & 810.36 & 88.47 & 88.70 & \cellcolor{green!15}\textbf{88.16} & 89.32 & 89.63 & 7.66 & 7.31 & 7.46 & \cellcolor{green!15}\textbf{7.20} & 7.21 \\
+\textbf{DLv3-R50} & 473.54 & \cellcolor{green!15}\textbf{453.16} & 471.91 & 524.64 & 528.12 & 55.00 & \cellcolor{green!15}\textbf{54.23} & 54.71 & 57.48 & 57.48 & \cellcolor{green!15}\textbf{4.57} & 4.82 & 5.81 & 5.24 & 5.29 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}

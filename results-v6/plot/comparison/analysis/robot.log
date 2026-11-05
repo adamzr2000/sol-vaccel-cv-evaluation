@@ -1,0 +1,53 @@
+root@robot:/src# cd /src && OMP_WAIT_POLICY=ACTIVE MODEL=r3d_18 BACKEND=vaccel-remote-sol DEVICE=gpu \
+  OMP_NUM_THREADS=$(nproc) OMP_THREAD_LIMIT=$(nproc) python3 vaccel_loop_probe.py
+   [Adapter] Loading SOL model from models/r3d_18_sol/lib_gpu/vaccel...
+   [SOL] GPU mode | SOL_RUN_MODE=2
+   [SOL] Option 2 selected: using run(*args) each call
+   [SOL] (Mode 2) Running GPU Optimization (Level 2)...
+torch=2.9.1+cu128 threads=4 model=r3d_18_sol median infer()=42.8ms freq_source=sysfs
+L0 back-to-back, same frames               p50=  53.48ms p90=  55.83ms min=  52.36ms  cpu_mhz=  2900
+L1 back-to-back, fresh copies              p50=  52.68ms p90=  53.35ms min=  52.19ms  cpu_mhz=  2900
+L2 same frames, sleep 43ms between         p50=  52.87ms p90=  53.21ms min=  52.38ms  cpu_mhz=  2900
+L3 same frames, infer() between            p50=  53.13ms p90=  53.37ms min=  52.67ms  cpu_mhz=  2900
+L4 fresh copies + infer() + postprocess    p50=  53.03ms p90=  53.86ms min=  52.38ms  cpu_mhz=  2900
+
+netcom@robot:~/sol-vaccel-cv-evaluation$ cat /sys/devices/system/cpu/cpu0/cpufreq/{scaling_driver,scaling_governor,energy_performance_preference}
+intel_pstate
+powersave
+balance_performance
+netcom@robot:~/sol-vaccel-cv-evaluation$ sudo cpupower frequency-set -g performance      # revert: -g <original governor shown above>
+Setting cpu: 0
+Setting cpu: 1
+Setting cpu: 2
+Setting cpu: 3
+netcom@robot:~/sol-vaccel-cv-evaluation$ sudo cpupower idle-set -D 2                     # limit deep C-states; revert: sudo cpupower idle-set -E
+Idlestate 1 disabled on CPU 0
+Idlestate 2 disabled on CPU 0
+Idlestate 3 disabled on CPU 0
+Idlestate 4 disabled on CPU 0
+Idlestate 1 disabled on CPU 1
+Idlestate 2 disabled on CPU 1
+Idlestate 3 disabled on CPU 1
+Idlestate 4 disabled on CPU 1
+Idlestate 1 disabled on CPU 2
+Idlestate 2 disabled on CPU 2
+Idlestate 3 disabled on CPU 2
+Idlestate 4 disabled on CPU 2
+Idlestate 1 disabled on CPU 3
+Idlestate 2 disabled on CPU 3
+Idlestate 3 disabled on CPU 3
+Idlestate 4 disabled on CPU 3
+netcom@robot:~/sol-vaccel-cv-evaluation$ ./run_ros.sh cpu --domain-id 10
+root@robot:/src# cd /src && OMP_WAIT_POLICY=ACTIVE MODEL=r3d_18 BACKEND=vaccel-remote-sol DEVICE=gpu \
+  OMP_NUM_THREADS=$(nproc) OMP_THREAD_LIMIT=$(nproc) python3 vaccel_loop_probe.py
+   [Adapter] Loading SOL model from models/r3d_18_sol/lib_gpu/vaccel...
+   [SOL] GPU mode | SOL_RUN_MODE=2
+   [SOL] Option 2 selected: using run(*args) each call
+   [SOL] (Mode 2) Running GPU Optimization (Level 2)...
+torch=2.9.1+cu128 threads=4 model=r3d_18_sol median infer()=41.8ms freq_source=sysfs
+L0 back-to-back, same frames               p50=  52.84ms p90=  55.34ms min=  52.54ms  cpu_mhz=  2900
+L1 back-to-back, fresh copies              p50=  52.90ms p90=  53.64ms min=  52.43ms  cpu_mhz=  2900
+L2 same frames, sleep 42ms between         p50=  52.74ms p90=  53.04ms min=  52.44ms  cpu_mhz=  2900
+L3 same frames, infer() between            p50=  53.11ms p90=  53.36ms min=  52.71ms  cpu_mhz=  2900
+L4 fresh copies + infer() + postprocess    p50=  53.26ms p90=  54.03ms min=  52.76ms  cpu_mhz=  2900
+root@robot:/src#

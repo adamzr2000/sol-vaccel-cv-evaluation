@@ -1,0 +1,255 @@
+#!/usr/bin/env python3
+"""
+vaccel_ros_comparison_barplot.py
+
+Plots the same numbers vaccel_ros_comparison.py prints to the console --
+ros2 (DDS/RTPS, sol backend; one bar per transport in ROS_RUN_TAGS: Fast DDS
+TCP and CycloneDDS UDP) vs vaccel-remote-sol, remote GPU (edge-asus), 1000
+inputs per run -- as one figure, 2 rows x 3 columns:
+
+  row 1: latency per input (ms), stacked Inference / Pre/Post-processing /
+         Network + Framework Overhead, with asymmetric IQR error bars on the
+         total (lower = p50-p25, upper = p75-p50).
+  row 2: total energy (kJ), stacked Robot CPU / Edge CPU / Edge GPU. No error
+         bars -- energy_totals.json is a single counter total per run.
+  columns: image classification / video classification / semantic segmentation,
+           3 bars per model (ros2 TCP, ros2 UDP, vaccel). A run (or a run's
+           energy files) that doesn't exist leaves its bar out, with a
+           console warning -- the rest of the figure still renders.
+
+All values come straight from vaccel_ros_comparison.py's ros_contrib() /
+vaccel_contrib() (same run selection, same p50s, same energy files), so the
+plot can never disagree with the console. Stack heights sum exactly to the
+console's total: net/fw is the residual total - inference - pre/post.
+
+Color = framework identity, matching barplot_network_perturbation.py /
+barplot_e2e_latency.py ("blue = vAccel, orange = ROS2"), in muted pgfplots /
+ColorBrewer Dark2-style hues: Fast DDS TCP burnt orange, CycloneDDS UDP teal,
+vAccel deep navy -- colour-blind safe and print-friendly. The stacked component
+is a second encoding layered on top as alpha of the same hue (as
+barplot_network_perturbation.py's energy stack) for latency and as hatch
+pattern for energy.
+
+"""
+from __future__ import annotations
+
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+
+from vaccel_ros_comparison import MODELS, ROS_RUN_TAGS, ros_contrib, vaccel_contrib
+
+OUTPUT_FILE = "vaccel-ros-comparison-barplot.pdf"
+
+# Keys are vaccel_ros_comparison.ROS_RUN_TAGS labels + "vAccel"; left -> right
+# within each model group.
+FRAMEWORKS = [label for label, _ in ROS_RUN_TAGS] + ["vAccel"]
+# Muted, print-friendly hues in the style of pgfplots' ColorBrewer Dark2 set
+# (colour-blind safe): burnt orange / teal / deep navy.
+FRAMEWORK_COLOR = {"ros2-fastdds-tcp": "#d95f02", "ros2-cyclonedds-udp": "#1b9e77", "vAccel": "#2c5d97"}
+FRAMEWORK_LABEL = {"ros2-fastdds-tcp": "ROS2 Fast DDS (TCP)",
+                   "ros2-cyclonedds-udp": "ROS2 CycloneDDS (UDP)", "vAccel": "vAccel"}
+BAR_WIDTH = 0.27
+
+# Stacking order bottom -> top: (key, label, alpha, hatch). Latency segments
+# are told apart by alpha of the framework hue, energy segments by hatch
+# pattern (full hue) -- a different encoding per row, so the two stacks
+# can't be confused for each other.
+LATENCY_COMPONENTS = [
+    ("inference_p50", "Inference", 1.0, None),
+    ("prepost_p50", "Pre/Post-processing", 0.6, None),
+    ("net_fw_p50", "Network + Framework Overhead", 0.25, None),
+]
+# Keys are indices into vaccel_comparison_test.energy_row()'s
+# (samples, duration_s, robot_cpu_J, edge_cpu_J, edge_gpu_J) tuple.
+ENERGY_COMPONENTS = [
+    (2, "Robot CPU", 1.0, None),
+    (3, "Edge CPU", 1.0, "///"),
+    (4, "Edge GPU", 1.0, "xx"),
+]
+
+FONT_SCALE = 4.3
+VALUE_FONTSIZE = 33     # totals above bars (absolute -- 12 bars/panel, see _label_tops)
+LEGEND_FONTSIZE = 35
+
+CATEGORY_PANELS = [
+    ("image_classification", "Image classification"),
+    ("video_classification", "Video classification"),
+    ("semantic_segmentation", "Semantic segmentation"),
+]
+
+# Family on line 1, variant on line 2 -- single-line names collide at this
+# font size with 4 model groups per panel.
+MODEL_LABEL = {
+    "resnet50": "ResNet\n50",
+    "swin_t": "Swin\nT",
+    "swin_s": "Swin\nS",
+    "swin_v2_b": "Swin-V2\nB",
+    "swin3d_s": "Swin3D\nS",
+    "swin3d_b": "Swin3D\nB",
+    "r3d_18": "R3D\n18",
+    "r2plus1d_18": "R(2+1)D\n18",
+    "deeplabv3_resnet50": "DLV3\nR50",
+    "deeplabv3_resnet101": "DLV3\nR101",
+    "fcn_resnet50": "FCN\nR50",
+    "fcn_resnet101": "FCN\nR101",
+}
+
+def load_results() -> dict:
+    """{model: {framework: contrib | None}} for every FRAMEWORKS key -- None
+    when that run is missing (bar simply not drawn, with a console warning)."""
+    results = {}
+    for model, category in MODELS:
+        loaders = [(label, lambda tag=tag: ros_contrib(model, category, tag)) for label, tag in ROS_RUN_TAGS]
+        loaders.append(("vAccel", lambda: vaccel_contrib(model, category)))
+        entry = {}
+        for fw, fn in loaders:
+            try:
+                entry[fw] = fn()
+            except FileNotFoundError as e:
+                print(f"[warn] {fw} {model}: missing, bar not drawn ({e})")
+                entry[fw] = None
+        results[model] = entry
+    return results
+
+
+def _bar_x(i: int, j: int) -> float:
+    """Centre of framework j's bar within model group i (groups centred on i)."""
+    return i + (j - (len(FRAMEWORKS) - 1) / 2) * BAR_WIDTH
+
+
+def _style_axes(ax, models: list[str], title: str | None, ylabel: str | None) -> None:
+    ax.set_xticks(np.arange(len(models)))
+    ax.set_xticklabels([MODEL_LABEL.get(m, m) for m in models])
+    if title:
+        ax.set_title(title)
+    if ylabel:
+        ax.set_ylabel(ylabel)
+    ax.set_axisbelow(True)
+    ax.grid(axis="y", linestyle="-", linewidth=0.6, alpha=0.35)
+    for side in ("top", "right", "bottom", "left"):
+        ax.spines[side].set_color("black")
+        ax.spines[side].set_linewidth(1.0)
+
+
+def _stack(ax, x: float, values: list[float], color: str, components: list[tuple]) -> float:
+    bottom = 0.0
+    for v, (_, _, alpha, hatch) in zip(values, components):
+        ax.bar(x, v, width=BAR_WIDTH, bottom=bottom, facecolor=color, alpha=alpha, hatch=hatch,
+               edgecolor="black", linewidth=0.8, zorder=3)
+        bottom += v
+    return bottom
+
+
+def draw_latency_panel(ax, models: list[str], results: dict, title: str, ylabel: str | None) -> None:
+    tops = []
+    labels = []
+    for i, model in enumerate(models):
+        for j, fw in enumerate(FRAMEWORKS):
+            c = results[model][fw]
+            if c is None:
+                continue
+            x = _bar_x(i, j)
+            total = _stack(ax, x, [c[comp[0]] for comp in LATENCY_COMPONENTS],
+                           FRAMEWORK_COLOR[fw], LATENCY_COMPONENTS)
+            # IQR of the total, around the stack top (== console's total p50).
+            lo, hi = total - c["p25"], c["p75"] - total
+            ax.errorbar(x, total, yerr=[[max(lo, 0.0)], [max(hi, 0.0)]], fmt="none", ecolor="black",
+                        elinewidth=1.2, capsize=4, capthick=1.2, zorder=10)
+            tops.append(total + max(hi, 0.0))
+            labels.append((x, total + max(hi, 0.0), f"{total:.0f}"))
+    _label_tops(ax, tops, labels)
+    _style_axes(ax, models, title, ylabel)
+
+
+def draw_energy_panel(ax, models: list[str], results: dict, ylabel: str | None) -> None:
+    tops = []
+    labels = []
+    for i, model in enumerate(models):
+        for j, fw in enumerate(FRAMEWORKS):
+            c = results[model][fw]
+            if c is None:
+                continue
+            e = c["energy"]
+            parts = [e[comp[0]] for comp in ENERGY_COMPONENTS]
+            if None in parts:
+                print(f"[warn] {fw} {model}: incomplete energy_totals, energy bar not drawn")
+                continue
+            x = _bar_x(i, j)
+            total = _stack(ax, x, [p / 1000.0 for p in parts], FRAMEWORK_COLOR[fw], ENERGY_COMPONENTS)
+            tops.append(total)
+            labels.append((x, total, f"{total:.2f}"))
+    _label_tops(ax, tops, labels)
+    _style_axes(ax, models, None, ylabel)
+
+
+def _label_tops(ax, tops: list[float], labels: list[tuple]) -> None:
+    """Total value above each bar, rotated 90 deg (12 bars per panel sit close
+    together -- upright labels would collide), offset/headroom scaled to the
+    panel's own range since panels differ ~4x in scale."""
+    if not tops:
+        return
+    data_max = max(tops)
+    offset = data_max * 0.03
+    for x, y, text in labels:
+        ax.text(x, y + offset, text, ha="center", va="bottom", rotation=90, fontsize=VALUE_FONTSIZE, zorder=11)
+    ax.set_ylim(0, data_max * 1.45)
+
+
+def _legend(fig, handles: list, title: str, x: float, y: float, ncol: int | None = None):
+    leg = fig.legend(handles=handles, title=title, loc="upper center", ncol=ncol or len(handles),
+                     bbox_to_anchor=(x, y), frameon=True, edgecolor="black", fancybox=False,
+                     fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_FONTSIZE,
+                     handlelength=1.6, columnspacing=1.2, borderpad=0.35)
+    leg.get_title().set_multialignment("center")  # two-line titles centred, not left-aligned
+    return leg
+
+
+def _component_handles(components: list[tuple]) -> list:
+    # Gray swatches -- the fill hue is framework identity (framework legend);
+    # these only encode which stacked segment is which (alpha or hatch).
+    # Listed top segment first, so the 1-column legend reads in the same
+    # order as the stack it describes.
+    return [mpatches.Patch(facecolor="dimgray", edgecolor="black", alpha=alpha, hatch=hatch, label=label)
+            for _, label, alpha, hatch in reversed(components)]
+
+
+def main() -> None:
+    sns.set_theme(context="paper", style="ticks", font_scale=FONT_SCALE)
+    plt.rcParams.update({
+        "font.family": "serif", "pdf.fonttype": 42, "ps.fonttype": 42,
+        "savefig.bbox": "tight", "savefig.pad_inches": 0.05, "hatch.linewidth": 1.0,
+    })
+
+    results = load_results()
+    fig, axes = plt.subplots(2, 3, figsize=(36, 20))
+
+    for col, (category, title) in enumerate(CATEGORY_PANELS):
+        models = [m for m, cat in MODELS if cat == category]
+        draw_latency_panel(axes[0, col], models, results, title,
+                           "Median latency\nper input (ms)" if col == 0 else None)
+        draw_energy_panel(axes[1, col], models, results,
+                          "Total energy (kJ)" if col == 0 else None)
+
+    fw_handles = [mpatches.Patch(facecolor=FRAMEWORK_COLOR[fw], edgecolor="black", label=FRAMEWORK_LABEL[fw])
+                  for fw in FRAMEWORKS]
+    sup = fig.suptitle("Remote GPU inference using SOL\n"
+                       "ROS2 (Fast DDS TCP / CycloneDDS UDP) vs vAccel, 1000 inputs per run", y=1.065)
+    # One band under the title: latency components (1 column) on the left,
+    # framework colours (1 row) in the centre, energy components (1 column) on
+    # the right.
+    legs = (
+        _legend(fig, _component_handles(LATENCY_COMPONENTS), "Latency (top row)", 0.13, 0.965, ncol=1),
+        _legend(fig, fw_handles, None, 0.54, 0.965),
+        _legend(fig, _component_handles(ENERGY_COMPONENTS), "Energy (bottom row)", 0.89, 0.965, ncol=1),
+    )
+
+    fig.tight_layout(rect=(0, 0, 1, 0.9), h_pad=1.2, w_pad=1.0)
+    extra = (*legs, sup)
+    fig.savefig(OUTPUT_FILE, bbox_extra_artists=extra)
+    print(f"[OK] Saved plot to: {OUTPUT_FILE}")
+
+
+if __name__ == "__main__":
+    main()

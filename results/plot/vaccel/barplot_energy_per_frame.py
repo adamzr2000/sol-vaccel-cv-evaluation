@@ -12,7 +12,7 @@ power, scaled to this run's own duration_sec), divided by num_processed_frames
 (from the benchmark JSON). No per-run std is available for this figure -
 it's a single exact total, not a distribution.
 
-Local robot rows come from the iso run; remote rows from the e2e run.
+Local robot rows come from model_stats.local_run_tag; remote rows from run_tag (plot_config.json).
 Produces: energy-per-frame.pdf
 """
 
@@ -31,7 +31,7 @@ import seaborn as sns
 from plot_config import (
     get_path, load_config, get_model_type_order, get_model_display_name,
     apply_seg_remote_override, seg_override_enabled, is_seg_remote,
-    get_seg_remote_model_summary_path,
+    get_seg_remote_model_summary_path, get_model_summary_path, get_model_stats_sources,
 )
 
 # --- CONFIGURATION ---
@@ -39,12 +39,12 @@ _HERE = Path(__file__).parent
 cfg = load_config()
 
 CPU_FILE     = str(get_path("system_cpu_summary"))   # e2e CPU (edge-asus + robot remote)
-ISO_CPU_FILE = str(_HERE / "../../experiments/system-stats/summary-vaccel/iso_overall_cpu_stats_wifi.csv")
+ISO_CPU_FILE = str(get_path("system_cpu_local_summary"))  # robot local rows (model_stats.local_run_tag)
 GPU_FILE     = str(get_path("system_gpu_summary"))   # e2e GPU
 
 # Benchmark JSONs supplying num_processed_frames per run
 E2E_PERF_FILE = str(get_path("model_summary"))       # e2e_benchmark_summary.json
-ISO_PERF_FILE = str(_HERE / "../../experiments/model-stats/summary-vaccel/iso_benchmark_summary.json")
+ISO_PERF_FILE = str(get_model_summary_path(get_model_stats_sources()["local_run_tag"]))  # same local runs
 
 IDLE_SUMMARY_FILE = str(_HERE / "../../experiments/system-stats/idle/summary.csv")
 

@@ -16,11 +16,13 @@ def load_config() -> Dict[str, Any]:
     if not run_tag or not link:
         raise SystemExit("plot_config.json must define non-empty 'run_tag' and 'link'")
 
-    # Expand templated paths
+    # Expand templated paths. {local_run_tag} = model_stats.local_run_tag, so
+    # local robot rows read system stats from the same runs as model stats.
+    local_run_tag = str((cfg.get("model_stats", {}) or {}).get("local_run_tag", "iso")).strip()
     paths = cfg.get("paths", {})
     expanded = {}
     for k, v in paths.items():
-        expanded[k] = str(v).format(run_tag=run_tag, link=link)
+        expanded[k] = str(v).format(run_tag=run_tag, link=link, local_run_tag=local_run_tag)
 
     cfg["paths_expanded"] = expanded
     return cfg
@@ -42,6 +44,44 @@ def get_model_type_order() -> list[str]:
         )
 
     return [str(x).strip() for x in order]
+
+
+def get_model_stats_sources() -> Dict[str, str]:
+    """
+    Which {tag}_benchmark_summary.json each part of the model-stats plots reads
+    (plot_config.json "model_stats"):
+      local_run_tag          -> Local CPU rows   (robot, vaccel-local-*)
+      remote_run_tag         -> Remote CPU/GPU rows (robot, vaccel-remote-*);
+                                defaults to run_tag
+      edge_inference_run_tag -> pure edge inference that replaces the
+                                RPC-inclusive inference_ms of remote rows,
+                                only runs on edge_inference_host
+    """
+    cfg = load_config()
+    ms = cfg.get("model_stats", {}) or {}
+    return {
+        "local_run_tag": str(ms.get("local_run_tag", "iso")).strip(),
+        "remote_run_tag": str(ms.get("remote_run_tag", cfg.get("run_tag", ""))).strip(),
+        "edge_inference_run_tag": str(ms.get("edge_inference_run_tag", "iso")).strip(),
+        "edge_inference_host": str(ms.get("edge_inference_host", cfg.get("remote_host", "edge-asus"))).strip().lower(),
+    }
+
+
+def get_model_summary_path(run_tag: str) -> Path:
+    cfg = load_config()
+    summary_dir = (cfg.get("model_stats", {}) or {}).get(
+        "summary_dir", "../../experiments/model-stats/summary-vaccel")
+    return (Path(__file__).parent / summary_dir / f"{run_tag}_benchmark_summary.json").resolve()
+
+
+def load_model_runs(run_tag: str) -> list:
+    """runs list of {run_tag}_benchmark_summary.json ([] + warning if missing)."""
+    path = get_model_summary_path(run_tag)
+    if not path.exists():
+        print(f"[WARNING] model summary not found: {path}")
+        return []
+    with path.open("r", encoding="utf-8") as f:
+        return json.load(f).get("runs", [])
 
 
 def get_seg_remote_run_tag() -> str:

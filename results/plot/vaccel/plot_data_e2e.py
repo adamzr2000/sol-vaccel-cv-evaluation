@@ -10,24 +10,22 @@ time is derived and all three plots stay consistent.
 
 See plot_style.py for the visual side (colors/legend/grid/font).
 """
-from pathlib import Path
-import json
 
 import numpy as np
 
 from plot_config import (
-    get_path, load_config, get_model_type_order,
+    get_model_type_order, get_model_stats_sources, load_model_runs,
     seg_override_enabled, is_seg_remote, get_seg_remote_run_tag,
 )
 
-_HERE = Path(__file__).parent
-INPUT_FILE = str(get_path("model_summary"))
-# iso run: edge-asus vaccel-remote-{ptc,sol} inference_ms used as pure-inference baseline for remote breakdown
-REMOTE_INFERENCE_FILE = _HERE / "../../experiments/model-stats/summary-vaccel/iso_benchmark_summary.json"
+# Which run tag feeds which rows -- plot_config.json "model_stats":
+#   local_run_tag          -> Local CPU variants  (robot, vaccel-local-*)
+#   remote_run_tag         -> Remote CPU/GPU variants (robot, vaccel-remote-*)
+#   edge_inference_run_tag -> pure edge inference for remote rows (runs on
+#                             edge_inference_host only, vaccel-local-*)
+SOURCES = get_model_stats_sources()
 
 METRIC = "median"  # "median" (p50) | "mean" — controls FPS derivation and latency bars
-LOCAL_ROBOT_MODE = "vaccel-rpc"  # "legacy"     -> ptc/sol backends, iros2 run tag
-                                 # "vaccel-rpc" -> vaccel-remote-*/remote_host=robot (loopback), iso run tag
 
 MODEL_TYPE_ORDER = get_model_type_order()
 
@@ -43,22 +41,16 @@ CAT_SEG = ["deeplabv3_resnet50", "deeplabv3_resnet101", "fcn_resnet50", "fcn_res
 CATEGORIES = [CAT_IMAGE, CAT_VIDEO, CAT_SEG]
 
 # --- Variant definitions (which run matches which deployment scenario) ---
-if LOCAL_ROBOT_MODE == "legacy":
-    _local_defs = [
-        {"label": "Local CPU (vAccel + Torch)", "match": {"host": "robot", "backend": "ptc", "device": "cpu"}},
-        {"label": "Local CPU (vAccSOL)", "match": {"host": "robot", "backend": "sol", "device": "cpu"}},
-    ]
-else:  # vaccel-rpc: robot local via vaccel-local-* (iso run tag, no remote_host)
-    _local_defs = [
-        {"label": "Local CPU (vAccel + Torch)", "match": {"host": "robot", "backend": "vaccel-local-ptc", "device": "cpu"}},
-        {"label": "Local CPU (vAccSOL)", "match": {"host": "robot", "backend": "vaccel-local-sol", "device": "cpu"}},
-    ]
+_local_defs = [
+    {"label": "Local CPU (vAccel + Torch)", "match": {"host": "robot", "backend": "vaccel-local-ptc", "device": "cpu"}},
+    {"label": "Local CPU (vAccSOL)", "match": {"host": "robot", "backend": "vaccel-local-sol", "device": "cpu"}},
+]
 
 VARIANT_DEFINITIONS = _local_defs + [
-    {"label": "Remote CPU (vAccel + Torch)", "match": {"host": "robot", "backend": "vaccel-remote-ptc", "device": "cpu", "remote_host": "edge-asus"}},
-    {"label": "Remote CPU (vAccSOL)", "match": {"host": "robot", "backend": "vaccel-remote-sol", "device": "cpu", "remote_host": "edge-asus"}},
-    {"label": "Remote GPU (vAccel + Torch)", "match": {"host": "robot", "backend": "vaccel-remote-ptc", "device": "gpu", "remote_host": "edge-asus"}},
-    {"label": "Remote GPU (vAccSOL)", "match": {"host": "robot", "backend": "vaccel-remote-sol", "device": "gpu", "remote_host": "edge-asus"}},
+    {"label": "Remote CPU (vAccel + Torch)", "match": {"host": "robot", "backend": "vaccel-remote-ptc", "device": "cpu", "remote_host": SOURCES["edge_inference_host"]}},
+    {"label": "Remote CPU (vAccSOL)", "match": {"host": "robot", "backend": "vaccel-remote-sol", "device": "cpu", "remote_host": SOURCES["edge_inference_host"]}},
+    {"label": "Remote GPU (vAccel + Torch)", "match": {"host": "robot", "backend": "vaccel-remote-ptc", "device": "gpu", "remote_host": SOURCES["edge_inference_host"]}},
+    {"label": "Remote GPU (vAccSOL)", "match": {"host": "robot", "backend": "vaccel-remote-sol", "device": "gpu", "remote_host": SOURCES["edge_inference_host"]}},
 ]
 
 
@@ -103,28 +95,19 @@ def classify_variant(run: dict):
     return None
 
 
-def get_remote_pure_inference(remote_data, model_name, variant_label):
-    """Return inference_ms[METRIC] for pure edge inference (no network).
-
-    Aligned with LOCAL_ROBOT_MODE:
-      legacy     -> ptc / sol backends (direct, no vAccel RPC layer)
-      vaccel-rpc -> vaccel-remote-ptc / vaccel-remote-sol edge-asus loopback
-    """
+def get_remote_pure_inference(edge_runs, model_name, variant_label):
+    """Return inference_ms[METRIC] for pure edge inference (no network): the
+    matching vaccel-local-{ptc,sol} run on edge_inference_host / same device,
+    from edge_inference_run_tag (0.0 if absent)."""
     is_gpu = "gpu" in variant_label.lower()
     is_sol = "sol" in variant_label.lower()
 
-    target_host = "edge-asus"
+    target_host = SOURCES["edge_inference_host"]
     target_device = "gpu" if is_gpu else "cpu"
+    target_backend = "vaccel-local-sol" if is_sol else "vaccel-local-ptc"
     stat_key = "p50" if METRIC == "median" else "mean"
 
-    if LOCAL_ROBOT_MODE == "legacy":
-        target_backend = "sol" if is_sol else "ptc"
-        match_remote_host = None  # legacy runs have no remote_host field
-    else:  # vaccel-rpc
-        target_backend = "vaccel-local-sol" if is_sol else "vaccel-local-ptc"
-        match_remote_host = None  # vaccel-local-* runs have no remote_host field
-
-    for r in remote_data:
+    for r in edge_runs:
         if base_model_name(r.get("model", "")) != model_name:
             continue
         if r.get("host", "").lower() != target_host:
@@ -133,9 +116,6 @@ def get_remote_pure_inference(remote_data, model_name, variant_label):
             continue
         if r.get("backend", "").lower() != target_backend:
             continue
-        if match_remote_host is not None:
-            if r.get("remote_host", "").lower() != match_remote_host:
-                continue
         inf = r.get("inference_ms", {}) or {}
         return float(inf.get(stat_key, 0.0))
 
@@ -213,50 +193,34 @@ def extract_rows(runs, remote_runs):
 
 
 def load_rows():
-    """Reads the configured summary JSONs and returns extract_rows(...) output."""
-    path = Path(INPUT_FILE).resolve()
-    if not path.exists():
-        raise SystemExit(f"JSON not found: {path}")
-
-    remote_path = REMOTE_INFERENCE_FILE.resolve()
-    remote_data = []
-    if remote_path.exists():
-        with remote_path.open("r") as f:
-            remote_data = json.load(f).get("runs", [])
-    else:
-        print(f"[WARNING] Remote inference file missing: {REMOTE_INFERENCE_FILE}")
-
-    with path.open("r") as f:
-        data = json.load(f)
-
-    runs = data.get("runs", [])
-    if not isinstance(runs, list) or not runs:
-        raise SystemExit("Input JSON does not contain a non-empty 'runs' list.")
+    """Reads the model summaries named in plot_config.json "model_stats" and
+    returns extract_rows(...) output. Each source only contributes its own
+    variants (local file -> Local CPU, remote file -> Remote *), so a run of
+    the other kind that happens to sit in the same file can't override them."""
+    local_runs = [r for r in load_model_runs(SOURCES["local_run_tag"])
+                  if (classify_variant(r) or "").startswith("Local")]
+    remote_runs = [r for r in load_model_runs(SOURCES["remote_run_tag"])
+                   if (classify_variant(r) or "").startswith("Remote")]
+    edge_runs = [r for r in load_model_runs(SOURCES["edge_inference_run_tag"])
+                 if str(r.get("host", "")).lower() == SOURCES["edge_inference_host"]]
 
     # Segmentation models' remote rows come from a separate run tag (e.g. a
-    # 12fps-capped rerun) instead of the base run above - see
-    # plot_config.json's seg_remote_run_tag / seg_models.
+    # 12fps-capped rerun) instead of remote_run_tag - see plot_config.json's
+    # seg_remote_run_tag / seg_models.
     if seg_override_enabled():
-        runs = [r for r in runs if not is_seg_remote(r.get("model", ""), r.get("backend", ""))]
-        seg_tag = get_seg_remote_run_tag()
-        seg_path = _HERE / f"../../experiments/model-stats/summary-vaccel/{seg_tag}_benchmark_summary.json"
-        if seg_path.exists():
-            with seg_path.open() as f:
-                seg_runs = json.load(f).get("runs", [])
-            runs = runs + [r for r in seg_runs if is_seg_remote(r.get("model", ""), r.get("backend", ""))]
-        else:
-            print(f"[WARNING] seg_remote_run_tag={seg_tag!r} file not found: {seg_path}")
+        remote_runs = [r for r in remote_runs if not is_seg_remote(r.get("model", ""), r.get("backend", ""))]
+        remote_runs += [r for r in load_model_runs(get_seg_remote_run_tag())
+                        if is_seg_remote(r.get("model", ""), r.get("backend", ""))
+                        and (classify_variant(r) or "").startswith("Remote")]
 
-    # In vaccel-rpc local mode, robot loopback data lives in iso (not iros2)
-    if LOCAL_ROBOT_MODE == "vaccel-rpc":
-        iso_path = REMOTE_INFERENCE_FILE.resolve()
-        if iso_path.exists():
-            with iso_path.open() as f:
-                runs = runs + json.load(f).get("runs", [])
-        else:
-            print(f"[WARNING] iso file not found for vaccel-rpc local mode: {iso_path}")
+    runs = local_runs + remote_runs
+    if not runs:
+        raise SystemExit(f"No local or remote runs found for model_stats sources: {SOURCES}")
+    print(f"[model-stats] local={SOURCES['local_run_tag']} ({len(local_runs)} runs), "
+          f"remote={SOURCES['remote_run_tag']} ({len(remote_runs)} runs), "
+          f"edge inference={SOURCES['edge_inference_run_tag']}@{SOURCES['edge_inference_host']} ({len(edge_runs)} runs)")
 
-    return extract_rows(runs, remote_data)
+    return extract_rows(runs, edge_runs)
 
 
 def filter_to_known_models(rows):

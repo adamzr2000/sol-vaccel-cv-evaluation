@@ -1,0 +1,58 @@
+--- src/torch.cpp.orig	2026-11-20 18:01:05.783691772 +0100
++++ src/torch.cpp	2026-11-20 18:01:05.800881908 +0100
+@@ -15,6 +15,7 @@
+ #include <new>
+ #include <stdexcept>
+ #include <torch/torch.h>
++#include <torch/cuda.h>
+ #include <unordered_map>
+ #include <vaccel.h>
+ #include <vector>
+@@ -25,6 +26,9 @@
+ 	VACCEL_PROF_REGION_INIT("torch_run");
+ struct vaccel_prof_region torch_out_stats =
+ 	VACCEL_PROF_REGION_INIT("torch_out");
++/* [eval patch] same scope as SOL's sol_predict: H2D + run + GPU sync + D2H */
++struct vaccel_prof_region torch_predict_stats =
++	VACCEL_PROF_REGION_INIT("torch_predict");
+ 
+ static const std::unordered_map<vaccel_torch_data_type, torch::ScalarType>
+ 	type_to_torch = { { VACCEL_TORCH_BYTE, torch::kUInt8 },
+@@ -153,6 +157,9 @@
+ 
+ 	vaccel_prof_region_start(&torch_run_stats);
+ 	auto out = plugin_model_run(model, input);
++	/* [eval patch] wait for the GPU so torch_run is the real compute time */
++	if (plugin_get_device().is_cuda())
++		torch::cuda::synchronize();
+ 	vaccel_prof_region_stop(&torch_run_stats);
+ 	return out;
+ }
+@@ -192,16 +199,19 @@
+ 			    model->blobs[0]->size);
+ 
+ 	torch::Tensor torch_tensor_out;
++	vaccel_prof_region_start(&torch_predict_stats);
+ 	try {
+ 		torch_tensor_out =
+ 			do_model_run(model, in_tensors, nr_inputs).toTensor();
+ 	} catch (const std::exception &e) {
++		vaccel_prof_region_stop(&torch_predict_stats);
+ 		torch_error("Model run failed: %s", e.what());
+ 		return VACCEL_EINVAL;
+ 	}
+ 
+ 	if (plugin_get_device().is_cuda())
+ 		torch_tensor_out = torch_tensor_out.cpu();
++	vaccel_prof_region_stop(&torch_predict_stats);
+ 
+ 	vaccel_prof_region_start(&torch_out_stats);
+ 
+@@ -222,6 +232,7 @@
+ 	vaccel_prof_region_print(&torch_input_stats);
+ 	vaccel_prof_region_print(&torch_run_stats);
+ 	vaccel_prof_region_print(&torch_out_stats);
++	vaccel_prof_region_print(&torch_predict_stats);
+ 
+ 	return VACCEL_OK;
+ }

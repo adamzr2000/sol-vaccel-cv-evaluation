@@ -70,6 +70,17 @@ case "$MODE" in
     ;;
 esac
 
+# edge-asus (hostname asus-g815, P-cores 0-7, E-cores 8-23): pin the container to the 8 P-cores,
+# the same setup as the vAccel agents (run_agent_sol.sh / run_agent_ptc.sh) and the ROS 2
+# inference node, so local and remote runs share the same CPU conditions. Inside the container
+# nproc is then 8, which evaluate_models_ros*.sh uses as the OMP thread count on edge hosts.
+# No effect on the robot or any other host. NO_PIN=1 restores the previous behaviour.
+PIN_ARGS=()
+if [[ "$(hostname)" == "asus-g815" && "${NO_PIN:-0}" != "1" ]]; then
+  PIN_ARGS=(--cpuset-cpus 0-7)
+fi
+echo "CPU pinning: ${PIN_ARGS[1]:-none}"
+
 SOL_LIBS="/src/models/deeplabv3_resnet50_sol/${LIB_TYPE}:\
 /src/models/deeplabv3_resnet101_sol/${LIB_TYPE}:\
 /src/models/deeplabv3_mobilenet_v3_large_sol/${LIB_TYPE}:\
@@ -187,6 +198,7 @@ DOCKER_RC=0
 docker run -it --rm \
   --name torchvision-app \
   --net host \
+  "${PIN_ARGS[@]}" \
   -v "$(pwd)"/scripts:/scripts \
   -v "$(pwd)"/src:/src \
   -v "$(pwd)"/results/experiments:/results/experiments \

@@ -20,7 +20,13 @@ CPU_AFFINITY=""           # CPU core mask for taskset (e.g. "0-7" for P-cores on
 # to keep the normal CLI surface small -- export these before invoking the
 # script if you ever need something other than the default) ----
 VACCEL_RPC_PORT="${VACCEL_RPC_PORT:-9125}"               # vaccel agent RPC port
-OMP_THREADS_OVERRIDE="${OMP_THREADS_OVERRIDE:-12}"       # OMP thread cap on edge hosts
+# OMP thread cap on edge hosts: 12, or the usable CPUs if fewer -- nproc respects the container's
+# cpuset, so this is 8 when run_ros.sh pins the container to edge-asus' 8 P-cores (same setup as the
+# vAccel agents). Set OMP_THREADS_OVERRIDE explicitly to force a value.
+OMP_THREADS_OVERRIDE="${OMP_THREADS_OVERRIDE:-$(( $(nproc) < 12 ? $(nproc) : 12 ))}"
+AGENT_SERVER_PORT="${AGENT_SERVER_PORT:-9130}"           # agent_server.py on the remote host
+MONITOR_DOCKER="${MONITOR_DOCKER:-0}"                    # per-container docker stats: off (not used in the
+                                                         # paper); system/energy monitoring is unaffected
 WIFI_STATS_ENDPOINT="${WIFI_STATS_ENDPOINT:-http://192.168.2.1:6002}"  # miniPC's wifi-stats-collector
 WIFI_IFACE="${WIFI_IFACE:-wlp1s0}"                       # miniPC's wireless interface
 
@@ -65,12 +71,17 @@ Optional:
   --samples          stop after N processed samples per model instead of by duration.
                      Takes priority over --duration when set (default: unset — duration governs stop).
   --export           true|false — export JSON/CSV results (default: true)
-  --monitoring       true|false — docker/system resource monitoring (default: true)
+  --monitoring       true|false — system (CPU/GPU power, network) resource monitoring (default: true);
+                     per-container docker stats only with MONITOR_DOCKER=1 (default 0, unused in the paper)
   --wifi-monitoring  true|false — WiFi link stats (retries/RSSI) from the miniPC's
                      wifi-stats-collector (default: false). Only takes effect with --host robot,
                      ignored (with a warning) otherwise. Endpoint/interface fixed at
                      ${WIFI_STATS_ENDPOINT} / ${WIFI_IFACE}; override via the
                      WIFI_STATS_ENDPOINT / WIFI_IFACE env vars if ever needed.
+  --agent-server     true|false — vaccel-remote-sol/ptc only: a fresh, profiled vAccel agent per model
+                     via agent_server.py on the remote host (port ${AGENT_SERVER_PORT}), started before
+                     and stopped after each run; it saves the agent log and the per-call agent-side
+                     computation of the measured inferences (default: false = agent managed by hand).
   --cpu-affinity     CPU core list for taskset (e.g. "0-7" pins to P-cores only for fair cross-backend comparison)
   --remote-host      robot|edge-asus|edge-xtreme|edge-alienware (default: ${REMOTE_HOST})
                      remote inference target for vaccel-remote-* backends (use --host value for loopback)
@@ -117,6 +128,7 @@ OMP_WAIT_POLICY_OPT=""   # empty = libgomp default (OMP_WAIT_POLICY unset)
 FRESH_FRAME_OPT=0
 LOW_PRIORITY_DECODE_OPT=0
 MALLOC_TUNABLES_OPT=0
+AGENT_SERVER=0
 # Same value as ros-vision-service's start_go2.sh --malloc-tunables.
 MALLOC_TUNABLES_VALUE="glibc.malloc.mmap_threshold=33554432:glibc.malloc.trim_threshold=268435456"
 
@@ -140,6 +152,7 @@ while [[ $# -gt 0 ]]; do
     --monitoring)        RESOURCE_MONITORING="$(parse_bool "$2")"; shift 2 ;;
     --wifi-monitoring)   WIFI_MONITORING="$(parse_bool "$2")"; shift 2 ;;
     --cpu-affinity)      CPU_AFFINITY="$2"; shift 2 ;;
+    --agent-server)      AGENT_SERVER="$(parse_bool "$2")"; shift 2 ;;
     -h|--help)          usage; exit 0 ;;
     *) echo "[err] Unknown argument: $1"; usage; exit 2 ;;
   esac
@@ -217,6 +230,16 @@ case "${REMOTE_HOST}" in
   *) echo "[err] Invalid remote host: ${REMOTE_HOST}"; exit 2 ;;
 esac
 
+# ---- Agent server (--agent-server true): same host as the vAccel agent ----
+if [[ "${AGENT_SERVER}" -eq 1 ]]; then
+  case "${BACKEND}" in
+    vaccel-remote-sol|vaccel-remote-ptc) ;;
+    *) echo "[err] --agent-server true needs --backend vaccel-remote-sol or vaccel-remote-ptc"; exit 2 ;;
+  esac
+  _agent_ip="${VACCEL_RPC_ADDRESS#tcp://}"
+  AGENT_SERVER_URL="http://${_agent_ip%:*}:${AGENT_SERVER_PORT}"
+fi
+
 # ---- Runner ----
 run_one () {
   local model="$1"
@@ -232,6 +255,7 @@ run_one () {
          EXPERIMENT_DURATION_SEC="${EXPERIMENT_DURATION_SEC}" \
          MAX_SAMPLES="${MAX_SAMPLES}" \
          RESOURCE_MONITORING="${RESOURCE_MONITORING}" \
+         MONITOR_DOCKER="${MONITOR_DOCKER}" \
          HOST="${HOST}" \
          DOCKER_STATS_ENDPOINT="${DOCKER_STATS_ENDPOINT}" \
          SYSTEM_STATS_ENDPOINT="${SYSTEM_STATS_ENDPOINT}" \
@@ -305,6 +329,18 @@ run_one () {
       > /dev/null || echo "[warn] wifi-stats /start failed (continuing without it)"
   fi
 
+  # Fresh profiled agent for this run (its log/CSV are named after the run id, = _wifi_tag)
+  if [[ "${AGENT_SERVER}" -eq 1 ]]; then
+    local _resp
+    _resp="$(curl -s --max-time 150 -X POST "${AGENT_SERVER_URL}/start" -H "Content-Type: application/json" \
+      -d "{\"backend\": \"${BACKEND#vaccel-remote-}\", \"device\": \"${DEVICE}\", \"run_id\": \"${_wifi_tag}\"}")" || true
+    echo "[bench] agent /start: ${_resp:-no response from ${AGENT_SERVER_URL}}"
+    if [[ "${_resp}" != *'"ok": true'* ]]; then
+      echo "[bench] error: no fresh agent -- is agent_server.py running on ${REMOTE_HOST}?"
+      exit 1
+    fi
+  fi
+
   # Exit code 134 (SIGABRT) at shutdown is emitted by AOTInductor's CUDA event
   # cleanup after all results are already saved — safe to ignore.
   # 139 (SIGSEGV) is a real crash and must NOT be silently swallowed.
@@ -325,6 +361,14 @@ run_one () {
     curl -s --max-time 5 -X POST "${WIFI_STATS_ENDPOINT}/stop" \
       -o "/results/experiments/wifi-stats/${HOST}/${_wifi_tag}_totals.json" \
       || echo "[warn] wifi-stats /stop failed"
+  fi
+
+  # Stop the agent (completes its log); the summary tells the server which calls were measured
+  if [[ "${AGENT_SERVER}" -eq 1 ]]; then
+    local _summary="${RESULTS_DIR:-/results/experiments/model-stats}/${HOST}/${_wifi_tag}/benchmark_summary.json"
+    [[ ( $_rc -eq 0 || $_rc -eq 134 ) && -f "${_summary}" ]] || _summary=/dev/null   # failed run: no CSV
+    echo "[bench] agent /stop: $(curl -s --max-time 90 -X POST "${AGENT_SERVER_URL}/stop" \
+      -H "Content-Type: application/json" --data-binary @"${_summary}" || echo "no response")"
   fi
 
   if [[ $_rc -ne 0 && $_rc -ne 134 ]]; then

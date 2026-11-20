@@ -6,9 +6,10 @@ the robot-side call time of the same run.
 
 The agent prints, after every call, cumulative totals per profiling region:
   <date>-<time> - <info> [prof] sol_predict: total_time: <ns> nsec nr_entries: <n>
-Per-call time = difference of consecutive totals of a region. Only lines inside
-the run's time window (benchmark_summary.json, UTC; the agent logs in UTC via
-TZ=UTC) are used, which excludes the warm-up calls.
+Per-call time = difference of consecutive totals of a region. The run's agent
+session is the one overlapping its time window (benchmark_summary.json, UTC; the
+agent logs in UTC via TZ=UTC); its last num_samples calls are the measured ones
+(warm-up/primer calls come first).
 
 Usage:
   python3 check_agent_profile.py AGENT_LOG RUN_DIR [--region sol_predict]
@@ -22,24 +23,74 @@ import statistics
 from datetime import datetime, timezone
 from pathlib import Path
 
-LINE = re.compile(r"^(\d{4}\.\d{2}\.\d{2}-\d{2}:\d{2}:\d{2}\.\d+).*?\[prof\] (\S+): total_time: (\d+) nsec "
-                  r"nr_entries: (\d+)")
+PROF = re.compile(r"\[prof\] (\S+): total_time: (\d+) nsec nr_entries: (\d+)")
+STAMP = re.compile(r"(\d{4}\.\d{2}\.\d{2}-\d{2}:\d{2}:\d{2}\.\d+)")
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
+SESSION = re.compile(r"Created session \d+")
 
 
-def per_call(log: Path, region: str, start: float, stop: float, slack: float = 0.05) -> list:
-    """Per-call durations (ms) of `region` whose log line falls inside [start, stop]."""
-    prev, out = None, []
+def per_call(log: Path, region: str, start: float, stop: float, n_samples: int) -> list:
+    """Per-call durations (ms) of `region` for the run's measured calls.
+
+    Sessions are delimited by the agent's "Created session" lines (each client session loads
+    its own wrapper copy, so the cumulative counters restart). The run's session is the one whose
+    lines overlap [start, stop] (timestamps only pick the session, so a small robot/edge clock
+    offset does not matter); its measured calls are its last n_samples calls by nr_entries
+    (warm-up/primer calls come first).
+    The agent's log output is occasionally interleaved: a [prof] entry may sit mid-line (the
+    last seen timestamp is used), be lost, or be truncated (e.g. "nr_entries: 173" -> "17").
+    Entries that break the strictly increasing (nr_entries, total_time) sequence are dropped; a
+    call whose predecessor entry is missing has no known duration and is skipped (reported).
+    """
+    sessions, cur, t = [], {}, None
     for raw in log.read_text(errors="replace").splitlines():
-        m = LINE.match(ANSI.sub("", raw))
-        if not m or m.group(2) != region:
+        line = ANSI.sub("", raw)
+        if (st := STAMP.search(line)):
+            t = datetime.strptime(st.group(1), "%Y.%m.%d-%H:%M:%S.%f").replace(tzinfo=timezone.utc).timestamp()
+        if SESSION.search(line):
+            sessions.append(cur)
+            cur = {}
             continue
-        t = datetime.strptime(m.group(1), "%Y.%m.%d-%H:%M:%S.%f").replace(tzinfo=timezone.utc).timestamp()
-        total, n = int(m.group(3)), int(m.group(4))
-        if prev and n == prev[1] + 1 and start - slack <= t <= stop + slack:
-            out.append((total - prev[0]) / 1e6)
-        prev = (total, n)
-    return out
+        for m in PROF.finditer(line):
+            if m.group(1) != region:
+                continue
+            total, n = int(m.group(2)), int(m.group(3))
+            last = max(cur) if cur else 0
+            if n > last and (not cur or total > cur[last][1]):   # else garbled/truncated: drop
+                cur[n] = (t, total)
+    sessions.append(cur)
+    hit = [s for s in sessions
+           if any(v[0] is not None and start - 1 <= v[0] <= stop + 1 for v in s.values())]
+    if len(hit) != 1:
+        print(f"[!] {len(hit)} agent sessions overlap the run window (expected 1)")
+        if not hit:
+            return {}
+    calls = hit[-1]
+    last = max(calls)
+    first = last - n_samples + 1
+    if calls[last][0] < stop - 0.1:   # tail of the session missing from the log: select by time instead
+        print(f"[!] last logged call {stop - calls[last][0]:.2f} s before the window stop (log tail lost); "
+              f"selecting the calls logged inside the window instead of the last {n_samples}")
+        inside = [n for n, v in calls.items() if start <= v[0] <= stop + 0.05]
+        first, last = min(inside), max(inside)
+    out = {n - first: (calls[n][1] - calls[n - 1][1]) / 1e6 if n > 1 else calls[n][1] / 1e6
+           for n in range(first, last + 1) if n in calls and (n == 1 or n - 1 in calls)}
+    print(f"  agent session: {max(calls)} calls ({first - 1} warm-up/primer), {n_samples - len(out)} "
+          f"measured call(s) without a complete log entry skipped; last call "
+          f"{calls[last][0] - stop:+.3f} s vs robot window stop (clock offset + reply time)")
+    return out   # {sample index 0..n_samples-1 (= robot benchmark_data.csv row): duration ms}
+
+
+def edge_calls(log: Path, regions: str, start: float, stop: float, n_samples: int) -> dict:
+    """{sample index: ms} of a region, or of a '+'-joined sum of regions (calls present in all)."""
+    parts = [per_call(log, r, start, stop, n_samples) for r in regions.split("+")]
+    common = set.intersection(*(set(p) for p in parts))
+    return {i: sum(p[i] for p in parts) for i in sorted(common)}
+
+
+def edge_times(log: Path, regions: str, start: float, stop: float, n_samples: int) -> list:
+    """Per-call durations (ms), in sample order."""
+    return list(edge_calls(log, regions, start, stop, n_samples).values())
 
 
 def pct(v, q):
@@ -52,9 +103,9 @@ def main() -> None:
     ap.add_argument("log", type=Path)
     ap.add_argument("run_dir", type=Path)
     ap.add_argument("--region", default="sol_predict",
-                    help="sol_predict (SOL; includes the GPU sync). PyTorch plugin regions are torch_input / "
-                         "torch_run / torch_out, but torch_run has no CUDA sync and the D2H copy is unprofiled, "
-                         "so they do not give the complete GPU computation")
+                    help="region, or regions summed per call joined by '+'. SOL: sol_predict (input buffer -> "
+                         "output buffer, incl. GPU sync). PyTorch with the eval-patched plugin: "
+                         "torch_predict+torch_out (same scope). The stock plugin's torch_run has no GPU sync.")
     a = ap.parse_args()
 
     summary = json.loads((a.run_dir / "benchmark_summary.json").read_text())
@@ -62,7 +113,7 @@ def main() -> None:
     start, stop = (datetime.fromisoformat(w[k]).timestamp() for k in ("start", "stop"))
     with open(a.run_dir / "benchmark_data.csv", newline="") as f:
         call = [float(r["inference_ms"]) for r in csv.DictReader(f)]
-    edge = per_call(a.log, a.region, start, stop)
+    edge = edge_times(a.log, a.region, start, stop, len(call))
 
     print(f"run {summary['run_id']}  ({summary['num_samples']} inferences, window {w['duration_sec']:.1f} s)")
     if not edge:
@@ -75,7 +126,7 @@ def main() -> None:
               f"p25 {pct(v, 25):8.2f}  p75 {pct(v, 75):8.2f}")
     print(f"  => communication = call - computation (medians): "
           f"{statistics.median(call) - statistics.median(edge):.2f} ms")
-    if len(edge) != len(call):
+    if len(edge) < 0.95 * len(call):
         print(f"  [!] {len(edge)} agent calls vs {len(call)} robot calls in the window -- "
               f"window/clock mismatch or extra calls; check before trusting the numbers")
 

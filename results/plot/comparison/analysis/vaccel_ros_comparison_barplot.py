@@ -248,6 +248,7 @@ def main() -> None:
     fig.tight_layout(rect=(0, 0, 1, 0.9), h_pad=1.2, w_pad=1.0)
     extra = (*legs, sup)
     fig.savefig(OUTPUT_FILE, bbox_extra_artists=extra)
+    fig.savefig(OUTPUT_FILE.replace(".pdf", ".png"), dpi=300, bbox_extra_artists=extra)
     print(f"[OK] Saved plot to: {OUTPUT_FILE}")
 
 

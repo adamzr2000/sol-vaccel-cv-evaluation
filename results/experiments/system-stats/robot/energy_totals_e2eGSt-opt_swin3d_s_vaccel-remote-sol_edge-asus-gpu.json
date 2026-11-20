@@ -5,8 +5,8 @@
     "cpu",
     "net"
   ],
-  "run_started_iso": "2026-11-05T19:20:12.491131+00:00",
-  "run_stopped_iso": "2026-11-05T19:22:05.317252+00:00",
-  "duration_sec": 112.826,
-  "cpu_energy_j_total": 1027.653
+  "run_started_iso": "2026-10-30T07:58:48.640391+00:00",
+  "run_stopped_iso": "2026-10-30T08:00:37.670160+00:00",
+  "duration_sec": 109.03,
+  "cpu_energy_j_total": 1019.529
 }

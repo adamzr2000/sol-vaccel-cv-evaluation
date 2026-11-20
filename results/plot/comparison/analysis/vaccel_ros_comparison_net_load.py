@@ -44,6 +44,10 @@ MODELS = [
 
 # (console label, level suffix): vaccel run tag is "net-{suffix}", ros2's is
 # "remote-gpu-{tcp|udp}-net-{suffix}" (ROS_RUN_TAGS' tag + "-net-" + suffix).
+# vaccel run tag used for the 0 Mbps level when net-baseline doesn't exist for a
+# model (e.g. deeplabv3_resnet50): the main comparison's remote GPU run.
+VACCEL_BASELINE_FALLBACK_TAG = "e2eGSt-opt"
+
 LOAD_LEVELS = [
     ("baseline", "baseline"),
     ("100 Mbps", "load-100M"),
@@ -70,7 +74,16 @@ def collect(model: str, category: str, level: str) -> list[tuple[str, dict | Non
         except FileNotFoundError as e:
             rows.append((label, None, str(e)))
     try:
-        c = vaccel_contrib(model, category, run_tag=f"net-{level}")
+        try:
+            c = vaccel_contrib(model, category, run_tag=f"net-{level}")
+        except FileNotFoundError:
+            if level != "baseline":
+                raise
+            # No dedicated net-baseline run: fall back to the main comparison's
+            # remote run (same config, no background load).
+            c = vaccel_contrib(model, category, run_tag=VACCEL_BASELINE_FALLBACK_TAG)
+            print(f"[info] vaccel {model} baseline: net-baseline missing, "
+                  f"using {VACCEL_BASELINE_FALLBACK_TAG} ({c['run_id']})")
         c["wifi"] = load_wifi_totals(SV_WIFI_ROBOT / f"{c['run_id']}_totals.json")
         rows.append(("vaccel-rpc", c, ""))
     except FileNotFoundError as e:

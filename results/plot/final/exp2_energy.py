@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-exp2_energy.py -- Experiment 2: robot energy per inference of AOTInductor vs
-SOL, both executed through vAccel, per model and execution target.
+exp2_energy.py -- Experiment 2: energy per inference of PyTorch (AOTInductor)
+vs SOL, both executed through vAccel, per model and execution target -- the
+energy of the device that runs the inference.
 
 Runs (both compilers): Local CPU <- common.LOCAL_RUN_TAG, Edge CPU and Edge GPU
 <- common.REMOTE_RUN_TAG. An execution target without runs (Edge CPU before
@@ -12,7 +13,11 @@ robot CPU, edge CPU and edge GPU and the estimated idle share of each, per
 inference, plus run duration and number of inferences.
 
 Figure (exp2-energy.pdf): rows = execution target, columns = task; 2 bars per
-model (AOTInductor, SOL) = robot CPU energy per inference (measured).
+model (vAccel + PyTorch, vAccSOL) = measured energy per inference (idle included) of the
+device that runs the inference (ENERGY_OF):
+  Local CPU  robot CPU
+  Edge CPU   edge CPU                (edge GPU not recorded in these runs)
+  Edge GPU   edge CPU + edge GPU     (the edge CPU hosts the vAccel agent)
 
 Usage:    python3 exp2_energy.py
 Produces: exp2-energy.{csv,pdf}
@@ -26,6 +31,12 @@ from exp1_energy import ENERGY_COLUMNS, energy_values
 
 CSV, PDF = HERE / "exp2-energy.csv", HERE / "exp2-energy.pdf"
 
+# execution target -> (row label, energy columns summed)
+ENERGY_OF = {
+    "robot_cpu": ("Local CPU\n(robot)", ["robot_cpu_j"]),
+    "edge_cpu": ("Edge CPU\n(edge)", ["edge_cpu_j"]),
+    "edge_gpu": ("Edge GPU\n(edge)", ["edge_cpu_j", "edge_gpu_j"]),
+}
 FIG_SIZE = (20, 11.0)  # for 3 rows; scaled to the rows with data
 BAR_WIDTH = 0.36
 HEADROOM = 1.1
@@ -46,20 +57,21 @@ def build_csv() -> None:
 
 def plot() -> None:
     tasks, raw = read_rows(CSV, 4)
-    robot = {k: float(d["robot_cpu_j"]) for k, d in raw.items()}
-    targets = [t for t in TARGETS if any(k[1] == t[0] for k in robot)]  # rows with data only
+    energy = {k: sum(float(d[c]) for c in ENERGY_OF[k[1]][1]) for k, d in raw.items()
+              if all(d[c] for c in ENERGY_OF[k[1]][1])}
+    targets = [t for t in TARGETS if any(k[1] == t[0] for k in energy)]  # rows with data only
     n = len(targets)
     fig = plt.figure(figsize=(FIG_SIZE[0], FIG_SIZE[1] * (n + 0.4) / 3.4))
     gs = fig.add_gridspec(n, len(tasks), width_ratios=[len(m) for m in tasks.values()], left=0.095, right=0.988,
                           top=1 - 0.4 / (n + 1), bottom=0.32 / (n + 0.4), wspace=0.2, hspace=0.12)
-    for r, (target, row_label, _) in enumerate(targets):
+    for r, (target, _, _) in enumerate(targets):
         for col, (task, models) in enumerate(tasks.items()):
             ax = fig.add_subplot(gs[r, col])
-            ax.set_ylim(0, max(v for (m, t, _), v in robot.items() if t == target and m in models) * HEADROOM)
+            ax.set_ylim(0, max(v for (m, t, _), v in energy.items() if t == target and m in models) * HEADROOM)
             for j, (compiler, _, _, color) in enumerate(COMPILERS):
                 for i, m in enumerate(models):
-                    if (m, target, compiler) in robot:
-                        ax.bar(i + (j - 0.5) * BAR_WIDTH, robot[(m, target, compiler)], width=BAR_WIDTH,
+                    if (m, target, compiler) in energy:
+                        ax.bar(i + (j - 0.5) * BAR_WIDTH, energy[(m, target, compiler)], width=BAR_WIDTH,
                                facecolor=color, edgecolor=EDGE_COLOR, linewidth=0.8, zorder=3)
             style_axes(ax)
             ax.yaxis.set_major_locator(MaxNLocator(nbins=4))
@@ -72,8 +84,8 @@ def plot() -> None:
             if r == 0:
                 ax.set_title(TITLES.get(task, task))
             if col == 0:
-                ax.set_ylabel(row_label)
-    fig.text(0.008, 0.5, "Energy per inference (J)\nRobot", rotation=90, ha="center", va="center",
+                ax.set_ylabel(ENERGY_OF[target][0])
+    fig.text(0.008, 0.5, "Energy per inference (J)", rotation=90, ha="center", va="center",
              fontsize=plt.rcParams["axes.labelsize"])
     fig.legend(handles=patches([(lbl, c) for _, lbl, _, c in COMPILERS]), loc="lower center",
                bbox_to_anchor=(0.54, 1 - 0.28 / (n + 1)), ncol=len(COMPILERS), **LEGEND_STYLE)

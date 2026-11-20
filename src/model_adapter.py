@@ -28,6 +28,32 @@ if SOL_RUN_MODE not in ("2", "3"):
     SOL_RUN_MODE = "2"
 
 
+def numpy_postprocess(output, model_type: str):
+    """Classification / segmentation post-processing shared by all adapters --
+    the same computation as ros-vision-service's monitoring_node.py (NumPy,
+    float64), so post-processing is identical in the vAccel and ROS 2 setups:
+      classification: softmax over the class scores + argmax -> (class, prob)
+      segmentation:   per-pixel argmax over the class axis    -> (H, W) mask
+    Takes the raw output (NumPy array or CPU tensor, batch 1) and returns
+    torch tensors, as before, so callers are unchanged. Other model types:
+    None (the caller keeps its own post-processing).
+    (The one remaining difference is layout: ROS 2 receives the segmentation
+    scores pixel-major, (H*W, C), rearranged on the edge before sending; here
+    they arrive as the model writes them, (C, H, W).)"""
+    if model_type not in ("classification", "video_classification", "segmentation"):
+        return None
+    out = output.detach().cpu().numpy() if isinstance(output, torch.Tensor) else output
+    out = np.asarray(out, dtype=np.float64)
+    if model_type == "segmentation":
+        mask = np.argmax(out.reshape(out.shape[-3:]), axis=0)  # (C, H, W) -> (H, W)
+        return torch.from_numpy(mask.astype(np.uint8))
+    scores = out.reshape(1, -1)
+    exp = np.exp(scores - np.max(scores, axis=1, keepdims=True))
+    probs = exp / np.sum(exp, axis=1, keepdims=True)
+    top_class = np.argmax(probs, axis=1)
+    return torch.from_numpy(top_class), torch.from_numpy(probs[np.arange(1), top_class])
+
+
 class BaseModelAdapter:
     def __init__(self, device):
         self.device = device
@@ -367,13 +393,8 @@ class PyTorchBaselineAdapter(BaseModelAdapter):
         return output.detach().cpu()
 
     def postprocess(self, output_tensor):
-        if self.model_type == "segmentation":
-            return torch.argmax(output_tensor.squeeze(0), dim=0).byte()
-
-        elif self.model_type in ["classification", "video_classification"]:
-            probs = torch.nn.functional.softmax(output_tensor, dim=1)
-            top_prob, top_class = torch.max(probs, dim=1)
-            return top_class, top_prob
+        if self.model_type in ("segmentation", "classification", "video_classification"):
+            return numpy_postprocess(output_tensor, self.model_type)  # same as the ROS 2 setup
 
         elif self.model_type == "object_detection":
             # 1. Strip batch dimension -> shape: (25200, 85)
@@ -792,14 +813,8 @@ class SolAdapter(BaseModelAdapter):
         return self.output_buffer
 
     def postprocess(self, output_numpy):
-        output_tensor = torch.from_numpy(output_numpy)
-        if self.model_type in ["classification", "video_classification"]:
-            probs = torch.nn.functional.softmax(output_tensor, dim=1)
-            top_prob, top_class = torch.max(probs, dim=1)
-            return top_class.cpu(), top_prob.cpu()
-        elif self.model_type == "segmentation":
-            return torch.argmax(output_tensor.squeeze(0), dim=0).byte().cpu()
-        return output_tensor
+        result = numpy_postprocess(output_numpy, self.model_type)  # same as the ROS 2 setup
+        return result if result is not None else torch.from_numpy(output_numpy)
 
 
 class VaccelSolAdapter(SolAdapter):

@@ -1,7 +1,7 @@
 category,execution_target,num_models,uplink_mbit_s,downlink_mbit_s,total_mbit_s,total_std_mbit_s
-image_classification,edge_cpu,4,64.24,0.54,64.79,7.64
-image_classification,edge_gpu,4,68.33,0.57,68.91,2.38
-video_action_recognition,edge_cpu,4,80.75,0.20,80.94,13.54
-video_action_recognition,edge_gpu,4,180.49,0.43,180.91,12.72
-semantic_segmentation,edge_cpu,4,31.56,191.30,222.86,25.67
-semantic_segmentation,edge_gpu,4,53.58,324.17,377.75,23.48
+image_classification,edge_cpu,4,66.90,0.57,67.47,3.42
+image_classification,edge_gpu,4,68.10,0.57,68.67,2.37
+video_action_recognition,edge_cpu,4,88.03,0.21,88.24,13.71
+video_action_recognition,edge_gpu,4,179.87,0.42,180.30,12.67
+semantic_segmentation,edge_cpu,4,34.05,206.23,240.29,27.37
+semantic_segmentation,edge_gpu,4,53.57,324.11,377.68,23.42

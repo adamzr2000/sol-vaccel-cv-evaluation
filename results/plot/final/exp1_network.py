@@ -7,8 +7,8 @@ Throughput = traffic of the robot's network interface over a run, from the
 per-second counters in system-stats/robot/{run_id}_net.csv (MB per sample):
   uplink   = transmitted by the robot (input tensors to the edge)
   downlink = received by the robot (model outputs from the edge)
-in Mbit/s = sum over the run x 8 / duration (the first row only holds the
-counters at start and is not counted). Throughput = data per inference x
+in Mbit/s = traffic within the measured inference loop (the run's
+time_window) x 8 / loop duration. Throughput = data per inference x
 inference rate of the run.
 
 Runs: Edge CPU <- common.REMOTE_CPU_RUN_TAG, Edge GPU <- common.REMOTE_RUN_TAG,
@@ -35,7 +35,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import MaxNLocator
 
-from common import (EDGE_COLOR, HERE, LEGEND_STYLE, SYSTEM_STATS, TARGETS, TASKS, apply_theme, model_of, patches,
+from common import (EDGE_COLOR, HERE, LEGEND_STYLE, SYSTEM_STATS, _iso_s, TARGETS, TASKS, apply_theme, model_of, patches,
                     save, style_axes, target_runs, write_rows)
 
 CSV, TASK_CSV, PDF = HERE / "exp1-network.csv", HERE / "exp1-network-task.csv", HERE / "exp1-network.pdf"
@@ -55,22 +55,30 @@ BAR_WIDTH = 0.55
 HEADROOM = 1.1
 
 
-def throughput(run_id: str):
-    """(uplink Mbit/s, downlink Mbit/s, duration s, [total Mbit/s of each full 1 s sample]), or None."""
-    path = SYSTEM_STATS / "robot" / f"{run_id}_net.csv"
-    if not path.exists():
+def throughput(run: dict):
+    """(uplink Mbit/s, downlink Mbit/s, duration s, [total Mbit/s of each full 1 s
+    sample]) of the robot over the measured inference loop of `run` (its
+    time_window), or None. Each row of the monitor file holds the MB of the
+    preceding ~1 s interval; intervals cut by the loop start/stop count pro rata."""
+    path = SYSTEM_STATS / "robot" / f"{run['run_id']}_net.csv"
+    window = run.get("time_window") or {}
+    if not path.exists() or "start" not in window:
         return None
     with open(path, newline="") as f:
         rows = list(csv.DictReader(f))
     if len(rows) < 4:
         return None
-    seconds = (int(rows[-1]["timestamp"]) - int(rows[0]["timestamp"])) / 1000.0
-    tx = sum(float(r["net_tx_mb"]) for r in rows[1:])
-    rx = sum(float(r["net_rx_mb"]) for r in rows[1:])
-    samples = []  # full intervals only: skip the start row and the final (partial) row
-    for prev, cur in zip(rows[1:-2], rows[2:-1]):
-        dt = (int(cur["timestamp"]) - int(prev["timestamp"])) / 1000.0
-        samples.append((float(cur["net_tx_mb"]) + float(cur["net_rx_mb"])) * 8 / dt)
+    a, b = _iso_s(window["start"]), _iso_s(window["stop"])
+    tx = rx = 0.0
+    samples = []
+    for prev, cur in zip(rows, rows[1:]):
+        t0, t1 = int(prev["timestamp"]) / 1000.0, int(cur["timestamp"]) / 1000.0
+        share = max(0.0, min(t1, b) - max(t0, a)) / (t1 - t0)  # part of this interval inside the loop
+        tx += float(cur["net_tx_mb"]) * share
+        rx += float(cur["net_rx_mb"]) * share
+        if share == 1.0:  # full intervals only, for the per-second spread
+            samples.append((float(cur["net_tx_mb"]) + float(cur["net_rx_mb"])) * 8 / (t1 - t0))
+    seconds = b - a
     return tx * 8 / seconds, rx * 8 / seconds, seconds, samples
 
 
@@ -83,7 +91,7 @@ def build_csv() -> None:
         for task, tag in overrides.items():
             runs += [r for r in target_runs(target, tag=tag) if task_of.get(model_of(r)) == task]
         for r in runs:
-            if (t := throughput(r["run_id"])) is None:
+            if (t := throughput(r)) is None:
                 print(f"[warn] {r['run_id']}: no network counters, skipped")
             else:
                 data[(model_of(r), target)] = t
@@ -132,7 +140,7 @@ def plot() -> None:
         ax.set_xticklabels([TASK_LABEL[t["category"]] for t in tasks])
         if len(targets) > 1:
             ax.set_title(label[target])
-    axes[0][0].set_ylabel("Network throughput\n(Mbit/s)")
+    axes[0][0].set_ylabel("Network traffic (Mbit/s)")
     # legend inside the (first) panel, top segment listed first
     axes[0][0].legend(handles=patches([(lbl, c) for _, lbl, c in reversed(DIRECTIONS)]), loc="upper left",
                       **LEGEND_STYLE)

@@ -10,8 +10,9 @@ runs where the model executes on the device itself (backend vaccel-local-*):
   Edge GPU   same, device gpu
 iqr_low/high_ms = 25th / 75th percentile.
 
-Figure: rows = execution target, columns = task; 2 bars per model
-(AOTInductor, SOL) with IQR error bars; linear y axis per panel.
+Figure: rows = execution target, columns = task; 2 bars per model -- "vAccel + PyTorch"
+(AOTInductor) and "vAccSOL" -- with IQR error bars; y axis "Computation time (ms)",
+linear per panel.
 
 Usage:    python3 exp2_latency.py
 Produces: exp2-latency.{csv,pdf}
@@ -79,7 +80,7 @@ def plot() -> None:
                 ax.set_title(TITLES.get(task, task))
             if col == 0:
                 ax.set_ylabel(row_label)
-    fig.text(0.008, 0.5, "Inference latency (ms)", rotation=90, ha="center", va="center",
+    fig.text(0.008, 0.5, "Computation time (ms)", rotation=90, ha="center", va="center",
              fontsize=plt.rcParams["axes.labelsize"])
     fig.legend(handles=patches([(lbl, c) for _, lbl, _, c in COMPILERS]), loc="lower center",
                bbox_to_anchor=(0.54, 0.925), ncol=len(COMPILERS), **LEGEND_STYLE)

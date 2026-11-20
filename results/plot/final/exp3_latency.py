@@ -18,7 +18,7 @@ edge run (common.EDGE_INFERENCE_RUN_TAG) for vAccel, the ROS 2 inference
 node's own measurement (edge pipeline file) for ROS 2.
 Communication = latency - computation (network + middleware).
 
-Figure: one panel per task, 2 stacked bars per model (ROS 2, vAccel):
+Figure: one panel per task, 2 stacked bars per model (ROS 2 + SOL, vAccSOL):
 Computation (solid) + Communication (hatched), IQR error bars; linear y axis.
 
 Usage:    python3 exp3_latency.py
@@ -30,15 +30,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import MaxNLocator
 
-from common import (EDGE_COLOR, HATCH, HATCH_ALPHA, HERE, ROS_MODEL_STATS, ROS_RUN_TAG, TARGETS, TASKS, TITLES,
-                    apply_theme, edge_runs, legend_row, lighten, model_of, model_ticks, part_patches, patches,
+from common import (EDGE_COLOR, HATCH, HATCH_ALPHA, HERE, LEGEND_STYLE, ROS_MODEL_STATS, ROS_RUN_TAG, TARGETS, TASKS, TITLES,
+                    apply_theme, edge_runs, lighten, model_of, model_ticks, part_patches, patches,
                     read_rows, save, style_axes, target_runs, write_rows)
 
 CSV, PDF = HERE / "exp3-latency.csv", HERE / "exp3-latency.pdf"
 COLUMNS = ["category", "model", "framework", "inference_ms", "communication_ms", "total_ms", "iqr_low_ms",
            "iqr_high_ms"]
 # (framework, legend label, colour): ROS 2 as gray baseline; vAccel in the Exp. 1 Edge GPU colour (same data)
-FRAMEWORKS = [("ros2", "ROS 2", "#BDBDBD"), ("vaccel", "vAccel", dict((t, c) for t, _, c in TARGETS)["edge_gpu"])]
+FRAMEWORKS = [("ros2", "ROS 2 + SOL", "#BDBDBD"), ("vaccel", "vAccSOL", dict((t, c) for t, _, c in TARGETS)["edge_gpu"])]
 
 FIG_SIZE = (20, 6.8)
 BAR_WIDTH = 0.36
@@ -111,9 +111,10 @@ def plot() -> None:
         model_ticks(ax, models)
         ax.set_title(TITLES.get(task, task))
     axes[0].set_ylabel("Inference latency (ms)")
-    fig.subplots_adjust(left=0.07, right=0.988, top=0.78, bottom=0.2, wspace=0.18)
-    legend_row(fig, [("Framework", patches([(lbl, c) for _, lbl, c in FRAMEWORKS])),
-                     ("Latency contribution", part_patches("Computation", "Communication"))], y=0.87)
+    fig.subplots_adjust(left=0.07, right=0.988, top=0.8, bottom=0.2, wspace=0.18)
+    handles = patches([(lbl, c) for _, lbl, c in FRAMEWORKS]) + part_patches("Computation", "Communication")
+    fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.53, 0.875), ncol=len(handles),
+               columnspacing=1.6, **LEGEND_STYLE)  # one row, no titles
     save(fig, PDF)
 
 

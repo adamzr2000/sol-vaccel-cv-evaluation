@@ -30,11 +30,36 @@ import gi
 gi.require_version('Gst', '1.0')
 from gi.repository import Gst
 
-import rclpy
-from rclpy.qos import QoSProfile
-from cv_bridge import CvBridge
-from sensor_msgs.msg import Image
-from std_msgs.msg import String
+# ROS 2 is optional (USE_ROS, default off): vAccel itself never needs it. Without
+# it no ROS node, spin thread, per-sample result publishing or DDS discovery
+# traffic runs on the robot -- CPU time, energy and Wi-Fi traffic that would
+# otherwise add to what is measured. Frame timestamps then come from the system
+# clock, which is what ROS time is anyway (no use_sim_time).
+USE_ROS = os.environ.get("USE_ROS", "false").strip().lower() in ("1", "true", "yes")
+if USE_ROS:
+    import rclpy
+    from rclpy.qos import QoSProfile
+    from cv_bridge import CvBridge
+    from sensor_msgs.msg import Image
+    from std_msgs.msg import String
+
+
+def ros_ok() -> bool:
+    return rclpy.ok() if USE_ROS else True
+
+
+def now_ns(node) -> int:
+    """Wall-clock ns: the ROS node clock with USE_ROS, else the system clock (same time base)."""
+    return node.get_clock().now().nanoseconds if node is not None else time.time_ns()
+
+
+def shutdown_ros(node, spin_thread=None) -> None:
+    if not USE_ROS:
+        return
+    rclpy.shutdown()
+    if spin_thread is not None:
+        spin_thread.join(timeout=2.0)
+    node.destroy_node()
 
 from pathlib import Path
 
@@ -171,6 +196,35 @@ AVOID_DUPLICATES = parse_boolean_env("AVOID_DUPLICATES", "true")
 
 # Track ROS Data Age (Disable if using rosbags without use_sim_time)
 TRACK_ROS_DATA_AGE = parse_boolean_env("TRACK_ROS_DATA_AGE", "false")
+
+# Console output: one line every PRINT_EVERY samples (1 = every sample, as
+# before). Each line goes through the container log and costs robot CPU time
+# and energy between iterations; not timed either way.
+PRINT_EVERY = max(1, int(os.environ.get("PRINT_EVERY", "50")))
+
+
+def cpu_platform_info() -> dict:
+    """CPU frequency-scaling state of this host (robot), recorded per run:
+    governor(s) and min/max/current frequency of each core. Latency and
+    energy depend on it, so all compared runs should use the same governor."""
+    base = Path("/sys/devices/system/cpu")
+    info = {}
+    for name, key in (("scaling_governor", "governor"), ("scaling_min_freq", "min_khz"),
+                      ("scaling_max_freq", "max_khz"), ("scaling_cur_freq", "cur_khz")):
+        vals = []
+        for f in sorted(base.glob(f"cpu[0-9]*/cpufreq/{name}")):
+            try:
+                vals.append(f.read_text().strip())
+            except OSError:
+                pass
+        if vals:
+            uniq = sorted(set(vals))
+            info[key] = uniq[0] if len(uniq) == 1 else uniq
+    try:
+        info["energy_perf_bias"] = (base / "cpu0/power/energy_perf_bias").read_text().strip()
+    except OSError:
+        pass
+    return info or {"unavailable": True}
 
 
 class GstFrameBuffer:
@@ -310,10 +364,7 @@ class GstFrameBuffer:
         try:
             bgr = np.frombuffer(map_info.data, dtype=np.uint8).reshape((self.height, self.width, 3))
             rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
-            stamp_ns = (
-                self._node.get_clock().now().nanoseconds
-                if self._node is not None else time.time_ns()
-            )
+            stamp_ns = now_ns(self._node)
 
             with self.lock:
                 self.total_received += 1
@@ -397,8 +448,10 @@ class GstFrameBuffer:
 
 
 def main():
-    rclpy.init()
-    node = rclpy.create_node("model_benchmark_ros2_v2")
+    node = None
+    if USE_ROS:
+        rclpy.init()
+        node = rclpy.create_node("model_benchmark_ros2_v2")
 
     print(f"\n🚀 STARTING MODEL BENCHMARK (ROS2 v2 — direct GStreamer input)")
     print(f"   Backend:   {BACKEND}")
@@ -411,7 +464,8 @@ def main():
     print(f"   Duration:  {EXPERIMENT_DURATION_SEC}s")
     print(f"   Samples:   {MAX_SAMPLES if MAX_SAMPLES > 0 else 'not set (duration governs stop)'}")
     print(f"   Warmup:    {WARMUP_ITERS} iters")
-    print(f"   Publish:   class={PUBLISH_CLASS} mask={PUBLISH_MASK} overlay={PUBLISH_OVERLAY}")
+    print(f"   ROS 2:     USE_ROS={USE_ROS} (publish class={PUBLISH_CLASS and USE_ROS} "
+          f"mask={PUBLISH_MASK and USE_ROS} overlay={PUBLISH_OVERLAY and USE_ROS})")
     print(f"   Export:    EXPORT_RESULTS={EXPORT_RESULTS}")
     print(f"   Monitors:  RESOURCE_MONITORING={cfg['monitor_resources']}")
     print(f"   Control:   AVOID_DUPLICATES={AVOID_DUPLICATES} MAX_FPS={MAX_FPS} SERIALIZE_CAPTURE={SERIALIZE_CAPTURE}")
@@ -422,8 +476,7 @@ def main():
 
     if TORCH_DEVICE.type == "cuda" and not torch.cuda.is_available():
         print("   ❌ GPU was selected but no GPU is available.")
-        node.destroy_node()
-        rclpy.shutdown()
+        shutdown_ros(node)
         return
 
     try:
@@ -431,8 +484,7 @@ def main():
         adapter.load_model(CURRENT_MODEL_DIR)
     except Exception as e:
         print(f"   ❌ Error loading model: {e}")
-        node.destroy_node()
-        rclpy.shutdown()
+        shutdown_ros(node)
         return
 
     run_tag = cfg["run_tag"]
@@ -464,28 +516,28 @@ def main():
         width=IMAGE_WIDTH, height=IMAGE_HEIGHT, lan_port=GO2_LAN_PORT,
     )
 
-    # Start spinning so publisher-side ROS internals run (no subscription left to service).
-    spin_thread = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
-    spin_thread.start()
-
-    # Publishers are optional; create only if enabled AND topic is not empty
+    # Result publishing only with USE_ROS (optional per topic: enabled AND topic not empty).
+    spin_thread = None
     pub_class = pub_mask = pub_overlay = None
-    qos_out_class = QoSProfile(depth=10)
-    qos_out_img = QoSProfile(depth=1)
-
-    if PUBLISH_CLASS and OUTPUT_CLASS_TOPIC.strip():
-        pub_class = node.create_publisher(String, OUTPUT_CLASS_TOPIC, qos_out_class)
-    if PUBLISH_MASK and OUTPUT_MASK_TOPIC.strip():
-        pub_mask = node.create_publisher(Image, OUTPUT_MASK_TOPIC, qos_out_img)
-    if PUBLISH_OVERLAY and OUTPUT_OVERLAY_TOPIC.strip():
-        pub_overlay = node.create_publisher(Image, OUTPUT_OVERLAY_TOPIC, qos_out_img)
-
-    bridge = CvBridge()
+    bridge = None
+    if USE_ROS:
+        # Start spinning so publisher-side ROS internals run (no subscription left to service).
+        spin_thread = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
+        spin_thread.start()
+        qos_out_class = QoSProfile(depth=10)
+        qos_out_img = QoSProfile(depth=1)
+        if PUBLISH_CLASS and OUTPUT_CLASS_TOPIC.strip():
+            pub_class = node.create_publisher(String, OUTPUT_CLASS_TOPIC, qos_out_class)
+        if PUBLISH_MASK and OUTPUT_MASK_TOPIC.strip():
+            pub_mask = node.create_publisher(Image, OUTPUT_MASK_TOPIC, qos_out_img)
+        if PUBLISH_OVERLAY and OUTPUT_OVERLAY_TOPIC.strip():
+            pub_overlay = node.create_publisher(Image, OUTPUT_OVERLAY_TOPIC, qos_out_img)
+        bridge = CvBridge()
 
     # Wait for first frame
     print("   ⏳ Waiting for first frame...")
     t_wait0 = time.time()
-    while rclpy.ok():
+    while ros_ok():
         fr = frame_buf.get_latest()
         if fr is not None:
             break
@@ -493,16 +545,14 @@ def main():
             print("   ❌ No frames received within 10s. Check GO2_LAN_PORT / camera multicast stream.")
             # See teardown-order comment above (frame-wait timeout branch).
             frame_buf.stop()
-            rclpy.shutdown()
-            spin_thread.join(timeout=2.0)
-            node.destroy_node()
+            shutdown_ros(node, spin_thread)
             return
         time.sleep(0.05)
 
     # Warmup
     print(f"   🔥 Warming up ({WARMUP_ITERS} iterations)...")
     warm_done = 0
-    while warm_done < WARMUP_ITERS and rclpy.ok():
+    while warm_done < WARMUP_ITERS and ros_ok():
         if IS_VIDEO_MODEL:
             clip = frame_buf.get_clip()
             if clip is None:
@@ -588,6 +638,7 @@ def main():
         time.sleep(1.2)  # Prime the monitors
 
     # Capture Start Time (Using Utils)
+    platform_start = cpu_platform_info()
     t_start_dt, t_start_iso = get_utc_timestamps()
 
     # Timing lists
@@ -619,7 +670,7 @@ def main():
     # FRESH_FRAME: received-frame count when the previous RPC returned.
     fresh_after_count = None
 
-    while rclpy.ok():
+    while ros_ok():
         now = time.time()
         if MAX_SAMPLES > 0:
             if processed_samples >= MAX_SAMPLES:
@@ -677,7 +728,7 @@ def main():
         # --- CALCULATE ROS DATA AGE ---
         if TRACK_ROS_DATA_AGE:
             frame_stamp_ns = frame_buf.get_latest_stamp_ns()
-            current_ros_time_ns = node.get_clock().now().nanoseconds
+            current_ros_time_ns = now_ns(node)
             if frame_stamp_ns is not None:
                 current_ros_data_age_ms = (current_ros_time_ns - frame_stamp_ns) / 1_000_000.0
             else:
@@ -832,15 +883,16 @@ def main():
 
         processed_samples += 1
 
-        print(
-            f"   [{sample_idx + 1}] {input_src} "
-            f"| ROS Age: {current_ros_data_age_ms:.1f}ms "
-            f"| Pre: {current_pre_ms:.1f}ms "
-            f"| Inf: {current_inf_ms:.1f}ms "
-            f"| Post: {current_post_ms:.1f}ms "
-            f"| Total: {current_sys_ms:.1f}ms"
-            f"{detected_info}"
-        )
+        if sample_idx % PRINT_EVERY == 0 or processed_samples == MAX_SAMPLES:
+            print(
+                f"   [{sample_idx + 1}] {input_src} "
+                f"| ROS Age: {current_ros_data_age_ms:.1f}ms "
+                f"| Pre: {current_pre_ms:.1f}ms "
+                f"| Inf: {current_inf_ms:.1f}ms "
+                f"| Post: {current_post_ms:.1f}ms "
+                f"| Total: {current_sys_ms:.1f}ms"
+                f"{detected_info}"
+            )
 
         # Diagnostic: did camera capture work (decode + convert + callback, on
         # the GStreamer thread) run concurrently with this sample's
@@ -867,6 +919,7 @@ def main():
 
     # Capture Stop Time (Using Utils)
     t_stop_dt, t_stop_iso = get_utc_timestamps()
+    platform_stop = cpu_platform_info()
     wall_duration_sec = max(1e-9, (time.time() - start_wall))
 
     # --- STOP RESOURCE MONITORING ---
@@ -888,9 +941,7 @@ def main():
         print("❌ No successful inferences recorded.")
         # See teardown-order comment above (frame-wait timeout branch).
         frame_buf.stop()
-        rclpy.shutdown()
-        spin_thread.join(timeout=2.0)
-        node.destroy_node()
+        shutdown_ros(node, spin_thread)
         return
 
     # Stats
@@ -986,6 +1037,8 @@ def main():
                 "low_priority_decode": bool(LOW_PRIORITY_DECODE),
                 "glibc_tunables": GLIBC_TUNABLES
             },
+            "platform": {"host_cpu_start": platform_start, "host_cpu_stop": platform_stop,
+                         "print_every": PRINT_EVERY},
             "ros_data_age_ms": stats_ros_data_age,
             "preprocessing_ms": stats_pre,
             "inference_ms": stats_inf,
@@ -1019,9 +1072,7 @@ def main():
 
     # See teardown-order comment above (frame-wait timeout branch).
     frame_buf.stop()
-    rclpy.shutdown()
-    spin_thread.join(timeout=2.0)
-    node.destroy_node()
+    shutdown_ros(node, spin_thread)
 
 
 if __name__ == "__main__":

@@ -36,7 +36,7 @@ IDLE_DIR = SYSTEM_STATS / "idle"                          # energy_totals_{devic
 
 LOCAL_RUN_TAG = "isoGSt-opt"        # local inference on the robot (Local CPU)
 REMOTE_RUN_TAG = "e2eGSt-opt"       # offloaded inference, edge GPU
-REMOTE_CPU_RUN_TAG = "e2e"          # offloaded inference, edge CPU (old runs; set to REMOTE_RUN_TAG after rerun)
+REMOTE_CPU_RUN_TAG = "e2eGSt-opt"  # offloaded inference, edge CPU (rerun 2026-11-20)
 EDGE_INFERENCE_RUN_TAG = "iso"      # isolated inference on the edge (pure computation time)
 EDGE_HOST = "edge-asus"
 
@@ -73,8 +73,8 @@ TARGET_TAG = {"robot_cpu": LOCAL_RUN_TAG, "edge_cpu": REMOTE_CPU_RUN_TAG, "edge_
 
 # (compiler, legend label, backend suffix, colour) -- Exp. 2
 COMPILERS = [
-    ("aoti", "AOTInductor", "ptc", "#BDBDBD"),   # PyTorch AOTInductor .pt2 model, vAccel Torch plugin
-    ("sol", "SOL", "sol", "#3A7CA5"),            # SOL-compiled library, vAccel Exec operation
+    ("aoti", "vAccel + PyTorch", "ptc", "#BDBDBD"),  # PyTorch AOTInductor .pt2 model, vAccel Torch plugin
+    ("sol", "vAccSOL", "sol", "#3A7CA5"),         # SOL-compiled library, vAccel Exec operation
 ]
 
 # ------------------------------------------------------------------ runs
@@ -165,11 +165,67 @@ def _energy_totals(path: Path, kind: str):
     return (float(energy), float(d["duration_sec"])) if energy is not None else None
 
 
-def device_energy(run_id: str, device: str):
-    """(energy J, duration s) of `device` over run `run_id` (exact counter total,
-    idle included), or None if not recorded."""
+def _power_samples(run_id: str, host: str, kind: str) -> list:
+    """[(sample time s, W)] of the run's per-second monitor file: CPU = cpu_watts
+    (counter energy of the preceding interval / its length), GPU = power_draw_w
+    summed over GPUs. [] if not recorded."""
+    col, power = ("cpu_watts" if kind == "cpu" else "power_draw_w"), {}
+    # The monitor's file name varies between runs ({run_id}_cpu.csv, {run_id}.csv,
+    # {run_id}_gpu.csv): pick the file by its columns, not its name.
+    for name in (f"{run_id}_{kind}.csv", f"{run_id}.csv"):
+        path = SYSTEM_STATS / host / name
+        if path.exists() and col in path.open().readline().strip().split(","):
+            break
+    else:
+        return []
+    with open(path, newline="") as f:
+        for r in csv.DictReader(f):
+            t = int(r["timestamp"]) / 1000.0
+            power[t] = power.get(t, 0.0) + float(r[col])
+    return sorted(power.items())
+
+
+def _integrate(samples: list, t_start: float, t_end: float, a: float, b: float) -> float:
+    """Energy (J) in [a, b] from per-interval power: sample i holds the power of
+    (t_{i-1}, t_i], the first interval starting at t_start; after the last sample
+    (up to t_end) its power is carried on."""
+    energy, prev = 0.0, t_start
+    for t, p in samples + [(t_end, samples[-1][1])]:
+        energy += p * max(0.0, min(t, b) - max(prev, a))
+        prev = t
+    return energy
+
+
+def _iso_s(iso: str) -> float:
+    from datetime import datetime
+    return datetime.fromisoformat(iso).timestamp()
+
+
+def device_energy(run: dict, device: str):
+    """(energy J, duration s) of `device` over the measured inference loop of
+    `run` (its time_window), or None if not recorded.
+
+    The energy monitors start ~1.2 s before the loop (warm-up of the
+    collectors) and stop ~0.2 s after it. The loop's share is the exact counter
+    total minus the energy before and after the loop, taken from the
+    per-second power samples. Falls back to the whole monitor window (with a
+    warning) if those samples or the loop window are missing."""
     host, kind, _ = DEVICES[device]
-    return _energy_totals(SYSTEM_STATS / host / f"energy_totals_{run_id}.json", kind)
+    path = SYSTEM_STATS / host / f"energy_totals_{run['run_id']}.json"
+    total = _energy_totals(path, kind)
+    if total is None:
+        return None
+    window = run.get("time_window") or {}
+    samples = _power_samples(run["run_id"], host, kind)
+    if not samples or "start" not in window or "stop" not in window:
+        print(f"[warn] {run['run_id']} {device}: no power samples/loop window, energy over the whole monitor window")
+        return total
+    meta = json.loads(path.read_text())
+    mon_start, mon_stop = _iso_s(meta["run_started_iso"]), _iso_s(meta["run_stopped_iso"])
+    loop_start, loop_stop = _iso_s(window["start"]), _iso_s(window["stop"])
+    outside = (_integrate(samples, mon_start, mon_stop, mon_start, loop_start)
+               + _integrate(samples, mon_start, mon_stop, loop_stop, mon_stop))
+    return max(total[0] - outside, 0.0), loop_stop - loop_start
 
 
 def idle_power() -> dict:

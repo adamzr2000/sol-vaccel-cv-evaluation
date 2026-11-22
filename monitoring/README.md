@@ -10,7 +10,7 @@ Both services expose REST APIs and optionally export metrics to CSV files for of
 A third, separate service — **`wifi-stats-collector`** (WiFi link retry rate/RSSI, for
 the small set of network-perturbation experiments) — lives in `wifi-stats-collector/`
 alongside these two, but has its own lifecycle (`start_wifi_monitoring.sh`/
-`stop_wifi_monitoring.sh` at the repo root, not `run_monitoring.sh`) and is documented
+`stop_wifi_monitoring.sh` at the repo root, not `start_monitoring.sh`) and is documented
 in the main [README.md](../README.md) and [README_NETWORK_PERTURBATION.md](../README_NETWORK_PERTURBATION.md) instead of here.
 
 ---

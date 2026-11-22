@@ -1,0 +1,11 @@
+{
+  "tag": "idle-edge-asus-cpu",
+  "run_idx": 1,
+  "mode": [
+    "cpu"
+  ],
+  "run_started_iso": "2026-07-24T07:06:05.115804+00:00",
+  "run_stopped_iso": "2026-07-24T07:10:05.163370+00:00",
+  "duration_sec": 240.048,
+  "cpu_energy_j_total": 1088.854
+}

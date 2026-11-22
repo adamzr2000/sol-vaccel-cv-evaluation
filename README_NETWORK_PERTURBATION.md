@@ -6,7 +6,7 @@ WiFi6 STA via the miniPC. Not applicable to Phase 1 (edge isolation) or Phase 2
 
 Scope is deliberately minimal: **app performance (model-stats) + WiFi stats only**
 — docker/system resource monitoring is skipped (`--monitoring false`), so
-`run_monitoring.sh` is not needed for these runs. All commands below use a single
+`start_monitoring.sh` is not needed for these runs. All commands below use a single
 example model (`resnet50`) — keep it the same across baseline and load levels
 within one comparison set.
 

@@ -1,0 +1,12 @@
+{
+  "tag": "system-stats",
+  "run_idx": 1,
+  "mode": [
+    "cpu",
+    "net"
+  ],
+  "run_started_iso": "2026-09-09T13:57:48.834723+00:00",
+  "run_stopped_iso": "2026-09-09T14:00:22.699281+00:00",
+  "duration_sec": 153.865,
+  "cpu_energy_j_total": 421.461
+}

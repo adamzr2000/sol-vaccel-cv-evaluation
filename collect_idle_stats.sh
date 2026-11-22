@@ -13,7 +13,7 @@ set -euo pipefail
 # energy_totals_*.json 1:1 aligned with its own CSV.
 #
 # Requires the system-stats-collector container to already be running on
-# this host (./run_monitoring.sh edge|robot) and reachable at --endpoint
+# this host (./start_monitoring.sh edge|robot) and reachable at --endpoint
 # (default: http://localhost:6001).
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -42,7 +42,7 @@ Optional:
   --endpoint    system-stats-collector base URL (default: ${ENDPOINT})
 
 Requires the system-stats-collector container to already be running on this
-host (./run_monitoring.sh edge|robot) and reachable at --endpoint.
+host (./start_monitoring.sh edge|robot) and reachable at --endpoint.
 
 Output (one CSV + one energy_totals JSON per requested mode):
   results/experiments/system-stats/idle/<host>-cpu-idle.csv
@@ -84,7 +84,7 @@ done
 mkdir -p "${HOST_OUT_DIR}"
 
 if ! curl -sf "${ENDPOINT}/health" > /dev/null; then
-  echo "[err] system-stats-collector not reachable at ${ENDPOINT} (is it running? see run_monitoring.sh)" >&2
+  echo "[err] system-stats-collector not reachable at ${ENDPOINT} (is it running? see start_monitoring.sh)" >&2
   exit 1
 fi
 

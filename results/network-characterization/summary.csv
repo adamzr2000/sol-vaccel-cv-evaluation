@@ -1,0 +1,5 @@
+metric,unit,mean,std,samples
+RTT latency,ms,4.56,0.34,300
+Jitter,ms,0.30,0.39,299
+Uplink throughput (robot -> edge),Mbit/s,648.02,9.58,90
+Downlink throughput (edge -> robot),Mbit/s,743.08,70.92,90

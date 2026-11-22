@@ -21,9 +21,9 @@ python3 /scripts/sol_vaccel_wrappers/gen_sol_vaccel_wrappers.py models
 
 ---
 
-## ROS Benchmark
+## Benchmark
 
-All commands below run **inside the container** from `/src`. Start the container with `./run_ros.sh` before running experiments.
+`evaluate_models_ros_v2.sh` runs **inside the container** (from `/src`), started with `./run_ros.sh`; the other commands run on the host.
 
 ### Setup
 
@@ -38,60 +38,51 @@ See [monitoring/](./monitoring) for details.
 
 ---
 
-### Phase 1 — Edge isolation (run on each edge host)
+### Phase 1 — Local execution (run on robot)
+
+**Goal:** inference latency and energy on the robot itself (CPU).
+
+**Robot:**
+```bash
+./start_monitoring.sh robot          # host
+./run_ros.sh cpu --domain-id 10      # host: opens the container
+./evaluate_models_ros_v2.sh --host robot --device cpu --backend vaccel-local-sol --run-tag iso --sleep 30 --samples 1000 --model resnet50,r3d_18,deeplabv3_resnet50
+```
+Use `--backend vaccel-local-ptc` for vAccel + PyTorch.
+
+---
+
+### Phase 3 — Edge execution (run on robot)
+
+**Goal:** offloaded inference to the edge: latency (robot) + computation inside the vAccel agent (edge), with energy monitoring on both hosts.
+
+**Edge** (keep both running):
+```bash
+./start_monitoring.sh edge          # host
+python3 agent_server.py             # host, repo root: fresh profiled vAccel agent per model run
+```
+
+**Robot:**
+```bash
+./start_monitoring.sh robot          # host
+./run_ros.sh cpu --domain-id 10      # host: opens the container
+./evaluate_models_ros_v2.sh --host robot --device gpu --backend vaccel-remote-sol --remote-host edge-asus --run-tag e2e --sleep 30 --samples 1000 --agent-server true --model resnet50,r3d_18,deeplabv3_resnet50
+```
+- `--device gpu|cpu` = Edge GPU / Edge CPU; `--backend vaccel-remote-sol|vaccel-remote-ptc`.
+- Agent computation per inference is saved on the edge in `results/experiments/agent-profile/edge-asus/{run_id}.csv` (row *i* = row *i* of the robot's `benchmark_data.csv`).
+- Keep the edge free of other load (`load_1min` in the `agent /start` line should be ~0).
+
+---
+
+### Edge isolation (optional)
 
 **Goal:** measure pure inference latency per backend on edge hardware, without RPC overhead. Monitoring is disabled; only `benchmark_summary.json` is saved for later latency breakdown analysis.
 
 1. Run benchmark on **edge-asus** (example with sol gpu backend):
 ```bash
-./run_ros.sh gpu --domain-id 10
+./run_ros.sh gpu
 
-./evaluate_models_ros.sh --host edge-asus --device gpu --backend vaccel-local-sol --run-tag iso --monitoring false --sleep 30 --samples 1000 --model resnet50,swin_t,swin_s,swin_v2_b,swin3d_s,swin3d_b,r3d_18,r2plus1d_18,fcn_resnet101,fcn_resnet50,deeplabv3_resnet101,deeplabv3_resnet50
-```
-
----
-
-### Phase 2 — Robot local (run on robot)
-
-**Goal:** measure robot-side inference latency for vaccel-local backends (CPU only). Captures robot resource usage.
-
-Requires: monitoring running on the robot host
-
-1. Start ROS 2 robot drivers on **robot** (see [ros-vision-service](https://github.com/adamzr2000/ros-vision-service#setup) project):
-```bash
-./start_go2.sh
-```
-
-2. Run benchmark on **robot** (example with sol cpu backend):
-```bash
-./run_ros.sh cpu --domain-id 10
-
-MONITOR_DOCKER=0 ./evaluate_models_ros.sh --host robot --device cpu --backend vaccel-local-sol --run-tag iso --sleep 30 --samples 1000 --model resnet50,swin_t,swin_s,swin_v2_b,swin3d_s,swin3d_b,r3d_18,r2plus1d_18,fcn_resnet101,fcn_resnet50,deeplabv3_resnet101,deeplabv3_resnet50
-```
-
----
-
-### Phase 3 — Robot remote (run on robot)
-
-**Goal:** measure end-to-end latency (robot preprocessing + RPC transport + edge inference + return) with full resource monitoring on both robot and edge simultaneously.
-
-Requires: monitoring running on both hosts
-
-1. Start ROS 2 robot drivers on **robot** (see [ros-vision-service](https://github.com/adamzr2000/ros-vision-service#setup) project):
-```bash
-./start_go2.sh
-```
-
-2. Start vaccel agent on **edge-asus** (example with sol gpu backend):
-```bash
-./run_agent_sol.sh gpu
-```
-
-3. Run benchmark on **robot** (example with sol gpu backend):
-```bash
-./run_ros.sh cpu --domain-id 10
-
-MONITOR_DOCKER=0 ./evaluate_models_ros.sh --host robot --device gpu --backend vaccel-remote-sol --run-tag e2e --remote-host edge-asus --samples 1000 --model resnet50
+./evaluate_models_ros_v2.sh --host edge-asus --device gpu --backend vaccel-local-sol --run-tag iso --monitoring false --sleep 30 --samples 1000 --model resnet50,swin_t,swin_s,swin_v2_b,swin3d_s,swin3d_b,r3d_18,r2plus1d_18,fcn_resnet101,fcn_resnet50,deeplabv3_resnet101,deeplabv3_resnet50
 ```
 
 ---
@@ -101,12 +92,12 @@ MONITOR_DOCKER=0 ./evaluate_models_ros.sh --host robot --device gpu --backend va
 ```
 results/experiments/
   model-stats/{host}/{run_id}/benchmark_summary.json   ← latency + FPS stats
-  docker-stats/{host}/torchvision-app_{run_id}.csv     ← container CPU/mem
   system-stats/{host}/{run_id}.csv                     ← host CPU or GPU stats
   system-stats/{host}/{run_id}_net.csv                 ← network usage
+  agent-profile/edge-asus/{run_id}.{csv,log}           ← per-inference agent computation (edge, --agent-server true)
 ```
 
-For remote runs (Phase 3), edge-side stats are captured under `docker-stats/{remote-host}/` and `system-stats/{remote-host}/` simultaneously. The edge-side docker-stats file is named `torchvision-app-agent_{run_id}.csv` (the agent container), not `torchvision-app_...`.
+For remote runs (Phase 3), edge-side stats are captured under `system-stats/{remote-host}/` simultaneously.
 
 `run_id` format:
 - Local: `{tag}_{model}_{backend}_{device}` — e.g. `iso_resnet50_vaccel-local-sol_gpu`
@@ -130,15 +121,12 @@ set only the ones you actually want to change)
 
 **Env vars (export before running, no flag needed):**
 ```bash
-MONITOR_DOCKER=0   # keep system-stats + model-stats monitoring, skip docker-stats
-                    # (default: on; useful when the client container isn't on --host,
-                    # e.g. a vaccel-remote-* run where the agent's docker daemon has
-                    # no "torchvision-app" container to inspect)
+MONITOR_DOCKER=1   # also record docker-stats per container (default: off)
 
 # Advanced, rarely needed -- see evaluate_models_ros.sh's own top-of-file
 # defaults for the exact values these override:
 VACCEL_RPC_PORT=9125              # vaccel agent RPC port
-OMP_THREADS_OVERRIDE=12           # OMP thread cap on edge hosts
+OMP_THREADS_OVERRIDE=8            # OMP threads on edge hosts (default: 8 on edge-asus, pinned to its P-cores)
 WIFI_STATS_ENDPOINT=http://192.168.2.1:6002   # miniPC's wifi-stats-collector
 WIFI_IFACE=wlp1s0                 # miniPC's wireless interface
 ```

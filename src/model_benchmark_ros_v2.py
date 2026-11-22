@@ -151,15 +151,6 @@ OMP_WAIT_POLICY = os.environ.get("OMP_WAIT_POLICY") or "default"
 # the achieved rate (it aligns the loop to the frame grid: ~7.1/s for video
 # and segmentation, unchanged for classification), not what is timed.
 FRESH_FRAME = parse_boolean_env("FRESH_FRAME", "false")
-# Opt-in (default off; evaluate_models_ros_v2.sh --low-priority-decode):
-# decode on the GStreamer streaming thread only (avdec_h264 max-threads=1 --
-# libav's own decode threads would keep the default priority) and drop that
-# thread to nice 19, so when camera decode and preprocessing compete for the
-# robot's 4 cores, preprocessing wins; decode catches up during the RPC wait.
-# Unlike FRESH_FRAME it keeps the loop's rate (no wait for a new frame), so
-# run length/energy are unchanged. Measured with pre_contention_probe.py
-# (NICE_DECODE): video 65 -> 56 ms vs 54 ms for the ros2-like order.
-LOW_PRIORITY_DECODE = parse_boolean_env("LOW_PRIORITY_DECODE", "false")
 # Recorded as-run (evaluate_models_ros_v2.sh --malloc-tunables): glibc malloc
 # settings that keep freed memory in the process instead of returning it to
 # the OS between samples -- otherwise, depending on the heap layout of a given
@@ -307,20 +298,12 @@ class GstFrameBuffer:
         self.appsink.connect("new-sample", self._on_new_sample)
         self.pipeline.get_by_name("dec").get_static_pad("sink").add_probe(
             Gst.PadProbeType.BUFFER, self._on_decode_input)
-        self._decode_niced = False
-        if LOW_PRIORITY_DECODE:
-            self.pipeline.get_by_name("dec").set_property("max-threads", 1)
         self.pipeline.set_state(Gst.State.PLAYING)
 
     def _on_decode_input(self, pad, info):
         # h264parse outputs one access unit (= one frame) per buffer, so this
         # marks the start of that frame's decode. Keeps the earliest start if a
         # frame ever spans several buffers before its callback fires.
-        if LOW_PRIORITY_DECODE and not self._decode_niced:
-            # Runs on the streaming thread itself (no queue elements), which
-            # does depay/parse/decode/convert/callback -- Linux nice is per thread.
-            os.setpriority(os.PRIO_PROCESS, threading.get_native_id(), 19)
-            self._decode_niced = True
         if self._decode_start_ns is None:
             self._decode_start_ns = time.perf_counter_ns()
         return Gst.PadProbeReturn.OK
@@ -470,8 +453,7 @@ def main():
     print(f"   Monitors:  RESOURCE_MONITORING={cfg['monitor_resources']}")
     print(f"   Control:   AVOID_DUPLICATES={AVOID_DUPLICATES} MAX_FPS={MAX_FPS} SERIALIZE_CAPTURE={SERIALIZE_CAPTURE}")
     print(f"   OpenMP:    OMP_WAIT_POLICY={OMP_WAIT_POLICY} threads={torch.get_num_threads()}")
-    print(f"   Capture:   FRESH_FRAME={FRESH_FRAME} LOW_PRIORITY_DECODE={LOW_PRIORITY_DECODE} "
-          f"GLIBC_TUNABLES={GLIBC_TUNABLES}")
+    print(f"   Capture:   FRESH_FRAME={FRESH_FRAME} GLIBC_TUNABLES={GLIBC_TUNABLES}")
     print(f"   Data Age:  TRACK_ROS_DATA_AGE={TRACK_ROS_DATA_AGE}")
 
     if TORCH_DEVICE.type == "cuda" and not torch.cuda.is_available():
@@ -1034,7 +1016,6 @@ def main():
                 "serialize_capture": bool(SERIALIZE_CAPTURE),
                 "omp_wait_policy": OMP_WAIT_POLICY,
                 "fresh_frame": bool(FRESH_FRAME),
-                "low_priority_decode": bool(LOW_PRIORITY_DECODE),
                 "glibc_tunables": GLIBC_TUNABLES
             },
             "platform": {"host_cpu_start": platform_start, "host_cpu_stop": platform_stop,

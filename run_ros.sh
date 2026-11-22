@@ -70,11 +70,7 @@ case "$MODE" in
     ;;
 esac
 
-# edge-asus (hostname asus-g815, P-cores 0-7, E-cores 8-23): pin the container to the 8 P-cores,
-# the same setup as the vAccel agents (run_agent_sol.sh / run_agent_ptc.sh) and the ROS 2
-# inference node, so local and remote runs share the same CPU conditions. Inside the container
-# nproc is then 8, which evaluate_models_ros*.sh uses as the OMP thread count on edge hosts.
-# No effect on the robot or any other host. NO_PIN=1 restores the previous behaviour.
+# edge-asus: pin to the 8 P-cores like the vAccel agents (NO_PIN=1 to disable)
 PIN_ARGS=()
 if [[ "$(hostname)" == "asus-g815" && "${NO_PIN:-0}" != "1" ]]; then
   PIN_ARGS=(--cpuset-cpus 0-7)

@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
-# Rebuilds libvaccel-torch.so.0.2.1 with torch_profiling_sync.diff, inside the PyTorch agent
-# image (same libtorch/vAccel as the agent). Works on a temporary copy; nothing in the image
-# or in vaccel-plugin-torch is modified. Output: ./libvaccel-torch.so.0.2.1 (next to this script).
-#
-# The patch only changes profiling: torch_run now waits for the GPU (cuda synchronize; the
-# following .cpu() waited anyway, so the call time is unchanged), and a new region
-# "torch_predict" covers H2D + run + sync + D2H. Use it with check_agent_profile.py
-# --region torch_predict+torch_out, which has the same scope as SOL's sol_predict.
+# Rebuilds libvaccel-torch.so.0.2.1 with torch_profiling_sync.diff (GPU sync in torch_run +
+# torch_predict region) inside the PyTorch agent image. Output next to this script.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 IMAGE="harbor.nbfc.io/desire6g/torchvision-vaccel:x86_64"

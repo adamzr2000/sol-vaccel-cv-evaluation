@@ -22,9 +22,7 @@ CPU_AFFINITY=""           # CPU core mask for taskset (e.g. "0-7" for P-cores on
 # to keep the normal CLI surface small -- export these before invoking the
 # script if you ever need something other than the default) ----
 VACCEL_RPC_PORT="${VACCEL_RPC_PORT:-9125}"               # vaccel agent RPC port
-# OMP thread cap on edge hosts: 12, or the usable CPUs if fewer -- nproc respects the container's
-# cpuset, so this is 8 when run_ros.sh pins the container to edge-asus' 8 P-cores (same setup as the
-# vAccel agents). Set OMP_THREADS_OVERRIDE explicitly to force a value.
+# OMP threads on edge hosts: min(12, usable CPUs) -> 8 when run_ros.sh pins to the P-cores
 OMP_THREADS_OVERRIDE="${OMP_THREADS_OVERRIDE:-$(( $(nproc) < 12 ? $(nproc) : 12 ))}"
 WIFI_STATS_ENDPOINT="${WIFI_STATS_ENDPOINT:-http://192.168.2.1:6002}"  # miniPC's wifi-stats-collector
 WIFI_IFACE="${WIFI_IFACE:-wlp1s0}"                       # miniPC's wireless interface

@@ -30,18 +30,8 @@ SESSION = re.compile(r"Created session \d+")
 
 
 def per_call(log: Path, region: str, start: float, stop: float, n_samples: int) -> list:
-    """Per-call durations (ms) of `region` for the run's measured calls.
-
-    Sessions are delimited by the agent's "Created session" lines (each client session loads
-    its own wrapper copy, so the cumulative counters restart). The run's session is the one whose
-    lines overlap [start, stop] (timestamps only pick the session, so a small robot/edge clock
-    offset does not matter); its measured calls are its last n_samples calls by nr_entries
-    (warm-up/primer calls come first).
-    The agent's log output is occasionally interleaved: a [prof] entry may sit mid-line (the
-    last seen timestamp is used), be lost, or be truncated (e.g. "nr_entries: 173" -> "17").
-    Entries that break the strictly increasing (nr_entries, total_time) sequence are dropped; a
-    call whose predecessor entry is missing has no known duration and is skipped (reported).
-    """
+    """{sample index: ms} of `region` for the run's measured calls: the last n_samples calls of the
+    agent session overlapping [start, stop]. Garbled/truncated log entries are dropped."""
     sessions, cur, t = [], {}, None
     for raw in log.read_text(errors="replace").splitlines():
         line = ANSI.sub("", raw)

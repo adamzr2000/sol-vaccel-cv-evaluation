@@ -20,13 +20,10 @@ CPU_AFFINITY=""           # CPU core mask for taskset (e.g. "0-7" for P-cores on
 # to keep the normal CLI surface small -- export these before invoking the
 # script if you ever need something other than the default) ----
 VACCEL_RPC_PORT="${VACCEL_RPC_PORT:-9125}"               # vaccel agent RPC port
-# OMP thread cap on edge hosts: 12, or the usable CPUs if fewer -- nproc respects the container's
-# cpuset, so this is 8 when run_ros.sh pins the container to edge-asus' 8 P-cores (same setup as the
-# vAccel agents). Set OMP_THREADS_OVERRIDE explicitly to force a value.
+# OMP threads on edge hosts: min(12, usable CPUs) -> 8 when run_ros.sh pins to the P-cores
 OMP_THREADS_OVERRIDE="${OMP_THREADS_OVERRIDE:-$(( $(nproc) < 12 ? $(nproc) : 12 ))}"
 AGENT_SERVER_PORT="${AGENT_SERVER_PORT:-9130}"           # agent_server.py on the remote host
-MONITOR_DOCKER="${MONITOR_DOCKER:-0}"                    # per-container docker stats: off (not used in the
-                                                         # paper); system/energy monitoring is unaffected
+MONITOR_DOCKER="${MONITOR_DOCKER:-0}"                    # per-container docker stats (off by default)
 WIFI_STATS_ENDPOINT="${WIFI_STATS_ENDPOINT:-http://192.168.2.1:6002}"  # miniPC's wifi-stats-collector
 WIFI_IFACE="${WIFI_IFACE:-wlp1s0}"                       # miniPC's wireless interface
 
@@ -72,16 +69,14 @@ Optional:
                      Takes priority over --duration when set (default: unset — duration governs stop).
   --export           true|false — export JSON/CSV results (default: true)
   --monitoring       true|false — system (CPU/GPU power, network) resource monitoring (default: true);
-                     per-container docker stats only with MONITOR_DOCKER=1 (default 0, unused in the paper)
+                     per-container docker stats only with MONITOR_DOCKER=1
   --wifi-monitoring  true|false — WiFi link stats (retries/RSSI) from the miniPC's
                      wifi-stats-collector (default: false). Only takes effect with --host robot,
                      ignored (with a warning) otherwise. Endpoint/interface fixed at
                      ${WIFI_STATS_ENDPOINT} / ${WIFI_IFACE}; override via the
                      WIFI_STATS_ENDPOINT / WIFI_IFACE env vars if ever needed.
-  --agent-server     true|false — vaccel-remote-sol/ptc only: a fresh, profiled vAccel agent per model
-                     via agent_server.py on the remote host (port ${AGENT_SERVER_PORT}), started before
-                     and stopped after each run; it saves the agent log and the per-call agent-side
-                     computation of the measured inferences (default: false = agent managed by hand).
+  --agent-server     true|false — vaccel-remote-sol/ptc: fresh profiled agent per model via
+                     agent_server.py on the remote host (default: false)
   --cpu-affinity     CPU core list for taskset (e.g. "0-7" pins to P-cores only for fair cross-backend comparison)
   --remote-host      robot|edge-asus|edge-xtreme|edge-alienware (default: ${REMOTE_HOST})
                      remote inference target for vaccel-remote-* backends (use --host value for loopback)
@@ -96,12 +91,9 @@ Optional:
                      overlapping preprocessing whenever pre+RPC+post exceeds the ~70 ms frame
                      interval (video, segmentation) -- the order go2_camerapublisher has by design.
                      Aligns the loop to the frame grid (~7.1/s video/segmentation; no MAX_FPS needed).
-  --low-priority-decode true|false — decode the camera on one thread at nice 19, so preprocessing
-                     wins the CPU when they overlap (default: false). Keeps the loop's rate,
-                     unlike --fresh-frame -- use it where --fresh-frame would cut throughput (video).
   --malloc-tunables  true|false — GLIBC_TUNABLES keeping freed memory in the process (mmap threshold
                      32 MiB, trim threshold 256 MiB) instead of re-faulting it each preprocessing
-                     (default: false). Use the same value as start_go2.sh --malloc-tunables.
+                     (default: true). Use the same value as start_go2.sh --malloc-tunables.
 
 Every --<flag> true|false option defaults to the value shown above and is
 fully independent of the others -- e.g. --export false --monitoring true
@@ -126,8 +118,7 @@ EXPERIMENT_DURATION_SEC=120
 MAX_SAMPLES=0   # 0 = disabled; --duration governs stop as today
 OMP_WAIT_POLICY_OPT=""   # empty = libgomp default (OMP_WAIT_POLICY unset)
 FRESH_FRAME_OPT=0
-LOW_PRIORITY_DECODE_OPT=0
-MALLOC_TUNABLES_OPT=0
+MALLOC_TUNABLES_OPT=1
 AGENT_SERVER=0
 # Same value as ros-vision-service's start_go2.sh --malloc-tunables.
 MALLOC_TUNABLES_VALUE="glibc.malloc.mmap_threshold=33554432:glibc.malloc.trim_threshold=268435456"
@@ -146,7 +137,6 @@ while [[ $# -gt 0 ]]; do
     --remote-host)      REMOTE_HOST="$2"; shift 2 ;;
     --omp-wait-policy)  OMP_WAIT_POLICY_OPT="${2,,}"; shift 2 ;;
     --fresh-frame)      FRESH_FRAME_OPT="$(parse_bool "$2")"; shift 2 ;;
-    --low-priority-decode) LOW_PRIORITY_DECODE_OPT="$(parse_bool "$2")"; shift 2 ;;
     --malloc-tunables)  MALLOC_TUNABLES_OPT="$(parse_bool "$2")"; shift 2 ;;
     --export)           EXPORT_RESULTS="$(parse_bool "$2")"; shift 2 ;;
     --monitoring)        RESOURCE_MONITORING="$(parse_bool "$2")"; shift 2 ;;
@@ -194,9 +184,8 @@ echo "[bench] OMP_WAIT_POLICY=${OMP_WAIT_POLICY:-default (unset)}"
 # Exported (or unset) explicitly either way, so a stray value in the calling
 # shell can't leak in -- model_benchmark_ros_v2.py records what it ran with.
 if [[ "${FRESH_FRAME_OPT}" -eq 1 ]]; then export FRESH_FRAME=true; else export FRESH_FRAME=false; fi
-if [[ "${LOW_PRIORITY_DECODE_OPT}" -eq 1 ]]; then export LOW_PRIORITY_DECODE=true; else export LOW_PRIORITY_DECODE=false; fi
 if [[ "${MALLOC_TUNABLES_OPT}" -eq 1 ]]; then export GLIBC_TUNABLES="${MALLOC_TUNABLES_VALUE}"; else unset GLIBC_TUNABLES; fi
-echo "[bench] FRESH_FRAME=${FRESH_FRAME} LOW_PRIORITY_DECODE=${LOW_PRIORITY_DECODE} GLIBC_TUNABLES=${GLIBC_TUNABLES:-default (unset)}"
+echo "[bench] FRESH_FRAME=${FRESH_FRAME} GLIBC_TUNABLES=${GLIBC_TUNABLES:-default (unset)}"
 
 # ---- Validate backend ----
 case "${BACKEND}" in
@@ -230,7 +219,7 @@ case "${REMOTE_HOST}" in
   *) echo "[err] Invalid remote host: ${REMOTE_HOST}"; exit 2 ;;
 esac
 
-# ---- Agent server (--agent-server true): same host as the vAccel agent ----
+# ---- Agent server (--agent-server true) ----
 if [[ "${AGENT_SERVER}" -eq 1 ]]; then
   case "${BACKEND}" in
     vaccel-remote-sol|vaccel-remote-ptc) ;;
@@ -329,7 +318,7 @@ run_one () {
       > /dev/null || echo "[warn] wifi-stats /start failed (continuing without it)"
   fi
 
-  # Fresh profiled agent for this run (its log/CSV are named after the run id, = _wifi_tag)
+  # Fresh agent for this run (log/CSV named after the run id)
   if [[ "${AGENT_SERVER}" -eq 1 ]]; then
     local _resp
     _resp="$(curl -s --max-time 150 -X POST "${AGENT_SERVER_URL}/start" -H "Content-Type: application/json" \
@@ -363,10 +352,10 @@ run_one () {
       || echo "[warn] wifi-stats /stop failed"
   fi
 
-  # Stop the agent (completes its log); the summary tells the server which calls were measured
+  # Stop the agent; the summary tells the server which calls were measured
   if [[ "${AGENT_SERVER}" -eq 1 ]]; then
     local _summary="${RESULTS_DIR:-/results/experiments/model-stats}/${HOST}/${_wifi_tag}/benchmark_summary.json"
-    [[ ( $_rc -eq 0 || $_rc -eq 134 ) && -f "${_summary}" ]] || _summary=/dev/null   # failed run: no CSV
+    [[ ( $_rc -eq 0 || $_rc -eq 134 ) && -f "${_summary}" ]] || _summary=/dev/null
     echo "[bench] agent /stop: $(curl -s --max-time 90 -X POST "${AGENT_SERVER_URL}/stop" \
       -H "Content-Type: application/json" --data-binary @"${_summary}" || echo "no response")"
   fi

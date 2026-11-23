@@ -1,0 +1,138 @@
+{
+    "run_id": "e2e_swin_t_vaccel-remote-ptc_edge-asus-cpu",
+    "backend": "vaccel-remote-ptc",
+    "host": "robot",
+    "model": "swin_t",
+    "model_type": "classification",
+    "device": "cpu",
+    "num_samples": 1000,
+    "time_window": {
+        "start": "2026-11-23T12:32:29.121991+00:00",
+        "stop": "2026-11-23T12:33:39.126051+00:00",
+        "duration_sec": 70.00406
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 26.39,
+        "inference_std": 1.25,
+        "system": 20.51,
+        "system_std": 1.04,
+        "processed": 14.28,
+        "camera_observed": 14.29
+    },
+    "stream": {
+        "avoid_duplicates": true,
+        "received_frames": 1004,
+        "processed_frames": 1000,
+        "drop_ratio": 0.003984,
+        "duplicates_skipped_loops": 18584,
+        "inference_failed": 0,
+        "frame_source": "gstreamer_direct",
+        "serialize_capture": false,
+        "omp_wait_policy": "default",
+        "fresh_frame": false,
+        "glibc_tunables": "glibc.malloc.mmap_threshold=33554432:glibc.malloc.trim_threshold=268435456"
+    },
+    "platform": {
+        "host_cpu_start": {
+            "governor": "powersave",
+            "min_khz": "700000",
+            "max_khz": "3400000",
+            "cur_khz": [
+                "1523457",
+                "1617068",
+                "1617122",
+                "1714741"
+            ],
+            "energy_perf_bias": "7"
+        },
+        "host_cpu_stop": {
+            "governor": "powersave",
+            "min_khz": "700000",
+            "max_khz": "3400000",
+            "cur_khz": [
+                "1041862",
+                "1228585",
+                "1329074",
+                "700000"
+            ],
+            "energy_perf_bias": "7"
+        },
+        "print_every": 50
+    },
+    "ros_data_age_ms": {
+        "mean": -1.0,
+        "std": 0.0,
+        "min": -1.0,
+        "max": -1.0,
+        "p25": -1.0,
+        "p50": -1.0,
+        "p75": -1.0,
+        "p90": -1.0,
+        "p95": -1.0,
+        "p99": -1.0
+    },
+    "preprocessing_ms": {
+        "mean": 10.3292,
+        "std": 1.856,
+        "min": 6.2828,
+        "max": 39.6808,
+        "p25": 9.5661,
+        "p50": 9.8106,
+        "p75": 10.245,
+        "p90": 11.9911,
+        "p95": 13.6846,
+        "p99": 17.5016
+    },
+    "inference_ms": {
+        "mean": 37.8914,
+        "std": 1.9068,
+        "min": 33.8282,
+        "max": 54.8778,
+        "p25": 36.6723,
+        "p50": 37.549,
+        "p75": 38.7316,
+        "p90": 40.4606,
+        "p95": 41.5672,
+        "p99": 43.1164
+    },
+    "postprocessing_ms": {
+        "mean": 0.5203,
+        "std": 0.0914,
+        "min": 0.2702,
+        "max": 0.9809,
+        "p25": 0.4517,
+        "p50": 0.5243,
+        "p75": 0.5824,
+        "p90": 0.6297,
+        "p95": 0.6668,
+        "p99": 0.7249
+    },
+    "system_ms": {
+        "mean": 48.7498,
+        "std": 2.7384,
+        "min": 43.512,
+        "max": 77.9968,
+        "p25": 47.0796,
+        "p50": 48.1289,
+        "p75": 49.7742,
+        "p90": 51.7672,
+        "p95": 53.3734,
+        "p99": 57.7581
+    },
+    "confidence_score": {
+        "mean": 17.2477,
+        "std": 3.8457,
+        "min": 8.921,
+        "max": 31.0654,
+        "p25": 14.4207,
+        "p50": 17.0474,
+        "p75": 19.5162,
+        "p90": 22.319,
+        "p95": 24.0912,
+        "p99": 27.8685
+    },
+    "remote_host": "edge-asus",
+    "local_device": "cpu",
+    "max_samples": 1000
+}

@@ -1,0 +1,137 @@
+{
+    "run_id": "iso_swin3d_s_vaccel-local-sol_cpu",
+    "backend": "vaccel-local-sol",
+    "host": "robot",
+    "model": "swin3d_s",
+    "model_type": "video_classification",
+    "device": "cpu",
+    "num_samples": 1000,
+    "time_window": {
+        "start": "2026-11-23T09:34:13.951397+00:00",
+        "stop": "2026-11-23T09:46:09.079498+00:00",
+        "duration_sec": 715.128101
+    },
+    "frames_per_sample": 16,
+    "fps": {
+        "inference": 1.54,
+        "inference_std": 0.03,
+        "system": 1.41,
+        "system_std": 0.03,
+        "processed": 1.4,
+        "camera_observed": 14.28
+    },
+    "stream": {
+        "avoid_duplicates": true,
+        "received_frames": 10219,
+        "processed_frames": 1000,
+        "drop_ratio": 0.902143,
+        "duplicates_skipped_loops": 12,
+        "inference_failed": 0,
+        "frame_source": "gstreamer_direct",
+        "serialize_capture": false,
+        "omp_wait_policy": "default",
+        "fresh_frame": false,
+        "glibc_tunables": "glibc.malloc.mmap_threshold=33554432:glibc.malloc.trim_threshold=268435456"
+    },
+    "platform": {
+        "host_cpu_start": {
+            "governor": "powersave",
+            "min_khz": "700000",
+            "max_khz": "3400000",
+            "cur_khz": [
+                "1474232",
+                "1810990",
+                "1858123",
+                "700000"
+            ],
+            "energy_perf_bias": "7"
+        },
+        "host_cpu_stop": {
+            "governor": "powersave",
+            "min_khz": "700000",
+            "max_khz": "3400000",
+            "cur_khz": [
+                "2599966",
+                "2599971",
+                "2599988",
+                "2600072"
+            ],
+            "energy_perf_bias": "7"
+        },
+        "print_every": 50
+    },
+    "ros_data_age_ms": {
+        "mean": -1.0,
+        "std": 0.0,
+        "min": -1.0,
+        "max": -1.0,
+        "p25": -1.0,
+        "p50": -1.0,
+        "p75": -1.0,
+        "p90": -1.0,
+        "p95": -1.0,
+        "p99": -1.0
+    },
+    "preprocessing_ms": {
+        "mean": 62.2087,
+        "std": 2.6214,
+        "min": 54.4849,
+        "max": 77.0614,
+        "p25": 61.7329,
+        "p50": 62.1447,
+        "p75": 62.636,
+        "p90": 64.1026,
+        "p95": 65.7633,
+        "p99": 72.6567
+    },
+    "inference_ms": {
+        "mean": 647.7426,
+        "std": 12.5367,
+        "min": 594.6894,
+        "max": 789.1093,
+        "p25": 643.5327,
+        "p50": 647.7157,
+        "p75": 653.097,
+        "p90": 657.8617,
+        "p95": 661.113,
+        "p99": 669.4532
+    },
+    "postprocessing_ms": {
+        "mean": 0.2072,
+        "std": 0.0377,
+        "min": 0.1844,
+        "max": 1.0314,
+        "p25": 0.202,
+        "p50": 0.2037,
+        "p75": 0.2068,
+        "p90": 0.2134,
+        "p95": 0.2179,
+        "p99": 0.2286
+    },
+    "system_ms": {
+        "mean": 710.164,
+        "std": 13.1195,
+        "min": 650.4313,
+        "max": 851.3413,
+        "p25": 705.9079,
+        "p50": 710.333,
+        "p75": 715.6817,
+        "p90": 720.3165,
+        "p95": 722.9604,
+        "p99": 731.9923
+    },
+    "confidence_score": {
+        "mean": 29.5891,
+        "std": 24.6186,
+        "min": 1.6947,
+        "max": 99.3104,
+        "p25": 10.6929,
+        "p50": 20.6454,
+        "p75": 42.7041,
+        "p90": 70.6449,
+        "p95": 84.4899,
+        "p99": 94.388
+    },
+    "max_samples": 1000,
+    "sol_run_mode": 2
+}

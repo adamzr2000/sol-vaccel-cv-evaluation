@@ -1,0 +1,136 @@
+{
+    "run_id": "iso_fcn_resnet101_vaccel-local-sol_cpu",
+    "backend": "vaccel-local-sol",
+    "host": "robot",
+    "model": "fcn_resnet101",
+    "model_type": "semantic_segmentation",
+    "device": "cpu",
+    "num_samples": 1000,
+    "time_window": {
+        "start": "2026-11-23T11:15:52.793824+00:00",
+        "stop": "2026-11-23T11:32:58.187700+00:00",
+        "duration_sec": 1025.393876
+    },
+    "frames_per_sample": 1,
+    "fps": {
+        "inference": 0.99,
+        "inference_std": 0.01,
+        "system": 0.98,
+        "system_std": 0.01,
+        "processed": 0.98,
+        "camera_observed": 14.28
+    },
+    "stream": {
+        "avoid_duplicates": true,
+        "received_frames": 14650,
+        "processed_frames": 1000,
+        "drop_ratio": 0.931741,
+        "duplicates_skipped_loops": 5,
+        "inference_failed": 0,
+        "frame_source": "gstreamer_direct",
+        "serialize_capture": false,
+        "omp_wait_policy": "default",
+        "fresh_frame": false,
+        "glibc_tunables": "glibc.malloc.mmap_threshold=33554432:glibc.malloc.trim_threshold=268435456"
+    },
+    "platform": {
+        "host_cpu_start": {
+            "governor": "powersave",
+            "min_khz": "700000",
+            "max_khz": "3400000",
+            "cur_khz": [
+                "1599984",
+                "1600026",
+                "700000"
+            ],
+            "energy_perf_bias": "7"
+        },
+        "host_cpu_stop": {
+            "governor": "powersave",
+            "min_khz": "700000",
+            "max_khz": "3400000",
+            "cur_khz": [
+                "2799935",
+                "2799953",
+                "2799996",
+                "2800002"
+            ],
+            "energy_perf_bias": "7"
+        },
+        "print_every": 50
+    },
+    "ros_data_age_ms": {
+        "mean": -1.0,
+        "std": 0.0,
+        "min": -1.0,
+        "max": -1.0,
+        "p25": -1.0,
+        "p50": -1.0,
+        "p75": -1.0,
+        "p90": -1.0,
+        "p95": -1.0,
+        "p99": -1.0
+    },
+    "preprocessing_ms": {
+        "mean": 6.0657,
+        "std": 1.5851,
+        "min": 5.1986,
+        "max": 15.659,
+        "p25": 5.3141,
+        "p50": 5.3429,
+        "p75": 5.4686,
+        "p90": 8.4771,
+        "p95": 10.2643,
+        "p99": 11.0827
+    },
+    "inference_ms": {
+        "mean": 1013.9788,
+        "std": 11.5479,
+        "min": 933.5223,
+        "max": 1040.865,
+        "p25": 1009.9839,
+        "p50": 1015.0051,
+        "p75": 1019.9314,
+        "p90": 1024.4145,
+        "p95": 1027.2304,
+        "p99": 1031.9807
+    },
+    "postprocessing_ms": {
+        "mean": 4.8951,
+        "std": 0.5702,
+        "min": 4.6484,
+        "max": 9.1601,
+        "p25": 4.7456,
+        "p50": 4.7613,
+        "p75": 4.7881,
+        "p90": 4.9073,
+        "p95": 5.1149,
+        "p99": 7.9987
+    },
+    "system_ms": {
+        "mean": 1024.9443,
+        "std": 11.4833,
+        "min": 945.031,
+        "max": 1053.6464,
+        "p25": 1021.288,
+        "p50": 1025.7879,
+        "p75": 1030.8831,
+        "p90": 1035.2756,
+        "p95": 1037.8505,
+        "p99": 1042.419
+    },
+    "confidence_score": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+    },
+    "max_samples": 1000,
+    "sol_run_mode": 2
+}

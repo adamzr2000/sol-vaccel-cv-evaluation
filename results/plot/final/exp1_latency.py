@@ -1,39 +1,52 @@
 #!/usr/bin/env python3
 """
-exp1_latency.py -- Experiment 1 (vAccSOL): inference latency per model.
+exp1_latency.py -- Experiment 1 (vAccSOL): inference latency and equivalent frame rate per model.
 
 Latency = duration of the vAccel inference call measured on the robot: from
 sending the input tensor until the output is received (pre-/post-processing
 excluded), with inference on the robot CPU, the edge CPU or the edge GPU.
 
   total_ms          median call duration (inference_ms p50 of the robot run)
-  inference_ms      edge: median pure computation of the isolated edge run
-                    (common.EDGE_INFERENCE_RUN_TAG); robot_cpu: = total_ms
-  communication_ms  total_ms - inference_ms (network + vAccel remoting; 0 local)
+  inference_ms      edge: median computation per call, profiled inside the vAccel
+                    agent during the same run (common.agent_computation); robot_cpu: = total_ms
+  communication_ms  total_ms - inference_ms (network + vAccel remoting; 0 local), from the
+                    rounded values so that computation + communication = latency in the tables
   iqr_low/high_ms   25th / 75th percentile of the call duration
   speedup_vs_local  edge targets: Local CPU total_ms / this total_ms
+  inference_fps     equivalent frame rate (fps) = 1000 / total_ms, i.e. the inverse of the
+                    median latency: the maximum rate of the inference call alone
 
-Figure: one panel per task, 3 stacked bars per model (Local CPU / Edge CPU /
-Edge GPU; Computation solid + Communication hatched), IQR error bars, and
-above each edge bar its latency reduction factor vs. Local CPU ("x7.3"). Broken
-linear y axis: the lower part is scaled to the edge bars, the upper part shows
-where the 5-70x taller Local CPU bars end.
+Latency figure (exp1-latency.pdf): one panel per task, 3 stacked bars per model
+(Local CPU / Edge CPU / Edge GPU; Computation solid + Communication hatched), IQR
+error bars, and above each edge bar its latency reduction factor vs. Local CPU
+("x7.3"; --no-factors: off). Broken linear y axis: the lower part is scaled to
+the edge bars, the upper part shows where the 5-70x taller Local CPU bars end.
 
-Usage:    python3 exp1_latency.py [--no-factors]   (--no-factors: without the factor labels)
-Produces: exp1-latency.{csv,pdf}
+Equivalent frame rate figure (exp1-fps.pdf): one panel per task, 3 bars per model =
+inference_fps, its value inside the top of each edge bar (white) and above each
+Local CPU bar (--no-values: off).
+
+LaTeX table (exp1-latency.tex): the medians of exp1-latency.csv, copied as written
+there; Local CPU latency, Edge CPU and Edge GPU computation / communication / latency,
+each latency followed by its equivalent frame rate in parentheses (as in exp1-fps.pdf).
+
+Usage:    python3 exp1_latency.py [--no-factors] [--no-values]
+Produces: exp1-latency.{csv,pdf,tex}, exp1-fps.pdf
 """
 import argparse
+import statistics
 
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
-from common import (EDGE_COLOR, HATCH, HATCH_ALPHA, HERE, TARGETS, TITLES, apply_theme, edge_runs, legend_row,
-                    lighten, model_of, model_ticks, part_patches, patches, read_rows, save, style_axes, target_runs,
-                    write_rows)
+from common import (EDGE_COLOR, HATCH, HATCH_ALPHA, HERE, LEGEND_STYLE, TARGETS, TEX_COLOUR, TITLES,
+                    agent_computation, apply_theme, fmt_fps, latency_tex, legend_row, lighten, model_of, model_ticks,
+                    part_patches, patches, read_rows, save, style_axes, target_runs, write_rows)
 
-CSV, PDF = HERE / "exp1-latency.csv", HERE / "exp1-latency.pdf"
+CSV, PDF, FPS_PDF, TEX = (HERE / "exp1-latency.csv", HERE / "exp1-latency.pdf", HERE / "exp1-fps.pdf",
+                         HERE / "exp1-latency.tex")
 COLUMNS = ["category", "model", "execution_target", "inference_ms", "communication_ms", "total_ms",
-           "iqr_low_ms", "iqr_high_ms", "speedup_vs_local"]
+           "iqr_low_ms", "iqr_high_ms", "speedup_vs_local", "inference_fps"]
 
 FIG_SIZE = (20, 7.4)
 BAR_WIDTH = 0.28
@@ -43,25 +56,32 @@ FACTOR_FONTSIZE = 21      # "x7.3" above the edge bars (bold)
 TOP_HEADROOM = 1.12       # upper part top = x highest Local CPU error bar
 HEIGHT_RATIOS = (1, 2.4)  # upper : lower part of the broken axis
 
+# equivalent frame rate figure
+FPS_FIG_SIZE = (20, 6.2)
+FPS_BAR_WIDTH = 0.3
+FPS_HEADROOM = 1.05       # y top = x highest bar
+FPS_FONT_GROWTH = 1.15    # fonts x this vs. the common theme
+VALUE_FONTSIZE = 17       # value on each bar
+SHOW_VALUES = True        # frame rate values on the bars (--no-values: off)
+
 
 def build_csv() -> None:
-    edge = {(model_of(r), r["device"].lower()): float(r["inference_ms"]["p50"])
-            for r in edge_runs() if r.get("backend", "").lower() == "vaccel-local-sol"}
     rows = {}  # (model, target) -> [inference, communication, total, p25, p75]
     for target, _, _ in TARGETS:
         for r in target_runs(target):
             call, model = r["inference_ms"], model_of(r)
             total = float(call["p50"])
-            inference = total if target == "robot_cpu" else edge.get((model, target[-3:]), 0.0)
+            inference = total if target == "robot_cpu" else statistics.median(agent_computation(r) or [0.0])
             if not 0 < inference <= total:
                 print(f"[warn] {model} {target}: no valid edge inference ({inference}), skipped")
                 continue
+            inference, total = round(inference, 1), round(total, 1)  # parts add up to the printed total
             rows[(model, target)] = [inference, total - inference, total, float(call["p25"]), float(call["p75"])]
     local_total = {m: v[2] for (m, t), v in rows.items() if t == "robot_cpu"}
     formatted = {}
     for (model, target), v in rows.items():
         speedup = f"{local_total[model] / v[2]:.2f}" if target != "robot_cpu" and model in local_total else ""
-        formatted[(model, target)] = [f"{x:.1f}" for x in v] + [speedup]
+        formatted[(model, target)] = [f"{x:.1f}" for x in v] + [speedup, f"{1000 / v[2]:.1f}"]
     write_rows(CSV, COLUMNS, formatted, [(t,) for t, _, _ in TARGETS])
 
 
@@ -97,7 +117,7 @@ def break_marks(ax_top, ax_bot) -> None:
         ax_bot.plot((x0 - d, x0 + d), (1 - d, 1 + d), transform=ax_bot.transAxes, **kw)
 
 
-def plot(show_factors: bool = SHOW_FACTORS) -> None:
+def plot_latency(show_factors: bool = SHOW_FACTORS) -> None:
     tasks, raw = read_rows(CSV, 3)
     values = {k: {c: float(v) if v else None for c, v in d.items()} for k, d in raw.items()}
     fig = plt.figure(figsize=FIG_SIZE)
@@ -135,10 +155,63 @@ def plot(show_factors: bool = SHOW_FACTORS) -> None:
     save(fig, PDF)
 
 
+# LaTeX table
+# (execution target, header, colour name, colour, CSV columns left to right; the last is the latency,
+# followed in the table by its equivalent frame rate in parentheses)
+TEX_GROUPS = [(t, title, *TEX_COLOUR[t], cols) for t, title, cols in
+              [("robot_cpu", "Local CPU", ["total_ms"]),
+               ("edge_cpu", "Edge CPU", ["inference_ms", "communication_ms", "total_ms"]),
+               ("edge_gpu", "Edge GPU", ["inference_ms", "communication_ms", "total_ms"])]]
+TEX_CAPTION = ("Exp.~1: Inference latency (ms) measured on the robot for models executed via vAccSOL. We compare "
+               "local inference on the robot CPU (blue) with remote inference on the edge CPU (orange) and GPU "
+               "(green). Remote latency is divided into computation (Comp.) and communication (Comm.), the latter "
+               "covering data transfer and vAccel processing. Values are medians, with the equivalent frame rate "
+               "in parentheses.")
+
+
+def write_tex() -> None:
+    latency_tex(CSV, TEX, TEX_GROUPS, TEX_CAPTION, "tab:exp1-latency", "exp1_latency.py")
+
+
+def plot_fps(show_values: bool = SHOW_VALUES) -> None:
+    tasks, raw = read_rows(CSV, 3)
+    fps = {k: float(d["inference_fps"]) for k, d in raw.items()}
+    sizes = ("font.size", "axes.titlesize", "axes.labelsize", "xtick.labelsize", "ytick.labelsize", "legend.fontsize")
+    with plt.rc_context({k: plt.rcParams[k] * FPS_FONT_GROWTH for k in sizes}):
+        fig, axes = plt.subplots(1, len(tasks), figsize=FPS_FIG_SIZE,
+                                 gridspec_kw={"width_ratios": [len(m) for m in tasks.values()]})
+        for ax, (task, models) in zip(axes, tasks.items()):
+            top = max(v for k, v in fps.items() if k[0] in models) * FPS_HEADROOM
+            ax.set_ylim(0, top)
+            for j, (target, _, color) in enumerate(TARGETS):
+                for i, m in enumerate(models):
+                    if (m, target) not in fps:
+                        continue
+                    x, v, local = i + (j - 1) * FPS_BAR_WIDTH, fps[(m, target)], target == "robot_cpu"
+                    ax.bar(x, v, width=FPS_BAR_WIDTH, facecolor=color, edgecolor=EDGE_COLOR, linewidth=0.8, zorder=3)
+                    if show_values:  # Local CPU bars are too short for the value: above them
+                        ax.text(x, v + top * 0.012 if local else v - top * 0.015, fmt_fps(v), ha="center",
+                                va="bottom" if local else "top", fontsize=VALUE_FONTSIZE,
+                                color=EDGE_COLOR if local else "white", zorder=11)
+            style_axes(ax)
+            ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
+            ax.set_xlim(-0.5, len(models) - 0.5)
+            model_ticks(ax, models)
+            ax.set_title(TITLES.get(task, task))
+        axes[0].set_ylabel("Frame rate (FPS)")
+        fig.subplots_adjust(left=0.065, right=0.995, top=0.82, bottom=0.2, wspace=0.17)
+        fig.legend(handles=patches([(lbl, c) for _, lbl, c in TARGETS]), loc="lower center",
+                   bbox_to_anchor=(0.53, 0.895), ncol=len(TARGETS), **LEGEND_STYLE)
+        save(fig, FPS_PDF)
+
+
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser(description="Experiment 1 inference latency: CSV + plot.")
+    ap = argparse.ArgumentParser(description="Experiment 1 inference latency and equivalent frame rate: CSV + plots.")
     ap.add_argument("--no-factors", action="store_true", help="omit the latency-reduction labels on the edge bars")
+    ap.add_argument("--no-values", action="store_true", help="omit the frame rate values on the bars")
     args = ap.parse_args()
     build_csv()
+    write_tex()
     apply_theme()
-    plot(show_factors=not args.no_factors)
+    plot_latency(show_factors=not args.no_factors)
+    plot_fps(show_values=not args.no_values)

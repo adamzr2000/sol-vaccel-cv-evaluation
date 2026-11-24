@@ -12,6 +12,7 @@ experiments -- no aggregation/summarize script has to be run first:
   system-stats/{robot,edge-asus}/energy_totals_{run_id}.json      energy counters
   system-stats/robot/{run_id}_net.csv                             network counters
   system-stats/idle/energy_totals_{device}-idle.json              idle runs
+  agent-profile/edge-asus/{run_id}.csv                            edge computation per call (vAccel agent)
 """
 from __future__ import annotations
 
@@ -31,18 +32,19 @@ EXPERIMENTS = HERE.parents[1] / "experiments"            # results/experiments
 MODEL_STATS = EXPERIMENTS / "model-stats"
 SYSTEM_STATS = EXPERIMENTS / "system-stats"
 IDLE_DIR = SYSTEM_STATS / "idle"                          # energy_totals_{device}-idle.json
+AGENT_PROFILE = EXPERIMENTS / "agent-profile" / "edge-asus"  # {run_id}.csv: sample,computation_ms
 
 # ------------------------------------------------------------------ run tags
 
-LOCAL_RUN_TAG = "isoGSt-opt"        # local inference on the robot (Local CPU)
-REMOTE_RUN_TAG = "e2eGSt-opt"       # offloaded inference, edge GPU
-REMOTE_CPU_RUN_TAG = "e2eGSt-opt"  # offloaded inference, edge CPU (rerun 2026-11-20)
+LOCAL_RUN_TAG = "iso"               # local inference on the robot (Local CPU)
+REMOTE_RUN_TAG = "e2e"              # offloaded inference, edge GPU
+REMOTE_CPU_RUN_TAG = "e2e"          # offloaded inference, edge CPU
 EDGE_INFERENCE_RUN_TAG = "iso"      # isolated inference on the edge (pure computation time)
 EDGE_HOST = "edge-asus"
 
 # ROS 2 (Exp. 3): ros-vision-service next to this repository; CycloneDDS (UDP), SOL on the edge GPU
 ROS_MODEL_STATS = HERE.parents[3] / "ros-vision-service" / "results" / "experiments" / "model-stats"
-ROS_RUN_TAG = "remote-gpu-udp"
+ROS_RUN_TAG = "remote-gpu"   # RELIABLE + KEEP_LAST 1 QoS on all topics (2026-11-23)
 
 # ------------------------------------------------------------------ tasks and models
 
@@ -60,6 +62,15 @@ MODEL_NAME = {
     "fcn_resnet50": "FCN-R50", "fcn_resnet101": "FCN-R101",
     "deeplabv3_resnet50": "DLv3-R50", "deeplabv3_resnet101": "DLv3-R101",
 }
+# LaTeX tables: model rows indented under their italic task row
+TEX_INDENT = "\\hspace{1em}"
+# names in the LaTeX tables (more room than on the figure axes)
+TEX_TASK = {"image_classification": "Image classification", "video_action_recognition": "Video action recognition",
+            "semantic_segmentation": "Semantic segmentation"}
+TEX_MODEL = {"resnet50": "ResNet-50", "swin_t": "Swin-T", "swin_s": "Swin-S", "swin_v2_b": "SwinV2-B",
+             "r3d_18": "R3D-18", "r2plus1d_18": "R(2+1)D-18", "swin3d_s": "Swin3D-S", "swin3d_b": "Swin3D-B",
+             "fcn_resnet50": "FCN-ResNet-50", "fcn_resnet101": "FCN-ResNet-101",
+             "deeplabv3_resnet50": "DeepLabV3-ResNet-50", "deeplabv3_resnet101": "DeepLabV3-ResNet-101"}
 
 # ------------------------------------------------------------------ execution targets
 
@@ -69,6 +80,9 @@ TARGETS = [
     ("edge_cpu", "Edge CPU", "#E0892B"),
     ("edge_gpu", "Edge GPU", "#2E9B7E"),
 ]
+# LaTeX tables: (colour name, light tint of the target colour) for the shaded columns of each target
+TEX_COLOUR = {"robot_cpu": ("vsLocal", "E3EDF8"), "edge_cpu": ("vsCPULight", "FBE1B8"),
+              "edge_gpu": ("vsGPULight", "D3EEE6")}
 TARGET_TAG = {"robot_cpu": LOCAL_RUN_TAG, "edge_cpu": REMOTE_CPU_RUN_TAG, "edge_gpu": REMOTE_RUN_TAG}
 
 # (compiler, legend label, backend suffix, colour) -- Exp. 2
@@ -113,6 +127,16 @@ def edge_runs() -> list:
     return [r for r in load_runs(EDGE_INFERENCE_RUN_TAG) if str(r.get("host", "")).lower() == EDGE_HOST]
 
 
+def agent_computation(run: dict) -> list:
+    """Edge computation time (ms) of each measured call of a remote run, profiled
+    inside the vAccel agent during that run; [] if not recorded."""
+    path = AGENT_PROFILE / f"{run['run_id']}.csv"
+    if not path.exists():
+        return []
+    with open(path, newline="") as f:
+        return [float(r["computation_ms"]) for r in csv.DictReader(f)]
+
+
 def model_of(run: dict) -> str:
     return str(run.get("model", "")).strip()
 
@@ -143,6 +167,62 @@ def read_rows(path: Path, n_keys: int):
                 models.append(row[key_cols[1]])
             values[tuple(row[c] for c in key_cols[1:])] = {k: v for k, v in row.items() if k not in key_cols}
     return tasks, values
+
+
+# ------------------------------------------------------------------ LaTeX latency tables
+
+TEX_LATENCY_HEADER = {"inference_ms": "Comp.", "communication_ms": "Comm.", "total_ms": "Latency"}
+
+
+def fmt_fps(v: float) -> str:
+    return f"{v:.0f}" if v >= 10 else f"{v:.1f}"
+
+
+def latency_tex(csv_path: Path, tex_path: Path, groups: list, caption: str, label: str, script: str) -> None:
+    """Latency table (Exp. 1 / Exp. 3 layout): per group (key, title, colour name, colour, CSV columns),
+    the columns Comp. / Comm. / Latency as written in csv_path (no re-rounding), the latency shaded
+    and followed by its equivalent frame rate (1000 / printed latency, "(33 fps)")."""
+    tasks, raw = read_rows(csv_path, 3)
+    n_cols = 1 + sum(len(cols) + 1 for *_, cols in groups)
+    spec, top, rules, sub, col = "", [], [], [], 2
+    for target, title, cname, _, cols in groups:
+        for c in cols:
+            # siunitx S column width: integer digits of the widest value, 1 decimal
+            digits = max(len(raw[(m, target)][c].split(".")[0]) for m in TEX_MODEL if (m, target) in raw)
+            if c == "total_ms":  # shaded latency + its frame rate, set close to it in small grey text
+                # fps colour: no left overhang (it would paint over the latency's last digit), none on the
+                # right at the table's end either
+                right = "0pt" if target == groups[-1][0] else "\\tabcolsep"
+                spec += (f">{{\\columncolor{{{cname}}}}}S[table-format={digits}.1]@{{\\,}}"
+                         f">{{\\columncolor{{{cname}}}[0pt][{right}]\\scriptsize\\color{{gray}}}}l")
+            else:
+                spec += f"S[table-format={digits}.1]"
+            sub.append(f"{{{TEX_LATENCY_HEADER[c]}}}")
+        sub.append("")  # frame rate column: the unit is in each cell ("(33 fps)")
+        width = len(cols) + 1
+        top.append(f"\\multicolumn{{{width}}}{{c}}{{{title}}}")
+        rules.append(f"\\cmidrule({'lr' if target != groups[-1][0] else 'l'}){{{col}-{col + width - 1}}}")
+        col += width
+    lines = ["% Requires: \\usepackage[table]{xcolor}, booktabs, array, siunitx",
+             f"% Generated by {script} from {csv_path.name} -- do not edit by hand."]
+    lines += [f"\\definecolor{{{cname}}}{{HTML}}{{{rgb}}}" for _, _, cname, rgb, _ in groups]
+    lines += ["\\begin{table*}[!t]", f"\\caption{{{caption}}}", f"\\label{{{label}}}", "\\centering",
+              "\\footnotesize", "\\setlength{\\tabcolsep}{6pt}", f"\\begin{{tabular}}{{@{{}}l{spec}@{{}}}}",
+              "\\toprule", " & ".join(["", *top]) + " \\\\", "".join(rules),
+              " & ".join(["Model", *sub]) + " \\\\"]
+    for task, models in tasks.items():
+        lines += ["\\midrule", f"\\multicolumn{{{n_cols}}}{{@{{}}l}}{{\\textit{{{TEX_TASK[task]}}}}} \\\\"]
+        for m in models:
+            cells = [TEX_INDENT + TEX_MODEL[m]]
+            for target, _, _, _, cols in groups:
+                row = raw.get((m, target))
+                cells += [row[c] if row else "{--}" for c in cols]
+                cells.append(f"({fmt_fps(1000 / float(row['total_ms']))}~fps)" if row else "")
+            lines.append(" & ".join(cells) + " \\\\")
+    lines += ["\\bottomrule", "\\end{tabular}", "\\end{table*}"]
+    tex_path.write_text("\n".join(lines) + "\n")
+    print(f"[OK] Saved LaTeX table to: {tex_path.name}")
+
 
 
 # ------------------------------------------------------------------ energy

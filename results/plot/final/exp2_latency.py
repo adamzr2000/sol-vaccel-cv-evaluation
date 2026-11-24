@@ -3,29 +3,37 @@
 exp2_latency.py -- Experiment 2: inference latency of AOTInductor vs SOL, both
 executed through vAccel, per model and execution target.
 
-Pure computation (no network, no pre/post-processing): median inference_ms of
-runs where the model executes on the device itself (backend vaccel-local-*):
-  Local CPU  robot runs of common.LOCAL_RUN_TAG
-  Edge CPU   edge runs of common.EDGE_INFERENCE_RUN_TAG, device cpu
-  Edge GPU   same, device gpu
-iqr_low/high_ms = 25th / 75th percentile.
+Computation time only (no network, no pre/post-processing), median and 25th /
+75th percentile (iqr_low/high_ms) per model, execution target and compiler:
+  Local CPU  inference_ms of the local robot runs (common.LOCAL_RUN_TAG,
+             backend vaccel-local-{sol,ptc})
+  Edge CPU   computation per call profiled inside the vAccel agent during the
+  Edge GPU   remote runs (common.agent_computation; SOL: sol_predict, PyTorch:
+             torch_predict + torch_out of the eval-patched plugin -- same scope)
 
 Figure: rows = execution target, columns = task; 2 bars per model -- "vAccel + PyTorch"
 (AOTInductor) and "vAccSOL" -- with IQR error bars; y axis "Computation time (ms)",
 linear per panel.
 
+LaTeX table (exp2-latency.tex): the medians of exp2-latency.csv (1 decimal), PyTorch and SOL
+per execution target, each SOL value followed by its speedup over PyTorch (PyTorch / SOL,
+from the unrounded medians: the printed 1-decimal values distort the ratio at a few ms).
+
 Usage:    python3 exp2_latency.py
-Produces: exp2-latency.{csv,pdf}
+Produces: exp2-latency.{csv,pdf,tex}
 """
+import statistics
+
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
-from common import (COMPILERS, EDGE_COLOR, EDGE_HOST, HERE, LEGEND_STYLE, LOCAL_RUN_TAG, TARGETS, TITLES,
-                    apply_theme, edge_runs, load_runs, model_of, model_ticks, patches, read_rows, save, style_axes,
-                    write_rows)
+from common import (COMPILERS, EDGE_COLOR, HERE, LEGEND_STYLE, TARGETS, TEX_INDENT, TEX_MODEL, TEX_TASK, TITLES,
+                    agent_computation, apply_theme, model_of, model_ticks, patches, read_rows, save, style_axes,
+                    target_runs, write_rows)
 
-CSV, PDF = HERE / "exp2-latency.csv", HERE / "exp2-latency.pdf"
-COLUMNS = ["category", "model", "execution_target", "compiler", "inference_ms", "iqr_low_ms", "iqr_high_ms"]
+CSV, PDF, TEX = HERE / "exp2-latency.csv", HERE / "exp2-latency.pdf", HERE / "exp2-latency.tex"
+COLUMNS = ["category", "model", "execution_target", "compiler", "inference_ms", "iqr_low_ms", "iqr_high_ms",
+           "sol_speedup"]  # SOL rows: PyTorch median / SOL median, from the unrounded medians
 
 FIG_SIZE = (20, 11.0)
 BAR_WIDTH = 0.36
@@ -33,24 +41,73 @@ HEADROOM = 1.1
 
 
 def build_csv() -> None:
-    runs = {"robot": [r for r in load_runs(LOCAL_RUN_TAG) if r.get("host", "").lower() == "robot"],
-            EDGE_HOST: edge_runs()}
-    rows = {}
+    rows, median = {}, {}
     for target, _, _ in TARGETS:
-        host, device = ("robot" if target == "robot_cpu" else EDGE_HOST), target[-3:]
-        for compiler, _, backend, _ in COMPILERS:
-            picked = [r for r in runs[host] if (r.get("device", "").lower(), r.get("backend", "").lower())
-                      == (device, f"vaccel-local-{backend}")]
-            print(f"[source] {target:<9} {compiler:<4} <- {host} ({len(picked)} runs)")
-            for r in picked:
-                inf = r["inference_ms"]
-                rows[(model_of(r), target, compiler)] = [f"{float(inf[k]):.2f}" for k in ("p50", "p25", "p75")]
+        for compiler, *_ in COMPILERS:
+            for r in target_runs(target, compiler):
+                if target == "robot_cpu":
+                    inf = r["inference_ms"]
+                    stats = [float(inf[k]) for k in ("p50", "p25", "p75")]
+                else:
+                    calls = agent_computation(r)
+                    if not calls:
+                        print(f"[warn] {r['run_id']}: no agent profile, skipped")
+                        continue
+                    q = statistics.quantiles(calls, n=4, method="inclusive")
+                    stats = [statistics.median(calls), q[0], q[2]]
+                rows[(model_of(r), target, compiler)] = [f"{v:.1f}" for v in stats]  # rounded once, as in exp1
+                median[(model_of(r), target, compiler)] = stats[0]
+    for (m, t, c), v in rows.items():
+        base = median.get((m, t, "aoti"))
+        v.append(f"{base / median[(m, t, c)]:.2f}" if c == "sol" and base else "")
     write_rows(CSV, COLUMNS, rows, [(t, c) for t, _, _ in TARGETS for c, *_ in COMPILERS])
+
+
+TEX_CAPTION = ("Exp.~2: Computation time (ms) of models compiled with PyTorch and SOL during local and remote "
+               "inference. Values are medians (lower is better), with the speedup of SOL over PyTorch in "
+               "parentheses.")
+
+
+def write_tex() -> None:
+    """exp2-latency.tex from exp2-latency.csv (medians and speedups copied as written); after each SOL value
+    its speedup over PyTorch (sol_speedup, > 1: SOL faster)."""
+    tasks, raw = read_rows(CSV, 4)
+    val = {k: d["inference_ms"] for k, d in raw.items()}
+    groups = [(t, title) for t, title, _ in TARGETS]
+    order = [("aoti", "PyTorch"), ("sol", "SOL")]  # baseline left, SOL right
+    spec = ""
+    for t, _ in groups:
+        for c, _ in order:
+            digits = max(len(v.split(".")[0]) for k, v in val.items() if k[1:] == (t, c))
+            spec += f"S[table-format={digits}.1]"
+        spec += "@{\\,}>{\\scriptsize\\color{gray}}l"  # speedup, set close to the SOL value
+    width = 1 + len(order)
+    lines = ["% Requires: \\usepackage{xcolor, booktabs, array, siunitx}",
+             "% Generated by exp2_latency.py from exp2-latency.csv -- do not edit by hand.",
+             "\\begin{table*}[!t]", f"\\caption{{{TEX_CAPTION}}}", "\\label{tab:exp2-compilers}", "\\centering",
+             "\\footnotesize", "\\setlength{\\tabcolsep}{8pt}", f"\\begin{{tabular}}{{@{{}}l{spec}@{{}}}}", "\\toprule",
+             " & " + " & ".join(f"\\multicolumn{{{width}}}{{c}}{{{title}}}" for _, title in groups) + " \\\\",
+             "".join(f"\\cmidrule({'l' if i == len(groups) - 1 else 'lr'}){{{2 + width * i}-{1 + width * (i + 1)}}}"
+                     for i in range(len(groups))),
+             "Model & " + " & ".join(" & ".join(f"{{{h}}}" for _, h in order) + " & " for _ in groups) + " \\\\"]
+    for task, models in tasks.items():
+        lines += ["\\midrule",
+                  f"\\multicolumn{{{1 + width * len(groups)}}}{{@{{}}l}}{{\\textit{{{TEX_TASK[task]}}}}} \\\\"]
+        for m in models:
+            cells = [TEX_INDENT + TEX_MODEL[m]]
+            for t, _ in groups:
+                ptc, sol = (val.get((m, t, c)) for c, _ in order)
+                speedup = raw.get((m, t, "sol"), {}).get("sol_speedup")
+                cells += [ptc or "{--}", sol or "{--}", f"($\\times${speedup})" if speedup else ""]
+            lines.append(" & ".join(cells) + " \\\\")
+    lines += ["\\bottomrule", "\\end{tabular}", "\\end{table*}"]
+    TEX.write_text("\n".join(lines) + "\n")
+    print(f"[OK] Saved LaTeX table to: {TEX.name}")
 
 
 def plot() -> None:
     tasks, raw = read_rows(CSV, 4)
-    values = {k: {c: float(v) for c, v in d.items()} for k, d in raw.items()}
+    values = {k: {c: float(v) for c, v in d.items() if v} for k, d in raw.items()}
     fig = plt.figure(figsize=FIG_SIZE)
     gs = fig.add_gridspec(len(TARGETS), len(tasks), width_ratios=[len(m) for m in tasks.values()],
                           left=0.085, right=0.988, top=0.885, bottom=0.11, wspace=0.2, hspace=0.12)
@@ -89,5 +146,6 @@ def plot() -> None:
 
 if __name__ == "__main__":
     build_csv()
+    write_tex()
     apply_theme()
     plot()

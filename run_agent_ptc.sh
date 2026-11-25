@@ -8,7 +8,6 @@ SET_OMP=1
 PORT=9125
 PROFILING=0
 PROFILE_LOG=""   # --profile: per-call vAccel profiling, agent output appended to this file
-ADDR="tcp://0.0.0.0:9125"
 # edge-asus: pin to the 8 P-cores (0-7) with 8 OpenMP threads (--no-pin: 12 threads, any core)
 PIN_CPUS=""
 if [[ "$(hostname)" == "asus-g815" ]]; then
@@ -109,6 +108,6 @@ docker run --rm "${TTY_ARGS[@]}" \
   -e "TZ=UTC" \
   -e "VACCEL_PROFILING_ENABLED=${PROFILING}" \
   -e "TTRPC_TCP_NODELAY_ENABLED=1" \
-  -p "${PORT}:9125" \
+  --network host \
   "${IMAGE}" \
-  bash -lc "vaccel-rpc-agent -a ${ADDR}" 2>&1 | if [[ -n "${PROFILE_LOG}" ]]; then tee -a "${PROFILE_LOG}"; else cat; fi
+  bash -lc "vaccel-rpc-agent -a tcp://0.0.0.0:${PORT}" 2>&1 | if [[ -n "${PROFILE_LOG}" ]]; then tee -a "${PROFILE_LOG}"; else cat; fi

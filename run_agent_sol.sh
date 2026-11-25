@@ -86,5 +86,6 @@ docker run --rm "${TTY_ARGS[@]}" \
   -e "TZ=UTC" \
   -e "VACCEL_PROFILING_ENABLED=${PROFILING}" \
   -e "TTRPC_TCP_NODELAY_ENABLED=1" \
-  -p "${PORT}:9125" \
-  "${IMAGE}" 2>&1 | if [[ -n "${PROFILE_LOG}" ]]; then tee -a "${PROFILE_LOG}"; else cat; fi
+  --network host \
+  --entrypoint /usr/bin/vaccel-rpc-agent \
+  "${IMAGE}" -a "tcp://0.0.0.0:${PORT}" 2>&1 | if [[ -n "${PROFILE_LOG}" ]]; then tee -a "${PROFILE_LOG}"; else cat; fi

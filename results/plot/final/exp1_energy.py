@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-exp1_energy.py -- Experiment 1 (vAccSOL): robot energy per inference per
+exp1_energy.py -- Experiment 1 (vAccSOL): robot and edge energy per inference per
 model, for each execution target (Local CPU / Edge CPU / Edge GPU).
 
 Energies are exact hardware-counter totals (RAPL CPU package, NVML GPU board;
@@ -18,25 +18,23 @@ CSV (exp1-energy.csv) -- everything recorded, per inference, for all cases:
 Devices not recorded in a run are left empty (the edge in local runs, the
 edge GPU in Edge CPU runs).
 
-Figure (exp1-energy.pdf): one panel per task, 3 bars per model = robot CPU
-energy per inference (measured), coloured by execution target; above each
-edge bar its change vs. Local CPU ("\u221266%"; --no-reduction: off), in the
-style of the latency figure's factor labels.
+Figure (exp1-energy.pdf): one panel per task, 3 bars per model (Local CPU / Edge CPU / Edge GPU) =
+energy per inference, stacked: the robot's part solid in the target's colour, the edge's part
+(edge CPU, + edge GPU for the edge GPU) hatched on top; local inference has no edge part.
 
 LaTeX table (exp1-energy.tex): energy per inference (J, 2 decimals) from exp1-energy.csv --
 Local CPU: robot; Edge CPU / Edge GPU: robot, edge (edge CPU, + edge GPU for Edge GPU) and
 total = robot + edge, all from the printed values.
 
-Usage:    python3 exp1_energy.py [--no-reduction]
+Usage:    python3 exp1_energy.py
 Produces: exp1-energy.{csv,pdf,tex}
 """
-import argparse
 
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
-from common import (DEVICES, EDGE_COLOR, HERE, LEGEND_STYLE, TARGETS, TEX_COLOUR, TEX_INDENT, TEX_MODEL, TEX_TASK, TITLES,
-                    apply_theme, device_energy, idle_power, model_of, model_ticks, patches, read_rows, save, style_axes,
+from common import (DEVICES, EDGE_COLOR, HATCH, HATCH_ALPHA, HERE, legend_row, TARGETS, TEX_COLOUR, TEX_INDENT, TEX_MODEL, TEX_TASK, TITLES,
+                    apply_theme, device_energy, idle_power, lighten, model_of, model_ticks, part_patches, patches, read_rows, save, style_axes,
                     target_runs, write_rows)
 
 CSV, PDF, TEX = HERE / "exp1-energy.csv", HERE / "exp1-energy.pdf", HERE / "exp1-energy.tex"
@@ -46,8 +44,6 @@ ENERGY_COLUMNS = ([f"{d}_j" for d in DEVICES] + [f"{d}_idle_j" for d in DEVICES]
 FIG_SIZE = (20, 6.8)
 BAR_WIDTH = 0.28
 HEADROOM = 1.08
-SHOW_REDUCTION = True        # "\u221266%" above the edge bars (--no-reduction: off)
-REDUCTION_FONTSIZE = 21     # same style as the factor labels of exp1_latency.py
 
 
 def energy_values(run: dict, idle: dict):
@@ -127,45 +123,39 @@ def write_tex() -> None:
     print(f"[OK] Saved LaTeX table to: {TEX.name}")
 
 
-def plot(show_reduction: bool = SHOW_REDUCTION) -> None:
+def plot() -> None:
+    """One panel per task, 3 bars per model (Local CPU / Edge CPU / Edge GPU): energy per inference, the robot's
+    part solid in the target's colour, the edge's part (edge CPU, + edge GPU for the edge GPU) hatched on top."""
     tasks, raw = read_rows(CSV, 3)
     robot = {k: float(d["robot_cpu_j"]) for k, d in raw.items()}
-    reduction = {k: float(d["robot_reduction_pct"]) for k, d in raw.items() if d.get("robot_reduction_pct")}
+    edge = {k: float(d["edge_cpu_j"] or 0) + float(d["edge_gpu_j"] or 0) for k, d in raw.items()}
     fig, axes = plt.subplots(1, len(tasks), figsize=FIG_SIZE, gridspec_kw={"width_ratios": [len(m) for m in tasks.values()]})
     for ax, (task, models) in zip(axes, tasks.items()):
         for j, (target, _, color) in enumerate(TARGETS):
             for i, m in enumerate(models):
-                if (m, target) in robot:
-                    ax.bar(i + (j - 1) * BAR_WIDTH, robot[(m, target)], width=BAR_WIDTH, facecolor=color,
-                           edgecolor=EDGE_COLOR, linewidth=0.8, zorder=3)
+                if (m, target) not in robot:
+                    continue
+                x, bar = i + (j - 1) * BAR_WIDTH, dict(width=BAR_WIDTH, edgecolor=EDGE_COLOR, linewidth=0.8, zorder=3)
+                ax.bar(x, robot[(m, target)], facecolor=color, **bar)
+                if edge[(m, target)] > 0:
+                    ax.bar(x, edge[(m, target)], bottom=robot[(m, target)], hatch=HATCH,
+                           facecolor=lighten(color, HATCH_ALPHA), **bar)
         style_axes(ax)
-        top = max(v for k, v in robot.items() if k[0] in models) * HEADROOM
-        ax.set_ylim(0, top)
-        if show_reduction:  # change of the robot's energy vs. Local CPU, above each edge bar
-            for j, (target, _, _) in enumerate(TARGETS):
-                for i, m in enumerate(models):
-                    if (m, target) in reduction:
-                        pct = reduction[(m, target)]
-                        ax.text(i + (j - 1) * BAR_WIDTH, robot[(m, target)] + top * 0.025,
-                                f"\u2212{pct:.0f}%" if pct >= 0 else f"+{-pct:.0f}%", rotation=90,
-                                ha="center", va="bottom", fontsize=REDUCTION_FONTSIZE, fontweight="bold",
-                                color=EDGE_COLOR, zorder=11)
+        ax.set_ylim(0, max(robot[k] + edge[k] for k in robot if k[0] in models) * HEADROOM)
         ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
         ax.set_xlim(-0.5, len(models) - 0.5)
         model_ticks(ax, models)
         ax.set_title(TITLES.get(task, task))
-    axes[0].set_ylabel("Robot energy consumption\nper inference (J)")
-    fig.subplots_adjust(left=0.07, right=0.988, top=0.83, bottom=0.19, wspace=0.21)
-    fig.legend(handles=patches([(lbl, c) for _, lbl, c in TARGETS]), loc="lower center", bbox_to_anchor=(0.53, 0.89),
-               ncol=len(TARGETS), **LEGEND_STYLE)
+    axes[0].set_ylabel("Energy per inference (J)")
+    fig.subplots_adjust(left=0.07, right=0.988, top=0.78, bottom=0.19, wspace=0.21)
+    # two titled legends side by side, as in exp1-latency.pdf
+    legend_row(fig, [("Execution", patches([(lbl, c) for _, lbl, c in TARGETS])),
+                     ("Energy contribution", part_patches("Robot", "Edge"))], y=0.85)
     save(fig, PDF)
 
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser(description="Experiment 1 robot energy per inference: CSV + plot.")
-    ap.add_argument("--no-reduction", action="store_true", help="omit the reduction labels on the edge bars")
-    args = ap.parse_args()
     build_csv()
     write_tex()
     apply_theme()
-    plot(show_reduction=not args.no_reduction)
+    plot()

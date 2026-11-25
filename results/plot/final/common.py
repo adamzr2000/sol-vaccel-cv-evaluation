@@ -69,8 +69,9 @@ TEX_TASK = {"image_classification": "Image classification", "video_action_recogn
             "semantic_segmentation": "Semantic segmentation"}
 TEX_MODEL = {"resnet50": "ResNet-50", "swin_t": "Swin-T", "swin_s": "Swin-S", "swin_v2_b": "SwinV2-B",
              "r3d_18": "R3D-18", "r2plus1d_18": "R(2+1)D-18", "swin3d_s": "Swin3D-S", "swin3d_b": "Swin3D-B",
-             "fcn_resnet50": "FCN-ResNet-50", "fcn_resnet101": "FCN-ResNet-101",
-             "deeplabv3_resnet50": "DeepLabV3-ResNet-50", "deeplabv3_resnet101": "DeepLabV3-ResNet-101"}
+             # segmentation: ResNet backbone as R50 / R101 (compact, used consistently in every table)
+             "fcn_resnet50": "FCN-R50", "fcn_resnet101": "FCN-R101",
+             "deeplabv3_resnet50": "DeepLabV3-R50", "deeplabv3_resnet101": "DeepLabV3-R101"}
 
 # ------------------------------------------------------------------ execution targets
 
@@ -86,9 +87,14 @@ TEX_COLOUR = {"robot_cpu": ("vsLocal", "E3EDF8"), "edge_cpu": ("vsCPULight", "FB
 TARGET_TAG = {"robot_cpu": LOCAL_RUN_TAG, "edge_cpu": REMOTE_CPU_RUN_TAG, "edge_gpu": REMOTE_RUN_TAG}
 
 # (compiler, legend label, backend suffix, colour) -- Exp. 2
+# comparison figures: baseline orange, our solution green (same in Exp. 2 and Exp. 3: PyTorch / ROS 2 orange,
+# SOL / vAccel green); the palette's Edge CPU / Edge GPU colours, no new colours; orange vs green stays distinct
+# for common colour-vision deficiencies (blue vs green does not)
+BASELINE_COLOR, OURS_COLOR = "#E0892B", "#2E9B7E"
 COMPILERS = [
-    ("aoti", "vAccel + PyTorch", "ptc", "#BDBDBD"),  # PyTorch AOTInductor .pt2 model, vAccel Torch plugin
-    ("sol", "vAccSOL", "sol", "#3A7CA5"),         # SOL-compiled library, vAccel Exec operation
+    ("aoti", "PyTorch", "ptc", BASELINE_COLOR),  # PyTorch AOTInductor .pt2 model, vAccel Torch plugin
+    ("sol", "SOL", "sol", OURS_COLOR),           # SOL-compiled library, vAccel Exec operation
+    # legend labels name only what differs (both run through vAccel), as in the Exp. 2 table and caption
 ]
 
 # ------------------------------------------------------------------ runs

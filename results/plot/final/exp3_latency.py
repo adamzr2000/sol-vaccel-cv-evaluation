@@ -38,15 +38,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import MaxNLocator
 
-from common import (EDGE_COLOR, HATCH, HATCH_ALPHA, HERE, LEGEND_STYLE, MODEL_STATS, ROS_MODEL_STATS, ROS_RUN_TAG, TARGETS, TASKS,
+from common import (BASELINE_COLOR, OURS_COLOR, EDGE_COLOR, HATCH, HATCH_ALPHA, HERE, LEGEND_STYLE, MODEL_STATS, ROS_MODEL_STATS, ROS_RUN_TAG, TARGETS, TASKS,
                     TEX_COLOUR, TITLES, agent_computation, apply_theme, latency_tex, lighten, model_of, model_ticks,
                     part_patches, patches, read_rows, save, style_axes, target_runs, write_rows)
 
 CSV, PDF, TEX = HERE / "exp3-latency.csv", HERE / "exp3-latency.pdf", HERE / "exp3-latency.tex"
 COLUMNS = ["category", "model", "framework", "inference_ms", "communication_ms", "total_ms", "iqr_low_ms",
            "iqr_high_ms"]
-# (framework, legend label, colour): ROS 2 as gray baseline; vAccel in the Exp. 1 Edge GPU colour (same data)
-FRAMEWORKS = [("ros2", "ROS 2", "#BDBDBD"), ("vaccel", "vAccel", dict((t, c) for t, _, c in TARGETS)["edge_gpu"])]
+# (framework, legend label, colour): baseline orange, ours green (common.BASELINE_COLOR / OURS_COLOR)
+FRAMEWORKS = [("ros2", "ROS 2", BASELINE_COLOR), ("vaccel", "vAccel", OURS_COLOR)]
 
 FIG_SIZE = (20, 6.8)
 BAR_WIDTH = 0.36

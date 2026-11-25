@@ -4,7 +4,7 @@ import runpy
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-for script in ["exp1_latency.py", "exp1_energy.py", "exp1_network.py", "exp2_latency.py", "exp2_energy.py",
-               "exp3_latency.py"]:
+for script in ["exp1_latency.py", "exp1_energy.py", "exp1_latency_energy.py", "exp1_combined.py", "exp1_network.py", "exp2_latency.py", "exp2_energy.py",
+               "exp3_latency.py", "exp3_latency_energy.py", "exp3_combined.py", "exp3_background_traffic.py"]:
     print(f"\n=== {script}")
     runpy.run_path(str(HERE / script), run_name="__main__")

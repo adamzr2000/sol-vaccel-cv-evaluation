@@ -998,7 +998,7 @@ def main():
             final_output_data["local_device"] = local_mode
         if MAX_SAMPLES > 0:
             final_output_data["max_samples"] = MAX_SAMPLES
-        if "sol" in BACKEND:
+        if "sol" in BACKEND and "vaccel" in BACKEND:
             final_output_data["sol_run_mode"] = int(os.environ.get("SOL_RUN_MODE", "2").strip())
 
         with open(json_output_path, "w") as f:

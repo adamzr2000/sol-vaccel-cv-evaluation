@@ -18,7 +18,7 @@ except ImportError:
 
 
 # =========================================================
-# SOL execution mode:
+# SOL execution mode (VaccelSolAdapter only; plain SolAdapter uses the SOL v0.9 call API):
 #   SOL_RUN_MODE=2 -> Pure Option 2 (call sol_predict via run(*args); no set_IO/optimize)
 #   SOL_RUN_MODE=3 -> Pure Option 3 (set_IO + optimize; run() + get_output)
 # =========================================================
@@ -465,7 +465,7 @@ class VaccelPyTorchAdapter(PyTorchBaselineAdapter):
             use_compile
         )
 
-    def _init_vaccel(self, use_remote) -> vaccel.Session:
+    def _init_vaccel(self, use_remote) -> "vaccel.Session":
         plugin_type = vaccel.PluginType.TORCH
         if use_remote:
             plugin_type = vaccel.PluginType.REMOTE | plugin_type
@@ -518,22 +518,9 @@ class VaccelPyTorchAdapter(PyTorchBaselineAdapter):
 # 2. ADAPTER FOR SOL COMPILER
 # =========================================================
 class SolAdapter(BaseModelAdapter):
-    # Segmentation models with an aux_classifier head are SOL-compiled with a
-    # fixed (in, out, aux, vdims) signature. The plain dlopen wrapper here
-    # still requires/returns the aux buffer as-is. VaccelSolAdapter overrides
-    # this to True: its vaccel wrapper (scripts/sol_vaccel_wrappers/templates)
-    # keeps aux server-side in a scratch buffer instead of a client-visible
-    # resource, so it's never shipped over vaccel-remote RPC, and its run()
-    # signature drops the aux param accordingly. Revert this flag (and the
-    # matching wrapper templates) if a future SOL export drops aux entirely.
-    TRANSPORT_DROPS_AUX = False
-
-    # Models whose vaccel wrapper's predict_unpack folds sol_*_sync() into
-    # the same RPC call as sol_predict() (see scripts/sol_vaccel_wrappers
-    # templates), so the separate client-side self.model.sync() below is
-    # redundant for them. Empty for the base (dlopen) adapter, which isn't
-    # ours to patch this way. See VaccelSolAdapter.SYNC_FOLDED_MODELS.
-    SYNC_FOLDED_MODELS = frozenset()
+    """SOL v0.9 deployment: lib_{cpu,gpu}/<model>.py exposes a callable class that
+    takes a NumPy array and returns a newly allocated NumPy output. GPU builds
+    copy host input to the device and the result back inside the call."""
 
     def __init__(self, device, model_name, model_type="classification", weights_enum=None):
         super().__init__(device)
@@ -568,14 +555,21 @@ class SolAdapter(BaseModelAdapter):
                 transforms.Resize((640, 640), antialias=True),
             ])
 
-        self.execution_args = []
-        self.input_buffer = None
-        self.output_buffer = None
-        self.vdims = None
-
     def load_model(self, model_dir):
         lib_path = self._get_model_lib_path(model_dir)
-        self._load_model_from_path(lib_path)
+        module_path = os.path.join(lib_path, f"{self.model_name}.py")
+        if not os.path.exists(module_path):
+            raise FileNotFoundError(f"SOL v0.9 wrapper not found: {module_path}")
+        print(f"   [Adapter] Loading SOL model from {lib_path}...")
+
+        spec = importlib.util.spec_from_file_location(f"sol_deploy_{self.model_name}", module_path)
+        sol_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(sol_module)
+        model_class = getattr(sol_module, self.model_name)
+
+        # CPU builds take no device arguments.
+        self.model = model_class(device_idx=0) if self.device == "cuda" else model_class()
+        print(f"   [SOL] {'GPU' if self.device == 'cuda' else 'CPU'} mode")
 
     def _get_model_lib_path(self, model_dir):
         # Determine library path based on device
@@ -586,6 +580,138 @@ class SolAdapter(BaseModelAdapter):
             raise FileNotFoundError(f"SOL library path not found: {lib_path}")
 
         return lib_path
+
+    def preprocess(self, input_path):
+        if self.model_type == "video_classification":
+            ext = os.path.splitext(input_path)[1].lower()
+            if ext in [".mp4", ".avi", ".mov"]:
+                tensor = load_video_with_cv2(input_path, num_frames=16, transform=self.transform)
+            else:
+                img = cv2.imread(str(input_path))
+                if img is None:
+                    raise FileNotFoundError(f"Failed: {input_path}")
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                dummy_tensor = torch.from_numpy(img).permute(2, 0, 1)
+                frame_tensor = self.transform(dummy_tensor)
+                tensor = torch.stack([frame_tensor] * 16, dim=1)
+            return tensor.unsqueeze(0).numpy()
+        else:
+            img = cv2.imread(str(input_path))
+            if img is None:
+                raise FileNotFoundError(f"Failed: {input_path}")
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            tensor = self.transform(img)
+            return tensor.unsqueeze(0).numpy()
+
+    def preprocess_frame(self, frame_rgb: np.ndarray):
+        """
+        Preprocess a single RGB frame (HxWx3 uint8) into NumPy input for SOL buffers.
+        Returns the same type/shape as preprocess(path).
+        """
+        if frame_rgb is None or frame_rgb.ndim != 3 or frame_rgb.shape[2] != 3:
+            raise ValueError("preprocess_frame expects an RGB HxWx3 frame")
+
+        if self.model_type == "video_classification":
+            dummy_tensor = torch.from_numpy(frame_rgb).permute(2, 0, 1)
+            frame_tensor = self.transform(dummy_tensor)  # (3,112,112) float
+            tensor = torch.stack([frame_tensor] * 16, dim=1)  # (3,16,112,112)
+            return tensor.unsqueeze(0).numpy()  # (1,3,16,112,112)
+
+        tensor = self.transform(frame_rgb)  # (3,224,224)
+        return tensor.unsqueeze(0).numpy()  # (1,3,224,224)
+
+    def preprocess_frames(self, frames_rgb):
+        """
+        Preprocess a list of RGB frames for SOL video models.
+        Returns (1,3,16,112,112) float32 NumPy.
+        """
+        if self.model_type != "video_classification":
+            raise ValueError("preprocess_frames is only valid for video_classification")
+
+        if not frames_rgb:
+            raise ValueError("frames_rgb is empty")
+
+        num_frames = 16
+        if len(frames_rgb) >= num_frames:
+            idx = np.linspace(0, len(frames_rgb) - 1, num_frames).astype(int)
+            frames_rgb = [frames_rgb[i] for i in idx]
+        else:
+            last = frames_rgb[-1]
+            frames_rgb = frames_rgb + [last] * (num_frames - len(frames_rgb))
+
+        frames_list = []
+        for fr in frames_rgb:
+            if fr is None or fr.ndim != 3 or fr.shape[2] != 3:
+                raise ValueError("Each frame must be RGB HxWx3")
+            ft = torch.from_numpy(fr).permute(2, 0, 1)
+            frames_list.append(self.transform(ft))  # (3,112,112)
+
+        clip = torch.stack(frames_list, dim=1)  # (3,16,112,112)
+        return clip.unsqueeze(0).numpy()
+    
+    
+    def infer(self, input_numpy):
+        return self.model(np.ascontiguousarray(input_numpy, dtype=np.float32))
+
+    def postprocess(self, output_numpy):
+        output_tensor = torch.from_numpy(output_numpy)
+        if self.model_type in ["classification", "video_classification"]:
+            probs = torch.nn.functional.softmax(output_tensor, dim=1)
+            top_prob, top_class = torch.max(probs, dim=1)
+            return top_class.cpu(), top_prob.cpu()
+        elif self.model_type == "segmentation":
+            return torch.argmax(output_tensor.squeeze(0), dim=0).byte().cpu()
+        return output_tensor
+
+
+class VaccelSolAdapter(SolAdapter):
+    """Pre-v0.9 SOL API (sol_<model>.py: init/run/set_IO/optimize/sync) behind the
+    vAccel wrappers in lib_{cpu,gpu}/vaccel/. Not yet ported to SOL v0.9."""
+
+    # Segmentation models with an aux_classifier head are SOL-compiled with a
+    # fixed (in, out, aux, vdims) signature. The vaccel wrapper
+    # (scripts/sol_vaccel_wrappers/templates) keeps aux server-side in a
+    # scratch buffer, so it's never shipped over vaccel-remote RPC, and its
+    # run() signature drops the aux param accordingly.
+    TRANSPORT_DROPS_AUX = True
+
+    # Models whose vaccel wrapper's predict_unpack folds sol_*_sync() into
+    # the same RPC call as sol_predict(), so the separate client-side
+    # self.model.sync() in infer() is redundant for them. All 19 SOL vaccel wrapper templates
+    # fold sol_*_sync() into predict_unpack now; revert per-model by removing
+    # its name here (and the matching wrapper.c change) if ever needed. Every
+    # deployed lib_{cpu,gpu}/vaccel/*.so this runs against must be rebuilt
+    # from the folded template before this ships — a stale, unrebuilt .so
+    # still relies on the (now-skipped) explicit client-side sync() below.
+    SYNC_FOLDED_MODELS = frozenset({
+        "deeplabv3_resnet50",
+        "deeplabv3_resnet101",
+        "deeplabv3_mobilenet_v3_large",
+        "fcn_resnet50",
+        "fcn_resnet101",
+        "lraspp_mobilenet_v3_large",
+        "resnet50",
+        "mobilenet_v3_large",
+        "swin_t",
+        "swin_s",
+        "swin_v2_b",
+        "swin_v2_s",
+        "swin_v2_t",
+        "mc3_18",
+        "r3d_18",
+        "r2plus1d_18",
+        "swin3d_t",
+        "swin3d_s",
+        "swin3d_b",
+    })
+
+    def __init__(self, device, model_name, model_type="classification", weights_enum=None, use_remote=False):
+        self.use_remote = use_remote
+        super().__init__(device, model_name, model_type, weights_enum)
+
+    def load_model(self, model_dir):
+        lib_path = self._get_model_lib_path(model_dir)
+        self._load_model_from_path(os.path.join(lib_path, "vaccel"), self.use_remote)
 
     def _load_model_from_path(self, lib_path, use_remote=False):
         print(f"   [Adapter] Loading SOL model from {lib_path}...")
@@ -696,75 +822,6 @@ class SolAdapter(BaseModelAdapter):
                 except Exception as e:
                     print(f"   ⚠️ SOL (Mode 2) Optimization warning: {e}")
 
-    def preprocess(self, input_path):
-        if self.model_type == "video_classification":
-            ext = os.path.splitext(input_path)[1].lower()
-            if ext in [".mp4", ".avi", ".mov"]:
-                tensor = load_video_with_cv2(input_path, num_frames=16, transform=self.transform)
-            else:
-                img = cv2.imread(str(input_path))
-                if img is None:
-                    raise FileNotFoundError(f"Failed: {input_path}")
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                dummy_tensor = torch.from_numpy(img).permute(2, 0, 1)
-                frame_tensor = self.transform(dummy_tensor)
-                tensor = torch.stack([frame_tensor] * 16, dim=1)
-            return tensor.unsqueeze(0).numpy()
-        else:
-            img = cv2.imread(str(input_path))
-            if img is None:
-                raise FileNotFoundError(f"Failed: {input_path}")
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            tensor = self.transform(img)
-            return tensor.unsqueeze(0).numpy()
-
-    def preprocess_frame(self, frame_rgb: np.ndarray):
-        """
-        Preprocess a single RGB frame (HxWx3 uint8) into NumPy input for SOL buffers.
-        Returns the same type/shape as preprocess(path).
-        """
-        if frame_rgb is None or frame_rgb.ndim != 3 or frame_rgb.shape[2] != 3:
-            raise ValueError("preprocess_frame expects an RGB HxWx3 frame")
-
-        if self.model_type == "video_classification":
-            dummy_tensor = torch.from_numpy(frame_rgb).permute(2, 0, 1)
-            frame_tensor = self.transform(dummy_tensor)  # (3,112,112) float
-            tensor = torch.stack([frame_tensor] * 16, dim=1)  # (3,16,112,112)
-            return tensor.unsqueeze(0).numpy()  # (1,3,16,112,112)
-
-        tensor = self.transform(frame_rgb)  # (3,224,224)
-        return tensor.unsqueeze(0).numpy()  # (1,3,224,224)
-
-    def preprocess_frames(self, frames_rgb):
-        """
-        Preprocess a list of RGB frames for SOL video models.
-        Returns (1,3,16,112,112) float32 NumPy.
-        """
-        if self.model_type != "video_classification":
-            raise ValueError("preprocess_frames is only valid for video_classification")
-
-        if not frames_rgb:
-            raise ValueError("frames_rgb is empty")
-
-        num_frames = 16
-        if len(frames_rgb) >= num_frames:
-            idx = np.linspace(0, len(frames_rgb) - 1, num_frames).astype(int)
-            frames_rgb = [frames_rgb[i] for i in idx]
-        else:
-            last = frames_rgb[-1]
-            frames_rgb = frames_rgb + [last] * (num_frames - len(frames_rgb))
-
-        frames_list = []
-        for fr in frames_rgb:
-            if fr is None or fr.ndim != 3 or fr.shape[2] != 3:
-                raise ValueError("Each frame must be RGB HxWx3")
-            ft = torch.from_numpy(fr).permute(2, 0, 1)
-            frames_list.append(self.transform(ft))  # (3,112,112)
-
-        clip = torch.stack(frames_list, dim=1)  # (3,16,112,112)
-        return clip.unsqueeze(0).numpy()
-    
-    
     def infer(self, input_numpy):
         # 1. Prepare Input
         input_numpy = np.ascontiguousarray(input_numpy, dtype=np.float32)
@@ -790,57 +847,6 @@ class SolAdapter(BaseModelAdapter):
                 self.model.sync()
                 
         return self.output_buffer
-
-    def postprocess(self, output_numpy):
-        output_tensor = torch.from_numpy(output_numpy)
-        if self.model_type in ["classification", "video_classification"]:
-            probs = torch.nn.functional.softmax(output_tensor, dim=1)
-            top_prob, top_class = torch.max(probs, dim=1)
-            return top_class.cpu(), top_prob.cpu()
-        elif self.model_type == "segmentation":
-            return torch.argmax(output_tensor.squeeze(0), dim=0).byte().cpu()
-        return output_tensor
-
-
-class VaccelSolAdapter(SolAdapter):
-    # See SolAdapter.TRANSPORT_DROPS_AUX.
-    TRANSPORT_DROPS_AUX = True
-
-    # See SolAdapter.SYNC_FOLDED_MODELS. All 19 SOL vaccel wrapper templates
-    # fold sol_*_sync() into predict_unpack now; revert per-model by removing
-    # its name here (and the matching wrapper.c change) if ever needed. Every
-    # deployed lib_{cpu,gpu}/vaccel/*.so this runs against must be rebuilt
-    # from the folded template before this ships — a stale, unrebuilt .so
-    # still relies on the (now-skipped) explicit client-side sync() below.
-    SYNC_FOLDED_MODELS = frozenset({
-        "deeplabv3_resnet50",
-        "deeplabv3_resnet101",
-        "deeplabv3_mobilenet_v3_large",
-        "fcn_resnet50",
-        "fcn_resnet101",
-        "lraspp_mobilenet_v3_large",
-        "resnet50",
-        "mobilenet_v3_large",
-        "swin_t",
-        "swin_s",
-        "swin_v2_b",
-        "swin_v2_s",
-        "swin_v2_t",
-        "mc3_18",
-        "r3d_18",
-        "r2plus1d_18",
-        "swin3d_t",
-        "swin3d_s",
-        "swin3d_b",
-    })
-
-    def __init__(self, device, model_name, model_type="classification", weights_enum=None, use_remote=False):
-        self.use_remote = use_remote
-        super().__init__(device, model_name, model_type, weights_enum)
-
-    def load_model(self, model_dir):
-        lib_path = self._get_model_lib_path(model_dir)
-        self._load_model_from_path(os.path.join(lib_path, "vaccel"), self.use_remote)
 
 
 # =========================================================

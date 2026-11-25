@@ -397,7 +397,7 @@ def main():
             "confidence_score": stats_confidence
         }
         
-        if "sol" in config['backend']:
+        if "sol" in config['backend'] and "vaccel" in config['backend']:
             final_output_data["sol_run_mode"] = int(os.environ.get("SOL_RUN_MODE", "2").strip())
 
         with open(json_output_path, 'w') as json_file:

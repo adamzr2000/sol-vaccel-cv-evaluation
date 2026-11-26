@@ -1,0 +1,140 @@
+{
+    "run_id": "e2e_r3d_18_vaccel-remote-sol_edge-asus-gpu",
+    "backend": "vaccel-remote-sol",
+    "host": "robot",
+    "model": "r3d_18",
+    "model_type": "video_classification",
+    "device": "gpu",
+    "num_samples": 1000,
+    "time_window": {
+        "start": "2026-11-26T10:33:44.403136+00:00",
+        "stop": "2026-11-26T10:35:52.405593+00:00",
+        "duration_sec": 128.002457
+    },
+    "frames_per_sample": 16,
+    "fps": {
+        "inference": 25.84,
+        "inference_std": 1.45,
+        "system": 8.32,
+        "system_std": 0.38,
+        "processed": 7.81,
+        "camera_observed": 14.29
+    },
+    "stream": {
+        "avoid_duplicates": true,
+        "received_frames": 1832,
+        "processed_frames": 1000,
+        "drop_ratio": 0.454148,
+        "duplicates_skipped_loops": 56,
+        "inference_failed": 0,
+        "frame_source": "gstreamer_direct",
+        "serialize_capture": false,
+        "omp_wait_policy": "default",
+        "fresh_frame": false,
+        "glibc_tunables": "glibc.malloc.mmap_threshold=33554432:glibc.malloc.trim_threshold=268435456"
+    },
+    "platform": {
+        "host_cpu_start": {
+            "governor": "powersave",
+            "min_khz": "700000",
+            "max_khz": "3400000",
+            "cur_khz": [
+                "1448802",
+                "1509164",
+                "3096639",
+                "700000"
+            ],
+            "energy_perf_bias": "7"
+        },
+        "host_cpu_stop": {
+            "governor": "powersave",
+            "min_khz": "700000",
+            "max_khz": "3400000",
+            "cur_khz": [
+                "1115337",
+                "1266020",
+                "1273020",
+                "1273401"
+            ],
+            "energy_perf_bias": "7"
+        },
+        "print_every": 50
+    },
+    "ros_data_age_ms": {
+        "mean": -1.0,
+        "std": 0.0,
+        "min": -1.0,
+        "max": -1.0,
+        "p25": -1.0,
+        "p50": -1.0,
+        "p75": -1.0,
+        "p90": -1.0,
+        "p95": -1.0,
+        "p99": -1.0
+    },
+    "preprocessing_ms": {
+        "mean": 81.1142,
+        "std": 4.9987,
+        "min": 54.6741,
+        "max": 120.6263,
+        "p25": 78.648,
+        "p50": 80.6121,
+        "p75": 83.9544,
+        "p90": 86.7118,
+        "p95": 88.0893,
+        "p99": 91.8774
+    },
+    "inference_ms": {
+        "mean": 38.7023,
+        "std": 2.2652,
+        "min": 33.5591,
+        "max": 53.0161,
+        "p25": 37.1005,
+        "p50": 38.4735,
+        "p75": 39.9874,
+        "p90": 41.4599,
+        "p95": 42.912,
+        "p99": 44.9814
+    },
+    "postprocessing_ms": {
+        "mean": 0.3898,
+        "std": 0.0926,
+        "min": 0.1796,
+        "max": 0.8196,
+        "p25": 0.3176,
+        "p50": 0.4095,
+        "p75": 0.4604,
+        "p90": 0.4889,
+        "p95": 0.4993,
+        "p99": 0.5808
+    },
+    "system_ms": {
+        "mean": 120.2133,
+        "std": 5.4539,
+        "min": 96.8376,
+        "max": 159.3949,
+        "p25": 117.1198,
+        "p50": 119.8825,
+        "p75": 123.5145,
+        "p90": 126.5571,
+        "p95": 128.4117,
+        "p99": 132.7108
+    },
+    "confidence_score": {
+        "mean": 29.5988,
+        "std": 2.4705,
+        "min": 24.2723,
+        "max": 40.7723,
+        "p25": 27.7765,
+        "p50": 29.2853,
+        "p75": 31.1549,
+        "p90": 33.0236,
+        "p95": 34.1567,
+        "p99": 35.9598
+    },
+    "remote_host": "edge-asus",
+    "local_device": "cpu",
+    "max_samples": 1000,
+    "sol_version": "0.9.1rc2",
+    "vaccel_rpc_client": "zero-copy"
+}

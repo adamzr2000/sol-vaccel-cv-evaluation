@@ -17,8 +17,8 @@ the better of each pair shaded (light green, as in Exp. 2/3); "--" where a frame
 
 Figures: only the loads measured for both frameworks (plot_loads).
 Figure (exp3-background-traffic.pdf): one panel per model, latency vs background traffic; per framework the
-median (line + markers at the measured loads) and the IQR (p25-p75, light band); colours as the other comparison
-figures (common.BASELINE_COLOR / OURS_COLOR).
+median (line + markers at the measured loads) and the IQR (p25-p75, light band); colours and clean axes as exp3-combined.pdf
+(ROS 2 blue, vAccel orange: pale fill + darker border; lines, markers and box borders in the border colour).
 Box-plot figure (exp3-background-traffic-box.pdf): the same data as box plots (box = IQR, whiskers =
 p5-p95, outliers not drawn), loads as evenly spaced categories.
 
@@ -30,13 +30,14 @@ import json
 import statistics
 from datetime import datetime
 
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
-from common import (BASELINE_COLOR, EDGE_COLOR, HERE, LEGEND_STYLE, MODEL_STATS, OURS_COLOR, REMOTE_RUN_TAG,
-                    ROS_MODEL_STATS, ROS_RUN_TAG, TEX_COLOUR, TEX_MODEL, _iso_s, apply_theme, load_runs, model_of,
-                    patches, save, style_axes)
-from exp3_latency import latest
+from common import (HERE, LEGEND_STYLE, MODEL_STATS, REMOTE_RUN_TAG, ROS_MODEL_STATS, ROS_RUN_TAG, TEX_COLOUR,
+                    TEX_MODEL, _iso_s, apply_theme, load_runs, model_of, save, style_axes)
+from exp3_combined import BAR_EDGE_WIDTH, BAR_STYLE, ROLE
+from exp3_latency import FRAMEWORKS as EXP3_FRAMEWORKS, latest
 
 CSV, TEX, PDF, BOX_PDF = (HERE / "exp3-background-traffic.csv", HERE / "exp3-background-traffic.tex",
                           HERE / "exp3-background-traffic.pdf", HERE / "exp3-background-traffic-box.pdf")
@@ -49,7 +50,10 @@ CAPTION = ("Exp.~3: Inference latency (ms) under background traffic for remote i
            "on the edge GPU via ROS~2 and vAccel. The better of the two is shaded; a dash marks a load not measured.")
 # figure
 FIG_SIZE = (20, 6.2)
-PLOT_FRAMEWORKS = [("ros2", "ROS 2", BASELINE_COLOR), ("vaccel", "vAccel", OURS_COLOR)]
+# (key, label, (fill, border)) -- the colours of exp3-combined.pdf
+PLOT_FRAMEWORKS = [(f, lbl, (BAR_STYLE[ROLE[f]]["facecolor"], BAR_STYLE[ROLE[f]]["edgecolor"]))
+                   for f, lbl, _ in EXP3_FRAMEWORKS]
+LINE = BAR_EDGE_WIDTH  # lines, marker edges, box borders, whiskers (as the bar borders / error bars of Exp. 1-3)
 BAND_ALPHA = 0.18
 def plot_loads(model: str, values: dict) -> list:
     """Loads drawn for `model` in the figures: only those measured for both frameworks, so every point is a direct
@@ -167,17 +171,18 @@ def plot(values: dict) -> None:
     fig, axes = plt.subplots(1, len(MODELS), figsize=FIG_SIZE)
     for ax, m in zip(axes, MODELS):
         top = 0.0
-        for f, _, color in PLOT_FRAMEWORKS:
+        for f, _, (fill, color) in PLOT_FRAMEWORKS:
             pts = [(load, values[(m, f, load)]) for load in plot_loads(m, values) if (m, f, load) in values]
             if not pts:
                 continue
             x = [load for load, _ in pts]
             ax.fill_between(x, [v["p25"] for _, v in pts], [v["p75"] for _, v in pts], color=color, alpha=BAND_ALPHA,
                             linewidth=0, zorder=2)
-            ax.plot(x, [v["median"] for _, v in pts], color=color, linewidth=2.4, zorder=3)
-            ax.plot(x, [v["median"] for _, v in pts], linestyle="none", marker="o", markersize=10, color=color, zorder=4)
+            ax.plot(x, [v["median"] for _, v in pts], color=color, linewidth=LINE, zorder=3)
+            ax.plot(x, [v["median"] for _, v in pts], linestyle="none", marker="o", markersize=11, markerfacecolor=fill,
+                    markeredgecolor=color, markeredgewidth=LINE, zorder=4)
             top = max(top, max(v["p75"] for _, v in pts))
-        style_axes(ax)
+        style_axes(ax, clean=True)
         ax.set_ylim(0, top * 1.08)
         ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
         last = max(plot_loads(m, values))  # each panel ends just after its last compared load
@@ -187,9 +192,15 @@ def plot(values: dict) -> None:
     axes[0].set_ylabel("Inference latency (ms)")
     fig.subplots_adjust(left=0.07, right=0.988, top=0.8, bottom=0.17, wspace=0.2)
     fig.supxlabel("Background traffic (Mbit/s)", y=0.035, fontsize=plt.rcParams["axes.labelsize"])  # shared
-    handles = patches([(lbl, c) for _, lbl, c in PLOT_FRAMEWORKS])
+    handles = legend_handles()
     fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.53, 0.885), ncol=len(handles), **LEGEND_STYLE)
     save(fig, PDF)
+
+
+def legend_handles() -> list:
+    """Outlined swatches (fill + border), as the legend of exp3-combined.pdf."""
+    return [mpatches.Patch(facecolor=fill, edgecolor=edge, linewidth=LINE, label=lbl)
+            for _, lbl, (fill, edge) in PLOT_FRAMEWORKS]
 
 
 BOX_WIDTH = 0.36
@@ -202,16 +213,17 @@ def plot_box(values: dict) -> None:
     fig, axes = plt.subplots(1, len(MODELS), figsize=FIG_SIZE)
     for ax, m in zip(axes, MODELS):
         loads = plot_loads(m, values)  # categories of this panel (no empty slots)
-        for j, (f, _, color) in enumerate(PLOT_FRAMEWORKS):
+        for j, (f, _, (fill, color)) in enumerate(PLOT_FRAMEWORKS):
             pts = [(i, values[(m, f, load)]["latencies"]) for i, load in enumerate(loads) if (m, f, load) in values]
             if not pts:
                 continue
             ax.boxplot([lat for _, lat in pts], positions=[i + (j - 0.5) * BOX_WIDTH for i, _ in pts],
                        widths=BOX_WIDTH * 0.9, whis=BOX_WHISKERS, showfliers=False, patch_artist=True,
-                       boxprops=dict(facecolor=color, edgecolor=EDGE_COLOR, linewidth=0.8),
-                       medianprops=dict(color=EDGE_COLOR, linewidth=1.6), whiskerprops=dict(color=EDGE_COLOR),
-                       capprops=dict(color=EDGE_COLOR), zorder=3)
-        style_axes(ax)
+                       boxprops=dict(facecolor=fill, edgecolor=color, linewidth=LINE),
+                       medianprops=dict(color=color, linewidth=LINE * 1.4),
+                       whiskerprops=dict(color=color, linewidth=LINE), capprops=dict(color=color, linewidth=LINE),
+                       zorder=3)
+        style_axes(ax, clean=True)
         ax.set_xticks(range(len(loads)))
         ax.set_xticklabels([str(load) for load in loads])
         ax.set_xlim(-0.6, len(loads) - 0.4)
@@ -221,7 +233,7 @@ def plot_box(values: dict) -> None:
     axes[0].set_ylabel("Inference latency (ms)")
     fig.subplots_adjust(left=0.07, right=0.988, top=0.8, bottom=0.17, wspace=0.2)
     fig.supxlabel("Background traffic (Mbit/s)", y=0.035, fontsize=plt.rcParams["axes.labelsize"])
-    fig.legend(handles=patches([(lbl, c) for _, lbl, c in PLOT_FRAMEWORKS]), loc="lower center",
+    fig.legend(handles=legend_handles(), loc="lower center",
                bbox_to_anchor=(0.53, 0.885), ncol=len(PLOT_FRAMEWORKS), **LEGEND_STYLE)
     save(fig, BOX_PDF)
 

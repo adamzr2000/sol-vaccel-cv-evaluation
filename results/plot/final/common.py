@@ -82,7 +82,8 @@ TARGETS = [
     ("edge_gpu", "Edge GPU", "#2E9B7E"),
 ]
 # LaTeX tables: (colour name, light tint of the target colour) for the shaded columns of each target
-TEX_COLOUR = {"robot_cpu": ("vsLocal", "E3EDF8"), "edge_cpu": ("vsCPULight", "FBE1B8"),
+# same fills as the figures' bars (exp1-combined, exp2/exp3 bar figures)
+TEX_COLOUR = {"robot_cpu": ("vsLocal", "DCE7F3"), "edge_cpu": ("vsCPULight", "FCE8D5"),
               "edge_gpu": ("vsGPULight", "D3EEE6")}
 TARGET_TAG = {"robot_cpu": LOCAL_RUN_TAG, "edge_cpu": REMOTE_CPU_RUN_TAG, "edge_gpu": REMOTE_RUN_TAG}
 
@@ -341,10 +342,25 @@ def apply_theme() -> None:
                          "savefig.bbox": "tight", "savefig.pad_inches": 0.02, "hatch.linewidth": 0.7})
 
 
-def style_axes(ax) -> None:
+# clean style (style_axes(ax, clean=True)): widths for figures drawn ~20 in wide and printed at 3.5-7.2 in, so
+# they end up ~0.5-0.8 pt in the paper
+CLEAN_AXIS_WIDTH, CLEAN_GRID_WIDTH, CLEAN_GRID_COLOR = 1.8, 1.2, "#BDBDBD"
+
+
+def style_axes(ax, clean: bool = False) -> None:
+    """Common axes style. clean: left/bottom axes only, thicker axes/ticks, light dashed y grid behind the data."""
     ax.set_axisbelow(True)
-    ax.grid(axis="y", linestyle="-", linewidth=0.6, alpha=0.35)
     ax.grid(axis="x", visible=False)
+    if clean:
+        ax.grid(axis="y", linestyle=(0, (4, 3)), linewidth=CLEAN_GRID_WIDTH, color=CLEAN_GRID_COLOR)
+        for side in ("top", "right"):
+            ax.spines[side].set_visible(False)
+        for side in ("bottom", "left"):
+            ax.spines[side].set_color("black")
+            ax.spines[side].set_linewidth(CLEAN_AXIS_WIDTH)
+        ax.tick_params(width=CLEAN_AXIS_WIDTH)
+        return
+    ax.grid(axis="y", linestyle="-", linewidth=0.6, alpha=0.35)
     for side in ("top", "right", "bottom", "left"):
         ax.spines[side].set_color("black")
         ax.spines[side].set_linewidth(1.0)

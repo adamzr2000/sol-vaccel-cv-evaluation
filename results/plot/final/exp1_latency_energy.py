@@ -70,7 +70,7 @@ def write_tex() -> None:
         width = 1
         if fps:  # fps cell: no left overhang (would paint over the latency's last digit)
             fps_right = "0pt" if k == 4 else "\\tabcolsep"
-            spec += f"@{{\\,}}>{{\\columncolor{{{TEX_COLOUR[t][0]}}}[0pt][{fps_right}]\\scriptsize\\color{{gray}}}}l"
+            spec += f"@{{\\,}}>{{\\columncolor{{{TEX_COLOUR[t][0]}}}[0pt][{fps_right}]\\scriptsize\\color{{black!65}}}}l"
             header.append("")
             width = 2
         group = "lat" if i < 2 else "energy"

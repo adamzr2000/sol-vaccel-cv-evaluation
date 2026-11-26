@@ -27,7 +27,7 @@ import statistics
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
-from common import (COMPILERS, EDGE_COLOR, HERE, LEGEND_STYLE, TARGETS, TEX_COLOUR, TEX_INDENT, TEX_MODEL, TEX_TASK, TITLES,
+from common import (COMPILERS, EDGE_COLOR, HERE, LEGEND_STYLE, MODEL_NAME, TARGETS, TEX_COLOUR, TEX_INDENT, TEX_MODEL, TEX_TASK, TITLES,
                     agent_computation, apply_theme, model_of, model_ticks, patches, read_rows, save, style_axes,
                     target_runs, write_rows)
 
@@ -114,7 +114,15 @@ def write_tex() -> None:
     print(f"[OK] Saved LaTeX table to: {TEX.name}")
 
 
+# bar style (this figure and its companion): light fill + darker border of the same hue -- baseline blue,
+# ours orange (pale fills; the borders carry the distinction)
+BAR_STYLE = {"base": dict(facecolor="#DCE7F3", edgecolor="#2B74B3"), "ours": dict(facecolor="#FCE8D5", edgecolor="#E15726")}
+BAR_EDGE_WIDTH = 2.2   # ~0.6-0.8 pt at the printed size
+ROLE = {"aoti": "base", "sol": "ours"}
+
+
 def plot() -> None:
+    import matplotlib.patches as mpatches
     tasks, raw = read_rows(CSV, 4)
     values = {k: {c: float(v) for c, v in d.items() if v} for k, d in raw.items()}
     fig = plt.figure(figsize=FIG_SIZE)
@@ -125,16 +133,17 @@ def plot() -> None:
             ax = fig.add_subplot(gs[r, col])
             ax.set_ylim(0, max(d["iqr_high_ms"] for (m, t, _), d in values.items()
                                if t == target and m in models) * HEADROOM)
-            for j, (compiler, _, _, color) in enumerate(COMPILERS):
+            for j, (compiler, _, _, _) in enumerate(COMPILERS):
+                style = BAR_STYLE[ROLE[compiler]]
                 for i, m in enumerate(models):
                     d = values.get((m, target, compiler))
                     if d is None:
                         continue
                     x, v = i + (j - 0.5) * BAR_WIDTH, d["inference_ms"]
-                    ax.bar(x, v, width=BAR_WIDTH, facecolor=color, edgecolor=EDGE_COLOR, linewidth=0.8, zorder=3)
+                    ax.bar(x, v, width=BAR_WIDTH, linewidth=BAR_EDGE_WIDTH, zorder=3, **style)
                     ax.errorbar(x, v, yerr=[[v - d["iqr_low_ms"]], [d["iqr_high_ms"] - v]], fmt="none",
-                                ecolor=EDGE_COLOR, elinewidth=1.4, capsize=4, capthick=1.4, zorder=10)
-            style_axes(ax)
+                                ecolor=EDGE_COLOR, elinewidth=2.2, capsize=5, capthick=2.2, zorder=10)
+            style_axes(ax, clean=True)
             ax.yaxis.set_major_locator(MaxNLocator(nbins=4))
             ax.set_xlim(-0.5, len(models) - 0.5)
             if r == len(TARGETS) - 1:
@@ -148,9 +157,62 @@ def plot() -> None:
                 ax.set_ylabel(row_label)
     fig.text(0.008, 0.5, "Computation time (ms)", rotation=90, ha="center", va="center",
              fontsize=plt.rcParams["axes.labelsize"])
-    fig.legend(handles=patches([(lbl, c) for _, lbl, _, c in COMPILERS]), loc="lower center",
-               bbox_to_anchor=(0.54, 0.925), ncol=len(COMPILERS), **LEGEND_STYLE)
+    handles = [mpatches.Patch(linewidth=BAR_EDGE_WIDTH, label=lbl, **BAR_STYLE[ROLE[c]]) for c, lbl, _, _ in COMPILERS]
+    fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.54, 0.925), ncol=len(COMPILERS),
+               **LEGEND_STYLE)
     save(fig, PDF)
+
+
+DUMBBELL_PDF = HERE / "exp2-latency-dumbbell.pdf"
+DUMBBELL_SIZE = (20, 6.6)
+DUMBBELL_OFFSET = 0.24  # x offset of the three execution targets around each model
+
+
+def plot_dumbbell() -> None:
+    """Same numbers as exp2-latency.tex in one log-scale panel: per model and execution target a vertical
+    segment from the PyTorch time (hollow marker) to the SOL time (filled marker); colour = execution target
+    (Exp. 1 colours; Local CPU in the palette's medium blue so its markers stay visible); task separators."""
+    import matplotlib.lines as mlines
+    tasks, raw = read_rows(CSV, 4)
+    val = {k: float(d["inference_ms"]) for k, d in raw.items()}
+    color = {t: c for t, _, c in TARGETS}
+    color["robot_cpu"] = "#3A7CA5"  # the palette's medium blue: the light Local CPU blue is invisible as a marker
+    fig, ax = plt.subplots(figsize=DUMBBELL_SIZE)
+    x, ticks, labels, bounds = 0, [], [], []
+    for task, models in tasks.items():
+        start = x
+        for m in models:
+            for j, (t, _, _) in enumerate(TARGETS):
+                ptc, sol = val.get((m, t, "aoti")), val.get((m, t, "sol"))
+                if ptc is None or sol is None:
+                    continue
+                xx = x + (j - 1) * DUMBBELL_OFFSET
+                ax.plot([xx, xx], [ptc, sol], color=color[t], linewidth=2.2, zorder=2)
+                ax.plot(xx, ptc, marker="o", markersize=10, markerfacecolor="white", markeredgecolor=color[t],
+                        markeredgewidth=2.2, linestyle="none", zorder=3)
+                ax.plot(xx, sol, marker="o", markersize=10, color=color[t], markeredgecolor=EDGE_COLOR,
+                        markeredgewidth=0.8, linestyle="none", zorder=4)
+            ticks.append(x); labels.append(m); x += 1
+        bounds.append((start, x - 1, task))
+        x += 0.6  # gap between tasks
+    ax.set_yscale("log")
+    style_axes(ax)
+    ax.set_xticks(ticks)
+    ax.set_xticklabels([MODEL_NAME.get(m, m) for m in labels], rotation=20, ha="right", rotation_mode="anchor")
+    ax.set_xlim(-0.6, x - 0.6 - 0.4)
+    for i, (a, b, task) in enumerate(bounds):
+        ax.text((a + b) / 2, 1.02, TITLES.get(task, task), transform=ax.get_xaxis_transform(), ha="center",
+                va="bottom", fontsize=plt.rcParams["axes.titlesize"])
+        if i:
+            ax.axvline(a - 0.8, color="#BBBBBB", linewidth=1, zorder=1)
+    ax.set_ylabel("Computation time (ms, log)")
+    fig.subplots_adjust(left=0.065, right=0.99, top=0.78, bottom=0.2)
+    handles = patches([(lbl, color[t]) for t, lbl, _ in TARGETS]) + [
+        mlines.Line2D([], [], marker="o", markersize=10, markerfacecolor="white", markeredgecolor=EDGE_COLOR,
+                      markeredgewidth=2, linestyle="none", label="PyTorch"),
+        mlines.Line2D([], [], marker="o", markersize=10, color=EDGE_COLOR, linestyle="none", label="SOL")]
+    fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.53, 0.89), ncol=len(handles), **LEGEND_STYLE)
+    save(fig, DUMBBELL_PDF)
 
 
 if __name__ == "__main__":
@@ -158,3 +220,4 @@ if __name__ == "__main__":
     write_tex()
     apply_theme()
     plot()
+    plot_dumbbell()

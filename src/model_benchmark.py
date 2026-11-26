@@ -349,7 +349,13 @@ def main():
             "confidence_score": stats_confidence
         }
         if "sol" in config['backend']:
-            final_output_data["sol_run_mode"] = int(os.environ.get("SOL_RUN_MODE", "2").strip())
+            _sol09 = getattr(adapter, "_sol09", None)
+            if _sol09 is not None:   # SOL 0.9 deployment: no run modes, record the SOL version instead
+                final_output_data["sol_version"] = _sol09.m["sol_version"]
+                if getattr(_sol09, "rpc_client", None):   # vaccel-remote: zero-copy | stock vAccel RPC client
+                    final_output_data["vaccel_rpc_client"] = _sol09.rpc_client
+            else:
+                final_output_data["sol_run_mode"] = int(os.environ.get("SOL_RUN_MODE", "2").strip())
 
         with open(json_output_path, 'w') as json_file:
             json.dump(final_output_data, json_file, indent=4)

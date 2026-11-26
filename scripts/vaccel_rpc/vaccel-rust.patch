@@ -1,0 +1,403 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 27c86a0..28f9ca8 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -1,3 +1,6 @@
+ [workspace]
+ members = ["vaccel-rpc-client", "vaccel-rpc-agent", "vaccel-bindings", "vaccel-rpc-proto"]
+ default-members = ["vaccel-rpc-agent"]
++
++[patch."https://github.com/nubificus/ttrpc-rust.git"]
++ttrpc = { path = "../ttrpc-rust" }
+diff --git a/vaccel-bindings/src/arg.rs b/vaccel-bindings/src/arg.rs
+index 0a85a47..5933544 100644
+--- a/vaccel-bindings/src/arg.rs
++++ b/vaccel-bindings/src/arg.rs
+@@ -102,6 +102,18 @@ impl Arg {
+             .ok_or(Error::EmptyValue)
+     }
+ 
++    /// vaccel patch: takes the vector an `Arg` created by `from_buf` was built on (the C arg does not own it),
++    /// leaving the `Arg` without data; `None` for other `Arg`s.
++    pub fn take_buffer(&mut self) -> Option<Vec<u8>> {
++        let b = self._buffer.take()?;
++        unsafe {
++            let inner = self.inner.as_mut();
++            inner.buf = std::ptr::null_mut();
++            inner.size = 0;
++        }
++        Some(b)
++    }
++
+     /// Returns the buffer of the `Arg`.
+     pub fn buf(&self) -> Option<&[u8]> {
+         let inner = unsafe { self.inner.as_ref() };
+diff --git a/vaccel-rpc-agent/src/ops/genop.rs b/vaccel-rpc-agent/src/ops/genop.rs
+index 7216adc..e16719f 100644
+--- a/vaccel-rpc-agent/src/ops/genop.rs
++++ b/vaccel-rpc-agent/src/ops/genop.rs
+@@ -40,9 +40,21 @@ impl AgentService {
+ 
+         let mut resp = Response::new();
+         resp.write_args = self.profile_fn(sess_id, "genop > resp_write_args", || {
++            // vaccel patch: move the output buffers into the response instead of copying them
+             write_args
+                 .into_iter()
+-                .map(|e| Ok(e.try_into()?))
++                .map(|mut e| match e.take_buffer() {
++                    Some(buf) if !buf.is_empty() => {
++                        let mut p = ProtoArg::try_from(&e)?;
++                        p.size = buf.len().try_into().map_err(|_| {
++                            AgentServiceError::Internal("arg size overflow".to_string())
++                        })?;
++                        p.unallocated = false;
++                        p.buf = buf;
++                        Ok(p)
++                    }
++                    _ => Ok(e.try_into()?),
++                })
+                 .collect::<Result<Vec<ProtoArg>>>()
+         })?;
+ 
+diff --git a/vaccel-rpc-client/Cargo.toml b/vaccel-rpc-client/Cargo.toml
+index 248827b..aa21d72 100644
+--- a/vaccel-rpc-client/Cargo.toml
++++ b/vaccel-rpc-client/Cargo.toml
+@@ -8,7 +8,7 @@ edition = "2021"
+ license = "Apache-2.0"
+ 
+ [lib]
+-crate-type = ["staticlib"]
++crate-type = ["staticlib", "cdylib"]
+ 
+ [dependencies]
+ env_logger = "0.11"
+diff --git a/vaccel-rpc-client/src/ops/genop.rs b/vaccel-rpc-client/src/ops/genop.rs
+index 76aece0..766f9c7 100644
+--- a/vaccel-rpc-client/src/ops/genop.rs
++++ b/vaccel-rpc-client/src/ops/genop.rs
+@@ -69,6 +69,25 @@ pub unsafe extern "C" fn vaccel_rpc_client_genop(
+         }
+     };
+ 
++    #[cfg(not(feature = "async"))]
++    if client.fastpath {
++        let read_args = match c_pointer_to_mut_slice(read_args_ptr, nr_read_args) {
++            Some(slice) => slice,
++            None => return ffi::VACCEL_EINVAL as c_int,
++        };
++        let write_args = c_pointer_to_mut_slice(write_args_ptr, nr_write_args).unwrap_or(&mut []);
++        client.start_profiling(sess_vaccel_id, "genop > client.genop");
++        let ret = match super::genop_fast::genop_fast(client, sess_vaccel_id.into(), read_args, write_args) {
++            Ok(()) => ffi::VACCEL_OK,
++            Err(e) => {
++                error!("{}", e);
++                e.to_ffi()
++            }
++        } as c_int;
++        client.stop_profiling(sess_vaccel_id, "genop > client.genop");
++        return ret;
++    }
++
+     let proto_read_args = {
+         let _scope = client.profile_scope(sess_vaccel_id, "genop > read_args");
+ 
+diff --git a/vaccel-rpc-client/src/ops/genop_fast.rs b/vaccel-rpc-client/src/ops/genop_fast.rs
+new file mode 100644
+index 0000000..21cdc8b
+--- /dev/null
++++ b/vaccel-rpc-client/src/ops/genop_fast.rs
+@@ -0,0 +1,257 @@
++// SPDX-License-Identifier: Apache-2.0
++//
++// vaccel patch: zero-copy genop for the sync client.
++//
++// Sends exactly the same bytes as `genop` (ttrpc `Request` envelope with the genop `Request` as payload), but
++// the read-arg buffers are written to the socket straight from the caller's memory (writev), and the response
++// write-arg buffers are copied once, straight from the received message into the caller's buffers, instead of
++// being copied into protobuf messages on both paths. VACCEL_RPC_FASTPATH=0 selects the original path.
++
++use crate::sync::client::VaccelRpcClient;
++use crate::{Error, Result};
++use protobuf::Message;
++use vaccel::{ffi, Arg, Handle};
++use vaccel_rpc_proto::genop::{Arg as ProtoArg, ArgType as ProtoArgType};
++
++/// Number of genop calls served by the fast path (lets the caller check that this client is the one in use).
++static FASTPATH_CALLS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
++
++#[no_mangle]
++pub extern "C" fn vaccel_rpc_client_fastpath_calls() -> u64 {
++    FASTPATH_CALLS.load(std::sync::atomic::Ordering::Relaxed)
++}
++
++pub(crate) const SERVICE: &str = "vaccel.sync.agent.AgentService";
++pub(crate) const METHOD: &str = "Genop";
++
++fn put_varint(v: &mut Vec<u8>, mut x: u64) {
++    while x >= 0x80 {
++        v.push((x as u8) | 0x80);
++        x >>= 7;
++    }
++    v.push(x as u8);
++}
++
++fn varint_len(mut x: u64) -> usize {
++    let mut n = 1;
++    while x >= 0x80 {
++        x >>= 7;
++        n += 1;
++    }
++    n
++}
++
++fn bad(msg: &str) -> Error {
++    Error::Other(format!("genop fast path: {msg}"))
++}
++
++fn get_varint(b: &[u8], pos: &mut usize) -> Result<u64> {
++    let mut x = 0u64;
++    let mut shift = 0;
++    loop {
++        let byte = *b.get(*pos).ok_or_else(|| bad("truncated varint"))?;
++        *pos += 1;
++        x |= ((byte & 0x7f) as u64) << shift;
++        if byte < 0x80 {
++            return Ok(x);
++        }
++        shift += 7;
++        if shift > 63 {
++            return Err(bad("varint too long"));
++        }
++    }
++}
++
++enum Val<'a> {
++    Varint(u64),
++    Bytes(&'a [u8]),
++    Other,
++}
++
++fn next_field<'a>(b: &'a [u8], pos: &mut usize) -> Result<(u32, Val<'a>)> {
++    let key = get_varint(b, pos)?;
++    let field = (key >> 3) as u32;
++    let skip = |pos: &mut usize, n: usize| -> Result<()> {
++        let end = pos.checked_add(n).filter(|&e| e <= b.len()).ok_or_else(|| bad("truncated field"))?;
++        *pos = end;
++        Ok(())
++    };
++    match key & 7 {
++        0 => Ok((field, Val::Varint(get_varint(b, pos)?))),
++        1 => skip(pos, 8).map(|_| (field, Val::Other)),
++        2 => {
++            let l = get_varint(b, pos)? as usize;
++            let start = *pos;
++            skip(pos, l)?;
++            Ok((field, Val::Bytes(&b[start..start + l])))
++        }
++        5 => skip(pos, 4).map(|_| (field, Val::Other)),
++        _ => Err(bad("unsupported wire type")),
++    }
++}
++
++enum Piece<'a> {
++    Own(Vec<u8>),
++    Borrow(&'a [u8]),
++}
++
++impl Piece<'_> {
++    fn len(&self) -> usize {
++        match self {
++            Piece::Own(v) => v.len(),
++            Piece::Borrow(s) => s.len(),
++        }
++    }
++    fn as_slice(&self) -> &[u8] {
++        match self {
++            Piece::Own(v) => v,
++            Piece::Borrow(s) => s,
++        }
++    }
++}
++
++fn proto_arg_meta(a: &Arg, unallocated: bool) -> Result<ProtoArg> {
++    Ok(ProtoArg {
++        size: a
++            .size()
++            .try_into()
++            .map_err(|e| bad(&format!("arg size [{e}]")))?,
++        arg_type: <ProtoArgType as protobuf::Enum>::from_i32(u32::from(a.type_()) as i32)
++            .ok_or_else(|| bad("arg type"))?
++            .into(),
++        custom_type_id: a.custom_type_id(),
++        unallocated,
++        ..Default::default()
++    })
++}
++
++/// Append one genop `Arg` as field `tag` of the genop `Request`: the protobuf encoding of the `Arg` with its
++/// data borrowed (field 1 `buf` comes first in the canonical encoding, then the remaining fields).
++fn push_arg<'a>(pieces: &mut Vec<Piece<'a>>, tag: u8, data: &'a [u8], meta: &ProtoArg) -> Result<usize> {
++    let rest = meta.write_to_bytes().map_err(|e| bad(&e.to_string()))?;
++    let data_field = if data.is_empty() { 0 } else { 1 + varint_len(data.len() as u64) + data.len() };
++    let arg_len = data_field + rest.len();
++    let mut head = Vec::with_capacity(24);
++    head.push(tag);
++    put_varint(&mut head, arg_len as u64);
++    if !data.is_empty() {
++        head.push(0x0a);
++        put_varint(&mut head, data.len() as u64);
++    }
++    let n = 1 + varint_len(arg_len as u64) + arg_len;
++    pieces.push(Piece::Own(head));
++    if !data.is_empty() {
++        pieces.push(Piece::Borrow(data));
++    }
++    pieces.push(Piece::Own(rest));
++    Ok(n)
++}
++
++/// One genop call; returns VACCEL_OK or an error. `read_args`/`write_args` are the caller's vAccel args.
++pub(crate) fn genop_fast(
++    client: &VaccelRpcClient,
++    sess_id: i64,
++    read_args: &mut [ffi::vaccel_arg],
++    write_args: &mut [ffi::vaccel_arg],
++) -> Result<()> {
++    let reads = read_args
++        .iter_mut()
++        .map(|a| Ok(unsafe { Arg::from_ref(a)? }))
++        .collect::<Result<Vec<Arg>>>()?;
++    let writes = write_args
++        .iter_mut()
++        .map(|a| Ok(unsafe { Arg::from_ref(a)? }))
++        .collect::<Result<Vec<Arg>>>()?;
++
++    // genop Request payload
++    let mut payload: Vec<Piece> = Vec::with_capacity(4 * (reads.len() + writes.len()) + 1);
++    let mut payload_len = 0usize;
++    if sess_id != 0 {
++        let mut v = vec![0x08];
++        put_varint(&mut v, sess_id as u64);
++        payload_len += v.len();
++        payload.push(Piece::Own(v));
++    }
++    for a in &reads {
++        let data = a.buf().unwrap_or(&[]);
++        payload_len += push_arg(&mut payload, 0x12, data, &proto_arg_meta(a, data.is_empty())?)?;
++    }
++    for a in &writes {
++        if client.send_write {
++            let data = a.buf().unwrap_or(&[]);
++            payload_len += push_arg(&mut payload, 0x1a, data, &proto_arg_meta(a, data.is_empty())?)?;
++        } else {
++            let meta = ProtoArg::try_from_vaccel_unallocated(a)?;
++            payload_len += push_arg(&mut payload, 0x1a, &[], &meta)?;
++        }
++    }
++
++    // ttrpc Request envelope: service(1), method(2), payload(3), timeout_nano(4), metadata(5)
++    let ctx = ttrpc::context::Context::default();
++    let mut head_msg = ttrpc::Request::new();
++    head_msg.set_service(SERVICE.to_string());
++    head_msg.set_method(METHOD.to_string());
++    let mut head = head_msg.write_to_bytes().map_err(|e| bad(&e.to_string()))?;
++    if payload_len > 0 {
++        head.push(0x1a);
++        put_varint(&mut head, payload_len as u64);
++    }
++    let mut tail_msg = ttrpc::Request::new();
++    tail_msg.set_timeout_nano(ctx.timeout_nano);
++    tail_msg.set_metadata(ttrpc::context::to_pb(ctx.metadata));
++    let tail = tail_msg.write_to_bytes().map_err(|e| bad(&e.to_string()))?;
++
++    let mut iov: Vec<&[u8]> = Vec::with_capacity(payload.len() + 2);
++    iov.push(&head);
++    iov.extend(payload.iter().filter(|p| p.len() > 0).map(|p| p.as_slice()));
++    if !tail.is_empty() {
++        iov.push(&tail);
++    }
++
++    let body = client
++        .raw_client
++        .request_raw_vectored(&iov, ctx.timeout_nano)
++        .map_err(Error::from)?;
++
++    // ttrpc Response envelope: status(1), payload(2)
++    let mut pos = 0;
++    let mut resp_payload: &[u8] = &[];
++    while pos < body.len() {
++        match next_field(&body, &mut pos)? {
++            (1, Val::Bytes(s)) => {
++                let status = ttrpc::Status::parse_from_bytes(s).map_err(|e| bad(&e.to_string()))?;
++                if status.code() != ttrpc::Code::OK {
++                    return Err(Error::from(ttrpc::Error::RpcStatus(status)));
++                }
++            }
++            (2, Val::Bytes(s)) => resp_payload = s,
++            _ => {}
++        }
++    }
++
++    // genop Response: repeated Arg write_args = 1; copy each `buf` into the caller's write arg
++    let mut pos = 0;
++    let mut i = 0;
++    while pos < resp_payload.len() {
++        if let (1, Val::Bytes(arg)) = next_field(resp_payload, &mut pos)? {
++            let (mut buf, mut size): (&[u8], usize) = (&[], 0);
++            let mut apos = 0;
++            while apos < arg.len() {
++                match next_field(arg, &mut apos)? {
++                    (1, Val::Bytes(b)) => buf = b,
++                    (2, Val::Varint(v)) => size = v as usize,
++                    _ => {}
++                }
++            }
++            if let Some(w) = write_args.get_mut(i) {
++                let n = size.min(buf.len()).min(w.size);
++                if n > 0 {
++                    unsafe { std::ptr::copy_nonoverlapping(buf.as_ptr(), w.buf as *mut u8, n) };
++                }
++            }
++            i += 1;
++        }
++    }
++    FASTPATH_CALLS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
++    Ok(())
++}
+diff --git a/vaccel-rpc-client/src/ops/mod.rs b/vaccel-rpc-client/src/ops/mod.rs
+index 6e69e1b..b05a73b 100644
+--- a/vaccel-rpc-client/src/ops/mod.rs
++++ b/vaccel-rpc-client/src/ops/mod.rs
+@@ -1,6 +1,8 @@
+ // SPDX-License-Identifier: Apache-2.0
+ 
+ pub mod genop;
++#[cfg(not(feature = "async"))]
++pub mod genop_fast;
+ pub mod image;
+ #[cfg(target_pointer_width = "64")]
+ pub mod tf;
+diff --git a/vaccel-rpc-client/src/sync/client.rs b/vaccel-rpc-client/src/sync/client.rs
+index e980b6e..39f1fd2 100644
+--- a/vaccel-rpc-client/src/sync/client.rs
++++ b/vaccel-rpc-client/src/sync/client.rs
+@@ -11,6 +11,9 @@ pub struct VaccelRpcClient {
+     pub ttrpc_client: AgentServiceClient,
+     pub profiler_manager: ProfilerManager,
+     pub send_write: bool,
++    // vaccel patch: raw ttrpc client for the zero-copy genop path (VACCEL_RPC_FASTPATH=0 disables it)
++    pub raw_client: ttrpc::Client,
++    pub fastpath: bool,
+ }
+ 
+ impl VaccelRpcClient {
+@@ -21,6 +24,8 @@ impl VaccelRpcClient {
+         let ttrpc_client = Self::create_ttrpc_client(&server_address)?;
+ 
+         Ok(VaccelRpcClient {
++            raw_client: ttrpc_client.clone(),
++            fastpath: std::env::var("VACCEL_RPC_FASTPATH").map(|v| v != "0").unwrap_or(true),
+             ttrpc_client: AgentServiceClient::new(ttrpc_client),
+             profiler_manager: ProfilerManager::new(Self::TIMERS_PREFIX),
+             send_write: Self::get_env_send_write(),

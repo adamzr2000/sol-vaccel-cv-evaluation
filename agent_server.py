@@ -2,7 +2,8 @@
 """
 agent_server.py -- starts a fresh, profiled vAccel agent per model run (edge side).
 
-  POST /start  {"backend": "sol"|"ptc", "device": "cpu"|"gpu", "run_id": "..."}
+  POST /start  {"backend": "sol"|"ptc", "device": "cpu"|"gpu", "run_id": "...",
+                "rpc": "zero-copy"|"stock" (sol only, default zero-copy: run_agent_sol.sh [--stock-rpc])}
   POST /stop   body = the run's benchmark_summary.json
 
 Writes results/experiments/agent-profile/<host>/<run_id>.log (raw agent log) and
@@ -50,13 +51,16 @@ def stop_agent() -> None:
 
 def start(req: dict) -> dict:
     backend, device, run_id = req.get("backend"), req.get("device"), req.get("run_id", "")
-    if backend not in REGION or device not in ("cpu", "gpu") or not RUN_ID.match(run_id):
+    rpc = req.get("rpc", "zero-copy")
+    if (backend not in REGION or device not in ("cpu", "gpu") or not RUN_ID.match(run_id)
+            or rpc not in ("zero-copy", "stock")):
         return {"ok": False, "error": f"bad request {req}"}
+    extra = ["--stock-rpc"] if backend == "sol" and rpc == "stock" else []
     stop_agent()
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     log = OUT_DIR / f"{run_id}.log"
     offset = log.stat().st_size if log.exists() else 0
-    state["proc"] = subprocess.Popen([str(HERE / f"run_agent_{backend}.sh"), device, "--profile", str(log)],
+    state["proc"] = subprocess.Popen([str(HERE / f"run_agent_{backend}.sh"), device, "--profile", str(log), *extra],
                                      cwd=HERE, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                                      stderr=subprocess.DEVNULL, start_new_session=True)
     state.update(run_id=run_id, backend=backend)
@@ -69,6 +73,7 @@ def start(req: dict) -> dict:
                 f.seek(offset)
                 if "Listening on" in f.read():
                     return {"ok": True, "log": str(log), "startup_s": round(time.time() - t0, 1),
+                            **({"rpc_agent": rpc} if backend == "sol" else {}),
                             "load_1min": round(os.getloadavg()[0], 2)}
         time.sleep(0.5)
     stop_agent()

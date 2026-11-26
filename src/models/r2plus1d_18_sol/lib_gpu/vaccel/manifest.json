@@ -1,0 +1,10 @@
+{
+  "format": "sol-0.9",
+  "sol_version": "0.9.1rc2",
+  "model": "r2plus1d_18",
+  "device": "gpu",
+  "libs": ["libsol_r2plus1d_18_wrapper.so"],
+  "data": ["../r2plus1d_18.so", "../r2plus1d_18.sol_weights", "../libsol-x86-dnn-cublaslt-0.9.1rc2-12.so","../libsol-x86-dnn-cudnn_v9-0.9.1rc2-9.20.so"],
+  "input_shape": [1, 3, 16, 112, 112],
+  "output_shape": [1, 400]
+}

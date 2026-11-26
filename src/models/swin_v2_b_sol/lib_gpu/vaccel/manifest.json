@@ -1,0 +1,10 @@
+{
+  "format": "sol-0.9",
+  "sol_version": "0.9.1rc2",
+  "model": "swin_v2_b",
+  "device": "gpu",
+  "libs": ["libsol_swin_v2_b_wrapper.so"],
+  "data": ["../swin_v2_b.so", "../swin_v2_b.sol_weights", "../libsol-x86-dnn-cublaslt-0.9.1rc2-12.so","../libsol-x86-dnn-cudnn_v9-0.9.1rc2-9.20.so"],
+  "input_shape": [1, 3, 224, 224],
+  "output_shape": [1, 1000]
+}

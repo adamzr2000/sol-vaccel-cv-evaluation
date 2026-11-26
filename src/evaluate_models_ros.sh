@@ -237,11 +237,20 @@ run_one () {
   # cleanup after all results are already saved — safe to ignore.
   # 139 (SIGSEGV) is a real crash and must NOT be silently swallowed.
   # ulimit -c 0 prevents core dump files from being written.
+  # GPU: same cuDNN as the agents (run_agent_{sol,ptc}.sh): 9.20 for SOL (the only version its GPU libraries run
+  # with), 9.28 for every other backend. Copied by scripts/sol_v09/install.sh.
+  local _ld="${LD_LIBRARY_PATH:-}"
+  local _cudnn="${PWD}/models/runtime/cudnn-9.28"
+  [[ "${BACKEND}" == "sol" || "${BACKEND}" == *-sol ]] && _cudnn="${PWD}/models/runtime/cudnn-9.20"
+  if [[ "${DEVICE}" == "gpu" ]]; then
+    [[ -f "${_cudnn}/libcudnn.so.9" ]] || { echo "[bench] error: ${_cudnn} missing (scripts/sol_v09/install.sh)"; exit 1; }
+    _ld="${_cudnn}${_ld:+:${_ld}}"
+  fi
   local _rc=0
   if [[ -n "${CPU_AFFINITY}" ]]; then
-    ( ulimit -c 0; taskset -c "${CPU_AFFINITY}" python3 -u "${SCRIPT}" ) || _rc=$?
+    ( ulimit -c 0; LD_LIBRARY_PATH="${_ld}" taskset -c "${CPU_AFFINITY}" python3 -u "${SCRIPT}" ) || _rc=$?
   else
-    ( ulimit -c 0; python3 -u "${SCRIPT}" ) || _rc=$?
+    ( ulimit -c 0; LD_LIBRARY_PATH="${_ld}" python3 -u "${SCRIPT}" ) || _rc=$?
   fi
 
   # Always stop wifi monitoring, even if the python run above failed/crashed --

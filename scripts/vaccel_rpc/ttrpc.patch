@@ -1,0 +1,357 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index 9742b7a..c307a70 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -64,6 +64,7 @@ cfg_sync! {
+     pub mod sync;
+     #[doc(hidden)]
+     pub use sync::response_to_channel;
++    pub use sync::response_raw_to_channel;
+     #[doc(inline)]
+     pub use sync::{MethodHandler, TtrpcContext};
+     pub use sync::Client;
+diff --git a/src/sync/channel.rs b/src/sync/channel.rs
+index 5890b91..b60828b 100644
+--- a/src/sync/channel.rs
++++ b/src/sync/channel.rs
+@@ -17,17 +17,20 @@ use crate::proto::{check_oversize, MessageHeader, DEFAULT_PAGE_SIZE, MESSAGE_HEA
+ use crate::sync::sys::PipeConnection;
+ 
+ fn read_count(conn: &PipeConnection, count: usize) -> Result<Vec<u8>> {
+-    let mut v: Vec<u8> = vec![0; count];
++    // vaccel patch: no zero-fill and no final copy of the (multi-MB) body
++    let mut v: Vec<u8> = Vec::with_capacity(count);
+     let mut len = 0;
+ 
+     if count == 0 {
+-        return Ok(v.to_vec());
++        return Ok(v);
+     }
+ 
+     loop {
+-        match conn.read(&mut v[len..]) {
++        let spare = unsafe { std::slice::from_raw_parts_mut(v.as_mut_ptr().add(len), count - len) };
++        match conn.read(spare) {
+             Ok(l) => {
+                 len += l;
++                unsafe { v.set_len(len) };
+                 // when socket peer closed, it would return 0.
+                 if len == count || l == 0 {
+                     break;
+@@ -39,7 +42,7 @@ fn read_count(conn: &PipeConnection, count: usize) -> Result<Vec<u8>> {
+         }
+     }
+ 
+-    Ok(v[0..len].to_vec())
++    Ok(v)
+ }
+ 
+ fn write_count(conn: &PipeConnection, buf: &[u8], count: usize) -> Result<usize> {
+@@ -131,15 +134,7 @@ fn write_message_header(conn: &PipeConnection, mh: MessageHeader) -> Result<()>
+ }
+ 
+ pub fn write_message(conn: &PipeConnection, mh: MessageHeader, buf: Vec<u8>) -> Result<()> {
+-    write_message_header(conn, mh)?;
+-
+-    let size = write_count(conn, &buf, buf.len())?;
+-    if size != buf.len() {
+-        return Err(sock_error_msg(
+-            size,
+-            format!("Send Message length size {size} is not right"),
+-        ));
+-    }
+-
+-    Ok(())
++    // vaccel patch: header and body in one writev (one TCP push instead of a separate 10-byte segment)
++    let hdr: Vec<u8> = mh.into();
++    conn.write_all_vectored(&[&hdr, &buf]).map_err(|e| Error::Socket(e.to_string()))
+ }
+diff --git a/src/sync/client.rs b/src/sync/client.rs
+index 9c92f83..4d8cae8 100644
+--- a/src/sync/client.rs
++++ b/src/sync/client.rs
+@@ -43,6 +43,11 @@ type ReciverMap = Arc<Mutex<HashMap<u32, mpsc::SyncSender<Result<Vec<u8>>>>>>;
+ pub struct Client {
+     _connection: Arc<ClientConnection>,
+     sender_tx: Sender,
++    // vaccel patch: state shared with the sender thread for `request_raw_vectored`
++    raw_conn: Arc<crate::sync::sys::PipeConnection>,
++    raw_map: ReciverMap,
++    next_stream_id: Arc<std::sync::atomic::AtomicU32>,
++    write_lock: Arc<Mutex<()>>,
+ }
+ 
+ impl Client {
+@@ -70,13 +75,17 @@ impl Client {
+         let receiver_map = recver_map_orig.clone();
+         let connection = Arc::new(client.get_pipe_connection()?);
+         let sender_client = connection.clone();
++        let next_stream_id = Arc::new(std::sync::atomic::AtomicU32::new(1));
++        let write_lock = Arc::new(Mutex::new(()));
++        let raw_conn = connection.clone();
++        let raw_map = recver_map_orig.clone();
++        let sender_ids = next_stream_id.clone();
++        let sender_lock = write_lock.clone();
+ 
+         //Sender
+         thread::spawn(move || {
+-            let mut stream_id: u32 = 1;
+             for (buf, recver_tx) in rx.iter() {
+-                let current_stream_id = stream_id;
+-                stream_id += 2;
++                let current_stream_id = sender_ids.fetch_add(2, std::sync::atomic::Ordering::SeqCst);
+                 //Put current_stream_id and recver_tx to recver_map
+                 {
+                     let mut map = receiver_map.lock().unwrap();
+@@ -85,7 +94,11 @@ impl Client {
+                 let mut mh = MessageHeader::new_request(0, buf.len() as u32);
+                 mh.set_stream_id(current_stream_id);
+ 
+-                if let Err(e) = write_message(&sender_client, mh, buf) {
++                let w = {
++                    let _g = sender_lock.lock().unwrap();
++                    write_message(&sender_client, mh, buf)
++                };
++                if let Err(e) = w {
+                     //Remove current_stream_id and recver_tx to recver_map
+                     {
+                         let mut map = receiver_map.lock().unwrap();
+@@ -155,8 +168,43 @@ impl Client {
+         Ok(Client {
+             _connection: client,
+             sender_tx,
++            raw_conn,
++            raw_map,
++            next_stream_id,
++            write_lock,
+         })
+     }
++
++    /// vaccel patch: send one request whose (already encoded) ttrpc `Request` body is the concatenation of
++    /// `parts`, written with writev from the calling thread (no copy of the parts), and return the raw
++    /// ttrpc `Response` body. Wire format identical to `request`.
++    pub fn request_raw_vectored(&self, parts: &[&[u8]], timeout_nano: i64) -> Result<Vec<u8>> {
++        let total: usize = parts.iter().map(|p| p.len()).sum();
++        check_oversize(total, false)?;
++        let id = self.next_stream_id.fetch_add(2, std::sync::atomic::Ordering::SeqCst);
++        let (tx, rx) = mpsc::sync_channel(0);
++        self.raw_map.lock().unwrap().insert(id, tx);
++        let mh = MessageHeader::new_request(id, total as u32);
++        let hdr: Vec<u8> = mh.into();
++        let mut iov: Vec<&[u8]> = Vec::with_capacity(parts.len() + 1);
++        iov.push(&hdr);
++        iov.extend_from_slice(parts);
++        let w = {
++            let _g = self.write_lock.lock().unwrap();
++            self.raw_conn.write_all_vectored(&iov)
++        };
++        if let Err(e) = w {
++            self.raw_map.lock().unwrap().remove(&id);
++            return Err(Error::Socket(e.to_string()));
++        }
++        let result = if timeout_nano == 0 {
++            rx.recv().map_err(err_to_others_err!(e, "Receive packet from Receiver error: "))?
++        } else {
++            rx.recv_timeout(Duration::from_nanos(timeout_nano as u64))
++                .map_err(err_to_others_err!(e, "Receive packet from Receiver timeout: "))?
++        };
++        result
++    }
+     pub fn request(&self, req: Request) -> Result<Response> {
+         check_oversize(req.compute_size() as usize, false)?;
+ 
+@@ -169,33 +217,30 @@ impl Client {
+             .send((buf, tx))
+             .map_err(err_to_others_err!(e, "Send packet to sender error "))?;
+ 
+-        let t = thread::spawn(move || {
+-            let result = if req.timeout_nano == 0 {
+-                rx.recv().map_err(err_to_others_err!(
++        // vaccel patch: wait and decode in the calling thread (no thread spawned per request)
++        let result = if req.timeout_nano == 0 {
++            rx.recv().map_err(err_to_others_err!(
++                    e,
++                    "Receive packet from Receiver error: "
++                    ))?
++        } else {
++            rx.recv_timeout(Duration::from_nanos(req.timeout_nano as u64))
++                .map_err(err_to_others_err!(
+                         e,
+-                        "Receive packet from Receiver error: "
++                        "Receive packet from Receiver timeout: "
+                         ))?
+-            } else {
+-                rx.recv_timeout(Duration::from_nanos(req.timeout_nano as u64))
+-                    .map_err(err_to_others_err!(
+-                            e,
+-                            "Receive packet from Receiver timeout: "
+-                            ))?
+-            };
+-
+-            let buf = result?;
+-            let res = Response::decode(buf)
+-                .map_err(err_to_others_err!(e, "Unpack response error "))?;
+-
+-            let status = res.status();
+-            if status.code() != Code::OK {
+-                return Err(Error::RpcStatus((*status).clone()));
+-            }
++        };
+ 
+-            Ok(res)
+-        });
++        let buf = result?;
++        let res = Response::decode(buf)
++            .map_err(err_to_others_err!(e, "Unpack response error "))?;
++
++        let status = res.status();
++        if status.code() != Code::OK {
++            return Err(Error::RpcStatus((*status).clone()));
++        }
+ 
+-        t.join().unwrap()
++        Ok(res)
+     }
+ }
+ 
+diff --git a/src/sync/mod.rs b/src/sync/mod.rs
+index 53d0680..0ce89ef 100644
+--- a/src/sync/mod.rs
++++ b/src/sync/mod.rs
+@@ -18,4 +18,5 @@ pub use server::Server;
+ 
+ #[doc(hidden)]
+ pub use utils::response_to_channel;
++pub use utils::response_raw_to_channel;
+ pub use utils::{MethodHandler, TtrpcContext};
+diff --git a/src/sync/sys/unix/net.rs b/src/sync/sys/unix/net.rs
+index d6fec34..99516ac 100644
+--- a/src/sync/sys/unix/net.rs
++++ b/src/sync/sys/unix/net.rs
+@@ -207,6 +207,37 @@ impl PipeConnection {
+         }
+     }
+ 
++    /// vaccel patch: write all slices with writev, retrying partial writes
++    pub fn write_all_vectored(&self, bufs: &[&[u8]]) -> Result<()> {
++        let mut iov: Vec<libc::iovec> = bufs
++            .iter()
++            .filter(|b| !b.is_empty())
++            .map(|b| libc::iovec { iov_base: b.as_ptr() as *mut libc::c_void, iov_len: b.len() })
++            .collect();
++        let mut first = 0;
++        while first < iov.len() {
++            let cnt = std::cmp::min(iov.len() - first, 1024) as libc::c_int;
++            let n = unsafe { libc::writev(self.fd, iov[first..].as_ptr(), cnt) };
++            if n < 0 {
++                let e = nix::errno::Errno::last();
++                if retryable(e) {
++                    continue;
++                }
++                return Err(crate::Error::Nix(e));
++            }
++            let mut n = n as usize;
++            while first < iov.len() && n >= iov[first].iov_len {
++                n -= iov[first].iov_len;
++                first += 1;
++            }
++            if n > 0 {
++                iov[first].iov_base = unsafe { (iov[first].iov_base as *mut u8).add(n) } as *mut libc::c_void;
++                iov[first].iov_len -= n;
++            }
++        }
++        Ok(())
++    }
++
+     pub fn close(&self) -> Result<()> {
+         match close(self.fd) {
+             Ok(_) => Ok(()),
+diff --git a/src/sync/utils.rs b/src/sync/utils.rs
+index 616b615..3682d9e 100644
+--- a/src/sync/utils.rs
++++ b/src/sync/utils.rs
+@@ -35,6 +35,25 @@ pub fn response_to_channel(
+     Ok(())
+ }
+ 
++/// vaccel patch: send an already encoded ttrpc `Response` body
++pub fn response_raw_to_channel(
++    stream_id: u32,
++    buf: Vec<u8>,
++    tx: std::sync::mpsc::Sender<(MessageHeader, Vec<u8>)>,
++) -> Result<()> {
++    if check_oversize(buf.len(), true).is_err() {
++        return Err(Error::Others(format!("response of {} bytes is too large", buf.len())));
++    }
++    let mh = MessageHeader {
++        length: buf.len() as u32,
++        stream_id,
++        type_: MESSAGE_TYPE_RESPONSE,
++        flags: 0,
++    };
++    tx.send((mh, buf)).map_err(err_to_others_err!(e, ""))?;
++    Ok(())
++}
++
+ pub fn response_error_to_channel(
+     stream_id: u32,
+     e: Error,
+@@ -52,29 +71,42 @@ macro_rules! request_handler {
+         req.merge_from(&mut s)
+             .map_err(::ttrpc::err_to_others!(e, ""))?;
+ 
+-        let mut res = ::ttrpc::Response::new();
+         match $class.service.$req_fn(&$ctx, req) {
+             Ok(rep) => {
++                // vaccel patch: encode the ttrpc Response envelope (status, then payload) and the reply into one
++                // buffer, instead of encoding the reply and copying it into the envelope (same bytes on the wire)
++                let mut res = ::ttrpc::Response::new();
+                 res.set_status(::ttrpc::get_status(::ttrpc::Code::OK, "".to_string()));
+-                res.payload.reserve(rep.compute_size() as usize);
+-                let mut s = protobuf::CodedOutputStream::vec(&mut res.payload);
+-                rep.write_to(&mut s)
++                let mut buf = ::protobuf::Message::write_to_bytes(&res)
+                     .map_err(::ttrpc::err_to_others!(e, ""))?;
+-                s.flush().map_err(::ttrpc::err_to_others!(e, ""))?;
+-            }
+-            Err(x) => match x {
+-                ::ttrpc::Error::RpcStatus(s) => {
+-                    res.set_status(s);
++                let n = ::protobuf::Message::compute_size(&rep);
++                if n > 0 {
++                    buf.reserve(n as usize + 11);
++                    let mut s = ::protobuf::CodedOutputStream::vec(&mut buf);
++                    s.write_raw_varint32(0x12).map_err(::ttrpc::err_to_others!(e, ""))?;
++                    s.write_raw_varint64(n).map_err(::ttrpc::err_to_others!(e, ""))?;
++                    ::protobuf::Message::write_to_with_cached_sizes(&rep, &mut s)
++                        .map_err(::ttrpc::err_to_others!(e, ""))?;
++                    s.flush().map_err(::ttrpc::err_to_others!(e, ""))?;
+                 }
+-                _ => {
+-                    res.set_status(::ttrpc::get_status(
+-                        ::ttrpc::Code::UNKNOWN,
+-                        format!("{:?}", x),
+-                    ));
++                ::ttrpc::response_raw_to_channel($ctx.mh.stream_id, buf, $ctx.res_tx)?
++            }
++            Err(x) => {
++                let mut res = ::ttrpc::Response::new();
++                match x {
++                    ::ttrpc::Error::RpcStatus(s) => {
++                        res.set_status(s);
++                    }
++                    _ => {
++                        res.set_status(::ttrpc::get_status(
++                            ::ttrpc::Code::UNKNOWN,
++                            format!("{:?}", x),
++                        ));
++                    }
+                 }
+-            },
++                ::ttrpc::response_to_channel($ctx.mh.stream_id, res, $ctx.res_tx)?
++            }
+         }
+-        ::ttrpc::response_to_channel($ctx.mh.stream_id, res, $ctx.res_tx)?
+     };
+ }
+ 

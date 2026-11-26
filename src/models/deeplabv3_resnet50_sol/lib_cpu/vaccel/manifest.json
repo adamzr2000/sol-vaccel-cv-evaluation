@@ -1,0 +1,10 @@
+{
+  "format": "sol-0.9",
+  "sol_version": "0.9.1rc2",
+  "model": "deeplabv3_resnet50",
+  "device": "cpu",
+  "libs": ["libsol_deeplabv3_resnet50_wrapper.so"],
+  "data": ["../deeplabv3_resnet50.so", "../deeplabv3_resnet50.sol_weights", "../libsleef.so.3","../libsleefgnuabi.so.3","../libsol-x86-dnn-dnnl-0.9.1rc2-3.14.1.so"],
+  "input_shape": [1, 3, 224, 224],
+  "output_shape": [1, 21, 224, 224]
+}

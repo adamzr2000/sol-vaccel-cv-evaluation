@@ -94,6 +94,10 @@ Optional:
   --malloc-tunables  true|false — GLIBC_TUNABLES keeping freed memory in the process (mmap threshold
                      32 MiB, trim threshold 256 MiB) instead of re-faulting it each preprocessing
                      (default: true). Use the same value as start_go2.sh --malloc-tunables.
+  --vaccel-rpc       zero-copy|stock — vAccel RPC client for vaccel-remote-sol (src/sol09.py, VACCEL_RPC_CLIENT)
+                     and agent started by --agent-server (run_agent_sol.sh [--stock-rpc]). zero-copy
+                     (default): same protocol without the redundant buffer copies (scripts/vaccel_rpc).
+                     With --agent-server false, start the agent with the matching run_agent_sol.sh option.
 
 Every --<flag> true|false option defaults to the value shown above and is
 fully independent of the others -- e.g. --export false --monitoring true
@@ -120,6 +124,7 @@ OMP_WAIT_POLICY_OPT=""   # empty = libgomp default (OMP_WAIT_POLICY unset)
 FRESH_FRAME_OPT=0
 MALLOC_TUNABLES_OPT=1
 AGENT_SERVER=0
+VACCEL_RPC_OPT="zero-copy"
 # Same value as ros-vision-service's start_go2.sh --malloc-tunables.
 MALLOC_TUNABLES_VALUE="glibc.malloc.mmap_threshold=33554432:glibc.malloc.trim_threshold=268435456"
 
@@ -143,6 +148,7 @@ while [[ $# -gt 0 ]]; do
     --wifi-monitoring)   WIFI_MONITORING="$(parse_bool "$2")"; shift 2 ;;
     --cpu-affinity)      CPU_AFFINITY="$2"; shift 2 ;;
     --agent-server)      AGENT_SERVER="$(parse_bool "$2")"; shift 2 ;;
+    --vaccel-rpc)        VACCEL_RPC_OPT="${2,,}"; shift 2 ;;
     -h|--help)          usage; exit 0 ;;
     *) echo "[err] Unknown argument: $1"; usage; exit 2 ;;
   esac
@@ -186,6 +192,18 @@ echo "[bench] OMP_WAIT_POLICY=${OMP_WAIT_POLICY:-default (unset)}"
 if [[ "${FRESH_FRAME_OPT}" -eq 1 ]]; then export FRESH_FRAME=true; else export FRESH_FRAME=false; fi
 if [[ "${MALLOC_TUNABLES_OPT}" -eq 1 ]]; then export GLIBC_TUNABLES="${MALLOC_TUNABLES_VALUE}"; else unset GLIBC_TUNABLES; fi
 echo "[bench] FRESH_FRAME=${FRESH_FRAME} GLIBC_TUNABLES=${GLIBC_TUNABLES:-default (unset)}"
+# vAccel RPC client of vaccel-remote-sol (read by src/sol09.py, recorded as vaccel_rpc_client in the summary)
+case "${VACCEL_RPC_OPT}" in
+  zero-copy|stock) export VACCEL_RPC_CLIENT="${VACCEL_RPC_OPT}" ;;
+  *) echo "[err] --vaccel-rpc must be 'zero-copy' or 'stock'" >&2; exit 2 ;;
+esac
+if [[ "${BACKEND:-}" == "vaccel-remote-sol" ]]; then
+  _zc_lib="$(cd "$(dirname "$0")" && pwd)/models/runtime/vaccel-rpc/libvaccel-rpc-client-zc.so"
+  if [[ "${VACCEL_RPC_CLIENT}" == "zero-copy" && ! -f "${_zc_lib}" ]]; then
+    echo "[err] ${_zc_lib} missing (scripts/vaccel_rpc/build.sh, then copy to this host) -- or --vaccel-rpc stock" >&2; exit 2
+  fi
+  echo "[bench] VACCEL_RPC_CLIENT=${VACCEL_RPC_CLIENT}"
+fi
 
 # ---- Validate backend ----
 case "${BACKEND}" in
@@ -322,7 +340,7 @@ run_one () {
   if [[ "${AGENT_SERVER}" -eq 1 ]]; then
     local _resp
     _resp="$(curl -s --max-time 150 -X POST "${AGENT_SERVER_URL}/start" -H "Content-Type: application/json" \
-      -d "{\"backend\": \"${BACKEND#vaccel-remote-}\", \"device\": \"${DEVICE}\", \"run_id\": \"${_wifi_tag}\"}")" || true
+      -d "{\"backend\": \"${BACKEND#vaccel-remote-}\", \"device\": \"${DEVICE}\", \"run_id\": \"${_wifi_tag}\", \"rpc\": \"${VACCEL_RPC_CLIENT}\"}")" || true
     echo "[bench] agent /start: ${_resp:-no response from ${AGENT_SERVER_URL}}"
     if [[ "${_resp}" != *'"ok": true'* ]]; then
       echo "[bench] error: no fresh agent -- is agent_server.py running on ${REMOTE_HOST}?"

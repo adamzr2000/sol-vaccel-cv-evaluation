@@ -16,6 +16,15 @@ r3d_18/
 
 # --- SOL models: keep sources but ignore built shared libs ---
 *_sol/**/*.so
+# SOL 0.9 deployments (scripts/sol_v09/install.sh): weights, generated sources and runtime libs stay local;
+# vaccel/manifest.json and vaccel/sol_wrapper.c are tracked
+*_sol/**/*.sol_weights
+*_sol/**/*.so.*
+*_sol/**/*.cpp
+*_sol/**/*.hpp
+# cuDNN 9.20 for all GPU runs (copied from sol-deploy:rc2 by scripts/sol_v09/install.sh; run_agent_{sol,ptc}.sh,
+# evaluate_models_ros.sh); vaccel-rpc/ = zero-copy vAccel RPC client/agent (scripts/vaccel_rpc/build.sh)
+runtime/
 
 # Keep common repo files (explicit allow; optional)
 !.gitignore

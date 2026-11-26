@@ -74,10 +74,16 @@ GPU_ARGS=()
 CUDA_LD_ARGS=()
 if [[ "${MODE}" == "gpu" ]]; then
   GPU_ARGS=(--gpus all)
-  # Prepend venv cudnn/cublas so libtorch finds 9.10.2.21 instead of system apt 9.7.0.66.
+  # venv cudnn/cublas before the system apt 9.7.0.66 (not on the image's LD_LIBRARY_PATH)
   # The harbor image has the pip package installed but /.venv/ is not in its LD_LIBRARY_PATH.
   VENV_NVIDIA="/.venv/lib/python3.10/site-packages/nvidia"
-  CUDA_LD_ARGS=(-e "LD_LIBRARY_PATH=${VENV_NVIDIA}/cudnn/lib:${VENV_NVIDIA}/cublas/lib:/workspace/libtorch/lib:/usr/lib/x86_64-linux-gnu:/usr/local/nvidia/lib:/usr/local/nvidia/lib64")
+  # cuDNN 9.28 (src/models/runtime/cudnn-9.28, from scripts/sol_v09/install.sh) first on the library path (the image
+  # alone would give libtorch 9.8). The SOL agent uses 9.20, the only version its GPU libraries run with.
+  CUDNN_DIR="$(cd "$(dirname "$0")" && pwd)/src/models/runtime/cudnn-9.28"
+  [[ -f "${CUDNN_DIR}/libcudnn.so.9" ]] || { echo "[err] ${CUDNN_DIR} missing (scripts/sol_v09/install.sh gpu ... copies it)"; exit 1; }
+  CUDA_LD_ARGS=(-v "${CUDNN_DIR}:/cudnn:ro"
+                -e "LD_LIBRARY_PATH=/cudnn:${VENV_NVIDIA}/cudnn/lib:${VENV_NVIDIA}/cublas/lib:/workspace/libtorch/lib:/usr/lib/x86_64-linux-gnu:/usr/local/nvidia/lib:/usr/local/nvidia/lib64")
+  echo "cuDNN: ${CUDNN_DIR}"
 fi
 
 echo "Starting ${CONTAINER_NAME} (${MODE}) on port ${PORT}"

@@ -9,6 +9,9 @@ import importlib
 import numpy as np
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import sol09  # SOL 0.9 deployments (src/sol09.py)
+
 try:
     import vaccel
     import vaccel.ops.torch as vaccel_torch
@@ -593,6 +596,7 @@ class SolAdapter(BaseModelAdapter):
         self.input_buffer = None
         self.output_buffer = None
         self.vdims = None
+        self._sol09 = None   # sol09.VaccelRunner / DirectRunner for SOL 0.9 deployments
 
     def load_model(self, model_dir):
         lib_path = self._get_model_lib_path(model_dir)
@@ -610,6 +614,23 @@ class SolAdapter(BaseModelAdapter):
 
     def _load_model_from_path(self, lib_path, use_remote=False):
         print(f"   [Adapter] Loading SOL model from {lib_path}...")
+
+        # SOL 0.9 deployment (scripts/sol_v09/install.sh): generic wrapper + manifest; the rest of this method
+        # is the pre-0.9 path (sol_<model>.py with init/set_IO/optimize/sync), kept for models not redeployed.
+        if sol09.is_sol09(lib_path):
+            via_vaccel = Path(lib_path).name == "vaccel"
+            self._sol09 = (sol09.VaccelRunner(lib_path, use_remote) if via_vaccel
+                           else sol09.DirectRunner(lib_path))
+            m = self._sol09.m
+            self.input_buffer = np.zeros(m["input_shape"], dtype=np.float32)
+            self.output_buffer = np.zeros(m["output_shape"], dtype=np.float32)
+            self.vdims, self.aux_buffer = None, None
+            self.execution_args = [self.input_buffer, self.output_buffer]
+            rpc = getattr(self._sol09, "rpc_client", None)
+            print(f"   [SOL] {m['sol_version']} {m['device'].upper()} | "
+                  f"{'vAccel ' + ('remote' if use_remote else 'local') if via_vaccel else 'direct C API'}"
+                  f"{f' | RPC client: {rpc}' if rpc else ''}")
+            return
 
         module_name = f"sol_{self.model_name}"
         module_path = os.path.join(lib_path, f"{module_name}.py")
@@ -787,6 +808,17 @@ class SolAdapter(BaseModelAdapter):
     
     
     def infer(self, input_numpy):
+        # SOL 0.9: one call, host input -> host output. The caller's array is passed as is when it already has the
+        # model's layout (vAccel args point at the numpy memory, no copy), saving a copy per inference (0.23 ms for a
+        # 2.4 MB video clip on the robot's N100); anything else goes through the input buffer.
+        if self._sol09 is not None:
+            x = input_numpy
+            if not (isinstance(x, np.ndarray) and x.dtype == np.float32 and x.flags.c_contiguous
+                    and x.shape == self.input_buffer.shape):
+                np.copyto(self.input_buffer, np.ascontiguousarray(x, dtype=np.float32))
+                x = self.input_buffer
+            return self._sol09.predict(x, self.output_buffer)
+
         # 1. Prepare Input
         input_numpy = np.ascontiguousarray(input_numpy, dtype=np.float32)
         np.copyto(self.input_buffer, input_numpy)

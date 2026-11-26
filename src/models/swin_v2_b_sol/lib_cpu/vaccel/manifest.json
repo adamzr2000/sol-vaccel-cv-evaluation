@@ -1,0 +1,10 @@
+{
+  "format": "sol-0.9",
+  "sol_version": "0.9.1rc2",
+  "model": "swin_v2_b",
+  "device": "cpu",
+  "libs": ["libsol_swin_v2_b_wrapper.so"],
+  "data": ["../swin_v2_b.so", "../swin_v2_b.sol_weights", "../libsleef.so.3","../libsleefgnuabi.so.3","../libsol-x86-dnn-aoclblas-0.9.1rc2-6.0.0.so","../libsol-x86-dnn-dnnl-0.9.1rc2-3.14.1.so","../libsol-x86-dnn-mkl-0.9.1rc2-2026.2.1.so","../libsol-x86-dnn-openblas-0.9.1rc2-0.3.34.so"],
+  "input_shape": [1, 3, 224, 224],
+  "output_shape": [1, 1000]
+}

@@ -56,6 +56,13 @@ def start(req: dict) -> dict:
             or rpc not in ("zero-copy", "stock")):
         return {"ok": False, "error": f"bad request {req}"}
     extra = ["--stock-rpc"] if backend == "sol" and rpc == "stock" else []
+    # run_agent_*.sh output goes to /dev/null: report missing runtime files here instead of a bare start-up failure
+    runtime = HERE / "src" / "models" / "runtime"
+    needed = ([runtime / "vaccel-rpc" / "vaccel-rpc-agent"] if backend == "sol" and rpc == "zero-copy" else []) + \
+             ([runtime / ("cudnn-9.20" if backend == "sol" else "cudnn-9.28") / "libcudnn.so.9"] if device == "gpu" else [])
+    missing = [str(p) for p in needed if not p.exists()]
+    if missing:
+        return {"ok": False, "error": f"missing {missing} (scripts/vaccel_rpc/build.sh, scripts/sol_v09/install.sh)"}
     stop_agent()
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     log = OUT_DIR / f"{run_id}.log"
